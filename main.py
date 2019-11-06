@@ -1,21 +1,22 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-from TimelinePlotPho import plotTimeline, plot_hlines_Timeline, plot_labjackData_Timeline, plot_combined_timeline
-from SqliteEventsDatabase import save_video_events_to_database, load_video_events_from_database
+import datetime as dt
+# from Testing.SqliteEventsDatabase import save_video_events_to_database, load_video_events_from_database
 
-from GUI.PhoEvent import *
-from GUI.EventsDrawingWindow import *
+from GUI.PhoEvent import PhoEvent, PhoDurationEvent
+from GUI.TimelineDrawingWindow import *
 from GUI.qtimeline import *
 
 if __name__ == '__main__':
     shouldShowGUIWindows = True
+    earliestTime = dt.datetime.now()
+    latestTime = dt.datetime.now() - dt.timedelta(days=7)
     if (shouldShowGUIWindows):
         # create the application and the main window
         app = QtWidgets.QApplication( sys.argv )
 
-        # mainWindow = EventsDrawingWindow(videoEvents, earliestTime, latestTime, dateTimes[relevant_labjack_indicies], dataArray[relevant_labjack_indicies] )
-        mainWindow = TimelineDrawingWindow(videoFileSearchPaths[0], videoEvents, earliestTime, latestTime, labjackEvents, variableData)
+        mainWindow = TimelineDrawingWindow(earliestTime, latestTime)
         desktop = QtWidgets.QApplication.desktop()
         resolution = desktop.availableGeometry()
 
