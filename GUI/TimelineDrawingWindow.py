@@ -13,12 +13,12 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 from GUI.EventTrackDrawingWidget import *
 from GUI.VideoPostProcessing import show_postprocessing_window
 
-class EventsDrawingWindow(QtWidgets.QMainWindow):
+class TimelineDrawingWindow(QtWidgets.QMainWindow):
     TraceCursorWidth = 2
     TraceCursorColor = QColor(51, 255, 102)  # Green
 
     def __init__(self, filesystemPath, durationEventObjects, totalStartTime, totalEndTime, labjackEventObjects, labjackVariableData=None):
-        super(EventsDrawingWindow, self).__init__()
+        super(TimelineDrawingWindow, self).__init__()
 
         self.filesystemPath = filesystemPath
         self.durationEventObjects = durationEventObjects
@@ -113,15 +113,15 @@ class EventsDrawingWindow(QtWidgets.QMainWindow):
     def initUI(self):
         self.resize( 900, 800 )
 
-        self.videoEventsWidget = EventTrackDrawingWidget(-1, self.durationEventObjects, [], self.totalStartTime, self.totalEndTime)
+        self.videoEventsWidget = TimelineTrackDrawingWidget(-1, self.durationEventObjects, [], self.totalStartTime, self.totalEndTime)
         self.videoEventsWidget.selection_changed.connect(self.handle_child_selection_event)
         self.videoEventsWidget.hover_changed.connect(self.handle_child_hover_event)
 
 
-        self.eventTrackWidgets = [EventTrackDrawingWidget(0, [], self.water1_labjackEventObjects, self.totalStartTime, self.totalEndTime),
-                                  EventTrackDrawingWidget(1, [], self.water2_labjackEventObjects, self.totalStartTime, self.totalEndTime),
-                                  EventTrackDrawingWidget(2, [], self.food1_labjackEventObjects, self.totalStartTime, self.totalEndTime),
-                                  EventTrackDrawingWidget(3, [], self.food2_labjackEventObjects, self.totalStartTime, self.totalEndTime)]
+        self.eventTrackWidgets = [TimelineTrackDrawingWidget(0, [], self.water1_labjackEventObjects, self.totalStartTime, self.totalEndTime),
+                                  TimelineTrackDrawingWidget(1, [], self.water2_labjackEventObjects, self.totalStartTime, self.totalEndTime),
+                                  TimelineTrackDrawingWidget(2, [], self.food1_labjackEventObjects, self.totalStartTime, self.totalEndTime),
+                                  TimelineTrackDrawingWidget(3, [], self.food2_labjackEventObjects, self.totalStartTime, self.totalEndTime)]
 
         # Build the bottomPanelWidget
         self.labjackEventsContainer = QtWidgets.QWidget()

@@ -6,6 +6,7 @@ from SqliteEventsDatabase import save_video_events_to_database, load_video_event
 
 from GUI.PhoEvent import *
 from GUI.EventsDrawingWindow import *
+from GUI.qtimeline import *
 
 if __name__ == '__main__':
     shouldShowGUIWindows = True
@@ -14,7 +15,7 @@ if __name__ == '__main__':
         app = QtWidgets.QApplication( sys.argv )
 
         # mainWindow = EventsDrawingWindow(videoEvents, earliestTime, latestTime, dateTimes[relevant_labjack_indicies], dataArray[relevant_labjack_indicies] )
-        mainWindow = EventsDrawingWindow(videoFileSearchPaths[0], videoEvents, earliestTime, latestTime, labjackEvents, variableData)
+        mainWindow = TimelineDrawingWindow(videoFileSearchPaths[0], videoEvents, earliestTime, latestTime, labjackEvents, variableData)
         desktop = QtWidgets.QApplication.desktop()
         resolution = desktop.availableGeometry()
 

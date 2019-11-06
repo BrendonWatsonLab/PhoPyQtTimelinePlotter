@@ -10,14 +10,14 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 
-class EventTrackDrawingWidget(QtWidgets.QWidget):
+class TimelineTrackDrawingWidget(QtWidgets.QWidget):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
     hover_changed = pyqtSignal(int, int, name='hover_changed')
     selection_changed = pyqtSignal(int, int, name='selection_changed')
     shouldDismissSelectionUponMouseButtonRelease = True
 
     def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime):
-        super(EventTrackDrawingWidget, self).__init__()
+        super(TimelineTrackDrawingWidget, self).__init__()
         self.trackID = trackID
         self.durationObjects = durationObjects
         self.instantaneousObjects = instantaneousObjects
@@ -93,7 +93,7 @@ class EventTrackDrawingWidget(QtWidgets.QWidget):
 
     def on_button_released(self, event):
         # Check if we want to dismiss the selection when the mouse button is released (requiring the user to hold down the button to see the results)
-        if EventTrackDrawingWidget.shouldDismissSelectionUponMouseButtonRelease:
+        if TimelineTrackDrawingWidget.shouldDismissSelectionUponMouseButtonRelease:
             self.selected_object_index = self.find_child_object(event.x(), event.y())
 
             if self.selected_object_index is None:
