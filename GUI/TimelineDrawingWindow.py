@@ -29,8 +29,47 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
 
 
     def initUI(self):
+
+        """
+        rootContainer
+            videoPlayerContainer
+            mainTimelineContainer
+                timelineMasterTrackWidget
+                extendedTracksContainer
+                partitionsTrackWidget
+        """
+
+
         desiredWindowWidth = 900
         self.resize( desiredWindowWidth, 800 )
+
+        # self.rootContainer = QtWidgets.QWidget()
+        
+        # Video Player Container: the container that holds the video player
+        self.videoPlayerContainer = QtWidgets.QWidget()
+        ## TODO: Add the video player to the container.
+        ## TODO: Needs a layout
+        
+        # mainTimelineContainer: the main container that holds the timelineMasterTrack (the numbers and ticks, as well as the playhead up top) in addition to the tracks
+        # self.mainTimelineContainer = QtWidgets.QWidget()
+
+        #Layout of Main Window
+        # self.mainVBoxLayout = QVBoxLayout(self)
+        # self.mainVBoxLayout.addStretch(1)
+        # self.mainVBoxLayout.addSpacing(2.0)
+
+        # self.mainVBoxLayout.addWidget(self.videoPlayerContainer)
+        # self.videoPlayerContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        # self.videoPlayerContainer.setAutoFillBackground(True)
+
+        # self.mainVBoxLayout.addWidget(self.mainTimelineContainer)
+        # self.mainTimelineContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        # self.mainTimelineContainer.setAutoFillBackground(True)
+
+        # self.rootContainer.setLayout(self.mainVBoxLayout)
+
+
+        ## Timeline Tracks:
 
         # Timeline Numberline track:
         self.timelineMasterTrackWidget = QTimeLine(360, desiredWindowWidth)
@@ -39,7 +78,6 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(-1, None, [], self.totalStartTime, self.totalEndTime)
         self.partitionsTrackWidget.selection_changed.connect(self.handle_child_selection_event)
         self.partitionsTrackWidget.hover_changed.connect(self.handle_child_hover_event)
-
 
         # Labjack Tracks:
         self.eventTrackWidgets = []
@@ -53,56 +91,54 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         # p.setColor(self.labjackEventsContainer.backgroundRole(), Qt.red)
         # self.labjackEventsContainer.setPalette(p)
 
-        #Layout of Container Widget
-        self.vboxLayout = QVBoxLayout(self)
-        self.vboxLayout.addStretch(1)
-        self.vboxLayout.addSpacing(2.0)
+        #Layout of Extended Tracks Container Widget
+        self.extendedTracksContainerVboxLayout = QVBoxLayout(self)
+        self.extendedTracksContainerVboxLayout.addStretch(1)
+        self.extendedTracksContainerVboxLayout.addSpacing(2.0)
 
-        self.vboxLayout.addWidget(self.timelineMasterTrackWidget)
+        self.extendedTracksContainerVboxLayout.addWidget(self.timelineMasterTrackWidget)
         self.timelineMasterTrackWidget.setMinimumSize(500,50)
         self.timelineMasterTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
+        self.extendedTracksContainerVboxLayout.addWidget(self.partitionsTrackWidget)
+        self.partitionsTrackWidget.setMinimumSize(500,50)
+        self.partitionsTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
         for i in range(0, len(self.eventTrackWidgets)):
             currWidget = self.eventTrackWidgets[i]
-            self.vboxLayout.addWidget(currWidget)
+            self.extendedTracksContainerVboxLayout.addWidget(currWidget)
             currWidget.setMinimumSize(500,50)
             currWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
             currWidget.mousePressEvent = currWidget.on_button_clicked
             currWidget.mouseReleaseEvent = currWidget.on_button_released
 
-        self.extendedTracksContainer.setLayout(self.vboxLayout)
+        self.extendedTracksContainer.setLayout(self.extendedTracksContainerVboxLayout)
+
+
+        #Layout of Main Timeline Container:
+        # self.mainTimelineTracksContainerVboxLayout = QVBoxLayout(self)
+        # self.mainTimelineTracksContainerVboxLayout.addStretch(1)
+        # self.mainTimelineTracksContainerVboxLayout.addSpacing(2.0)
+
+        # self.mainTimelineTracksContainerVboxLayout.addWidget(self.partitionsTrackWidget)
+        # self.partitionsTrackWidget.setMinimumSize(500,50)
+        # self.partitionsTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+
+        # self.mainTimelineContainer.setLayout(mainTimelineTracksContainerVboxLayout)
+
 
         self.verticalSplitter = QSplitter(Qt.Vertical)
         self.verticalSplitter.setHandleWidth(8)
         self.verticalSplitter.setMouseTracking(True)
-        self.verticalSplitter.addWidget(self.partitionsTrackWidget)
+        self.verticalSplitter.addWidget(self.videoPlayerContainer)
         self.verticalSplitter.addWidget(self.extendedTracksContainer)
 
         # Size the widgets
         self.verticalSplitter.setSizes([100, 600])
 
-        # # set the initial scale: 4:1
-        # self.verticalSplitter.setStretchFactor(0, 4)
-        # self.verticalSplitter.setStretchFactor(1, 1)
-
-        # clickable(self.videoEventsWidget).connect(self.videoEventsWidget.on_button_clicked)
         self.partitionsTrackWidget.mousePressEvent = self.partitionsTrackWidget.on_button_clicked
         self.partitionsTrackWidget.mouseReleaseEvent = self.partitionsTrackWidget.on_button_released
-
-    
-        # # Build the horizontal splitter
-        # self.horizontalSplitter = QSplitter(Qt.Horizontal)
-        # self.horizontalSplitter.setHandleWidth(8)
-        # self.horizontalSplitter.setMouseTracking(True)
-        # self.horizontalSplitter.addWidget(self.verticalSplitter)
-        # self.horizontalSplitter.addWidget(self.tableWidget)
-
-        # self.leftmostHorizontalSplitter = QSplitter(Qt.Horizontal)
-        # self.leftmostHorizontalSplitter.setHandleWidth(8)
-        # self.leftmostHorizontalSplitter.setMouseTracking(True)
-        # self.initUIFilesystemTree()
-        # self.leftmostHorizontalSplitter.addWidget(self.filesystemTree)
-        # self.leftmostHorizontalSplitter.addWidget(self.horizontalSplitter)
 
         # Complete setup
         self.setCentralWidget( self.verticalSplitter )
