@@ -203,7 +203,6 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
                     currWidget = self.eventTrackWidgets[i]
                     currWidget.set_active_filter(currHoveredObject.startTime, currHoveredObject.endTime)
 
-        self.updateTable()
 
     # Occurs when the user selects an object in the video track with the mouse
     def handle_child_hover_event(self, trackIndex, trackObjectIndex):
