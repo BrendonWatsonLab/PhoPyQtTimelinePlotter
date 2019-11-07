@@ -9,21 +9,16 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
+from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import *
 
-class TimelineTrackDrawingWidget(QtWidgets.QWidget):
+class TimelineTrackDrawingWidget(TimelineTrackDrawingWidgetBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
-    hover_changed = pyqtSignal(int, int, name='hover_changed')
-    selection_changed = pyqtSignal(int, int, name='selection_changed')
     shouldDismissSelectionUponMouseButtonRelease = True
 
     def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime):
-        super(TimelineTrackDrawingWidget, self).__init__()
-        self.trackID = trackID
+        super(TimelineTrackDrawingWidget, self).__init__(trackID, totalStartTime, totalEndTime)
         self.durationObjects = durationObjects
         self.instantaneousObjects = instantaneousObjects
-        self.totalStartTime = totalStartTime
-        self.totalEndTime = totalEndTime
-        self.totalDuration = (self.totalEndTime - self.totalStartTime)
         self.eventRect = np.repeat(QRect(0,0,0,0), len(durationObjects))
         self.instantaneousEventRect = np.repeat(QRect(0,0,0,0), len(instantaneousObjects))
         # Hovered Object
@@ -33,16 +28,7 @@ class TimelineTrackDrawingWidget(QtWidgets.QWidget):
         # Selected Object
         self.selected_object_index = None
 
-        QToolTip.setFont(QFont('SansSerif', 10))
-        # self.setToolTip('This is a <b>QWidget</b> widget')
-        self.setMouseTracking(True)
-
-    def minimumSizeHint(self) -> QSize:
-        return QSize(500, 50)
-
-    def sizeHint(self) -> QSize:
-        return QSize(800, 100)
-
+    
     def paintEvent( self, event ):
         qp = QtGui.QPainter()
         qp.begin( self )
@@ -136,26 +122,3 @@ class TimelineTrackDrawingWidget(QtWidgets.QWidget):
             self.hover_changed.emit(self.trackID, self.hovered_object_index)
 
 
-    # def event(self, event):
-    #     if event.type() == QEvent.ToolTip:
-    #         helpEvent = event
-    #         index = self.itemAt(helpEvent.pos())
-    #         if index != -1:
-    #             QtGui.QToolTip.showText(helpEvent.globalPos(),
-    #                                     self.shapeItems[index].toolTip())
-    #         else:
-    #             QtGui.QToolTip.hideText()
-    #             event.ignore()
-    #
-    #         return True
-    #
-    #     return super(EventTrackDrawingWidget, self).event(event)
-
-    # def resizeEvent(self, event):
-    #     margin = self.style().pixelMetric(QtGui.QStyle.PM_DefaultTopLevelMargin)
-    #     x = self.width() - margin
-    #     y = self.height() - margin
-    #
-    #     y = self.updateButtonGeometry(self.newCircleButton, x, y)
-    #     y = self.updateButtonGeometry(self.newSquareButton, x, y)
-    #     self.updateButtonGeometry(self.newTriangleButton, x, y)
