@@ -104,10 +104,11 @@ def load_video_events_from_database(as_videoInfo_objects=False):
         else:
             is_deeplabcut_labeled_video = (not is_original_video)
 
-
+        ## TODO: Decide whether to port these changes back to PhoPythonVideoFileParser proj
+        # DO I want to do ".replace(tzinfo=None)" at this stage?
         if as_videoInfo_objects:
             newExperimentContextInfoObj = ExperimentContextInfo(-1, anExperimentID, aCohortID, anAnimalID, notes)
-            newVideoInfoObj = VideoInfo(aFullName, aBaseName, anExtension, aFullParentPath, startTime, endTime, duration, is_original_video, newExperimentContextInfoObj)
+            newVideoInfoObj = VideoInfo(aFullName, aBaseName, anExtension, aFullParentPath, startTime.replace(tzinfo=None), endTime.replace(tzinfo=None), duration, is_original_video, newExperimentContextInfoObj)
             outputVideoFileInfoList.append(newVideoInfoObj)
 
         else:
