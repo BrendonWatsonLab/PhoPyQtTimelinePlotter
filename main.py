@@ -8,6 +8,9 @@ from GUI.PhoEvent import PhoEvent, PhoDurationEvent
 from GUI.TimelineDrawingWindow import *
 from GUI.qtimeline import *
 
+from GUI.HelpWindow.HelpWindowFinal import *
+
+
 if __name__ == '__main__':
     shouldShowGUIWindows = True
     # Show last 7 days worth of data
@@ -18,6 +21,14 @@ if __name__ == '__main__':
         app = QtWidgets.QApplication( sys.argv )
 
         mainWindow = TimelineDrawingWindow(earliestTime, latestTime)
+        windowFlags = mainWindow.windowFlags()
+        # print(windowFlags)
+        windowFlags |= Qt.WindowContextHelpButtonHint # Add the help button to the window
+        # mainWindow.setWindowFlags(windowFlags)
+
+        # mainWindow.setWindowFlags(Qt.WindowContextHelpButtonHint) # This works for some reason. 
+
+
         desktop = QtWidgets.QApplication.desktop()
         resolution = desktop.availableGeometry()
 
@@ -27,4 +38,9 @@ if __name__ == '__main__':
 
         # run
         mainWindow.show()
+
+
+        # helpWindow = HelpWindowFinal()
+        # helpWindow.show()
+
         sys.exit( app.exec_() )
