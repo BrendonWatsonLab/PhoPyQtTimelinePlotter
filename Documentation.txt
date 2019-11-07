@@ -8,3 +8,16 @@ In general each track widget has the following setup:
         self.extendedTracksContainerVboxLayout.addWidget(self.partitionsTrackWidget)
         self.partitionsTrackWidget.setMinimumSize(500,50)
         self.partitionsTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+
+
+
+GENERAL TODO:
+ - "Comments" Track: multiline comments previewed in timeline, with popover text display and editor.
+    - Perhaps preview of text of hovered comments in another pane or the status bar.
+    - Perhaps allowing user color coding or short text to be displayed on the comment itself.
+    - Perhaps support for instantaneous, duration, or file comments.
+
+- "Video" Track: displays videos along a full timeline.
+    - Perhaps multiple video tracks allowed, one for original source videos and another for DeepLabCut processed videos for example.
+

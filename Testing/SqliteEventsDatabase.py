@@ -34,6 +34,13 @@ def save_video_events_to_database(videoEvents):
         else:
             aBBID = 1
 
+        if (not aVideoEvent.extended_data['is_deeplabcut_labeled_video'] is None):
+            is_deeplabcut_labeled_video = aVideoEvent.extended_data['is_deeplabcut_labeled_video']
+            is_original_video = (not is_deeplabcut_labeled_video)
+        else:
+            is_deeplabcut_labeled_video = None
+            is_original_video = None # We know nothing about whether it is an original video
+
         anExperimentID = 1
         aCohortID = 1
         anAnimalID = 3
@@ -42,11 +49,9 @@ def save_video_events_to_database(videoEvents):
         endTime = int(aVideoEvent.endTime.timestamp()*1000.0)
         duration = int(aVideoEvent.computeDuration().total_seconds()*1000.0)
         #anOutRecord = (None, aFullName, aBaseName, anExtension, aFullParentPath, startTime, endTime, duration, aBBID, anExperimentID, aCohortID, anAnimalID, notes)
-        anOutRecord = (aFullName, aBaseName, anExtension, aFullParentPath, startTime, endTime, duration, aBBID, anExperimentID, aCohortID, anAnimalID, notes)
+        anOutRecord = (aFullName, aBaseName, anExtension, aFullParentPath, startTime, endTime, duration, aBBID, anExperimentID, aCohortID, anAnimalID, is_original_video, notes)
         try:
-            #conn.execute("INSERT INTO VideoFile VALUES (aFullName, aBaseName, anExtension, aFullParentPath, startTime, endTime, duration, aBBID, anExperimentID, aCohortID, anAnimalID, notes)")
-            conn.execute('INSERT INTO VideoFile (file_fullname, file_basename, file_extension, file_video_folder, start_date, end_date, duration, behavioral_box_id, experiment_id, cohort_id, animal_id, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', anOutRecord)
-            #conn.execute('INSERT INTO VideoFile VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', anOutRecord)
+            conn.execute('INSERT INTO VideoFile (file_fullname, file_basename, file_extension, file_video_folder, start_date, end_date, duration, behavioral_box_id, experiment_id, cohort_id, animal_id, is_original_video, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', anOutRecord)
             conn.commit()
             num_added_files = num_added_files + 1
 
@@ -54,13 +59,13 @@ def save_video_events_to_database(videoEvents):
             print("Failed to add record! Continuing")
             num_skipped_files = num_skipped_files + 1
             continue
-        except:
-            print("Other exception! Trying to continue")
+        except Exception as e:
+            print(e)
+            print("Other exception! Trying to continue", e)
             num_skipped_files = num_skipped_files + 1
             continue
 
     print('Added ', num_added_files, 'of', num_found_files, 'files to database.')
-    #(file_fullname, file_basename, file_extension, file_video_folder, start_date, end_date, duration, behavioral_box_id, experiment_id, cohort_id, animal_id, notes)
 
     # Save (commit) the changes
     conn.commit()
@@ -80,7 +85,7 @@ def load_video_events_from_database():
     num_added_files = 0
     num_skipped_files = 0
     for aVideoRecord in conn.execute('SELECT * FROM VideoFile ORDER BY start_date'):
-        (aRecordID, aFullName, aBaseName, anExtension, aFullParentPath, startTimeNum, endTimeNum, durationNum, aBBID, anExperimentID, aCohortID, anAnimalID, notes) = aVideoRecord
+        (aRecordID, aFullName, aBaseName, anExtension, aFullParentPath, startTimeNum, endTimeNum, durationNum, aBBID, anExperimentID, aCohortID, anAnimalID, is_original_video, notes) = aVideoRecord
         startTime = datetime.fromtimestamp(float(startTimeNum) / 1000.0)
         endTime = datetime.fromtimestamp(float(endTimeNum) / 1000.0)
         duration = float(durationNum) / 1000.0
@@ -88,9 +93,16 @@ def load_video_events_from_database():
         entries = Path(aFullParentPath)
         aFullPath = entries.joinpath(aFullName).resolve(strict=True)
 
+        # Allow being undecided as to whether a video is an original or not
+        if (is_original_video is None):
+            is_deeplabcut_labeled_video = None
+        else:
+            is_deeplabcut_labeled_video = (not is_original_video)
+
+
         currProperties = {'duration': duration}
         extendedProperties = {'behavioral_box_id': aBBID}
-        currOutputDict = {'base_name': aBaseName, 'file_fullname': aFullName, 'file_extension': anExtension, 'parent_path': aFullParentPath, 'path': aFullPath, 'parsed_date': startTime, 'computed_end_date': endTime, 'properties': currProperties, 'extended_properties': extendedProperties}
+        currOutputDict = {'base_name': aBaseName, 'file_fullname': aFullName, 'file_extension': anExtension, 'parent_path': aFullParentPath, 'path': aFullPath, 'parsed_date': startTime, 'computed_end_date': endTime, 'is_deeplabcut_labeled_video': is_deeplabcut_labeled_video, 'properties': currProperties, 'extended_properties': extendedProperties}
         outputVideoFileInfoList.append(currOutputDict)
         num_found_files = num_found_files + 1
 
