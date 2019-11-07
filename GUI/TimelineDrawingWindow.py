@@ -43,31 +43,12 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         desiredWindowWidth = 900
         self.resize( desiredWindowWidth, 800 )
 
-        # self.rootContainer = QtWidgets.QWidget()
-        
         # Video Player Container: the container that holds the video player
         self.videoPlayerContainer = QtWidgets.QWidget()
         ## TODO: Add the video player to the container.
         ## TODO: Needs a layout
         
-        # mainTimelineContainer: the main container that holds the timelineMasterTrack (the numbers and ticks, as well as the playhead up top) in addition to the tracks
-        # self.mainTimelineContainer = QtWidgets.QWidget()
-
-        #Layout of Main Window
-        # self.mainVBoxLayout = QVBoxLayout(self)
-        # self.mainVBoxLayout.addStretch(1)
-        # self.mainVBoxLayout.addSpacing(2.0)
-
-        # self.mainVBoxLayout.addWidget(self.videoPlayerContainer)
-        # self.videoPlayerContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        # self.videoPlayerContainer.setAutoFillBackground(True)
-
-        # self.mainVBoxLayout.addWidget(self.mainTimelineContainer)
-        # self.mainTimelineContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        # self.mainTimelineContainer.setAutoFillBackground(True)
-
-        # self.rootContainer.setLayout(self.mainVBoxLayout)
-
+        ## Define WIDGETS:
 
         ## Timeline Tracks:
 
@@ -79,8 +60,11 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.partitionsTrackWidget.selection_changed.connect(self.handle_child_selection_event)
         self.partitionsTrackWidget.hover_changed.connect(self.handle_child_hover_event)
 
-        # Labjack Tracks:
+        # Other Tracks:
         self.eventTrackWidgets = []
+
+        # self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(0, None, [], self.totalStartTime, self.totalEndTime)
+        # self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
 
         # Build the bottomPanelWidget
         self.extendedTracksContainer = QtWidgets.QWidget()
@@ -104,30 +88,18 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.partitionsTrackWidget.setMinimumSize(500,50)
         self.partitionsTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
+        #Layout of Main Window:
+
+        # Loop through the eventTrackWidgets and add them
         for i in range(0, len(self.eventTrackWidgets)):
             currWidget = self.eventTrackWidgets[i]
             self.extendedTracksContainerVboxLayout.addWidget(currWidget)
             currWidget.setMinimumSize(500,50)
             currWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-            currWidget.mousePressEvent = currWidget.on_button_clicked
-            currWidget.mouseReleaseEvent = currWidget.on_button_released
 
         self.extendedTracksContainer.setLayout(self.extendedTracksContainerVboxLayout)
 
-
-        #Layout of Main Timeline Container:
-        # self.mainTimelineTracksContainerVboxLayout = QVBoxLayout(self)
-        # self.mainTimelineTracksContainerVboxLayout.addStretch(1)
-        # self.mainTimelineTracksContainerVboxLayout.addSpacing(2.0)
-
-        # self.mainTimelineTracksContainerVboxLayout.addWidget(self.partitionsTrackWidget)
-        # self.partitionsTrackWidget.setMinimumSize(500,50)
-        # self.partitionsTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
-
-        # self.mainTimelineContainer.setLayout(mainTimelineTracksContainerVboxLayout)
-
-
+        # Main Vertical Splitter:
         self.verticalSplitter = QSplitter(Qt.Vertical)
         self.verticalSplitter.setHandleWidth(8)
         self.verticalSplitter.setMouseTracking(True)
@@ -136,9 +108,6 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
 
         # Size the widgets
         self.verticalSplitter.setSizes([100, 600])
-
-        self.partitionsTrackWidget.mousePressEvent = self.partitionsTrackWidget.on_button_clicked
-        self.partitionsTrackWidget.mouseReleaseEvent = self.partitionsTrackWidget.on_button_released
 
         # Complete setup
         self.setCentralWidget( self.verticalSplitter )

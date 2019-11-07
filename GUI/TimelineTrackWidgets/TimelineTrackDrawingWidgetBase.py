@@ -26,6 +26,9 @@ class TimelineTrackDrawingWidgetBase(QtWidgets.QWidget):
         # self.setToolTip('This is a <b>QWidget</b> widget')
         self.setMouseTracking(True)
 
+        self.mousePressEvent = self.on_button_clicked
+        self.mouseReleaseEvent = self.on_button_released
+
     def minimumSizeHint(self) -> QSize:
         return QSize(500, 50)
 
