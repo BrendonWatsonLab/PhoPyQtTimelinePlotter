@@ -27,7 +27,6 @@ class GlobalTimeAdjustmentOptions(Enum):
 
 
 class TimelineDrawingWindow(QtWidgets.QMainWindow):
-
     
     TraceCursorWidth = 2
     TraceCursorColor = QColor(51, 255, 102)  # Green
@@ -60,7 +59,6 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
                 extendedTracksContainer
                 partitionsTrackWidget
         """
-
 
         desiredWindowWidth = 900
         self.resize( desiredWindowWidth, 800 )
