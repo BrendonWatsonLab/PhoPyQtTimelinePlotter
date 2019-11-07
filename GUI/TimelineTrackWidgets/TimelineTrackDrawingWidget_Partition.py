@@ -21,7 +21,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         super(TimelineTrackDrawingWidget_Partition, self).__init__(trackID, totalStartTime, totalEndTime)
         
         self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, 'partitioner', partitionObjects)
-        self.partitionObjects = self.partitionManager.paritions
+        self.partitionObjects = self.partitionManager.partitions
         ## TODO: can reconstruct partitions from cutObjects, but can't recover the specific partition's info.
         self.cutObjects = cutObjects
         
@@ -63,9 +63,23 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
                 break
         return clicked_object_index
 
-    def cut_partition(self, event_x, event_y):
+    def cut_partition(self, partition_index, cut_x):
         # Creates a new cut at the specified position.
-        pass
+        cut_duration_offset = self.offset_to_duration(cut_x)
+        cut_datetime = self.offset_to_datetime(cut_x)
+
+        
+        if self.partitionManager.cut_partition(partition_index, cut_datetime):
+                # Cut successful!
+                print("Cut successful! Cut at ", partition_index)
+                self.cutObjects.append(PhoDurationEvent(cut_datetime))
+                # Update partitions:
+                self.partitionObjects = self.partitionManager.partitions
+                return True
+        else:
+            return False
+        
+
 
 
     def set_active_filter(self, start_datetime, end_datetime):
@@ -89,18 +103,29 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
 
     def on_button_released(self, event):
         # Check if we want to dismiss the selection when the mouse button is released (requiring the user to hold down the button to see the results)
-        if TimelineTrackDrawingWidget_Partition.shouldDismissSelectionUponMouseButtonRelease:
-            self.selected_object_index = self.find_child_object(event.x(), event.y())
+        self.selected_object_index = self.find_child_object(event.x(), event.y())
 
-            if self.selected_object_index is None:
-                self.selection_changed.emit(self.trackID, -1)
-            else:
+        if self.selected_object_index is None:
+            if TimelineTrackDrawingWidget_Partition.shouldDismissSelectionUponMouseButtonRelease:
+                self.selection_changed.emit(self.trackID, -1) # Deselect
+
+            # No partitions to create
+            return
+        else:
+            cut_partition_index = self.selected_object_index
+            if TimelineTrackDrawingWidget_Partition.shouldDismissSelectionUponMouseButtonRelease:
                 self.partitionObjects[self.selected_object_index].on_button_released(event)
                 self.selection_changed.emit(self.trackID, self.selected_object_index)
-                self.update()
+            
+            # Create the partition cut:
+            was_cut_made = self.cut_partition(cut_partition_index, event.x())
+            
+            self.update()
+        
+            
+            
 
-        # Create the partition cut:
-        self.cut_partition(event.x(), event.y())
+
 
 
     def keyPressEvent(self, event):

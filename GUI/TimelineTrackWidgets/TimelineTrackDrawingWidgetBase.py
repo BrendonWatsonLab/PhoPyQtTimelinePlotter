@@ -47,3 +47,16 @@ class TimelineTrackDrawingWidgetBase(QtWidgets.QWidget):
     def on_mouse_moved(self, event):
         pass
 
+    # Timeline position/time converion functions:
+    def offset_to_percent(self, event_x, event_y):
+        percent_x = event_x / self.width()
+        percent_y = event_y / self.height()
+        return (percent_x, percent_y)
+
+    def offset_to_duration(self, event_x):
+        (percent_x, percent_y) = self.offset_to_percent(event_x, 0.0)
+        return (self.totalDuration * percent_x)
+
+    def offset_to_datetime(self, event_x):
+        duration_offset = self.offset_to_duration(event_x)
+        return (self.totalStartTime + duration_offset)

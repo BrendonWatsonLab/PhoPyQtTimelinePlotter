@@ -10,8 +10,9 @@ from GUI.qtimeline import *
 
 if __name__ == '__main__':
     shouldShowGUIWindows = True
-    earliestTime = dt.datetime.now()
-    latestTime = dt.datetime.now() - dt.timedelta(days=7)
+    # Show last 7 days worth of data
+    earliestTime = dt.datetime.now() - dt.timedelta(days=7)
+    latestTime = dt.datetime.now()
     if (shouldShowGUIWindows):
         # create the application and the main window
         app = QtWidgets.QApplication( sys.argv )

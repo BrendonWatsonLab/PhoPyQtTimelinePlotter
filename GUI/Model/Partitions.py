@@ -41,9 +41,9 @@ class Partitioner(QObject):
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
         self.name = name
         if partitions:
-            self.paritions = partitions
+            self.partitions = partitions
         else:
-            self.paritions = [PhoDurationEvent(self.totalStartTime, self.totalEndTime)] # Create default partition
+            self.partitions = [PhoDurationEvent(self.totalStartTime, self.totalEndTime)] # Create default partition
     
         self.extended_data = extended_data
 
@@ -55,5 +55,20 @@ class Partitioner(QObject):
         return self.startTime < otherEvent.startTime
 
     def __str__(self):
-        return 'Event {0}: startTime: {1}, paritions: {2}, extended_data: {3}'.format(self.name, self.paritions, self.color, str(self.extended_data))
+        return 'Event {0}: startTime: {1}, partitions: {2}, extended_data: {3}'.format(self.name, self.partitions, self.color, str(self.extended_data))
+
+    def cut_partition(self, cut_partition_index, cut_datetime):
+        # Creates a cut at a given datetime
+        partition_to_cut = self.partitions[cut_partition_index]
+        if (partition_to_cut.startTime < cut_datetime < partition_to_cut.endTime):
+            # only can cut if it's in the appropriate partition.
+            # Create a new partition and insert it after the partition to cut. It should span from [cut_datetime, to the end of the cut partition]
+            self.partitions.insert(cut_partition_index+1, PhoDurationEvent(cut_datetime, partition_to_cut.endTime))
+            self.partitions[cut_partition_index].endTime = cut_datetime # Truncate the partition to cut to the cut_datetime
+            return True
+        else:
+            print('Error! Tried to cut invalid partition! parition[{0}]: (start: {1}, attemptted_cut: {2}, end: {3})'.format(cut_partition_index, partition_to_cut.startTime, cut_datetime, partition_to_cut.endTime))
+            return False
+
+        # The first partition keeps the metadata/info, while the second is initialized to a blank partition
 
