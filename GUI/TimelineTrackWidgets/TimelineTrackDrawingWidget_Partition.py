@@ -74,7 +74,6 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         cut_duration_offset = self.offset_to_duration(cut_x)
         cut_datetime = self.offset_to_datetime(cut_x)
 
-        
         if self.partitionManager.cut_partition(partition_index, cut_datetime):
                 # Cut successful!
                 print("Cut successful! Cut at ", partition_index)
@@ -123,8 +122,16 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
                 self.partitionObjects[self.selected_object_index].on_button_released(event)
                 self.selection_changed.emit(self.trackID, self.selected_object_index)
             
-            # Create the partition cut:
-            was_cut_made = self.cut_partition(cut_partition_index, event.x())
+            if event.button() == Qt.LeftButton:
+                print("Left click")
+            elif event.button() == Qt.RightButton:
+                print("Right click")
+            elif event.button() == Qt.MiddleButton:
+                print("Middle click")
+                # Create the partition cut:
+                was_cut_made = self.cut_partition(cut_partition_index, event.x())
+            else:
+                print("Unknown click event!")
             
             self.update()
         
