@@ -12,6 +12,12 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 from GUI.Model.Partitions import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import *
 
+## TODO:
+"""
+TODO: Add "undo" functionality to creating cuts. Can use the "cutObjects" to find the last created cut, find the partition created at that timestamp, grab its endTime and then delete it, and then set the endTime of the partition just before it.
+
+"""
+
 # Consts of N "Cuts" that separate a block into N+1 "Partitions"
 #  
 class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
