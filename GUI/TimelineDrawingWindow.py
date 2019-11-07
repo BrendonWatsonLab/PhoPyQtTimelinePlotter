@@ -28,7 +28,10 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
-    
+
+        self.videoInfoObjects = load_video_events_from_database(as_videoInfo_objects=True)
+        
+
         self.initUI()
 
 

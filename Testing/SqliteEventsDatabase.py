@@ -3,6 +3,8 @@ from sqlite3 import Error
 from pathlib import Path
 from datetime import datetime
 
+from GUI.Model.Videos import *
+
 def create_connection(db_file='G:\Google Drive\Modern Behavior Box\Results - Data\BehavioralBoxDatabase.db'):
     """ create a database connection to the SQLite database
         specified by the db_file
@@ -76,7 +78,10 @@ def save_video_events_to_database(videoEvents):
     return
 
 
-def load_video_events_from_database():
+def load_video_events_from_database(as_videoInfo_objects=False):
+    """
+    as_videoInfo_objects: if true, outputs "VideoInfo" objects instead of an array of dictionaries.
+    """
     outputVideoFileInfoList = []
     print("Loading video events from database:")
     conn = create_connection()
@@ -100,10 +105,17 @@ def load_video_events_from_database():
             is_deeplabcut_labeled_video = (not is_original_video)
 
 
-        currProperties = {'duration': duration}
-        extendedProperties = {'behavioral_box_id': aBBID}
-        currOutputDict = {'base_name': aBaseName, 'file_fullname': aFullName, 'file_extension': anExtension, 'parent_path': aFullParentPath, 'path': aFullPath, 'parsed_date': startTime, 'computed_end_date': endTime, 'is_deeplabcut_labeled_video': is_deeplabcut_labeled_video, 'properties': currProperties, 'extended_properties': extendedProperties}
-        outputVideoFileInfoList.append(currOutputDict)
+        if as_videoInfo_objects:
+            newExperimentContextInfoObj = ExperimentContextInfo(-1, anExperimentID, aCohortID, anAnimalID, notes)
+            newVideoInfoObj = VideoInfo(aFullName, aBaseName, anExtension, aFullParentPath, startTime, endTime, duration, is_original_video, newExperimentContextInfoObj)
+            outputVideoFileInfoList.append(newVideoInfoObj)
+
+        else:
+            currProperties = {'duration': duration}
+            extendedProperties = {'behavioral_box_id': aBBID}
+            currOutputDict = {'base_name': aBaseName, 'file_fullname': aFullName, 'file_extension': anExtension, 'parent_path': aFullParentPath, 'path': aFullPath, 'parsed_date': startTime, 'computed_end_date': endTime, 'is_deeplabcut_labeled_video': is_deeplabcut_labeled_video, 'properties': currProperties, 'extended_properties': extendedProperties}
+            outputVideoFileInfoList.append(currOutputDict)
+
         num_found_files = num_found_files + 1
 
     print('Found ', num_found_files, 'files in the database.')
