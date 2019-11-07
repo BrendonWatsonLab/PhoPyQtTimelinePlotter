@@ -21,3 +21,4 @@ GENERAL TODO:
 - "Video" Track: displays videos along a full timeline.
     - Perhaps multiple video tracks allowed, one for original source videos and another for DeepLabCut processed videos for example.
 
+- Need to be able to adjust "zoom".

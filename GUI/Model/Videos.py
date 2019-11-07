@@ -44,7 +44,7 @@ class VideoInfo(QObject):
         self.startTime = startTime
         self.endTime = endTime
         self.duration = duration
-        self.is_original_video = is_original_video
+        self.is_original_video = is_original_video # true if it's the original video as opposed to a pre-processed or labeled version
         self.experimentContextInfo = experimentContextInfo
         self.extended_data = extended_data
 
@@ -55,10 +55,6 @@ class VideoInfo(QObject):
     # Also recognizes the DeepLabCut labeled video versions as the same as the base video
     def is_same_video_content(self, otherEvent):
         return self.startTime == otherEvent.startTime and self.endTime == otherEvent.endTime and self.experimentContextInfo == otherEvent.experimentContextInfo
-
-    # Returns true if it's the original video as opposed to a pre-processed or labeled version
-    def is_original_video(self):
-        return True
 
     # Less Than (<) operator
     def __lt__(self, otherEvent):
