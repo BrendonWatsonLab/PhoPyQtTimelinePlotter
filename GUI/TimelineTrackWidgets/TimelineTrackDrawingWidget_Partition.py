@@ -10,21 +10,16 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 from GUI.Model.Partitions import *
+from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import *
 
 # Consts of N "Cuts" that separate a block into N+1 "Partitions"
 #  
-class TimelineTrackDrawingWidget_Partition(QtWidgets.QWidget):
-    # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
-    hover_changed = pyqtSignal(int, int, name='hover_changed')
-    selection_changed = pyqtSignal(int, int, name='selection_changed')
+class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
     shouldDismissSelectionUponMouseButtonRelease = True
 
     def __init__(self, trackID, partitionObjects, cutObjects, totalStartTime, totalEndTime):
-        super(TimelineTrackDrawingWidget_Partition, self).__init__()
-        self.trackID = trackID
-        self.totalStartTime = totalStartTime
-        self.totalEndTime = totalEndTime
-        self.totalDuration = (self.totalEndTime - self.totalStartTime)
+        super(TimelineTrackDrawingWidget_Partition, self).__init__(trackID, totalStartTime, totalEndTime)
+        
         self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, 'partitioner', partitionObjects)
         self.partitionObjects = self.partitionManager.paritions
         ## TODO: can reconstruct partitions from cutObjects, but can't recover the specific partition's info.
@@ -42,12 +37,6 @@ class TimelineTrackDrawingWidget_Partition(QtWidgets.QWidget):
         QToolTip.setFont(QFont('SansSerif', 10))
         # self.setToolTip('This is a <b>QWidget</b> widget')
         self.setMouseTracking(True)
-
-    def minimumSizeHint(self) -> QSize:
-        return QSize(500, 50)
-
-    def sizeHint(self) -> QSize:
-        return QSize(800, 100)
 
     def paintEvent( self, event ):
         qp = QtGui.QPainter()
@@ -77,6 +66,11 @@ class TimelineTrackDrawingWidget_Partition(QtWidgets.QWidget):
                 clicked_object_index = index
                 break
         return clicked_object_index
+
+    def cut_partition(self, event_x, event_y):
+        # Creates a new cut at the specified position.
+        pass
+
 
     def set_active_filter(self, start_datetime, end_datetime):
         # Draw the duration objects
@@ -108,6 +102,10 @@ class TimelineTrackDrawingWidget_Partition(QtWidgets.QWidget):
                 self.partitionObjects[self.selected_object_index].on_button_released(event)
                 self.selection_changed.emit(self.trackID, self.selected_object_index)
                 self.update()
+
+        # Create the partition cut:
+        self.cut_partition(event.x(), event.y())
+
 
     def keyPressEvent(self, event):
         gey = event.key()
