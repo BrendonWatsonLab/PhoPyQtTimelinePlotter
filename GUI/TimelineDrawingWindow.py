@@ -4,6 +4,8 @@
 import sys
 from datetime import datetime, timezone, timedelta
 import numpy as np
+from enum import Enum
+
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
 from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget
@@ -18,12 +20,24 @@ from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Partition import *
 
 from Testing.SqliteEventsDatabase import load_video_events_from_database
 
+class GlobalTimeAdjustmentOptions(Enum):
+        ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.
+        ConstrainVideosShownToGlobal = 2 #  keeps the global the same, and only shows the videos within the global start and end range
+        ConstantOffsetFromMostRecentVideo = 3  # adjusts the global to a fixed time prior to the end of the most recent video.
+
+
 class TimelineDrawingWindow(QtWidgets.QMainWindow):
+
+    
     TraceCursorWidth = 2
     TraceCursorColor = QColor(51, 255, 102)  # Green
 
-    ConstrainToVideoTimeRange = True # If true, adjusts the global start and end times for the timeline to the range of the loaded videos.
-    # If false, only shows the videos within the global start and end range
+    GlobalTimelineConstraintOptions = GlobalTimeAdjustmentOptions.ConstantOffsetFromMostRecentVideo
+    # ConstrainToVideoTimeRange = True # If true, adjusts the global start and end times for the timeline to the range of the loaded videos.
+    # # If false, only shows the videos within the global start and end range
+
+    # Only used if GlobalTimelineConstraintOptions is .ConstantOffsetFromMostRecentVideo. Specifies the offset prior to the end of the last video which to start the global timeline.
+    ConstantOffsetFromMostRecentVideoDuration = timedelta(days=7)
 
     def __init__(self, totalStartTime, totalEndTime):
         super(TimelineDrawingWindow, self).__init__()
@@ -148,20 +162,19 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
 
+    # Build the PhoDurationEvent objects that are displayed in the main video timeline to represent the videos
     def build_video_display_events(self):
         videoDates = []
         videoEndDates = []
-        self.videoLabels = []
+        # self.videoLabels = []
         self.videoEventDisplayObjects = []
         for videoInfoItem in self.videoInfoObjects:
-            videoDates.append(videoInfoItem.startTime)
-            videoEndDates.append(videoInfoItem.endTime)
-            self.videoLabels.append(videoInfoItem.fullName)
-
-            # Event Generation
-            currEvent = PhoDurationEvent(videoInfoItem.startTime, videoInfoItem.endTime,
-                                        videoInfoItem.fullName, QColor(51,204,255), {})
-            self.videoEventDisplayObjects.append(currEvent)
+            if (videoInfoItem.is_original_video):
+                videoDates.append(videoInfoItem.startTime)
+                videoEndDates.append(videoInfoItem.endTime)
+                # Event Generation
+                currEvent = PhoDurationEvent(videoInfoItem.startTime, videoInfoItem.endTime, videoInfoItem.fullName, QColor(51,204,255), {})
+                self.videoEventDisplayObjects.append(currEvent)
 
         self.videoDates = np.array(videoDates)
         self.videoEndDates = np.array(videoEndDates)
@@ -171,14 +184,25 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         print('earliest video: ', self.earliestVideoTime)
         print('latest video: ', self.latestVideoTime)
 
-        if TimelineDrawingWindow.ConstrainToVideoTimeRange:
+
+        if TimelineDrawingWindow.GlobalTimelineConstraintOptions is GlobalTimeAdjustmentOptions.ConstrainGlobalToVideoTimeRange:
             # adjusts the global start and end times for the timeline to the range of the loaded videos.
             self.update_global_start_end_times(self.earliestVideoTime, self.latestVideoTime)
-
-        else:
+        elif TimelineDrawingWindow.GlobalTimelineConstraintOptions is GlobalTimeAdjustmentOptions.ConstrainVideosShownToGlobal:
             # Otherwise filter the videos
             ## TODO: Filter the videoEvents, self.videoDates, self.videoEndDates, and labels if we need them to the global self.totalStartTime and self.totalEndTime range
             pass
+        elif TimelineDrawingWindow.GlobalTimelineConstraintOptions is GlobalTimeAdjustmentOptions.ConstantOffsetFromMostRecentVideo:
+            # Otherwise filter the videos
+            newLatestTime = self.latestVideoTime
+            newEarliestTime = newLatestTime - TimelineDrawingWindow.ConstantOffsetFromMostRecentVideoDuration
+            self.update_global_start_end_times(newEarliestTime, newLatestTime)
+
+            ## TODO: Filter the videoEvents, self.videoDates, self.videoEndDates, and labels if we need them to the global self.totalStartTime and self.totalEndTime range
+            # Set an "isInViewport" option or something
+        else:
+            print('INVALID ENUM VALUE!!!')
+
         
 
     # Timeline position/time converion functions:
