@@ -22,15 +22,16 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
     TraceCursorWidth = 2
     TraceCursorColor = QColor(51, 255, 102)  # Green
 
+    ConstrainToVideoTimeRange = True # If true, adjusts the global start and end times for the timeline to the range of the loaded videos.
+    # If false, only shows the videos within the global start and end range
+
     def __init__(self, totalStartTime, totalEndTime):
         super(TimelineDrawingWindow, self).__init__()
 
-        self.totalStartTime = totalStartTime
-        self.totalEndTime = totalEndTime
-        self.totalDuration = (self.totalEndTime - self.totalStartTime)
+        self.update_global_start_end_times(totalStartTime, totalEndTime)
 
         self.videoInfoObjects = load_video_events_from_database(as_videoInfo_objects=True)
-        
+        self.build_video_display_events()
 
         self.initUI()
 
@@ -65,8 +66,9 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
 
         # Video Track
         ## TODO: The video tracks must set:
-        # self.mainVideoTrack.selection_changed.connect(self.handle_child_selection_event)
-        # self.mainVideoTrack.hover_changed.connect(self.handle_child_hover_event)
+        self.mainVideoTrack = TimelineTrackDrawingWidget_Events(-1, self.videoEventDisplayObjects, [], self.totalStartTime, self.totalEndTime)
+        self.mainVideoTrack.selection_changed.connect(self.handle_child_selection_event)
+        self.mainVideoTrack.hover_changed.connect(self.handle_child_hover_event)
 
         
         # Other Tracks:
@@ -94,6 +96,10 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.extendedTracksContainerVboxLayout.addWidget(self.timelineMasterTrackWidget)
         self.timelineMasterTrackWidget.setMinimumSize(500,50)
         self.timelineMasterTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+        self.extendedTracksContainerVboxLayout.addWidget(self.mainVideoTrack)
+        self.mainVideoTrack.setMinimumSize(500,50)
+        self.mainVideoTrack.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
         self.extendedTracksContainerVboxLayout.addWidget(self.partitionsTrackWidget)
         self.partitionsTrackWidget.setMinimumSize(500,50)
@@ -136,6 +142,44 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.cursorY = 0.0
         #self.cursorTraceRect = QRect(0,0,0,0)
 
+
+    def update_global_start_end_times(self, totalStartTime, totalEndTime):
+        self.totalStartTime = totalStartTime
+        self.totalEndTime = totalEndTime
+        self.totalDuration = (self.totalEndTime - self.totalStartTime)
+
+    def build_video_display_events(self):
+        videoDates = []
+        videoEndDates = []
+        self.videoLabels = []
+        self.videoEventDisplayObjects = []
+        for videoInfoItem in self.videoInfoObjects:
+            videoDates.append(videoInfoItem.startTime)
+            videoEndDates.append(videoInfoItem.endTime)
+            self.videoLabels.append(videoInfoItem.fullName)
+
+            # Event Generation
+            currEvent = PhoDurationEvent(videoInfoItem.startTime, videoInfoItem.endTime,
+                                        videoInfoItem.fullName, QColor(51,204,255), {})
+            self.videoEventDisplayObjects.append(currEvent)
+
+        self.videoDates = np.array(videoDates)
+        self.videoEndDates = np.array(videoEndDates)
+        
+        self.earliestVideoTime = self.videoDates.min()
+        self.latestVideoTime = self.videoEndDates.max()
+        print('earliest video: ', self.earliestVideoTime)
+        print('latest video: ', self.latestVideoTime)
+
+        if TimelineDrawingWindow.ConstrainToVideoTimeRange:
+            # adjusts the global start and end times for the timeline to the range of the loaded videos.
+            self.update_global_start_end_times(self.earliestVideoTime, self.latestVideoTime)
+
+        else:
+            # Otherwise filter the videos
+            ## TODO: Filter the videoEvents, self.videoDates, self.videoEndDates, and labels if we need them to the global self.totalStartTime and self.totalEndTime range
+            pass
+        
 
     # Timeline position/time converion functions:
     def offset_to_percent(self, event_x, event_y):
