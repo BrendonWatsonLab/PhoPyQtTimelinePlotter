@@ -16,6 +16,7 @@ from GUI.qtimeline import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Events import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Partition import *
 
+from Testing.SqliteEventsDatabase import load_video_events_from_database
 
 class TimelineDrawingWindow(QtWidgets.QMainWindow):
     TraceCursorWidth = 2
