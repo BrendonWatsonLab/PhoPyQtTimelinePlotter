@@ -12,6 +12,8 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 # from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget import *
 from GUI.qtimeline import *
+
+from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Events import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Partition import *
 
 

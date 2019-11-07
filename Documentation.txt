@@ -1,0 +1,10 @@
+In general each track widget has the following setup:
+
+
+## Creation:
+        self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(-1, None, [], self.totalStartTime, self.totalEndTime)
+
+## Layout:
+        self.extendedTracksContainerVboxLayout.addWidget(self.partitionsTrackWidget)
+        self.partitionsTrackWidget.setMinimumSize(500,50)
+        self.partitionsTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
