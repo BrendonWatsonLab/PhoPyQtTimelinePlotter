@@ -40,12 +40,16 @@ class TimelineTrackDrawingWidget_Events(TimelineTrackDrawingWidgetBase):
         # qp.setPen(QtGui.QPen(EventsDrawingWindow.TraceCursorColor, 20.0, join=Qt.MiterJoin))
         # qp.drawRect(event.rect().x(), event.rect().y(), EventsDrawingWindow.TraceCursorWidth, self.height())
 
+        ## TODO: Use viewport information to only draw the currently displayed rectangles instead of having to draw it all at once.
+        # drawRect = event.rect()
+        drawRect = self.rect()
+
         # Draw the duration objects
         for (index, obj) in enumerate(self.durationObjects):
-            self.eventRect[index] = obj.paint( qp, self.totalStartTime, self.totalEndTime, self.totalDuration, event.rect())
+            self.eventRect[index] = obj.paint( qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
         # Draw the instantaneous event objects
         for (index, obj) in enumerate(self.instantaneousObjects):
-            self.instantaneousEventRect[index] = obj.paint(qp, self.totalStartTime, self.totalEndTime, self.totalDuration, event.rect())
+            self.instantaneousEventRect[index] = obj.paint(qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
 
         qp.end()
 
