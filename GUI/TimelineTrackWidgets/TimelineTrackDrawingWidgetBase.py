@@ -15,13 +15,12 @@ class TimelineTrackDrawingWidgetBase(QtWidgets.QWidget):
     hover_changed = pyqtSignal(int, int, name='hover_changed')
     selection_changed = pyqtSignal(int, int, name='selection_changed')
 
-    def __init__(self, trackID, totalStartTime, totalEndTime, fixedLength=None):
+    def __init__(self, trackID, totalStartTime, totalEndTime):
         super(TimelineTrackDrawingWidgetBase, self).__init__()
         self.trackID = trackID
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
-        self.fixedLength = fixedLength
         
         QToolTip.setFont(QFont('SansSerif', 10))
         
@@ -30,6 +29,7 @@ class TimelineTrackDrawingWidgetBase(QtWidgets.QWidget):
         p.setColor(QPalette.Background, Qt.red)
         self.setAutoFillBackground(True)
         self.setPalette(p)
+
         # self.setToolTip('This is a <b>QWidget</b> widget')
         self.setMouseTracking(True)
 
@@ -37,16 +37,10 @@ class TimelineTrackDrawingWidgetBase(QtWidgets.QWidget):
         self.mouseReleaseEvent = self.on_button_released
 
     def minimumSizeHint(self) -> QSize:
-        if self.fixedLength:
-            return QSize(self.fixedLength, 50)
-        else:
-            return QSize(500, 50)
+        return QSize(500, 50)
 
     def sizeHint(self) -> QSize:
-        if self.fixedLength:
-            return QSize(self.fixedLength, 100)
-        else:
-            return QSize(800, 100)
+        return QSize(800, 100)
         
     def paintEvent( self, event ):
         pass

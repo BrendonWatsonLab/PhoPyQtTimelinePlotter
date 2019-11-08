@@ -23,8 +23,8 @@ TODO: Add "undo" functionality to creating cuts. Can use the "cutObjects" to fin
 class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
     shouldDismissSelectionUponMouseButtonRelease = True
 
-    def __init__(self, trackID, partitionObjects, cutObjects, totalStartTime, totalEndTime, fixedLength=None):
-        super(TimelineTrackDrawingWidget_Partition, self).__init__(trackID, totalStartTime, totalEndTime, fixedLength)
+    def __init__(self, trackID, partitionObjects, cutObjects, totalStartTime, totalEndTime):
+        super(TimelineTrackDrawingWidget_Partition, self).__init__(trackID, totalStartTime, totalEndTime)
         
         self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, 'partitioner', partitionObjects)
         self.partitionObjects = self.partitionManager.partitions
