@@ -64,6 +64,9 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         desiredWindowWidth = 900
         self.resize( desiredWindowWidth, 800 )
 
+        # minimumWidgetWidth = 500
+        minimumWidgetWidth = self.width() * self.scaleMultiplier
+
         # Video Player Container: the container that holds the video player
         self.videoPlayerContainer = QtWidgets.QWidget()
         ## TODO: Add the video player to the container.
@@ -74,7 +77,8 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         ## Timeline Tracks:
 
         # Timeline Numberline track:
-        self.timelineMasterTrackWidget = QTimeLine(360, desiredWindowWidth)
+        masterTimelineDurationSeconds = self.totalDuration.total_seconds()
+        self.timelineMasterTrackWidget = QTimeLine(masterTimelineDurationSeconds, minimumWidgetWidth)
 
 
         # Video Track
@@ -97,7 +101,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.extendedTracksContainer = QtWidgets.QWidget()
         self.extendedTracksContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.extendedTracksContainer.setAutoFillBackground(True)
-        
+
         # Debug Pallete
         # p = self.labjackEventsContainer.palette()
         # p.setColor(self.labjackEventsContainer.backgroundRole(), Qt.red)
@@ -108,15 +112,14 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.extendedTracksContainerVboxLayout.addStretch(1)
         self.extendedTracksContainerVboxLayout.addSpacing(2.0)
 
-        # minimumWidgetWidth = 500
-        minimumWidgetWidth = self.width() * self.scaleMultiplier
+
 
         self.extendedTracksContainerVboxLayout.addWidget(self.timelineMasterTrackWidget)
-        self.timelineMasterTrackWidget.setMinimumSize(minimumWidgetWidth,50)
+        self.timelineMasterTrackWidget.setMinimumSize(minimumWidgetWidth, 50)
         self.timelineMasterTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
         self.extendedTracksContainerVboxLayout.addWidget(self.mainVideoTrack)
-        self.mainVideoTrack.setMinimumSize(minimumWidgetWidth,50)
+        self.mainVideoTrack.setMinimumSize(minimumWidgetWidth, 50)
         self.mainVideoTrack.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
 
