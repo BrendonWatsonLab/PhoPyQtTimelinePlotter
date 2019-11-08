@@ -15,12 +15,13 @@ class TimelineTrackDrawingWidgetBase(QtWidgets.QWidget):
     hover_changed = pyqtSignal(int, int, name='hover_changed')
     selection_changed = pyqtSignal(int, int, name='selection_changed')
 
-    def __init__(self, trackID, totalStartTime, totalEndTime):
+    def __init__(self, trackID, totalStartTime, totalEndTime, fixedLength=None):
         super(TimelineTrackDrawingWidgetBase, self).__init__()
         self.trackID = trackID
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
+        self.fixedLength = fixedLength
         
         QToolTip.setFont(QFont('SansSerif', 10))
         
@@ -36,11 +37,17 @@ class TimelineTrackDrawingWidgetBase(QtWidgets.QWidget):
         self.mouseReleaseEvent = self.on_button_released
 
     def minimumSizeHint(self) -> QSize:
-        return QSize(500, 50)
+        if self.fixedLength:
+            return QSize(self.fixedLength, 50)
+        else:
+            return QSize(500, 50)
 
     def sizeHint(self) -> QSize:
-        return QSize(800, 100)
-
+        if self.fixedLength:
+            return QSize(self.fixedLength, 100)
+        else:
+            return QSize(800, 100)
+        
     def paintEvent( self, event ):
         pass
  
@@ -57,6 +64,14 @@ class TimelineTrackDrawingWidgetBase(QtWidgets.QWidget):
         pass
 
     # Timeline position/time converion functions:
+    # Get scale from length
+    def getScale(self):
+        return float(self.totalDuration)/float(self.width())
+
+    # Get duration
+    def getDuration(self):
+        return self.duration
+
     def offset_to_percent(self, event_x, event_y):
         percent_x = event_x / self.width()
         percent_y = event_y / self.height()

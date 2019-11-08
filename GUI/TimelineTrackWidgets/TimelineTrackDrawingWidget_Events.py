@@ -15,8 +15,8 @@ class TimelineTrackDrawingWidget_Events(TimelineTrackDrawingWidgetBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
     shouldDismissSelectionUponMouseButtonRelease = True
 
-    def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime):
-        super(TimelineTrackDrawingWidget_Events, self).__init__(trackID, totalStartTime, totalEndTime)
+    def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime, fixedLength=None):
+        super(TimelineTrackDrawingWidget_Events, self).__init__(trackID, totalStartTime, totalEndTime, fixedLength)
         self.durationObjects = durationObjects
         self.instantaneousObjects = instantaneousObjects
         self.eventRect = np.repeat(QRect(0,0,0,0), len(durationObjects))
