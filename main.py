@@ -26,8 +26,7 @@ if __name__ == '__main__':
         windowFlags |= Qt.WindowContextHelpButtonHint # Add the help button to the window
         # mainWindow.setWindowFlags(windowFlags)
 
-        # mainWindow.setWindowFlags(Qt.WindowContextHelpButtonHint) # This works for some reason. 
-
+        # mainWindow.setWindowFlags(Qt.WindowContextHelpButtonHint) # This works for some reason, but gets rid of the minimize, maximize, and close buttons
 
         desktop = QtWidgets.QApplication.desktop()
         resolution = desktop.availableGeometry()
