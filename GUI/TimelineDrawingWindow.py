@@ -7,7 +7,7 @@ import numpy as np
 from enum import Enum
 
 from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
+from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea
 from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
@@ -41,6 +41,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
     def __init__(self, totalStartTime, totalEndTime):
         super(TimelineDrawingWindow, self).__init__()
 
+        self.scaleMultiplier = 4.0
         self.update_global_start_end_times(totalStartTime, totalEndTime)
 
         self.videoInfoObjects = load_video_events_from_database(as_videoInfo_objects=True)
@@ -63,6 +64,9 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         desiredWindowWidth = 900
         self.resize( desiredWindowWidth, 800 )
 
+        # minimumWidgetWidth = 500
+        minimumWidgetWidth = self.width() * self.scaleMultiplier
+
         # Video Player Container: the container that holds the video player
         self.videoPlayerContainer = QtWidgets.QWidget()
         ## TODO: Add the video player to the container.
@@ -73,7 +77,8 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         ## Timeline Tracks:
 
         # Timeline Numberline track:
-        self.timelineMasterTrackWidget = QTimeLine(360, desiredWindowWidth)
+        masterTimelineDurationSeconds = self.totalDuration.total_seconds()
+        self.timelineMasterTrackWidget = QTimeLine(masterTimelineDurationSeconds, minimumWidgetWidth)
 
 
         # Video Track
@@ -87,6 +92,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.eventTrackWidgets = []
 
         self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(0, None, [], self.totalStartTime, self.totalEndTime)
+        self.eventTrackWidgets.append(self.partitionsTrackWidget)
 
         self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(1, None, [], self.totalStartTime, self.totalEndTime)
         self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
@@ -95,6 +101,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.extendedTracksContainer = QtWidgets.QWidget()
         self.extendedTracksContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.extendedTracksContainer.setAutoFillBackground(True)
+
         # Debug Pallete
         # p = self.labjackEventsContainer.palette()
         # p.setColor(self.labjackEventsContainer.backgroundRole(), Qt.red)
@@ -105,21 +112,16 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.extendedTracksContainerVboxLayout.addStretch(1)
         self.extendedTracksContainerVboxLayout.addSpacing(2.0)
 
+
+
         self.extendedTracksContainerVboxLayout.addWidget(self.timelineMasterTrackWidget)
-        self.timelineMasterTrackWidget.setMinimumSize(500,50)
+        self.timelineMasterTrackWidget.setMinimumSize(minimumWidgetWidth, 50)
         self.timelineMasterTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
         self.extendedTracksContainerVboxLayout.addWidget(self.mainVideoTrack)
-        self.mainVideoTrack.setMinimumSize(500,50)
+        self.mainVideoTrack.setMinimumSize(minimumWidgetWidth, 50)
         self.mainVideoTrack.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
-        self.extendedTracksContainerVboxLayout.addWidget(self.partitionsTrackWidget)
-        self.partitionsTrackWidget.setMinimumSize(500,50)
-        self.partitionsTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
-        # self.extendedTracksContainerVboxLayout.addWidget(self.partitionsTwoTrackWidget)
-        # self.partitionsTwoTrackWidget.setMinimumSize(500,50)
-        # self.partitionsTwoTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
         #Layout of Main Window:
 
@@ -127,17 +129,27 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         for i in range(0, len(self.eventTrackWidgets)):
             currWidget = self.eventTrackWidgets[i]
             self.extendedTracksContainerVboxLayout.addWidget(currWidget)
-            currWidget.setMinimumSize(500,50)
+            currWidget.setMinimumSize(minimumWidgetWidth,50)
             currWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
         self.extendedTracksContainer.setLayout(self.extendedTracksContainerVboxLayout)
+
+
+
+        self.extendedTracksContainer.setFixedWidth(minimumWidgetWidth)
+        ## Scroll Area: should contain only the extendedTracksContainer (not the video container)
+        self.timelineScroll = QScrollArea()
+        self.timelineScroll.setWidget(self.extendedTracksContainer)
+        self.timelineScroll.setWidgetResizable(True)
+        # self.timelineScroll.setFixedHeight(400)
+        # self.timelineScroll.setFixedWidth(self.width())
 
         # Main Vertical Splitter:
         self.verticalSplitter = QSplitter(Qt.Vertical)
         self.verticalSplitter.setHandleWidth(8)
         self.verticalSplitter.setMouseTracking(True)
         self.verticalSplitter.addWidget(self.videoPlayerContainer)
-        self.verticalSplitter.addWidget(self.extendedTracksContainer)
+        self.verticalSplitter.addWidget(self.timelineScroll)
 
         # Size the widgets
         self.verticalSplitter.setSizes([100, 600])
@@ -205,7 +217,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
 
     # Timeline position/time converion functions:
     def offset_to_percent(self, event_x, event_y):
-        percent_x = event_x / self.width()
+        percent_x = event_x / (self.width() * self.scaleMultiplier)
         percent_y = event_y / self.height()
         return (percent_x, percent_y)
 

@@ -6,7 +6,7 @@ from datetime import datetime, timezone, timedelta
 import numpy as np
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget,QTableWidgetItem
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
+from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPalette
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 # The base timeline track widget which all others should inherit from
@@ -23,6 +23,13 @@ class TimelineTrackDrawingWidgetBase(QtWidgets.QWidget):
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
         
         QToolTip.setFont(QFont('SansSerif', 10))
+        
+        # Debug background fill
+        p = self.palette()
+        p.setColor(QPalette.Background, Qt.red)
+        self.setAutoFillBackground(True)
+        self.setPalette(p)
+
         # self.setToolTip('This is a <b>QWidget</b> widget')
         self.setMouseTracking(True)
 
@@ -34,7 +41,7 @@ class TimelineTrackDrawingWidgetBase(QtWidgets.QWidget):
 
     def sizeHint(self) -> QSize:
         return QSize(800, 100)
-
+        
     def paintEvent( self, event ):
         pass
  
@@ -51,6 +58,14 @@ class TimelineTrackDrawingWidgetBase(QtWidgets.QWidget):
         pass
 
     # Timeline position/time converion functions:
+    # Get scale from length
+    def getScale(self):
+        return float(self.totalDuration)/float(self.width())
+
+    # Get duration
+    def getDuration(self):
+        return self.duration
+
     def offset_to_percent(self, event_x, event_y):
         percent_x = event_x / self.width()
         percent_y = event_y / self.height()

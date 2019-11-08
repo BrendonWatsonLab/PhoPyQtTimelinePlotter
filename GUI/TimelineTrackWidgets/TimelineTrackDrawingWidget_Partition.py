@@ -40,6 +40,8 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         # Selected Object
         self.selected_object_index = None
 
+    # Ohhh, paint event is only passing the displayed rectangle in the event, so when it's in a scroll view, only the part that's on the screen is being drawn.
+    # But if that's true, why isn't it appearing unchanged when we scroll?
     def paintEvent( self, event ):
         qp = QtGui.QPainter()
         qp.begin( self )
@@ -51,12 +53,20 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         # qp.setPen(QtGui.QPen(EventsDrawingWindow.TraceCursorColor, 20.0, join=Qt.MiterJoin))
         # qp.drawRect(event.rect().x(), event.rect().y(), EventsDrawingWindow.TraceCursorWidth, self.height())
 
+        ## TODO: Use viewport information to only draw the currently displayed rectangles instead of having to draw it all at once.
+        # print('eventRect:', event.rect())
+        # print('selftRect:', self.rect())
+        # print('')
+
+        # drawRect = event.rect()
+        drawRect = self.rect()
+
         # Draw the duration objects
         for (index, obj) in enumerate(self.partitionObjects):
-            self.eventRect[index] = obj.paint( qp, self.totalStartTime, self.totalEndTime, self.totalDuration, event.rect())
+            self.eventRect[index] = obj.paint( qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
         # Draw the instantaneous event objects
         for (index, obj) in enumerate(self.cutObjects):
-            self.instantaneousEventRect[index] = obj.paint(qp, self.totalStartTime, self.totalEndTime, self.totalDuration, event.rect())
+            self.instantaneousEventRect[index] = obj.paint(qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
 
         qp.end()
 
