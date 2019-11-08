@@ -88,6 +88,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.eventTrackWidgets = []
 
         self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(0, None, [], self.totalStartTime, self.totalEndTime)
+        self.eventTrackWidgets.append(self.partitionsTrackWidget)
 
         self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(1, None, [], self.totalStartTime, self.totalEndTime)
         self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
@@ -96,6 +97,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.extendedTracksContainer = QtWidgets.QWidget()
         self.extendedTracksContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.extendedTracksContainer.setAutoFillBackground(True)
+        
         # Debug Pallete
         # p = self.labjackEventsContainer.palette()
         # p.setColor(self.labjackEventsContainer.backgroundRole(), Qt.red)
@@ -117,16 +119,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.mainVideoTrack.setMinimumSize(minimumWidgetWidth,50)
         self.mainVideoTrack.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
-        self.extendedTracksContainerVboxLayout.addWidget(self.partitionsTrackWidget)
-        self.partitionsTrackWidget.setMinimumSize(minimumWidgetWidth,50)
-        self.partitionsTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
-        self.partitionsTrackWidget.setFixedWidth(minimumWidgetWidth)
 
-        # self.extendedTracksContainerVboxLayout.addWidget(self.partitionsTwoTrackWidget)
-        # self.partitionsTwoTrackWidget.setMinimumSize(minimumWidgetWidth,50)
-        # self.partitionsTwoTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        # self.partitionsTwoTrackWidget.setFixedWidth(minimumWidgetWidth)
-        
         #Layout of Main Window:
 
         # Loop through the eventTrackWidgets and add them
