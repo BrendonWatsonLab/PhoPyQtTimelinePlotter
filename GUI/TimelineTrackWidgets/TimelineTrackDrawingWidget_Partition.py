@@ -40,6 +40,8 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         # Selected Object
         self.selected_object_index = None
 
+    # Ohhh, paint event is only passing the displayed rectangle in the event, so when it's in a scroll view, only the part that's on the screen is being drawn.
+    # But if that's true, why isn't it appearing unchanged when we scroll?
     def paintEvent( self, event ):
         qp = QtGui.QPainter()
         qp.begin( self )
