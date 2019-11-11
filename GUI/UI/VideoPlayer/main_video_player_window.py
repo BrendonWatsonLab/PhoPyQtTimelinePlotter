@@ -250,8 +250,14 @@ class MainVideoPlayerWindow(QMainWindow):
 
         self.update_video_file_play_labels()
 
-        # When the video finishes
+
         self.ui.slider_progress.blockSignals(False)
+
+        self.ui.doubleSpinBoxPlaybackSpeed.blockSignals(True)
+        self.ui.doubleSpinBoxPlaybackSpeed.setValue(self.media_player.get_rate())
+        self.ui.doubleSpinBoxPlaybackSpeed.blockSignals(False)
+
+        # When the video finishes
         if self.media_started_playing and \
            self.media_player.get_media().get_state() == vlc.State.Ended:
             self.play_pause_model.setState(True)
@@ -321,11 +327,12 @@ class MainVideoPlayerWindow(QMainWindow):
     def slow_down_handler(self):
         self.modify_rate(-0.1)
 
-    def modify_rate(self, delta_percent):
-        new_rate = self.media_player.get_rate() + delta_percent
-        if new_rate < 0.2 or new_rate > 2.0:
+    def modify_rate(self, delta):
+        new_rate = self.media_player.get_rate() + delta
+        if new_rate < 0.2 or new_rate > 6.0:
             return
         self.media_player.set_rate(new_rate)
+        
 
     # media_time_change_handler(...) is called on VLC's MediaPlayerTimeChanged event
     def media_time_change_handler(self, _):
@@ -448,7 +455,7 @@ class MainVideoPlayerWindow(QMainWindow):
         self.play_pause_model.setState(not self.media_is_playing)
 
 
-
+    # After a new media has been set, this function is called to start playing for a short bit to display the first few frames of the video
     def update_preview_frame(self):
         # Updates the frame displayed in the media player
         self.is_display_initial_frame_playback = True
@@ -473,7 +480,7 @@ class MainVideoPlayerWindow(QMainWindow):
         curr_percent_complete = self.media_player.get_position()  # Current percent complete between 0.0 and 1.0
 
         if curr_percent_complete >= 0:
-            self.ui.lblPlaybackPercent.setText("{:.9f}".format(curr_percent_complete))
+            self.ui.lblPlaybackPercent.setText("{:.4f}".format(curr_percent_complete))
         else:
             self.ui.lblPlaybackPercent.setText("--")
 
@@ -542,20 +549,20 @@ class MainVideoPlayerWindow(QMainWindow):
 
     # Playback Navigation (Left/Right) Handlers:
     def step_left_handler(self):
-        print('seek: left')
-        self.seek_frames(-10 * self.get_frame_multipler())
-
+        print('step: left')
+        self.seek_frames(-1 * self.get_frame_multipler())
+        
     def skip_left_handler(self):
         print('skip: left')
-        self.seek_frames(-1 * self.get_frame_multipler())
+        self.seek_frames(-10 * self.get_frame_multipler())
 
     def step_right_handler(self):
-        print('seek: right')
-        self.seek_frames(10 * self.get_frame_multipler())
+        print('step: right')
+        self.seek_frames(1 * self.get_frame_multipler())
 
     def skip_right_handler(self):
         print('skip: right')
-        self.seek_frames(1 * self.get_frame_multipler())
+        self.seek_frames(10 * self.get_frame_multipler())
 
     # Other:
     def seek_frames(self, relativeFrameOffset):
