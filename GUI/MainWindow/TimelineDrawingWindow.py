@@ -307,6 +307,19 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
             self.videoPlayerWindow = MainVideoPlayerWindow()
             self.videoPlayerWindow.show()
 
+    def try_set_video_player_window_url(self, url):
+        if self.videoPlayerWindow:
+            self.videoPlayerWindow.set_video_filename(url)
+            self.videoPlayerWindow.show()
+        else:
+            # Create a new videoPlayerWindow window
+            self.videoPlayerWindow = MainVideoPlayerWindow()
+            self.videoPlayerWindow.set_video_filename(url)
+            self.videoPlayerWindow.show()
+
+        
+        
+
     # @pyqtSlot(int, int)
     # Occurs when the user selects an object in the child video track with the mouse
     def handle_child_selection_event(self, trackIndex, trackObjectIndex):
@@ -327,8 +340,10 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
                 currSelectedObjectIndex = trackObjectIndex
                 currSelectedObject = self.mainVideoTrack.durationObjects[trackObjectIndex]
                 
-
-                print(currSelectedObject)
+                if currSelectedObject:
+                    selected_video_path = currSelectedObject.extended_data['path']
+                    print(selected_video_path)
+                    self.try_set_video_player_window_url(str(selected_video_path))
                 # Iterate through the timeline tracks to filter based on the video.
                 # for i in range(0, len(self.eventTrackWidgets)):
                 #     currWidget = self.eventTrackWidgets[i]
