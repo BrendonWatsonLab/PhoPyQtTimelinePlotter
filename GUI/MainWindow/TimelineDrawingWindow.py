@@ -33,6 +33,9 @@ class GlobalTimeAdjustmentOptions(Enum):
 
 class TimelineDrawingWindow(QtWidgets.QMainWindow):
     
+    static_VideoTrackTrackID = -1 # The integer ID of the main video track
+    
+
     TraceCursorWidth = 2
     TraceCursorColor = QColor(51, 255, 102)  # Green
 
@@ -308,17 +311,23 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
     def handle_child_selection_event(self, trackIndex, trackObjectIndex):
         text = "handle_child_selection_event(...): trackIndex: {0}, trackObjectIndex: {1}".format(trackIndex, trackObjectIndex)
         print(text)
-        if trackIndex == -1:
+        if trackIndex == TimelineDrawingWindow.static_VideoTrackTrackID:
             # If it's the video track
-            if trackObjectIndex == -1:
+            if trackObjectIndex == TimelineTrackDrawingWidget_Events.static_TimeTrackObjectIndex_NoSelection:
                 # No selection, just clear the filters
                 for i in range(0, len(self.eventTrackWidgets)):
                     currWidget = self.eventTrackWidgets[i]
                     currWidget.set_active_filter(self.totalStartTime, self.totalEndTime)
             else:
                 # Get the selected video object
-                currHoveredObject = self.mainVideoTrack.hovered_object
-                print(currHoveredObject)
+                # currHoveredObject = self.mainVideoTrack.hovered_object
+
+                # currSelectedObjectIndex = self.mainVideoTrack.selected_duration_object_indicies[0]
+                currSelectedObjectIndex = trackObjectIndex
+                currSelectedObject = self.mainVideoTrack.durationObjects[trackObjectIndex]
+                
+
+                print(currSelectedObject)
                 # Iterate through the timeline tracks to filter based on the video.
                 # for i in range(0, len(self.eventTrackWidgets)):
                 #     currWidget = self.eventTrackWidgets[i]

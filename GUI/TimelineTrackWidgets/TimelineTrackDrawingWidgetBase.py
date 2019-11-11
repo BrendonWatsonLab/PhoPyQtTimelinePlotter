@@ -22,6 +22,8 @@ class TimelineTrackDrawingWidgetBase(QtWidgets.QWidget):
     hover_changed = pyqtSignal(int, int, name='hover_changed')
     selection_changed = pyqtSignal(int, int, name='selection_changed')
 
+    static_TimeTrackObjectIndex_NoSelection = -1  # The integer value that indicates no object has been selected in the timeline
+
     def __init__(self, trackID, totalStartTime, totalEndTime):
         super(TimelineTrackDrawingWidgetBase, self).__init__()
         self.trackID = trackID
