@@ -20,6 +20,7 @@ from GUI.UI.qtimeline import *
 
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Events import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Partition import *
+from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_AnnotationComments import *
 
 from Testing.SqliteEventsDatabase import load_video_events_from_database
 
@@ -74,6 +75,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
                         self.timelineMasterTrackWidget
                         self.mainVideoTrack
                         () All in self.eventTrackWidgets:
+                            self.annotationCommentsTrackWidget
                             self.partitionsTrackWidget
                             self.partitionsTwoTrackWidget
         """
@@ -126,10 +128,15 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         # Other Tracks:
         self.eventTrackWidgets = []
 
-        self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(0, None, [], self.totalStartTime, self.totalEndTime)
+        # Annotation Comments track:
+        self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(0, None, [], self.totalStartTime, self.totalEndTime)
+        self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
+
+        # Partition tracks:
+        self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(1, None, [], self.totalStartTime, self.totalEndTime)
         self.eventTrackWidgets.append(self.partitionsTrackWidget)
 
-        self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(1, None, [], self.totalStartTime, self.totalEndTime)
+        self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(2, None, [], self.totalStartTime, self.totalEndTime)
         self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
 
         # Build the bottomPanelWidget
