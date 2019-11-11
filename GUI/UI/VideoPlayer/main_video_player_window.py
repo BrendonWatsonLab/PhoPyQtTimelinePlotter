@@ -17,7 +17,14 @@ from app.model import TimestampModel, ToggleButtonModel, TimestampDelta
 
 """
 The software displays/plays a video file with variable speed and navigation settings.
-The software runs a timer.
+The software runs a timer, which calls both self.timer_handler() and self.update_ui().
+
+self.update_ui():
+    - Updates the slider_progress (playback slider) when the video plays
+    - Updates the video labels
+
+self.media_time_change_handler(...) is called on VLC's MediaPlayerTimeChanged event:
+    - 
 """
 class MainVideoPlayerWindow(QMainWindow):
     """
@@ -56,6 +63,7 @@ class MainVideoPlayerWindow(QMainWindow):
 
         self.vlc_instance = vlc.Instance()
         self.media_player = self.vlc_instance.media_player_new()
+        self.is_display_initial_frame_playback = False
         # if sys.platform == "darwin":  # for MacOS
         #     self.ui.frame_video = QMacCocoaViewContainer(0)
 
@@ -232,6 +240,7 @@ class MainVideoPlayerWindow(QMainWindow):
                                      TimestampDelta.string_from_int(
                                          end_time))
 
+    # self.update_ui(): called when the timer fires
     def update_ui(self):
         self.ui.slider_progress.blockSignals(True)
         self.ui.slider_progress.setValue(
@@ -255,6 +264,8 @@ class MainVideoPlayerWindow(QMainWindow):
             self.run()
 
     # Event Handlers:
+
+    # self.timer_handler(): called when the timer fires
     def timer_handler(self):
         """
         This is a workaround, because for some reason we can't call set_time()
@@ -265,6 +276,8 @@ class MainVideoPlayerWindow(QMainWindow):
             self.media_player.set_time(self.media_start_time)
             self.restart_needed = False
 
+
+    # Input Handelers:
     def key_handler(self, event):
         if event.key() == Qt.Key_Escape and self.is_full_screen:
             self.toggle_full_screen()
@@ -276,6 +289,7 @@ class MainVideoPlayerWindow(QMainWindow):
     def wheel_handler(self, event):
         # self.modify_volume(1 if event.angleDelta().y() > 0 else -1)
         self.set_media_position(1 if event.angleDelta().y() > 0 else -1)
+
 
     def modify_volume(self, delta_percent):
         new_volume = self.media_player.audio_get_volume() + delta_percent
@@ -313,7 +327,15 @@ class MainVideoPlayerWindow(QMainWindow):
             return
         self.media_player.set_rate(new_rate)
 
+    # media_time_change_handler(...) is called on VLC's MediaPlayerTimeChanged event
     def media_time_change_handler(self, _):
+        print('Time changed!')
+        if (self.is_display_initial_frame_playback):
+            # self.is_display_initial_frame_playback: true to indicate that we're just trying to play the media long enough to get the first frame, so it's not a black square
+            # Pause
+            self.media_pause()
+            self.is_display_initial_frame_playback = False # Set the variable to false so it quits pausing
+
         if self.media_end_time == -1:
             return
         if self.media_player.get_time() > self.media_end_time:
@@ -376,6 +398,7 @@ class MainVideoPlayerWindow(QMainWindow):
             self._show_error(str(ex))
             print(traceback.format_exc())
 
+    # Toggles play/pause status:
     def play_pause(self):
         """Toggle play/pause status
         """
@@ -383,11 +406,54 @@ class MainVideoPlayerWindow(QMainWindow):
             self.run()
             return
         if self.media_is_playing:
-            self.media_player.pause()
+            self.media_pause()
+        else:
+            self.media_play()
+            
+    # Plays the media:
+    def media_play(self):
+        if not self.media_started_playing:
+            self.run()
+            return
+        if self.media_is_playing:
+            return # It's already playing, just return
         else:
             self.media_player.play()
+            self.post_playback_state_changed_update()
+
+    # Pauses the media:
+    def media_pause(self):
+        if not self.media_started_playing:
+            self.run()
+            return
+        if self.media_is_playing:
+            self.media_player.pause()
+            self.post_playback_state_changed_update()
+        else:
+            return # It's already paused, just return
+
+    # Stops the media:
+    def media_stop(self):
+        if not self.media_started_playing:
+            return # It's already stopped, just return
+        if self.media_is_playing:
+            self.media_player.pause()
+
+        self.media_player.stop()        
+        self.post_playback_state_changed_update()
+        
+    def post_playback_state_changed_update(self):
+        # Called after the play, pause, stop state changed
         self.media_is_playing = not self.media_is_playing
         self.play_pause_model.setState(not self.media_is_playing)
+
+
+
+    def update_preview_frame(self):
+        # Updates the frame displayed in the media player
+        self.is_display_initial_frame_playback = True
+        self.media_play()
+        # Pause is called in the self.media_time_change_handler(...)
 
     # Info labels above the video that display the FPS/frame/time/etc info
     def update_video_file_play_labels(self):
@@ -407,7 +473,7 @@ class MainVideoPlayerWindow(QMainWindow):
         curr_percent_complete = self.media_player.get_position()  # Current percent complete between 0.0 and 1.0
 
         if curr_percent_complete >= 0:
-            self.ui.lblPlaybackPercent.setText(str(curr_percent_complete))
+            self.ui.lblPlaybackPercent.setText("{:.9f}".format(curr_percent_complete))
         else:
             self.ui.lblPlaybackPercent.setText("--")
 
@@ -678,6 +744,10 @@ class MainVideoPlayerWindow(QMainWindow):
             self.ui.entry_end_time.setReadOnly(True)
             self.ui.entry_description.setReadOnly(True)
 
+    
+
+
+
     def set_video_filename(self, filename):
         """
         Set the video filename
@@ -689,6 +759,9 @@ class MainVideoPlayerWindow(QMainWindow):
         self.startDirectory = os.path.pardir
         self.video_filename = filename
 
+        # Close the previous file:
+        self.media_stop()
+
         media = self.vlc_instance.media_new(self.video_filename)
         media.parse()
         if not media.get_duration():
@@ -697,6 +770,11 @@ class MainVideoPlayerWindow(QMainWindow):
             self.video_filename = None
         else:
             self.media_player.set_media(media)
+
+            # The media player has to be 'connected' to the QFrame (otherwise the
+            # video would be displayed in it's own window). This is platform
+            # specific, so we must give the ID of the QFrame (or similar object) to
+            # vlc. Different platforms have different functions for this
             if sys.platform.startswith('linux'): # for Linux using the X Server
                 self.media_player.set_xwindow(self.ui.frame_video.winId())
             elif sys.platform == "win32": # for Windows
@@ -710,6 +788,7 @@ class MainVideoPlayerWindow(QMainWindow):
             self.media_is_playing = False
             # self.set_volume(self.ui.slider_volume.value())
             self.play_pause_model.setState(True)
+            self.update_preview_frame()
 
     def browse_video_handler(self):
         """

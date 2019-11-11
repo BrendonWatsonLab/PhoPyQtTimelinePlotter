@@ -309,15 +309,17 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
 
     def try_set_video_player_window_url(self, url):
         if self.videoPlayerWindow:
+            print("Using existing Video Player Window...")
             self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
             self.videoPlayerWindow.set_video_filename(url)
-            self.videoPlayerWindow.show()
+            # self.videoPlayerWindow.show()
         else:
             # Create a new videoPlayerWindow window
+            print("Creating new Video Player Window...")
             self.videoPlayerWindow = MainVideoPlayerWindow()
             self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
             self.videoPlayerWindow.set_video_filename(url)
-            self.videoPlayerWindow.show()
+            # self.videoPlayerWindow.show()
 
         
         
