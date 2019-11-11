@@ -6,11 +6,14 @@ from datetime import datetime, timezone, timedelta
 import numpy as np
 from enum import Enum
 
-from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea
-from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget
+from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QAction, qApp, QApplication
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
+
+
+from GUI.HelpWindow.HelpWindowFinal import *
 
 # from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget import *
 from GUI.UI.qtimeline import *
@@ -39,15 +42,19 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
     ConstantOffsetFromMostRecentVideoDuration = timedelta(days=7)
 
     def __init__(self, totalStartTime, totalEndTime):
-        super(TimelineDrawingWindow, self).__init__()
-
+        super(TimelineDrawingWindow, self).__init__() # Call the inherited classes __init__ method
+        self.ui = uic.loadUi("GUI/MainWindow/MainWindow.ui", self) # Load the .ui file
+        
         self.scaleMultiplier = 4.0
         self.update_global_start_end_times(totalStartTime, totalEndTime)
 
         self.videoInfoObjects = load_video_events_from_database(as_videoInfo_objects=True)
         self.build_video_display_events()
 
+        self.helpWindow = None
+
         self.initUI()
+        # self.show() # Show the GUI
 
 
     def initUI(self):
@@ -61,8 +68,22 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
                 partitionsTrackWidget
         """
 
+        # Nested helper function to initialize the menu bar
+        def initUI_initMenuBar(self):
+            # action_exit = QAction(QIcon('exit.png'), '&Exit', self)        
+            # action_exit.setShortcut('Ctrl+Q')
+            # action_exit.setStatusTip('Exit application')
+            # action_exit.triggered.connect(qApp.quit)
+
+            self.ui.actionExit_Application.triggered.connect(qApp.quit)
+            self.ui.actionShow_Help.triggered.connect(self.handle_showHelpWindow)
+
+
         desiredWindowWidth = 900
         self.resize( desiredWindowWidth, 800 )
+
+        # Setup the menubar
+        initUI_initMenuBar(self)
 
         # minimumWidgetWidth = 500
         minimumWidgetWidth = self.width() * self.scaleMultiplier
@@ -247,6 +268,17 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
             text = text + ' -- relative to duration: {0}'.format(relative_duration_offset)
 
         self.statusBar().showMessage(text)
+
+
+    # Shows the help/instructions window:
+    def handle_showHelpWindow(self):
+        if self.helpWindow:
+            self.helpWindow.show()
+        else:
+            # Create a new help window
+            self.helpWindow = HelpWindowFinal()
+            self.helpWindow.show()
+
 
     # @pyqtSlot(int, int)
     # Occurs when the user selects an object in the child video track with the mouse

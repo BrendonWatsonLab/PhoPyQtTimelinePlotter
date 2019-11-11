@@ -5,7 +5,7 @@ import datetime as dt
 # from Testing.SqliteEventsDatabase import save_video_events_to_database, load_video_events_from_database
 
 from GUI.PhoEvent import PhoEvent, PhoDurationEvent
-from GUI.TimelineDrawingWindow import *
+from GUI.MainWindow.TimelineDrawingWindow import *
 
 from GUI.HelpWindow.HelpWindowFinal import *
 
