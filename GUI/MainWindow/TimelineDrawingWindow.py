@@ -23,6 +23,8 @@ from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Partition import *
 
 from Testing.SqliteEventsDatabase import load_video_events_from_database
 
+from GUI.UI.VideoPlayer.main_video_player_window import * 
+
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.
         ConstrainVideosShownToGlobal = 2 #  keeps the global the same, and only shows the videos within the global start and end range
@@ -51,6 +53,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.videoInfoObjects = load_video_events_from_database(as_videoInfo_objects=True)
         self.build_video_display_events()
 
+        self.videoPlayerWindow = None
         self.helpWindow = None
 
         self.initUI()
@@ -81,7 +84,9 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
 
             self.ui.actionExit_Application.triggered.connect(qApp.quit)
             self.ui.actionShow_Help.triggered.connect(self.handle_showHelpWindow)
+            self.ui.actionVideo_Player.triggered.connect(self.handle_showVideoPlayerWindow)
 
+            
 
         desiredWindowWidth = 900
         self.resize( desiredWindowWidth, 800 )
@@ -278,6 +283,14 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
             self.helpWindow = HelpWindowFinal()
             self.helpWindow.show()
 
+    # Shows the video player window:
+    def handle_showVideoPlayerWindow(self):
+        if self.videoPlayerWindow:
+            self.videoPlayerWindow.show()
+        else:
+            # Create a new videoPlayerWindow window
+            self.videoPlayerWindow = MainVideoPlayerWindow()
+            self.videoPlayerWindow.show()
 
     # @pyqtSlot(int, int)
     # Occurs when the user selects an object in the child video track with the mouse

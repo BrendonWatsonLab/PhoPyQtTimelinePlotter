@@ -1,0 +1,12 @@
+QLineEdit {
+    color: #000000;
+    background-color: #ffffff;
+    border: 1px solid #B0B0B0;
+    border-radius: 2px;
+}
+QLineEdit:read-only {
+    color: #808080;
+    background-color: #F0F0F0;
+    border: 1px solid #B0B0B0;
+    border-radius: 2px;
+}
