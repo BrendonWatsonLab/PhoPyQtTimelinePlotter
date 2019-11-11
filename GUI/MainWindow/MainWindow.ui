@@ -51,8 +51,16 @@
     </property>
     <addaction name="actionShow_Help"/>
    </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+    <addaction name="actionMain"/>
+    <addaction name="actionVideo_Player"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuHelp"/>
+   <addaction name="menuWindow"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionShow_Help">
@@ -93,6 +101,16 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionMain">
+   <property name="text">
+    <string>Main</string>
+   </property>
+  </action>
+  <action name="actionVideo_Player">
+   <property name="text">
+    <string>Video Player</string>
    </property>
   </action>
  </widget>

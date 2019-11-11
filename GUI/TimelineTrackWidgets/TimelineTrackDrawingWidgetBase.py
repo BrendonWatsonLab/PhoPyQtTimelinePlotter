@@ -8,12 +8,21 @@ from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget,QTableWidgetItem
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPalette
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
+from enum import Enum
+
+class ItemSelectionOptions(Enum):
+        DisableSelection = 1 # disallows selection
+        SingleSelection = 2 #  allows one or no items to be selected
+        # TODO: could have a "RequireSingleSelection" which disallows deselection
+        MultiSelection = 3  # allows multiple selection
 
 # The base timeline track widget which all others should inherit from
 class TimelineTrackDrawingWidgetBase(QtWidgets.QWidget):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
     hover_changed = pyqtSignal(int, int, name='hover_changed')
     selection_changed = pyqtSignal(int, int, name='selection_changed')
+
+    static_TimeTrackObjectIndex_NoSelection = -1  # The integer value that indicates no object has been selected in the timeline
 
     def __init__(self, trackID, totalStartTime, totalEndTime):
         super(TimelineTrackDrawingWidgetBase, self).__init__()

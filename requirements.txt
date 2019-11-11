@@ -1,0 +1,2 @@
+PyQt5==5.4.1
+QtAwesome==0.1.8

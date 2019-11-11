@@ -23,6 +23,8 @@ from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Partition import *
 
 from Testing.SqliteEventsDatabase import load_video_events_from_database
 
+from GUI.UI.VideoPlayer.main_video_player_window import * 
+
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.
         ConstrainVideosShownToGlobal = 2 #  keeps the global the same, and only shows the videos within the global start and end range
@@ -31,6 +33,9 @@ class GlobalTimeAdjustmentOptions(Enum):
 
 class TimelineDrawingWindow(QtWidgets.QMainWindow):
     
+    static_VideoTrackTrackID = -1 # The integer ID of the main video track
+    
+
     TraceCursorWidth = 2
     TraceCursorColor = QColor(51, 255, 102)  # Green
 
@@ -51,6 +56,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.videoInfoObjects = load_video_events_from_database(as_videoInfo_objects=True)
         self.build_video_display_events()
 
+        self.videoPlayerWindow = None
         self.helpWindow = None
 
         self.initUI()
@@ -59,13 +65,17 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
 
     def initUI(self):
 
-        """
-        rootContainer
-            videoPlayerContainer
-            mainTimelineContainer
-                timelineMasterTrackWidget
-                extendedTracksContainer
-                partitionsTrackWidget
+        """ View Hierarchy:
+            self.verticalSplitter
+                self.videoPlayerContainer
+                self.timelineScroll: QScrollArea
+                    .widget = self.extendedTracksContainer
+                        extendedTracksContainer -> extendedTracksContainerVboxLayout
+                        self.timelineMasterTrackWidget
+                        self.mainVideoTrack
+                        () All in self.eventTrackWidgets:
+                            self.partitionsTrackWidget
+                            self.partitionsTwoTrackWidget
         """
 
         # Nested helper function to initialize the menu bar
@@ -77,7 +87,9 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
 
             self.ui.actionExit_Application.triggered.connect(qApp.quit)
             self.ui.actionShow_Help.triggered.connect(self.handle_showHelpWindow)
+            self.ui.actionVideo_Player.triggered.connect(self.handle_showVideoPlayerWindow)
 
+            
 
         desiredWindowWidth = 900
         self.resize( desiredWindowWidth, 800 )
@@ -107,8 +119,10 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.mainVideoTrack = TimelineTrackDrawingWidget_Events(-1, self.videoEventDisplayObjects, [], self.totalStartTime, self.totalEndTime)
         self.mainVideoTrack.selection_changed.connect(self.handle_child_selection_event)
         self.mainVideoTrack.hover_changed.connect(self.handle_child_hover_event)
+        self.mainVideoTrack.setMouseTracking(True)
+        self.mainVideoTrack.shouldDismissSelectionUponMouseButtonRelease = False
+        self.mainVideoTrack.itemSelectionMode = ItemSelectionOptions.SingleSelection
 
-        
         # Other Tracks:
         self.eventTrackWidgets = []
 
@@ -122,6 +136,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.extendedTracksContainer = QtWidgets.QWidget()
         self.extendedTracksContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.extendedTracksContainer.setAutoFillBackground(True)
+        self.extendedTracksContainer.setMouseTracking(True)
 
         # Debug Pallete
         # p = self.labjackEventsContainer.palette()
@@ -132,8 +147,6 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.extendedTracksContainerVboxLayout = QVBoxLayout(self)
         self.extendedTracksContainerVboxLayout.addStretch(1)
         self.extendedTracksContainerVboxLayout.addSpacing(2.0)
-
-
 
         self.extendedTracksContainerVboxLayout.addWidget(self.timelineMasterTrackWidget)
         self.timelineMasterTrackWidget.setMinimumSize(minimumWidgetWidth, 50)
@@ -155,13 +168,12 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
 
         self.extendedTracksContainer.setLayout(self.extendedTracksContainerVboxLayout)
 
-
-
         self.extendedTracksContainer.setFixedWidth(minimumWidgetWidth)
         ## Scroll Area: should contain only the extendedTracksContainer (not the video container)
         self.timelineScroll = QScrollArea()
         self.timelineScroll.setWidget(self.extendedTracksContainer)
         self.timelineScroll.setWidgetResizable(True)
+        self.timelineScroll.setMouseTracking(True)
         # self.timelineScroll.setFixedHeight(400)
         # self.timelineScroll.setFixedWidth(self.width())
 
@@ -203,8 +215,9 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
             if (videoInfoItem.is_original_video):
                 videoDates.append(videoInfoItem.startTime)
                 videoEndDates.append(videoInfoItem.endTime)
+                currExtraInfoDict = videoInfoItem.get_output_dict()
                 # Event Generation
-                currEvent = PhoDurationEvent(videoInfoItem.startTime, videoInfoItem.endTime, videoInfoItem.fullName, QColor(51,204,255), {})
+                currEvent = PhoDurationEvent(videoInfoItem.startTime, videoInfoItem.endTime, videoInfoItem.fullName, QColor(51,204,255), currExtraInfoDict)
                 self.videoEventDisplayObjects.append(currEvent)
 
         self.videoDates = np.array(videoDates)
@@ -252,7 +265,11 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
 
     # Event Handlers:
     def keyPressEvent(self, event):
-        self.partitionsTrackWidget.keyPressEvent(event)
+        # TODO: pass to all children
+        self.mainVideoTrack.keyPressEvent(event)
+
+        
+        # self.partitionsTrackWidget.keyPressEvent(event)
 
     def mouseMoveEvent(self, event):
         self.cursorX = event.x()
@@ -261,8 +278,10 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         datetime = self.offset_to_datetime(self.cursorX)
         text = "window x: {0},  duration: {1}, datetime: {2}".format(self.cursorX, duration_offset, datetime)
         # Call the on_mouse_moved handler for the video track which will update its .hovered_object property, which is then read and used for relative offsets
-        self.partitionsTrackWidget.on_mouse_moved(event)
-        potentially_hovered_child_object = self.partitionsTrackWidget.hovered_object
+        # self.partitionsTrackWidget.on_mouse_moved(event)
+        self.mainVideoTrack.on_mouse_moved(event)
+        # TODO: Need to use offset into scroll view instead of window?
+        potentially_hovered_child_object = self.mainVideoTrack.hovered_object
         if potentially_hovered_child_object:
             relative_duration_offset = potentially_hovered_child_object.compute_relative_offset_duration(datetime)
             text = text + ' -- relative to duration: {0}'.format(relative_duration_offset)
@@ -279,25 +298,60 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
             self.helpWindow = HelpWindowFinal()
             self.helpWindow.show()
 
+    # Shows the video player window:
+    def handle_showVideoPlayerWindow(self):
+        if self.videoPlayerWindow:
+            self.videoPlayerWindow.show()
+        else:
+            # Create a new videoPlayerWindow window
+            self.videoPlayerWindow = MainVideoPlayerWindow()
+            self.videoPlayerWindow.show()
+
+    def try_set_video_player_window_url(self, url):
+        if self.videoPlayerWindow:
+            print("Using existing Video Player Window...")
+            self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
+            self.videoPlayerWindow.set_video_filename(url)
+            # self.videoPlayerWindow.show()
+        else:
+            # Create a new videoPlayerWindow window
+            print("Creating new Video Player Window...")
+            self.videoPlayerWindow = MainVideoPlayerWindow()
+            self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
+            self.videoPlayerWindow.set_video_filename(url)
+            # self.videoPlayerWindow.show()
+
+        
+        
 
     # @pyqtSlot(int, int)
     # Occurs when the user selects an object in the child video track with the mouse
     def handle_child_selection_event(self, trackIndex, trackObjectIndex):
         text = "handle_child_selection_event(...): trackIndex: {0}, trackObjectIndex: {1}".format(trackIndex, trackObjectIndex)
-        # print(text)
-        if trackIndex == -1:
+        print(text)
+        if trackIndex == TimelineDrawingWindow.static_VideoTrackTrackID:
             # If it's the video track
-            if trackObjectIndex == -1:
+            if trackObjectIndex == TimelineTrackDrawingWidget_Events.static_TimeTrackObjectIndex_NoSelection:
                 # No selection, just clear the filters
                 for i in range(0, len(self.eventTrackWidgets)):
                     currWidget = self.eventTrackWidgets[i]
                     currWidget.set_active_filter(self.totalStartTime, self.totalEndTime)
             else:
                 # Get the selected video object
-                currHoveredObject = self.partitionsTrackWidget.hovered_object
-                for i in range(0, len(self.eventTrackWidgets)):
-                    currWidget = self.eventTrackWidgets[i]
-                    currWidget.set_active_filter(currHoveredObject.startTime, currHoveredObject.endTime)
+                # currHoveredObject = self.mainVideoTrack.hovered_object
+
+                # currSelectedObjectIndex = self.mainVideoTrack.selected_duration_object_indicies[0]
+                currSelectedObjectIndex = trackObjectIndex
+                currSelectedObject = self.mainVideoTrack.durationObjects[trackObjectIndex]
+                
+                if currSelectedObject:
+                    selected_video_path = currSelectedObject.extended_data['path']
+                    print(selected_video_path)
+                    self.try_set_video_player_window_url(str(selected_video_path))
+                # Iterate through the timeline tracks to filter based on the video.
+                # for i in range(0, len(self.eventTrackWidgets)):
+                #     currWidget = self.eventTrackWidgets[i]
+                #     currWidget.set_active_filter(currHoveredObject.startTime, currHoveredObject.endTime)
 
 
     # Occurs when the user selects an object in the child video track with the mouse
