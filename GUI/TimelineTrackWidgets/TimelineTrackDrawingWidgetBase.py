@@ -33,11 +33,11 @@ class TimelineTrackDrawingWidgetBase(QtWidgets.QWidget):
         
         QToolTip.setFont(QFont('SansSerif', 10))
         
-        # Debug background fill
-        p = self.palette()
-        p.setColor(QPalette.Background, Qt.red)
-        self.setAutoFillBackground(True)
-        self.setPalette(p)
+        # # Debug background fill
+        # p = self.palette()
+        # p.setColor(QPalette.Background, Qt.red)
+        # self.setAutoFillBackground(True)
+        # self.setPalette(p)
 
         # self.setToolTip('This is a <b>QWidget</b> widget')
         self.setMouseTracking(True)

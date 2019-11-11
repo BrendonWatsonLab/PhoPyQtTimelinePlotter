@@ -6,7 +6,8 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
-from GUI.PhoEvent import *
+from GUI.Model.PhoEvent import PhoEvent
+from GUI.Model.PhoDurationEvent import PhoDurationEvent
 
 """
 Represents a partition

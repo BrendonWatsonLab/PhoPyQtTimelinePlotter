@@ -4,7 +4,9 @@ import matplotlib.colors as mcolors
 import datetime as dt
 # from Testing.SqliteEventsDatabase import save_video_events_to_database, load_video_events_from_database
 
-from GUI.PhoEvent import PhoEvent, PhoDurationEvent
+from GUI.Model.PhoEvent import PhoEvent
+from GUI.Model.PhoDurationEvent import PhoDurationEvent
+
 from GUI.MainWindow.TimelineDrawingWindow import *
 
 from GUI.HelpWindow.HelpWindowFinal import *
