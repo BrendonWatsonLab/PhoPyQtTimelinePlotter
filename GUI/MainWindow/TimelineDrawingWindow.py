@@ -116,6 +116,8 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.mainVideoTrack = TimelineTrackDrawingWidget_Events(-1, self.videoEventDisplayObjects, [], self.totalStartTime, self.totalEndTime)
         self.mainVideoTrack.selection_changed.connect(self.handle_child_selection_event)
         self.mainVideoTrack.hover_changed.connect(self.handle_child_hover_event)
+        self.mainVideoTrack.setMouseTracking(True)
+        self.mainVideoTrack.shouldDismissSelectionUponMouseButtonRelease = False
 
         # Other Tracks:
         self.eventTrackWidgets = []
@@ -130,6 +132,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.extendedTracksContainer = QtWidgets.QWidget()
         self.extendedTracksContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.extendedTracksContainer.setAutoFillBackground(True)
+        self.extendedTracksContainer.setMouseTracking(True)
 
         # Debug Pallete
         # p = self.labjackEventsContainer.palette()
@@ -166,6 +169,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.timelineScroll = QScrollArea()
         self.timelineScroll.setWidget(self.extendedTracksContainer)
         self.timelineScroll.setWidgetResizable(True)
+        self.timelineScroll.setMouseTracking(True)
         # self.timelineScroll.setFixedHeight(400)
         # self.timelineScroll.setFixedWidth(self.width())
 
@@ -256,7 +260,11 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
 
     # Event Handlers:
     def keyPressEvent(self, event):
-        self.partitionsTrackWidget.keyPressEvent(event)
+        # TODO: pass to all children
+        self.mainVideoTrack.keyPressEvent(event)
+
+        
+        # self.partitionsTrackWidget.keyPressEvent(event)
 
     def mouseMoveEvent(self, event):
         self.cursorX = event.x()
@@ -265,8 +273,10 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         datetime = self.offset_to_datetime(self.cursorX)
         text = "window x: {0},  duration: {1}, datetime: {2}".format(self.cursorX, duration_offset, datetime)
         # Call the on_mouse_moved handler for the video track which will update its .hovered_object property, which is then read and used for relative offsets
-        self.partitionsTrackWidget.on_mouse_moved(event)
-        potentially_hovered_child_object = self.partitionsTrackWidget.hovered_object
+        # self.partitionsTrackWidget.on_mouse_moved(event)
+        self.mainVideoTrack.on_mouse_moved(event)
+        # TODO: Need to use offset into scroll view instead of window?
+        potentially_hovered_child_object = self.mainVideoTrack.hovered_object
         if potentially_hovered_child_object:
             relative_duration_offset = potentially_hovered_child_object.compute_relative_offset_duration(datetime)
             text = text + ' -- relative to duration: {0}'.format(relative_duration_offset)
@@ -296,7 +306,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
     # Occurs when the user selects an object in the child video track with the mouse
     def handle_child_selection_event(self, trackIndex, trackObjectIndex):
         text = "handle_child_selection_event(...): trackIndex: {0}, trackObjectIndex: {1}".format(trackIndex, trackObjectIndex)
-        # print(text)
+        print(text)
         if trackIndex == -1:
             # If it's the video track
             if trackObjectIndex == -1:
@@ -306,10 +316,12 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
                     currWidget.set_active_filter(self.totalStartTime, self.totalEndTime)
             else:
                 # Get the selected video object
-                currHoveredObject = self.partitionsTrackWidget.hovered_object
-                for i in range(0, len(self.eventTrackWidgets)):
-                    currWidget = self.eventTrackWidgets[i]
-                    currWidget.set_active_filter(currHoveredObject.startTime, currHoveredObject.endTime)
+                currHoveredObject = self.mainVideoTrack.hovered_object
+                print(currHoveredObject)
+                # Iterate through the timeline tracks to filter based on the video.
+                # for i in range(0, len(self.eventTrackWidgets)):
+                #     currWidget = self.eventTrackWidgets[i]
+                #     currWidget.set_active_filter(currHoveredObject.startTime, currHoveredObject.endTime)
 
 
     # Occurs when the user selects an object in the child video track with the mouse
