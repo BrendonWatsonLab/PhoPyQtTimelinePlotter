@@ -129,7 +129,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.eventTrackWidgets = []
 
         # Annotation Comments track:
-        self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(0, None, [], self.totalStartTime, self.totalEndTime)
+        self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(0, [], [], self.totalStartTime, self.totalEndTime)
         self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
 
         # Partition tracks:

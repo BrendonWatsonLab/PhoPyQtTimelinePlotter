@@ -10,7 +10,10 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
 class HelpWindowFinal(QtWidgets.QDialog):
+
     def __init__(self):
         super(HelpWindowFinal, self).__init__() # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/HelpWindow/HelpWindow.ui", self) # Load the .ui file
         self.show() # Show the GUI
+
+

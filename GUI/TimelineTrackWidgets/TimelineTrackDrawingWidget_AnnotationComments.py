@@ -10,6 +10,10 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import *
+from GUI.Model.PhoDurationEvent_AnnotationComment import *
+
+
+from GUI.UI.TextAnnotations.TextAnnotationDialog import *
 
 class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
@@ -31,6 +35,8 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         self.selected_duration_object_indicies = []
         self.shouldDismissSelectionUponMouseButtonRelease = TimelineTrackDrawingWidget_AnnotationComments.default_shouldDismissSelectionUponMouseButtonRelease
         self.itemSelectionMode = TimelineTrackDrawingWidget_AnnotationComments.default_itemSelectionMode
+
+        self.annotationEditingDialog = None
     
     def paintEvent( self, event ):
         qp = QtGui.QPainter()
@@ -104,24 +110,36 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
 
     def on_button_released(self, event):
         # Check if we want to dismiss the selection when the mouse button is released (requiring the user to hold down the button to see the results)
-        if self.shouldDismissSelectionUponMouseButtonRelease:
-            newlySelectedObjectIndex = self.find_child_object(event.x(), event.y())
+        self.selected_object_index = self.find_child_object(event.x(), event.y())
 
-            if newlySelectedObjectIndex is None:
-                self.selected_duration_object_indicies = [] # Empty all the objects
-                self.selection_changed.emit(self.trackID, -1)
-            else:
-                if (self.selected_duration_object_indicies.__contains__(newlySelectedObjectIndex)):
-                    # Already contains the object.
-                    self.selected_duration_object_indicies.remove(newlySelectedObjectIndex)
-                    self.durationObjects[newlySelectedObjectIndex].on_button_released(event)
-                    self.selection_changed.emit(self.trackID, newlySelectedObjectIndex)
-                    self.update()
-                else:
-                    # Doesn't already contain the object
-                    return
+        if event.button() == Qt.LeftButton:
+            print("Left click")
+        elif event.button() == Qt.RightButton:
+            print("Right click")
+        elif event.button() == Qt.MiddleButton:
+            print("Middle click")
+            # Create the partition cut:
+            was_cut_made = self.create_comment(event.x())
+        else:
+            print("Unknown click event!")
+
+        if self.selected_object_index is None:
+            # if TimelineTrackDrawingWidget_AnnotationComments.shouldDismissSelectionUponMouseButtonRelease:
+            #     self.selection_changed.emit(self.trackID, -1) # Deselect
+
+            # No partitions to create
+            return
+        else:
+            create_comment_index = self.selected_object_index
+            # if TimelineTrackDrawingWidget_AnnotationComments.shouldDismissSelectionUponMouseButtonRelease:
+            #     self.commentObjects[self.selected_object_index].on_button_released(event)
+            #     self.selection_changed.emit(self.trackID, self.selected_object_index)
+            
+
+            
+        self.update()
+        
                 
-
     def keyPressEvent(self, event):
         gey = event.key()
         self.func = (None, None)
@@ -154,5 +172,37 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
             text = "event: {0}\nstart_time: {1}\nend_time: {2}\nduration: {3}".format(self.hovered_object.name, self.hovered_object.startTime, self.hovered_object.endTime, self.hovered_object.computeDuration())
             QToolTip.showText(event.globalPos(), text, self, self.hovered_object_rect)
             self.hover_changed.emit(self.trackID, self.hovered_object_index)
+
+    def create_comment(self, cut_x):
+        # Creates a new cut at the specified position.
+        cut_duration_offset = self.offset_to_duration(cut_x)
+        cut_datetime = self.offset_to_datetime(cut_x)
+
+        self.annotationEditingDialog = TextAnnotationDialog()
+        self.annotationEditingDialog.on_commit.connect(self.try_create_comment)
+        self.annotationEditingDialog.on_cancel.connect(self.comment_dialog_canceled)
+        self.annotationEditingDialog.set_start_date(cut_datetime)
+        self.annotationEditingDialog.set_end_date(cut_datetime)
+        
+
+        # if self.partitionManager.cut_partition(partition_index, cut_datetime):
+        #         # Cut successful!
+        #         print("Cut successful! Cut at ", partition_index)
+        #         self.cutObjects.append(PhoDurationEvent(cut_datetime))
+        #         # Update partitions:
+        #         self.commentObjects = self.partitionManager.partitions
+        #         return True
+        # else:
+        #     return False
+        return False
+
+    def try_create_comment(self, start_date, end_date, title, subtitle, body):
+        # Tries to create a new comment
+        print('try_create_comment')
+
+    def comment_dialog_canceled(self):
+        print('comment_Dialog_canceled')
+
+        
 
 
