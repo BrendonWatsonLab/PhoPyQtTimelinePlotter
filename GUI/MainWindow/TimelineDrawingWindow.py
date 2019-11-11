@@ -118,6 +118,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.mainVideoTrack.hover_changed.connect(self.handle_child_hover_event)
         self.mainVideoTrack.setMouseTracking(True)
         self.mainVideoTrack.shouldDismissSelectionUponMouseButtonRelease = False
+        self.mainVideoTrack.itemSelectionMode = ItemSelectionOptions.SingleSelection
 
         # Other Tracks:
         self.eventTrackWidgets = []
