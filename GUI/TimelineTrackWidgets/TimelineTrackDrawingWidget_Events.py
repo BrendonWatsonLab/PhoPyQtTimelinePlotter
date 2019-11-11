@@ -13,7 +13,7 @@ from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import *
 
 class TimelineTrackDrawingWidget_Events(TimelineTrackDrawingWidgetBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
-    shouldDismissSelectionUponMouseButtonRelease = True
+    default_shouldDismissSelectionUponMouseButtonRelease = True
 
     def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime):
         super(TimelineTrackDrawingWidget_Events, self).__init__(trackID, totalStartTime, totalEndTime)
@@ -27,6 +27,7 @@ class TimelineTrackDrawingWidget_Events(TimelineTrackDrawingWidgetBase):
         self.hovered_object_rect = None
         # Selected Object
         self.selected_object_index = None
+        self.shouldDismissSelectionUponMouseButtonRelease = TimelineTrackDrawingWidget_Events.default_shouldDismissSelectionUponMouseButtonRelease
 
     
     def paintEvent( self, event ):
@@ -83,7 +84,7 @@ class TimelineTrackDrawingWidget_Events(TimelineTrackDrawingWidgetBase):
 
     def on_button_released(self, event):
         # Check if we want to dismiss the selection when the mouse button is released (requiring the user to hold down the button to see the results)
-        if TimelineTrackDrawingWidget_Events.shouldDismissSelectionUponMouseButtonRelease:
+        if self.shouldDismissSelectionUponMouseButtonRelease:
             self.selected_object_index = self.find_child_object(event.x(), event.y())
 
             if self.selected_object_index is None:
