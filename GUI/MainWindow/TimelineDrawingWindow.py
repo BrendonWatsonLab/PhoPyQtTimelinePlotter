@@ -59,13 +59,17 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
 
     def initUI(self):
 
-        """
-        rootContainer
-            videoPlayerContainer
-            mainTimelineContainer
-                timelineMasterTrackWidget
-                extendedTracksContainer
-                partitionsTrackWidget
+        """ View Hierarchy:
+            self.verticalSplitter
+                self.videoPlayerContainer
+                self.timelineScroll: QScrollArea
+                    .widget = self.extendedTracksContainer
+                        extendedTracksContainer -> extendedTracksContainerVboxLayout
+                        self.timelineMasterTrackWidget
+                        self.mainVideoTrack
+                        () All in self.eventTrackWidgets:
+                            self.partitionsTrackWidget
+                            self.partitionsTwoTrackWidget
         """
 
         # Nested helper function to initialize the menu bar
@@ -108,7 +112,6 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.mainVideoTrack.selection_changed.connect(self.handle_child_selection_event)
         self.mainVideoTrack.hover_changed.connect(self.handle_child_hover_event)
 
-        
         # Other Tracks:
         self.eventTrackWidgets = []
 
@@ -133,8 +136,6 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.extendedTracksContainerVboxLayout.addStretch(1)
         self.extendedTracksContainerVboxLayout.addSpacing(2.0)
 
-
-
         self.extendedTracksContainerVboxLayout.addWidget(self.timelineMasterTrackWidget)
         self.timelineMasterTrackWidget.setMinimumSize(minimumWidgetWidth, 50)
         self.timelineMasterTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -154,8 +155,6 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
             currWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
         self.extendedTracksContainer.setLayout(self.extendedTracksContainerVboxLayout)
-
-
 
         self.extendedTracksContainer.setFixedWidth(minimumWidgetWidth)
         ## Scroll Area: should contain only the extendedTracksContainer (not the video container)
