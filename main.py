@@ -6,7 +6,6 @@ import datetime as dt
 
 from GUI.PhoEvent import PhoEvent, PhoDurationEvent
 from GUI.TimelineDrawingWindow import *
-from GUI.qtimeline import *
 
 from GUI.HelpWindow.HelpWindowFinal import *
 

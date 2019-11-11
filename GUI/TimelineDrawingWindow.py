@@ -13,7 +13,7 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
 # from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget import *
-from GUI.qtimeline import *
+from GUI.UI.qtimeline import *
 
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Events import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Partition import *
