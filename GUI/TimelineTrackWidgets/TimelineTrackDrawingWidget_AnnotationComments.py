@@ -56,6 +56,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         # Draw the duration objects
         for (index, obj) in enumerate(self.durationObjects):
             self.eventRect[index] = obj.paint( qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
+            
         # Draw the instantaneous event objects
         for (index, obj) in enumerate(self.instantaneousObjects):
             self.instantaneousEventRect[index] = obj.paint(qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
@@ -199,6 +200,13 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
     def try_create_comment(self, start_date, end_date, title, subtitle, body):
         # Tries to create a new comment
         print('try_create_comment')
+        if end_date == start_date:
+            end_date = None # This is a work-around because "None" value end_dates can't be passed through a PyQt signal
+
+        newAnnotation = PhoDurationEvent_AnnotationComment(start_date, end_date, body, title, subtitle)
+        self.durationObjects.append(newAnnotation)
+        self.update()
+
 
     def comment_dialog_canceled(self):
         print('comment_Dialog_canceled')
