@@ -20,8 +20,8 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
     default_shouldDismissSelectionUponMouseButtonRelease = True
     default_itemSelectionMode = ItemSelectionOptions.MultiSelection
 
-    def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime):
-        super(TimelineTrackDrawingWidget_AnnotationComments, self).__init__(trackID, totalStartTime, totalEndTime)
+    def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime, wantsKeyboardEvents=False, wantsMouseEvents=True):
+        super(TimelineTrackDrawingWidget_AnnotationComments, self).__init__(trackID, totalStartTime, totalEndTime, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
         self.durationObjects = durationObjects
         self.instantaneousObjects = instantaneousObjects
         self.eventRect = np.repeat(QRect(0,0,0,0), len(durationObjects))
@@ -153,7 +153,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
             
         self.update()
                 
-    def keyPressEvent(self, event):
+    def on_key_pressed(self, event):
         gey = event.key()
         self.func = (None, None)
         if gey == Qt.Key_M:
@@ -169,6 +169,12 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
             self.func = (self.drawNumber, {"notePoint": QPoint(100, 100)})
             self.mModified = True
             self.update()
+
+
+    def on_key_released(self, event):
+        pass
+
+
 
     def on_mouse_moved(self, event):
         self.hovered_object_index = self.find_child_object(event.x(), event.y())

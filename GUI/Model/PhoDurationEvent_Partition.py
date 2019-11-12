@@ -35,64 +35,64 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
         # self.setAutoFillBackground(True)
         # self.setPalette(p)
 
-        self.initUI()
+        # self.initUI()
 
-    def initUI(self):
-        # QtWidgets.QWidget()
-        minimumWidgetWidth = 10
-        self.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+    # def initUI(self):
+    #     # QtWidgets.QWidget()
+    #     minimumWidgetWidth = 10
+    #     self.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         
-        self.frameWidget = QFrame(self)
-        self.frameWidget.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
-        # self.frameWidget.setMinimumSize(minimumWidgetWidth, 50)
-        self.frameWidget.setAutoFillBackground(True)
-        self.frameWidget.setMouseTracking(True)
-        # self.frameWidget.setStyleSheet("background-color: red; border: 1px solid black; border-radius: 8px")
-        self.frameWidget.setStyleSheet("background-color: #33ccff; border: 1px solid #e0e0e0; border-radius: 8px")
+    #     self.frameWidget = QFrame(self)
+    #     self.frameWidget.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
+    #     # self.frameWidget.setMinimumSize(minimumWidgetWidth, 50)
+    #     self.frameWidget.setAutoFillBackground(True)
+    #     self.frameWidget.setMouseTracking(True)
+    #     # self.frameWidget.setStyleSheet("background-color: red; border: 1px solid black; border-radius: 8px")
+    #     self.frameWidget.setStyleSheet("background-color: #33ccff; border: 1px solid #e0e0e0; border-radius: 8px")
 
-        self.lblTitle = QLabel("Title",self)
-        self.lblTitle.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+    #     self.lblTitle = QLabel("Title",self)
+    #     self.lblTitle.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
 
-        self.lblSubtitle = QLabel("Subtitle",self)
-        self.lblSubtitle.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+    #     self.lblSubtitle = QLabel("Subtitle",self)
+    #     self.lblSubtitle.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
 
-        self.comboBox = QComboBox(self)
-        self.comboBox.customContextMenuRequested.connect(self.showMenu)
-        self.comboBox.addItem("Ubuntu")
-        self.comboBox.addItem("Mandriva")
-        self.comboBox.addItem("Fedora")
-        self.comboBox.addItem("Red Hat")
-        self.comboBox.addItem("Gentoo")
-        self.comboBox.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+    #     self.comboBox = QComboBox(self)
+    #     self.comboBox.customContextMenuRequested.connect(self.showMenu)
+    #     self.comboBox.addItem("Ubuntu")
+    #     self.comboBox.addItem("Mandriva")
+    #     self.comboBox.addItem("Fedora")
+    #     self.comboBox.addItem("Red Hat")
+    #     self.comboBox.addItem("Gentoo")
+    #     self.comboBox.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
 
-         #Layout of Extended Tracks Container Widget
-        self.mainVboxLayout = QVBoxLayout(self)
-        self.mainVboxLayout.addStretch(1)
-        self.mainVboxLayout.addSpacing(0.2)
-        self.mainVboxLayout.setContentsMargins(0, 0, 0, 0)
+    #      #Layout of Extended Tracks Container Widget
+    #     self.mainVboxLayout = QVBoxLayout(self)
+    #     self.mainVboxLayout.addStretch(1)
+    #     self.mainVboxLayout.addSpacing(0.2)
+    #     self.mainVboxLayout.setContentsMargins(0, 0, 0, 0)
 
-        self.mainVboxLayout.addWidget(self.lblTitle)
-        # self.lblTitle.setMinimumSize(minimumWidgetWidth, 10)
+    #     self.mainVboxLayout.addWidget(self.lblTitle)
+    #     # self.lblTitle.setMinimumSize(minimumWidgetWidth, 10)
 
-        self.mainVboxLayout.addWidget(self.lblSubtitle)
-        # self.lblSubtitle.setMinimumSize(minimumWidgetWidth, 10)
+    #     self.mainVboxLayout.addWidget(self.lblSubtitle)
+    #     # self.lblSubtitle.setMinimumSize(minimumWidgetWidth, 10)
 
-        self.mainVboxLayout.addWidget(self.comboBox)
-        # self.comboBox.setMinimumSize(minimumWidgetWidth, 10)
+    #     self.mainVboxLayout.addWidget(self.comboBox)
+    #     # self.comboBox.setMinimumSize(minimumWidgetWidth, 10)
 
-        self.frameWidget.setLayout(self.mainVboxLayout)
+    #     self.frameWidget.setLayout(self.mainVboxLayout)
 
-        # self.comboBox.move(0, 0)
-        # self.lbl.move(50, 150)
+    #     # self.comboBox.move(0, 0)
+    #     # self.lbl.move(50, 150)
 
-        self.comboBox.activated[str].connect(self.onActivated)
+    #     self.comboBox.activated[str].connect(self.onActivated)
 
-        self.rootVboxLayout = QVBoxLayout(self)
-        self.rootVboxLayout.addWidget(self.frameWidget)
-        self.rootVboxLayout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(self.rootVboxLayout)
+    #     self.rootVboxLayout = QVBoxLayout(self)
+    #     self.rootVboxLayout.addWidget(self.frameWidget)
+    #     self.rootVboxLayout.setContentsMargins(0, 0, 0, 0)
+    #     self.setLayout(self.rootVboxLayout)
 
-        # self.setGeometry(300, 300, 300, 200)
+    #     # self.setGeometry(300, 300, 300, 200)
 
     def showMenu(self,pos):
         menu = QMenu()
@@ -115,10 +115,11 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
     def keyPressEvent(self, event):
         gey = event.key()
         self.func = (None, None)
+        print('PhoDurationEvent_Partition.keyPressEvent!')
         if gey == Qt.Key_M:
-            print("Key 'm' pressed!")
+            print("PhoDurationEvent_Partition.keyPressEvent: Key 'm' pressed!")
         elif gey == Qt.Key_Right:
-            print("Right key pressed!, call drawFundBlock()")
+            print("PhoDurationEvent_Partition.keyPressEvent: Right key pressed!, call drawFundBlock()")
             # self.func = (self.drawFundBlock, {})
             self.mModified = True
         # elif gey == Qt.Key_5:
@@ -127,7 +128,7 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
         #     self.mModified = True
 
     def paint(self, painter, totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect):
-        # parent_modified_event_rect = super(PhoDurationEvent_Partition, self).paint(painter, totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect)
+        parent_modified_event_rect = super(PhoDurationEvent_Partition, self).paint(painter, totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect)
         # "total*" refers to the parent frame in which this event is to be drawn
         # totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect
         parentOffsetRect = self.compute_parent_offset_rect(totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect.width(), totalParentCanvasRect.height())
@@ -137,10 +138,10 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
         height = parentOffsetRect.height()
         finalEventRect = QRect(x,y,width,height)
 
-        print('Partition paint is called: ', finalEventRect)
+        # print('Partition paint is called: ', finalEventRect)
 
         # self.resize(width, height)
-        self.frameWidget.resize(width, height)
+        # self.frameWidget.resize(width, height)
         # self.frameWidget.move(x, y)
 
         # self.setGeometry(finalEventRect)
@@ -166,8 +167,6 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
         # self.update()
 
         # self.widget.move(self.width() - self.widget.width() - 1, 1)
-
-        
 
         # self.comboBox.paint
         

@@ -21,10 +21,11 @@ TODO: Add "undo" functionality to creating cuts. Can use the "cutObjects" to fin
 # Consts of N "Cuts" that separate a block into N+1 "Partitions"
 #  
 class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
-    shouldDismissSelectionUponMouseButtonRelease = True
+    default_shouldDismissSelectionUponMouseButtonRelease = False
+    default_itemSelectionMode = ItemSelectionOptions.SingleSelection
 
-    def __init__(self, trackID, partitionObjects, cutObjects, totalStartTime, totalEndTime):
-        super(TimelineTrackDrawingWidget_Partition, self).__init__(trackID, totalStartTime, totalEndTime)
+    def __init__(self, trackID, partitionObjects, cutObjects, totalStartTime, totalEndTime, wantsKeyboardEvents=True, wantsMouseEvents=True):
+        super(TimelineTrackDrawingWidget_Partition, self).__init__(trackID, totalStartTime, totalEndTime, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
         
         self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, 'partitioner', partitionObjects)
         self.partitionObjects = self.partitionManager.partitions
@@ -38,7 +39,9 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         self.hovered_object = None
         self.hovered_object_rect = None
         # Selected Object
-        self.selected_object_index = None
+        self.selected_partition_object_indicies = []
+        self.shouldDismissSelectionUponMouseButtonRelease = TimelineTrackDrawingWidget_Partition.default_shouldDismissSelectionUponMouseButtonRelease
+        self.itemSelectionMode = TimelineTrackDrawingWidget_Partition.default_itemSelectionMode
 
         
 
@@ -108,30 +111,56 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         self.update()
 
     def on_button_clicked(self, event):
-        self.selected_object_index = self.find_child_object(event.x(), event.y())
+        newlySelectedObjectIndex = self.find_child_object(event.x(), event.y())
 
-        if self.selected_object_index is None:
+        if newlySelectedObjectIndex is None:
+            self.selected_partition_object_indicies = [] # Empty all the objects
             self.selection_changed.emit(self.trackID, -1)
         else:
-            self.partitionObjects[self.selected_object_index].on_button_clicked(event)
-            self.update()
-            self.selection_changed.emit(self.trackID, self.selected_object_index)
+            # Select the object
+            if (self.selected_partition_object_indicies.__contains__(newlySelectedObjectIndex)):
+                # Already contains the object.
+                return
+            else:
+                # If in single selection mode, be sure to deselect any previous selections before selecting a new one.
+                if (self.itemSelectionMode is ItemSelectionOptions.SingleSelection):
+                    if (len(self.selected_partition_object_indicies) > 0):
+                        # Deselect previously selected item
+                        prevSelectedItemIndex = self.selected_partition_object_indicies[0]
+                        self.selected_partition_object_indicies.remove(prevSelectedItemIndex)
+                        self.partitionObjects[prevSelectedItemIndex].on_button_released(event)
+                        # self.selection_changed.emit(self.trackID, newlySelectedObjectIndex) # TODO: need to update the selection to deselect the old event?
+                        
 
+                # Doesn't already contain the object
+                self.selected_partition_object_indicies.append(newlySelectedObjectIndex)
+                self.partitionObjects[newlySelectedObjectIndex].on_button_clicked(event)
+                self.update()
+                self.selection_changed.emit(self.trackID, newlySelectedObjectIndex)
+
+            
     def on_button_released(self, event):
         # Check if we want to dismiss the selection when the mouse button is released (requiring the user to hold down the button to see the results)
-        self.selected_object_index = self.find_child_object(event.x(), event.y())
+        needs_update = False                    
+        newlySelectedObjectIndex = self.find_child_object(event.x(), event.y())
 
-        if self.selected_object_index is None:
-            if TimelineTrackDrawingWidget_Partition.shouldDismissSelectionUponMouseButtonRelease:
+        if newlySelectedObjectIndex is None:
+            if self.shouldDismissSelectionUponMouseButtonRelease:
                 self.selection_changed.emit(self.trackID, -1) # Deselect
-
             # No partitions to create
             return
         else:
-            cut_partition_index = self.selected_object_index
-            if TimelineTrackDrawingWidget_Partition.shouldDismissSelectionUponMouseButtonRelease:
-                self.partitionObjects[self.selected_object_index].on_button_released(event)
-                self.selection_changed.emit(self.trackID, self.selected_object_index)
+            cut_partition_index = newlySelectedObjectIndex
+            if self.shouldDismissSelectionUponMouseButtonRelease:
+                if (self.selected_partition_object_indicies.__contains__(newlySelectedObjectIndex)):
+                    # Already contains the object.
+                    self.selected_partition_object_indicies.remove(newlySelectedObjectIndex)
+                    self.partitionObjects[newlySelectedObjectIndex].on_button_released(event)
+                    self.selection_changed.emit(self.trackID, newlySelectedObjectIndex)
+                    needs_update = True
+                else:
+                    # Doesn't already contain the object
+                    return
             
             if event.button() == Qt.LeftButton:
                 print("Left click")
@@ -142,29 +171,36 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
                 # Create the partition cut:
                 was_cut_made = self.cut_partition(cut_partition_index, event.x())
                 if(was_cut_made):
-                    self.update()
-                    # self.update()
+                    needs_update = True
             else:
                 print("Unknown click event!")
             
+        if needs_update:
             self.update()
+            
     
-    def keyPressEvent(self, event):
+    def on_key_pressed(self, event):
         gey = event.key()
         self.func = (None, None)
+        print("partitionTrack: on_key_pressed(...)")
         if gey == Qt.Key_M:
-            print("Key 'm' pressed!")
+            print("partitionTrack: Key 'm' pressed!")
+            if self.hovered_object_index:
+                self.hovered_object_index.on_key_pressed(event)
+
         elif gey == Qt.Key_Right:
-            print("Right key pressed!, call drawFundBlock()")
+            print("partitionTrack: Right key pressed!, call drawFundBlock()")
             self.func = (self.drawFundBlock, {})
             self.mModified = True
             self.update()
             self.nextRegion()
         elif gey == Qt.Key_5:
-            print("#5 pressed, call drawNumber()")
+            print("partitionTrack: #5 pressed, call drawNumber()")
             self.func = (self.drawNumber, {"notePoint": QPoint(100, 100)})
             self.mModified = True
             self.update()
+
+
 
     def on_mouse_moved(self, event):
         self.hovered_object_index = self.find_child_object(event.x(), event.y())
@@ -181,6 +217,6 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
             QToolTip.showText(event.globalPos(), text, self, self.hovered_object_rect)
             self.hover_changed.emit(self.trackID, self.hovered_object_index)
 
-    def resizeEvent(self, event):
-            # self.widget.move(self.width() - self.widget.width() - 2, 2)
-            super(TimelineTrackDrawingWidget_Partition, self).resizeEvent(event)
+    # def resizeEvent(self, event):
+    #         # self.widget.move(self.width() - self.widget.width() - 2, 2)
+    #         super(TimelineTrackDrawingWidget_Partition, self).resizeEvent(event)
