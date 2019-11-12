@@ -9,6 +9,17 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QStandardItemMode
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 
+class BehaviorInfoOptions(QObject):
+
+    def __init__(self, name='', description='', type=-1, subtype=-1, color=Qt.red, extended_data=dict()):
+            super(BehaviorInfoOptions, self).__init__(None)
+            self.name = name
+            self.description = description
+            self.type = type
+            self.subtype = subtype
+            self.color = color
+            self.extended_data = extended_data
+
 class BehaviorNode(QObject):
 
     def __init__(self, behaviorName, color, parentNode=None, childrenNodes=[]):

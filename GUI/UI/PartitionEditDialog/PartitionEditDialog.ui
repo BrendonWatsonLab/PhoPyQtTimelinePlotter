@@ -49,6 +49,9 @@
      </item>
      <item row="3" column="1">
       <widget class="QLineEdit" name="lineEdit_Title">
+       <property name="text">
+        <string>title</string>
+       </property>
        <property name="placeholderText">
         <string>title</string>
        </property>
@@ -66,6 +69,9 @@
      </item>
      <item row="4" column="1">
       <widget class="QLineEdit" name="lineEdit_Subtitle">
+       <property name="text">
+        <string>subtitle</string>
+       </property>
        <property name="placeholderText">
         <string>subtitle</string>
        </property>
@@ -90,6 +96,26 @@
         <string>body text</string>
        </property>
       </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Type</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QComboBox" name="comboBox_Type"/>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>Subtype</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1">
+      <widget class="QComboBox" name="comboBox_Subtype"/>
      </item>
     </layout>
    </item>

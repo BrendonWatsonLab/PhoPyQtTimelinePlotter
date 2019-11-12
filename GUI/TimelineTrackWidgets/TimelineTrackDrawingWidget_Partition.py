@@ -7,10 +7,12 @@ import numpy as np
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QComboBox, QMenu
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
+from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
 
 from GUI.Model.Partitions import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import *
+
+from GUI.UI.PartitionEditDialog.PartitionEditDialog import *
 
 ## TODO:
 """
@@ -28,11 +30,9 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         super(TimelineTrackDrawingWidget_Partition, self).__init__(trackID, totalStartTime, totalEndTime, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
         
         self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, 'partitioner', partitionObjects)
-        self.partitionObjects = self.partitionManager.partitions
+        self.reinitialize_from_partition_manager()
         ## TODO: can reconstruct partitions from cutObjects, but can't recover the specific partition's info.
         self.cutObjects = cutObjects
-        
-        self.eventRect = np.repeat(QRect(0,0,0,0), len(self.partitionObjects))
         self.instantaneousEventRect = np.repeat(QRect(0,0,0,0), len(cutObjects))
         # Hovered Object
         self.hovered_object_index = None
@@ -43,8 +43,67 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         self.shouldDismissSelectionUponMouseButtonRelease = TimelineTrackDrawingWidget_Partition.default_shouldDismissSelectionUponMouseButtonRelease
         self.itemSelectionMode = TimelineTrackDrawingWidget_Partition.default_itemSelectionMode
 
-        
+        self.activePartitionEditDialog = None
 
+
+    def reinitialize_from_partition_manager(self):
+        self.partitionObjects = self.partitionManager.partitions
+        self.eventRect = np.repeat(QRect(0,0,0,0), len(self.partitionObjects))
+
+
+
+    # Called by a specific child partition's menu to indicate that it should be edited in a new Partition Editor Dialog
+    @pyqtSlot()    
+    def on_partition_modify_event(self):
+        print("on_partition_modify_event(...)")
+        selectedPartitionIndex = self.get_selected_partition_index()
+        selectedPartitionObject = self.get_selected_partition()
+        if (selectedPartitionObject):
+            self.activeEditingPartitionIndex = selectedPartitionIndex
+            self.activePartitionEditDialog = PartitionEditDialog()
+            self.activePartitionEditDialog.set_start_date(selectedPartitionObject.startTime)
+            self.activePartitionEditDialog.set_end_date(selectedPartitionObject.endTime)
+            self.activePartitionEditDialog.set_type(1)
+            self.activePartitionEditDialog.set_subtype(1)
+            self.activePartitionEditDialog.set_title(selectedPartitionObject.name)
+            self.activePartitionEditDialog.set_subtitle(selectedPartitionObject.name)
+            self.activePartitionEditDialog.set_body(str(selectedPartitionObject.extended_data))
+            self.activePartitionEditDialog.on_commit.connect(self.try_update_partition)
+            self.activePartitionEditDialog.on_cancel.connect(self.partition_dialog_canceled)
+        else:
+            print("Couldn't get active partition object to edit!!")
+            self.activeEditingPartitionIndex = None
+
+
+    # @pyqtSlot(PhoDurationEvent_Partition)    
+    # def on_partition_modify_event(self, modifiedPartition):
+    #     print("on_partition_modify_event(...)")
+    #     self.activePartitionEditDialog = PartitionEditDialog()
+
+
+    # Returns the currently selected partition index or None if none are selected
+    def get_selected_partition_index(self):
+        if (len(self.selected_partition_object_indicies) > 0):
+            # Deselect previously selected item
+            prevSelectedItemIndex = self.selected_partition_object_indicies[0]
+            if (prevSelectedItemIndex):
+                return prevSelectedItemIndex
+            else:
+                return None
+        else:
+            return None
+
+    # Returns the currently selected partition object or None if none are selected
+    def get_selected_partition(self):
+        prevSelectedItemIndex = self.get_selected_partition_index()
+        if (prevSelectedItemIndex):
+            prevSelectedPartitionObj = self.partitionObjects[prevSelectedItemIndex]
+            if (prevSelectedPartitionObj):
+                return prevSelectedPartitionObj
+            else:
+                return None
+        else:
+            return None
     
     # Ohhh, paint event is only passing the displayed rectangle in the event, so when it's in a scroll view, only the part that's on the screen is being drawn.
     # But if that's true, why isn't it appearing unchanged when we scroll?
@@ -189,12 +248,9 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
             else:
                 print('partitionTrack: No valid hoverred object')
 
-            if (len(self.selected_partition_object_indicies) > 0):
-                        # Deselect previously selected item
-                        prevSelectedItemIndex = self.selected_partition_object_indicies[0]
-                        prevSelectedPartitionObj = self.partitionObjects[prevSelectedItemIndex]
-                        if (prevSelectedPartitionObj):
-                            prevSelectedPartitionObj.on_key_pressed(event)
+            prevSelectedPartitionObj = self.get_selected_partition()
+            if (prevSelectedPartitionObj):
+                prevSelectedPartitionObj.on_key_pressed(event)
             else:
                 print('partitionTrack: No valid selection object')
 
@@ -209,8 +265,6 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
             self.func = (self.drawNumber, {"notePoint": QPoint(100, 100)})
             self.mModified = True
             self.update()
-
-
 
     def on_mouse_moved(self, event):
         self.hovered_object_index = self.find_child_object(event.x(), event.y())
@@ -230,3 +284,19 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
     # def resizeEvent(self, event):
     #         # self.widget.move(self.width() - self.widget.width() - 2, 2)
     #         super(TimelineTrackDrawingWidget_Partition, self).resizeEvent(event)
+
+    def try_update_partition(self, start_date, end_date, title, subtitle, body, type_id, subtype_id):
+        # Tries to create a new comment
+        print('try_update_partition')
+        if (self.activeEditingPartitionIndex):
+            self.partitionManager.modify_partition(self.activeEditingPartitionIndex, start_date, end_date, title, subtitle, body, type_id, subtype_id)
+            print('Modified partition[{0}]'.format(self.activeEditingPartitionIndex))
+            self.reinitialize_from_partition_manager()
+            self.update()
+        else:
+            print("Error: unsure what partition to update!")
+            return
+
+    def partition_dialog_canceled(self):
+        print('comment_Dialog_canceled')
+        self.activeEditingPartitionIndex = None

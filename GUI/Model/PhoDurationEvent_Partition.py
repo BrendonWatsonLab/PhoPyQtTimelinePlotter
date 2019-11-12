@@ -25,6 +25,11 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
 
     MainTextFont = QFont('SansSerif', 10)
 
+    # This defines a signal called 'closed' that takes no arguments.
+    on_edit = pyqtSignal()
+    # on_edit = pyqtSignal(datetime, datetime, str, str, str)
+    # on_edit = pyqtSignal(PhoDurationEvent_Partition)
+
     def __init__(self, startTime=datetime.now(), endTime=None, name='', color=QColor(51, 204, 255), extended_data=dict(), parent=None):
         super(PhoDurationEvent_Partition, self).__init__(startTime, endTime, name, color, extended_data, parent=parent)
         # TODO: init gui
@@ -101,7 +106,10 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
         # action = menu.exec_(self.mapToParent(pos))
         # action = menu.exec_(pos)
         if action == clear_action:
-            self.comboBox.setCurrentIndex(0)
+            print("Clear action!")
+            self.on_edit.emit()
+            # self.on_edit.emit(self)
+            # self.comboBox.setCurrentIndex(0)
 
     def onActivated(self, text):
         self.name = text

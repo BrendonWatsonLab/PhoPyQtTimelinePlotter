@@ -71,3 +71,13 @@ class TextAnnotationDialog(QtWidgets.QDialog):
 
     def get_body(self):
         return self.ui.textBrowser_Body.toPlainText()
+
+    def set_title(self, updatedStr):
+        self.ui.lineEdit_Title.setText(updatedStr)
+
+    def set_subtitle(self, updatedStr):
+        return self.ui.lineEdit_Subtitle.setText(updatedStr)
+
+    def set_body(self, updatedStr):
+        return self.ui.textBrowser_Body.setPlainText(updatedStr)
+    

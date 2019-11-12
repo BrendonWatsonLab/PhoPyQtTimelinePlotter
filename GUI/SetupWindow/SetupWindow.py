@@ -11,20 +11,7 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 
-from app.BehaviorsList import BehaviorsManager
-
-class PartitionInfoOptions(QObject):
-
-    def __init__(self, name='', description='', type=-1, subtype=-1, color=Qt.red, extended_data=dict()):
-            super(PartitionInfoOptions, self).__init__(None)
-            self.name = name
-            self.description = description
-            self.type = type
-            self.subtype = subtype
-            self.color = color
-            self.extended_data = extended_data
-
-
+from app.BehaviorsList import BehaviorsManager, BehaviorInfoOptions
 
 class SetupWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -58,7 +45,7 @@ class SetupWindow(QtWidgets.QMainWindow):
         
         self.partitionInfoOptions = []
         for (anIndex, aBehavior) in enumerate(uniqueBehaviorsList):
-            newObj = PartitionInfoOptions(aBehavior, aBehavior, anIndex, 0, uniqueColorsDict[aBehavior])
+            newObj = BehaviorInfoOptions(aBehavior, aBehavior, anIndex, 0, uniqueColorsDict[aBehavior])
             self.partitionInfoOptions.append(newObj)
 
     def initUI(self):
