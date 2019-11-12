@@ -51,8 +51,11 @@ class SetupWindow(QtWidgets.QMainWindow):
         self.initUI()
 
     def build_from_behaviors_manager(self):
-        uniqueBehaviorsList = self.behaviorsManager.get_unique_behaviors()
-        uniqueColorsDict = self.behaviorsManager.color_dictionary
+        # uniqueBehaviorsList = self.behaviorsManager.get_unique_behaviors()
+        # uniqueColorsDict = self.behaviorsManager.color_dictionary
+        uniqueBehaviorsList = self.behaviorsManager.get_unique_behavior_groups()
+        uniqueColorsDict = self.behaviorsManager.groups_color_dictionary
+        
         self.partitionInfoOptions = []
         for (anIndex, aBehavior) in enumerate(uniqueBehaviorsList):
             newObj = PartitionInfoOptions(aBehavior, aBehavior, anIndex, 0, uniqueColorsDict[aBehavior])

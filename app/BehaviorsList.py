@@ -42,6 +42,7 @@ class BehaviorsManager(QObject):
         super(BehaviorsManager, self).__init__(None)
         # Color Map:
         self.color_dictionary = dict(zip(BehaviorsManager.get_behaviors_list(), BehaviorsManager.get_behaviors_colors()))
+        self.groups_color_dictionary = dict(zip(BehaviorsManager.get_behaviors_group_names_list(), BehaviorsManager.get_behaviors_colors()))
         self.leaf_to_behavior_groups_dict = dict(zip(BehaviorsManager.get_behaviors_list(), BehaviorsManager.get_behaviors_group_names_list()))
 
         self.uniqueBehaviors = set(BehaviorsManager.get_behaviors_list())
@@ -52,7 +53,7 @@ class BehaviorsManager(QObject):
         newRootNode = BehaviorNode('Root', Qt.black, parentNode=None, childrenNodes=[])
         # Add the top-level parent nodes
         for aUniqueBehavior in self.uniqueBehaviorGroups:
-            aNewNode = BehaviorNode(aUniqueBehavior, Qt.red, newRootNode)
+            aNewNode = BehaviorNode(aUniqueBehavior, self.groups_color_dictionary[aUniqueBehavior], newRootNode)
             newRootNode.add_child(aNewNode)
 
         # Add the leaf nodes
