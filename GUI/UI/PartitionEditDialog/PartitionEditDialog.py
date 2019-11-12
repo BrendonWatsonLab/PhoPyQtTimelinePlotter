@@ -24,7 +24,7 @@ class PartitionEditDialog(QtWidgets.QDialog):
         super(PartitionEditDialog, self).__init__() # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/UI/PartitionEditDialog/PartitionEditDialog.ui", self) # Load the .ui file
         self.behaviorsManager = BehaviorsManager()
-        self.build_from_behaviors_manager()
+        self.init_from_behaviors_manager()
         self.initUI()
         self.rebuild_combo_boxes_from_behaviors()
         self.show() # Show the GUI
@@ -35,7 +35,8 @@ class PartitionEditDialog(QtWidgets.QDialog):
         self.ui.comboBox_Type.activated[str].connect(self.on_type_combobox_changed)
         self.ui.comboBox_Subtype.activated[str].connect(self.on_subtype_combobox_changed)
 
-    def build_from_behaviors_manager(self):
+
+    def init_from_behaviors_manager(self):
         uniqueBehaviorsList = self.behaviorsManager.get_unique_behaviors()
         uniqueColorsDict = self.behaviorsManager.color_dictionary
         uniqueBehaviorGroupsList = self.behaviorsManager.get_unique_behavior_groups()
@@ -52,12 +53,13 @@ class PartitionEditDialog(QtWidgets.QDialog):
             newGroupObj = BehaviorInfoOptions(aBehaviorGroup, aBehaviorGroup, anIndex, 0, uniqueColorGroupsDict[aBehaviorGroup])
             self.behaviorInfoGroupsOptions.append(newGroupObj)
 
+    # rebuild_combo_boxes_from_behaviors(): rebuilds the two combo boxes from the behaviors
     def rebuild_combo_boxes_from_behaviors(self):
         types_model = self.ui.comboBox_Type.model()
         for (anIndex, aBehaviorInfoGroupOption) in enumerate(self.behaviorInfoGroupsOptions):
             # self.ui.comboBox_Type.addItem(aBehaviorInfoGroupOption.name)
             item = QtGui.QStandardItem(str(aBehaviorInfoGroupOption.name))
-            item.setForeground(QtGui.QColor('red'))
+            item.setForeground(aBehaviorInfoGroupOption.color)
             types_model.appendRow(item)
             # self.ui.comboBox_Type.addItem(item)
             # self.ui.comboBox_Type.setItemData()
@@ -98,13 +100,13 @@ class PartitionEditDialog(QtWidgets.QDialog):
         self.ui.comboBox_Type.setCurrentIndex(type_id)
     
     def get_type(self):
-        return self.ui.comboBox_Type.currentIndex
+        return self.ui.comboBox_Type.currentIndex()
 
     def set_subtype(self, subtype_id):
         self.ui.comboBox_Subtype.setCurrentIndex(subtype_id)
     
     def get_subtype(self):
-        return self.ui.comboBox_Subtype.currentIndex
+        return self.ui.comboBox_Subtype.currentIndex()
 
     def set_start_date(self, startDate):
         self.ui.dateTimeEdit_Start.setDateTime(startDate)

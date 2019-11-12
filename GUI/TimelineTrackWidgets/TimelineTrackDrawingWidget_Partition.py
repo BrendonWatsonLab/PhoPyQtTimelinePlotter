@@ -63,11 +63,11 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
             self.activePartitionEditDialog = PartitionEditDialog()
             self.activePartitionEditDialog.set_start_date(selectedPartitionObject.startTime)
             self.activePartitionEditDialog.set_end_date(selectedPartitionObject.endTime)
-            self.activePartitionEditDialog.set_type(1)
-            self.activePartitionEditDialog.set_subtype(1)
+            self.activePartitionEditDialog.set_type(selectedPartitionObject.type_id)
+            self.activePartitionEditDialog.set_subtype(selectedPartitionObject.subtype_id)
             self.activePartitionEditDialog.set_title(selectedPartitionObject.name)
-            self.activePartitionEditDialog.set_subtitle(selectedPartitionObject.name)
-            self.activePartitionEditDialog.set_body(str(selectedPartitionObject.extended_data))
+            self.activePartitionEditDialog.set_subtitle(selectedPartitionObject.subtitle)
+            self.activePartitionEditDialog.set_body(selectedPartitionObject.body)
             self.activePartitionEditDialog.on_commit.connect(self.try_update_partition)
             self.activePartitionEditDialog.on_cancel.connect(self.partition_dialog_canceled)
         else:
@@ -290,7 +290,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         print('try_update_partition')
         if (self.activeEditingPartitionIndex):
             self.partitionManager.modify_partition(self.activeEditingPartitionIndex, start_date, end_date, title, subtitle, body, type_id, subtype_id)
-            print('Modified partition[{0}]'.format(self.activeEditingPartitionIndex))
+            print('Modified partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(self.activeEditingPartitionIndex, type_id, subtype_id))
             self.reinitialize_from_partition_manager()
             self.update()
         else:

@@ -30,8 +30,14 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
     # on_edit = pyqtSignal(datetime, datetime, str, str, str)
     # on_edit = pyqtSignal(PhoDurationEvent_Partition)
 
-    def __init__(self, startTime=datetime.now(), endTime=None, name='', color=QColor(51, 204, 255), extended_data=dict(), parent=None):
+    def __init__(self, startTime=datetime.now(), endTime=None, name='', subtitle='', body='', color=QColor(51, 204, 255), type_id=1, subtype_id=1, extended_data=dict(), parent=None):
         super(PhoDurationEvent_Partition, self).__init__(startTime, endTime, name, color, extended_data, parent=parent)
+        self.subtitle = subtitle
+        self.body = body
+        
+        self.type_id = type_id
+        self.subtype_id = subtype_id
+
         # TODO: init gui
 
         # Debug pallete
@@ -41,63 +47,6 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
         # self.setPalette(p)
 
         # self.initUI()
-
-    # def initUI(self):
-    #     # QtWidgets.QWidget()
-    #     minimumWidgetWidth = 10
-    #     self.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        
-    #     self.frameWidget = QFrame(self)
-    #     self.frameWidget.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
-    #     # self.frameWidget.setMinimumSize(minimumWidgetWidth, 50)
-    #     self.frameWidget.setAutoFillBackground(True)
-    #     self.frameWidget.setMouseTracking(True)
-    #     # self.frameWidget.setStyleSheet("background-color: red; border: 1px solid black; border-radius: 8px")
-    #     self.frameWidget.setStyleSheet("background-color: #33ccff; border: 1px solid #e0e0e0; border-radius: 8px")
-
-    #     self.lblTitle = QLabel("Title",self)
-    #     self.lblTitle.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
-
-    #     self.lblSubtitle = QLabel("Subtitle",self)
-    #     self.lblSubtitle.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
-
-    #     self.comboBox = QComboBox(self)
-    #     self.comboBox.customContextMenuRequested.connect(self.showMenu)
-    #     self.comboBox.addItem("Ubuntu")
-    #     self.comboBox.addItem("Mandriva")
-    #     self.comboBox.addItem("Fedora")
-    #     self.comboBox.addItem("Red Hat")
-    #     self.comboBox.addItem("Gentoo")
-    #     self.comboBox.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
-
-    #      #Layout of Extended Tracks Container Widget
-    #     self.mainVboxLayout = QVBoxLayout(self)
-    #     self.mainVboxLayout.addStretch(1)
-    #     self.mainVboxLayout.addSpacing(0.2)
-    #     self.mainVboxLayout.setContentsMargins(0, 0, 0, 0)
-
-    #     self.mainVboxLayout.addWidget(self.lblTitle)
-    #     # self.lblTitle.setMinimumSize(minimumWidgetWidth, 10)
-
-    #     self.mainVboxLayout.addWidget(self.lblSubtitle)
-    #     # self.lblSubtitle.setMinimumSize(minimumWidgetWidth, 10)
-
-    #     self.mainVboxLayout.addWidget(self.comboBox)
-    #     # self.comboBox.setMinimumSize(minimumWidgetWidth, 10)
-
-    #     self.frameWidget.setLayout(self.mainVboxLayout)
-
-    #     # self.comboBox.move(0, 0)
-    #     # self.lbl.move(50, 150)
-
-    #     self.comboBox.activated[str].connect(self.onActivated)
-
-    #     self.rootVboxLayout = QVBoxLayout(self)
-    #     self.rootVboxLayout.addWidget(self.frameWidget)
-    #     self.rootVboxLayout.setContentsMargins(0, 0, 0, 0)
-    #     self.setLayout(self.rootVboxLayout)
-
-    #     # self.setGeometry(300, 300, 300, 200)
 
     def showMenu(self, pos):
         menu = QMenu()
@@ -159,75 +108,6 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
 
         # print('Partition paint is called: ', finalEventRect)
 
-        # self.resize(width, height)
-        # self.frameWidget.resize(width, height)
-        # self.frameWidget.move(x, y)
-
-        # self.setGeometry(finalEventRect)
-        # self.setMaximumWidth(width)
-
-        # self.setGeometry(x, y, width, height)
-        # self.updateGeometry()
-
-        # self.frameWidget.setMaximumWidth(width)
-        # self.frameWidget.setFixedWidth(width)
-
-        # self.update()
-
-        # self.move(x, y)
-        # self.setFixedWidth(width)
-
-        # self.move(x, y)
-        
-        # self.setGeometry(finalEventRect)     
-        # self.frameWidget.setMinimumSize(width, 50)
-        # self.frameWidget.setFixedWidth(width)
-        # self.updateGeometry()
-        # self.update()
-
-        # self.widget.move(self.width() - self.widget.width() - 1, 1)
-
-        # self.comboBox.paint
-        
-        # # painter.setPen( QtGui.QPen( Qt.darkBlue, 2, join=Qt.MiterJoin ) )
-
-        # painter.save()
-        # painter.setRenderHint(QPainter.Antialiasing)
-
-        # if self.is_deemphasized:
-        #     activeColor = Qt.lightGray
-        # else:
-        #     # de-emphasized overrides emphasized status
-        #     if self.is_emphasized:
-        #         activeColor = PhoDurationEvent.ColorEmph
-        #     else:
-        #         activeColor = self.color
-
-        # if self.is_active:
-        #     painter.setPen(QtGui.QPen(PhoDurationEvent.ColorBorderActive, 4.0, join=Qt.MiterJoin))
-        #     painter.setBrush(QBrush(PhoDurationEvent.ColorActive, Qt.SolidPattern))
-        # else:
-        #     painter.setPen(QtGui.QPen(PhoDurationEvent.ColorBorderBase, 1.5, join=Qt.MiterJoin))
-        #     painter.setBrush(QBrush(activeColor, Qt.SolidPattern))
-
-        # if self.endTime is None:
-        #     # Instantaneous type event
-        #     # painter.setPen(Qt.NoPen)
-        #     if self.is_emphasized:
-        #         penWidth = 1.0
-        #     else:
-        #         penWidth = 0.2
-
-        #     ## NOTE: Apparently for events as small as the instantaneous events (with a width of 2) the "Brush" or "fill" doesn't matter, only the stroke does.
-        #     painter.setPen(QtGui.QPen(activeColor, penWidth, join=Qt.MiterJoin))
-        #     painter.drawRect(x, y, width, height)
-        # else:
-        #     # Normal duration event (like for videos)
-        #     painter.drawRoundedRect(x, y, width, height, PhoDurationEvent.RectCornerRounding, PhoDurationEvent.RectCornerRounding)
-        #     # If it's not an instantaneous event, draw the label
-        #     painter.drawText(eventRect, Qt.AlignCenter, self.name)
-
-        # painter.restore()
         return self.finalEventRect
         # return parent_modified_event_rect
         

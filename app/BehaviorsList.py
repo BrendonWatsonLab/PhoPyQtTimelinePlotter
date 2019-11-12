@@ -56,9 +56,14 @@ class BehaviorsManager(QObject):
         self.groups_color_dictionary = dict(zip(BehaviorsManager.get_behaviors_group_names_list(), BehaviorsManager.get_behaviors_colors()))
         self.leaf_to_behavior_groups_dict = dict(zip(BehaviorsManager.get_behaviors_list(), BehaviorsManager.get_behaviors_group_names_list()))
 
-        self.uniqueBehaviors = set(BehaviorsManager.get_behaviors_list())
-        self.uniqueBehaviorGroups = set(BehaviorsManager.get_behaviors_group_names_list())
-        self.uniqueActivityGroups = set(BehaviorsManager.get_behaviors_activity_groups_list())
+        self.uniqueBehaviors = list(set(BehaviorsManager.get_behaviors_list()))
+        self.uniqueBehaviorGroups = list(set(BehaviorsManager.get_behaviors_group_names_list()))
+        self.uniqueActivityGroups = list(set(BehaviorsManager.get_behaviors_activity_groups_list()))
+
+        self.uniqueBehaviors.sort(reverse = False)
+        self.uniqueBehaviorGroups.sort(reverse = False)
+        self.uniqueActivityGroups.sort(reverse = False)
+
 
     def buildBehaviorsTree(self):
         newRootNode = BehaviorNode('Root', Qt.black, parentNode=None, childrenNodes=[])
@@ -88,6 +93,25 @@ class BehaviorsManager(QObject):
 
     def get_unique_behavior_activity_groups(self):
         return self.uniqueActivityGroups
+
+
+    # "Types": grouped sets of behaviors
+    def get_type(self, type_id):
+        return self.uniqueBehaviors[type_id]
+
+    def get_type_color(self, type_id):
+        return self.get_type(type_id)
+    
+    # "Subtypes": the most specific set of behaviors
+    def get_subtype(self, subtype_id):
+        return self.uniqueBehaviors[subtype_id]
+
+    def get_subtype_color(self, subtype_id):
+        return self.color_dictionary[self.get_subtype(subtype_id)]
+
+        self.groups_color_dictionary
+
+    
 
 
     # def addMail(self, model, mailFrom, subject, date):
