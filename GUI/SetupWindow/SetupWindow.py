@@ -11,6 +11,8 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 
+from app.BehaviorsList import BehaviorsManager
+
 class PartitionInfoOptions(QObject):
 
     def __init__(self, name='', description='', type=-1, subtype=-1, color=Qt.red, extended_data=dict()):
@@ -28,14 +30,33 @@ class SetupWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(SetupWindow, self).__init__() # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/SetupWindow/SetupWindow.ui", self) # Load the .ui file
-        self.partitionInfoOptions = [PartitionInfoOptions('Unpartitioned','Unpartitioned'),
-            PartitionInfoOptions('Removed','Removed'),
-            PartitionInfoOptions('Sleep','Sleep'),
-            PartitionInfoOptions('Stationary','Stationary'),
-            PartitionInfoOptions('Active','Active'),
-            PartitionInfoOptions('Running','Running')
-        ]
+        self.behaviorsManager = BehaviorsManager()
+        # self.partitionInfoOptions = [PartitionInfoOptions('Unpartitioned','Unpartitioned'),
+        #     PartitionInfoOptions('Removed','Removed'),
+        #     PartitionInfoOptions('Sleep','Sleep'),
+        #     PartitionInfoOptions('Stationary','Stationary'),
+        #     PartitionInfoOptions('Active','Active'),
+        #     PartitionInfoOptions('Running','Running')
+        # ]
+
+        # self.partitionInfoOptions = [PartitionInfoOptions('Unpartitioned','Unpartitioned'),
+        #     PartitionInfoOptions('Removed','Removed'),
+        #     PartitionInfoOptions('Sleep','Sleep'),
+        #     PartitionInfoOptions('Stationary','Stationary'),
+        #     PartitionInfoOptions('Active','Active'),
+        #     PartitionInfoOptions('Running','Running')
+        # ]
+
+        self.build_from_behaviors_manager()
         self.initUI()
+
+    def build_from_behaviors_manager(self):
+        uniqueBehaviorsList = self.behaviorsManager.get_unique_behaviors()
+        uniqueColorsDict = self.behaviorsManager.color_dictionary
+        self.partitionInfoOptions = []
+        for (anIndex, aBehavior) in enumerate(uniqueBehaviorsList):
+            newObj = PartitionInfoOptions(aBehavior, aBehavior, anIndex, 0, uniqueColorsDict[aBehavior])
+            self.partitionInfoOptions.append(newObj)
 
     def initUI(self):
         self.ui.tableWidget_Settings_PartitionTrack.setColumnCount(5)
@@ -69,7 +90,7 @@ class SetupWindow(QtWidgets.QMainWindow):
             self.ui.tableWidget_Settings_PartitionTrack.setItem(aDataRowIndex,3,QTableWidgetItem(str(aPartitionInfoOption.subtype)))
 
             # Color Item:
-            currColorTableWidgetItem = QTableWidgetItem(aPartitionInfoOption.color)
+            currColorTableWidgetItem = QTableWidgetItem('')
             # btnCurrTableWidgetCellColorItem = QPushButton(self.ui.tableWidget_Settings_PartitionTrack)
             # # btnCurrTableWidgetCellColorItem = QPushButton(currColorTableWidgetItem)
             # btnCurrTableWidgetCellColorItem.setText('color')
