@@ -156,6 +156,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.extendedTracksContainerVboxLayout = QVBoxLayout(self)
         self.extendedTracksContainerVboxLayout.addStretch(1)
         self.extendedTracksContainerVboxLayout.addSpacing(2.0)
+        self.extendedTracksContainerVboxLayout.setContentsMargins(0,0,0,0)
 
         self.extendedTracksContainerVboxLayout.addWidget(self.timelineMasterTrackWidget)
         self.timelineMasterTrackWidget.setMinimumSize(minimumWidgetWidth, 50)
