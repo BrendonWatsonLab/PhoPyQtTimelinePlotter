@@ -41,7 +41,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         self.annotationDataObjects = load_annotation_events_from_database('/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db')
         self.rebuildDrawnObjects()
 
-    
+    # Rebuilds the GUI event objects from the self.annotationDataObjects
     def rebuildDrawnObjects(self):
         self.durationObjects = []
         for aDataObj in self.annotationDataObjects:

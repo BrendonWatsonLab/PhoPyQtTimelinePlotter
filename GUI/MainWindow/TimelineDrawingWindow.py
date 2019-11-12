@@ -25,7 +25,8 @@ from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_AnnotationComments impo
 from app.database.SqliteEventsDatabase import load_video_events_from_database
 from app.database.SqlAlchemyDatabase import load_annotation_events_from_database, save_annotation_events_to_database, create_TimestampedAnnotation
 
-from GUI.UI.VideoPlayer.main_video_player_window import * 
+from GUI.UI.VideoPlayer.main_video_player_window import *
+from GUI.SetupWindow.SetupWindow import *
 
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.
@@ -37,7 +38,6 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
     
     static_VideoTrackTrackID = -1 # The integer ID of the main video track
     
-
     TraceCursorWidth = 2
     TraceCursorColor = QColor(51, 255, 102)  # Green
 
@@ -60,6 +60,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
 
         self.videoPlayerWindow = None
         self.helpWindow = None
+        self.setupWindow = None
 
         self.initUI()
         # self.show() # Show the GUI
@@ -91,7 +92,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
             self.ui.actionExit_Application.triggered.connect(qApp.quit)
             self.ui.actionShow_Help.triggered.connect(self.handle_showHelpWindow)
             self.ui.actionVideo_Player.triggered.connect(self.handle_showVideoPlayerWindow)
-
+            self.ui.actionSettings.triggered.connect(self.handle_showSetupWindow)
             
 
         desiredWindowWidth = 900
@@ -305,6 +306,15 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
             # Create a new help window
             self.helpWindow = HelpWindowFinal()
             self.helpWindow.show()
+
+    # Shows the Setup/Settings window:
+    def handle_showSetupWindow(self):
+        if self.setupWindow:
+            self.setupWindow.show()
+        else:
+            # Create a new setup window
+            self.setupWindow = SetupWindow()
+            self.setupWindow.show()
 
     # Shows the video player window:
     def handle_showVideoPlayerWindow(self):
