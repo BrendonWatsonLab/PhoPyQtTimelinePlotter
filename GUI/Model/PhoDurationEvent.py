@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 import numpy as np
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
+from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QFontMetrics
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 from GUI.Model.PhoEvent import *
@@ -22,6 +22,8 @@ class PhoDurationEvent(PhoEvent):
 
     ColorBorderBase = QColor('#e0e0e0')  # Whiteish
     ColorBorderActive = QColor(255, 222, 122)  # Yellowish
+
+    MainTextFont = QFont('SansSerif', 10)
 
     def __init__(self, startTime=datetime.now(), endTime=None, name='', color=QColor(51, 204, 255), extended_data=dict()):
         super(PhoDurationEvent, self).__init__(startTime, name, color, extended_data)
@@ -38,7 +40,6 @@ class PhoDurationEvent(PhoEvent):
     def is_entirely_greater_than(self, otherEvent):
         # Returns true if this event is entirely greater than the otherEvent (meaning it both starts AND completes after the end of the otherEvent)
         return self.startTime > otherEvent.endTime and self.endTime > otherEvent.endTime
-
 
     def overlaps_range(self, range_start_datetime, range_end_datetime):
         # Returns true if the event overlaps a given datetime range
@@ -58,10 +59,13 @@ class PhoDurationEvent(PhoEvent):
             else:
                 return False
 
-    # def overlaps(self, otherEvent):
-    #     # Returns true if this event overlaps the otherEvent
-    #     if otherEvent.end
-    #     return self.
+    def precompute_text_height(self, font):
+        qm = QFontMetrics(font)
+        return qm.height()
+
+    def precompute_text_width(self, font, text):
+        qm = QFontMetrics(font)
+        return qm.width(text)
 
     def __str__(self):
         return 'Event {0}: [startTime: {1}, endTime: {2}], duration: {3}, extended_data: {4}'.format(self.name, self.startTime, self.endTime, self.computeDuration(), str(self.extended_data))

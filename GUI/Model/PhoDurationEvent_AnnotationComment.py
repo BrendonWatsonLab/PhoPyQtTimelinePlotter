@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 import numpy as np
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPainterPath, QPolygon
+from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPainterPath, QPolygon, QFontMetrics
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 from GUI.Model.PhoEvent import *
@@ -27,12 +27,15 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     ColorBorderBase = QColor('#e0e0e0')  # Whiteish
     ColorBorderActive = QColor(255, 222, 122)  # Yellowish
 
+    MainTextFont = QFont('SansSerif', 12)
+    SecondaryTextFont = QFont('SansSerif', 10)
+    BodyTextFont = QFont('SansSerif', 8)
+
     NibTriangleHeight = 10.0
     NibTriangleWidth = 5.0
 
     LeftNibPainter = TrianglePainter(TriangleDrawOption_Horizontal.LeftApex)
     RightNibPainter = TrianglePainter(TriangleDrawOption_Horizontal.RightApex)
-
 
     def __init__(self, startTime=datetime.now(), endTime=None, name='', title='', subtitle='', color=QColor(51, 255, 102), extended_data=dict()):
         super(PhoDurationEvent_AnnotationComment, self).__init__(startTime, endTime, name, color, extended_data)
@@ -116,6 +119,7 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         # percent_duration = relative_offset_duration / self.computeDuration()
         return relative_offset_duration
 
+
     # "pass": specifies that we're leaving this method "virtual" or intensionally empty to be overriden by a subclass.
     def paint(self, painter, totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect):
         # "total*" refers to the parent frame in which this event is to be drawn
@@ -184,9 +188,20 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
             end_poly = PhoDurationEvent_AnnotationComment.RightNibPainter.get_poly(startPos, PhoDurationEvent_AnnotationComment.NibTriangleHeight, PhoDurationEvent_AnnotationComment.NibTriangleWidth)
         
             # If it's not an instantaneous event, draw the label
-            painter.drawText(bodyRect, Qt.AlignTop|Qt.AlignHCenter, self.title)
-            painter.drawText(bodyRect, Qt.AlignHCenter|Qt.AlignCenter, self.subtitle)
-            painter.drawText(bodyRect, Qt.AlignBottom|Qt.AlignHCenter, self.name)
+            self.titleHeight = self.precompute_text_height(PhoDurationEvent_AnnotationComment.MainTextFont)
+            self.titleLabelRect = QRect(x, body_y, width, self.titleHeight)
+            self.subtitleHeight = self.precompute_text_height(PhoDurationEvent_AnnotationComment.SecondaryTextFont)
+            self.subtitleLabelRect = QRect(x, (body_y+self.titleHeight), width, self.subtitleHeight)
+            self.bodyTextLabelRect = QRect(x, self.subtitleLabelRect.bottom(), width, (bodyRect.height()-(self.titleHeight + self.subtitleHeight)))
+            # PhoDurationEvent_AnnotationComment.BodyTextFont
+
+            # painter.drawText(bodyRect, Qt.AlignTop|Qt.AlignHCenter, self.title)
+            # painter.drawText(bodyRect, Qt.AlignHCenter|Qt.AlignCenter, self.subtitle)
+            # painter.drawText(bodyRect, Qt.AlignBottom|Qt.AlignHCenter, self.name)
+
+            painter.drawText(self.titleLabelRect, Qt.AlignCenter, self.title)
+            painter.drawText(self.subtitleLabelRect, Qt.AlignCenter, self.subtitle)
+            painter.drawText(self.bodyTextLabelRect, Qt.AlignCenter, self.name)
 
             # Draw Nibs:
             painter.drawPolygon(start_poly)
