@@ -8,6 +8,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 from GUI.Model.PhoEvent import PhoEvent
 from GUI.Model.PhoDurationEvent import PhoDurationEvent
+from GUI.Model.PhoDurationEvent_Partition import PhoDurationEvent_Partition
 
 """
 Represents a partition
@@ -44,7 +45,7 @@ class Partitioner(QObject):
         if partitions:
             self.partitions = partitions
         else:
-            self.partitions = [PhoDurationEvent(self.totalStartTime, self.totalEndTime, '0')] # Create default partition
+            self.partitions = [PhoDurationEvent_Partition(self.totalStartTime, self.totalEndTime, '0')] # Create default partition
     
         self.extended_data = extended_data
 
@@ -65,7 +66,7 @@ class Partitioner(QObject):
             # only can cut if it's in the appropriate partition.
             # Create a new partition and insert it after the partition to cut. It should span from [cut_datetime, to the end of the cut partition]
             new_partition_index = cut_partition_index+1
-            self.partitions.insert(new_partition_index, PhoDurationEvent(cut_datetime, partition_to_cut.endTime, str(new_partition_index)))
+            self.partitions.insert(new_partition_index, PhoDurationEvent_Partition(cut_datetime, partition_to_cut.endTime, str(new_partition_index)))
             self.partitions[cut_partition_index].endTime = cut_datetime # Truncate the partition to cut to the cut_datetime
             return True
         else:
