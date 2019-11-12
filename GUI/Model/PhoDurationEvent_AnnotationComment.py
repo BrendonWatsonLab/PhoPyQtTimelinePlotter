@@ -37,8 +37,8 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     LeftNibPainter = TrianglePainter(TriangleDrawOption_Horizontal.LeftApex)
     RightNibPainter = TrianglePainter(TriangleDrawOption_Horizontal.RightApex)
 
-    def __init__(self, startTime=datetime.now(), endTime=None, name='', title='', subtitle='', color=QColor(51, 255, 102), extended_data=dict()):
-        super(PhoDurationEvent_AnnotationComment, self).__init__(startTime, endTime, name, color, extended_data)
+    def __init__(self, startTime=datetime.now(), endTime=None, name='', title='', subtitle='', color=QColor(51, 255, 102), extended_data=dict(), parent=None):
+        super(PhoDurationEvent_AnnotationComment, self).__init__(startTime, endTime, name, color, extended_data, parent=parent)
         self.title = title
         self.subtitle = subtitle
 

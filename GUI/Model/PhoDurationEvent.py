@@ -25,8 +25,8 @@ class PhoDurationEvent(PhoEvent):
 
     MainTextFont = QFont('SansSerif', 10)
 
-    def __init__(self, startTime=datetime.now(), endTime=None, name='', color=QColor(51, 204, 255), extended_data=dict()):
-        super(PhoDurationEvent, self).__init__(startTime, name, color, extended_data)
+    def __init__(self, startTime=datetime.now(), endTime=None, name='', color=QColor(51, 204, 255), extended_data=dict(), parent=None):
+        super(PhoDurationEvent, self).__init__(startTime, name, color, extended_data, parent=parent)
         self.endTime = endTime
 
     def __eq__(self, otherEvent):

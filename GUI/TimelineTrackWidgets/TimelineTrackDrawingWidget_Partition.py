@@ -26,7 +26,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
     def __init__(self, trackID, partitionObjects, cutObjects, totalStartTime, totalEndTime):
         super(TimelineTrackDrawingWidget_Partition, self).__init__(trackID, totalStartTime, totalEndTime)
         
-        self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, 'partitioner', partitionObjects)
+        self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, 'partitioner', partitionObjects)
         self.partitionObjects = self.partitionManager.partitions
         ## TODO: can reconstruct partitions from cutObjects, but can't recover the specific partition's info.
         self.cutObjects = cutObjects

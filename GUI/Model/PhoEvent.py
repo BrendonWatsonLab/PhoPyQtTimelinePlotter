@@ -13,8 +13,8 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 class PhoEvent(QWidget):
 
-    def __init__(self, startTime=datetime.now(), name='', color=Qt.black, extended_data=dict()):
-        super(PhoEvent, self).__init__(None)
+    def __init__(self, startTime=datetime.now(), name='', color=Qt.black, extended_data=dict(), parent=None):
+        super(PhoEvent, self).__init__(parent)
         self.name = name
         self.startTime = startTime
         self.color = color

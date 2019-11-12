@@ -25,8 +25,8 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
 
     MainTextFont = QFont('SansSerif', 10)
 
-    def __init__(self, startTime=datetime.now(), endTime=None, name='', color=QColor(51, 204, 255), extended_data=dict()):
-        super(PhoDurationEvent_Partition, self).__init__(startTime, endTime, name, color, extended_data)
+    def __init__(self, startTime=datetime.now(), endTime=None, name='', color=QColor(51, 204, 255), extended_data=dict(), parent=None):
+        super(PhoDurationEvent_Partition, self).__init__(startTime, endTime, name, color, extended_data, parent=parent)
         # TODO: init gui
         self.initUI()
 
