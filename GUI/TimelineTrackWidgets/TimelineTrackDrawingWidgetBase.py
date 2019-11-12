@@ -24,8 +24,8 @@ class TimelineTrackDrawingWidgetBase(QtWidgets.QWidget):
 
     static_TimeTrackObjectIndex_NoSelection = -1  # The integer value that indicates no object has been selected in the timeline
 
-    def __init__(self, trackID, totalStartTime, totalEndTime, wantsKeyboardEvents=False, wantsMouseEvents=True):
-        super(TimelineTrackDrawingWidgetBase, self).__init__()
+    def __init__(self, trackID, totalStartTime, totalEndTime, parent=None, wantsKeyboardEvents=False, wantsMouseEvents=True):
+        super(TimelineTrackDrawingWidgetBase, self).__init__(parent)
         self.trackID = trackID
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
