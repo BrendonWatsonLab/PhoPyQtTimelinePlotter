@@ -138,7 +138,6 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
                 self.update()
                 self.selection_changed.emit(self.trackID, newlySelectedObjectIndex)
 
-            
     def on_button_released(self, event):
         # Check if we want to dismiss the selection when the mouse button is released (requiring the user to hold down the button to see the results)
         needs_update = False                    
@@ -178,15 +177,26 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         if needs_update:
             self.update()
             
-    
     def on_key_pressed(self, event):
         gey = event.key()
         self.func = (None, None)
         print("partitionTrack: on_key_pressed(...)")
         if gey == Qt.Key_M:
             print("partitionTrack: Key 'm' pressed!")
-            if self.hovered_object_index:
-                self.hovered_object_index.on_key_pressed(event)
+            prevHoveredObj = self.hovered_object
+            if prevHoveredObj:
+                prevHoveredObj.on_key_pressed(event)
+            else:
+                print('partitionTrack: No valid hoverred object')
+
+            if (len(self.selected_partition_object_indicies) > 0):
+                        # Deselect previously selected item
+                        prevSelectedItemIndex = self.selected_partition_object_indicies[0]
+                        prevSelectedPartitionObj = self.partitionObjects[prevSelectedItemIndex]
+                        if (prevSelectedPartitionObj):
+                            prevSelectedPartitionObj.on_key_pressed(event)
+            else:
+                print('partitionTrack: No valid selection object')
 
         elif gey == Qt.Key_Right:
             print("partitionTrack: Right key pressed!, call drawFundBlock()")

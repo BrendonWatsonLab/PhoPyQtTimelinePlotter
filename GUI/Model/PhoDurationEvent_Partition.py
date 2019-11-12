@@ -94,10 +94,12 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
 
     #     # self.setGeometry(300, 300, 300, 200)
 
-    def showMenu(self,pos):
+    def showMenu(self, pos):
         menu = QMenu()
         clear_action = menu.addAction("Clear Selection")
         action = menu.exec_(self.mapToGlobal(pos))
+        # action = menu.exec_(self.mapToParent(pos))
+        # action = menu.exec_(pos)
         if action == clear_action:
             self.comboBox.setCurrentIndex(0)
 
@@ -112,14 +114,23 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
         self.is_emphasized = False
         self.is_active = False
 
-    def keyPressEvent(self, event):
+    def on_key_pressed(self, event):
         gey = event.key()
         self.func = (None, None)
-        print('PhoDurationEvent_Partition.keyPressEvent!')
+        print('PhoDurationEvent_Partition.on_key_pressed!')
         if gey == Qt.Key_M:
-            print("PhoDurationEvent_Partition.keyPressEvent: Key 'm' pressed!")
+            print("PhoDurationEvent_Partition.on_key_pressed: Key 'm' pressed!")
+            # currPos = self.rect()
+            # currPos = self.frameGeometry()
+            # self.showMenu(currPos.topLeft())
+            # currPos = self.frameGeometry().topLeft()
+            # currPos = QPoint(0,0)
+            currPos = self.finalEventRect.topLeft()
+            # currPos = QPoint(-100,0)
+            self.showMenu(currPos)
+            
         elif gey == Qt.Key_Right:
-            print("PhoDurationEvent_Partition.keyPressEvent: Right key pressed!, call drawFundBlock()")
+            print("PhoDurationEvent_Partition.on_key_pressed: Right key pressed!, call drawFundBlock()")
             # self.func = (self.drawFundBlock, {})
             self.mModified = True
         # elif gey == Qt.Key_5:
@@ -136,7 +147,7 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
         y = parentOffsetRect.y() + totalParentCanvasRect.y()
         width = parentOffsetRect.width()
         height = parentOffsetRect.height()
-        finalEventRect = QRect(x,y,width,height)
+        self.finalEventRect = QRect(x,y,width,height)
 
         # print('Partition paint is called: ', finalEventRect)
 
@@ -209,7 +220,7 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
         #     painter.drawText(eventRect, Qt.AlignCenter, self.name)
 
         # painter.restore()
-        return finalEventRect
+        return self.finalEventRect
         # return parent_modified_event_rect
         
 

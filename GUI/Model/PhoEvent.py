@@ -43,7 +43,7 @@ class PhoEvent(QWidget):
     def on_button_released(self, event):
         pass
 
-    def keyPressEvent(self, event):
+    def on_key_pressed(self, event):
         pass
 
     # "pass": specifies that we're leaving this method "virtual" or intensionally empty to be overriden by a subclass.

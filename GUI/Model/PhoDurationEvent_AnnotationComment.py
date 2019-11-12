@@ -99,7 +99,7 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         self.is_emphasized = False
         self.is_active = False
 
-    def keyPressEvent(self, event):
+    def on_key_pressed(self, event):
         gey = event.key()
         self.func = (None, None)
         if gey == Qt.Key_M:
