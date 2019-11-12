@@ -62,6 +62,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.helpWindow = None
         self.setupWindow = None
 
+        self.setMouseTracking(True)
         self.initUI()
         # self.show() # Show the GUI
 
@@ -106,6 +107,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
 
         # Video Player Container: the container that holds the video player
         self.videoPlayerContainer = QtWidgets.QWidget()
+        self.videoPlayerContainer.setMouseTracking(True)
         ## TODO: Add the video player to the container.
         ## TODO: Needs a layout
         
@@ -116,7 +118,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         # Timeline Numberline track:
         masterTimelineDurationSeconds = self.totalDuration.total_seconds()
         self.timelineMasterTrackWidget = QTimeLine(masterTimelineDurationSeconds, minimumWidgetWidth)
-
+        self.timelineMasterTrackWidget.setMouseTracking(True)
 
         # Video Track
         ## TODO: The video tracks must set:
@@ -131,7 +133,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.eventTrackWidgets = []
 
         # Annotation Comments track:
-        self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(0, [], [], self.totalStartTime, self.totalEndTime)
+        self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(0, [], [], self.totalStartTime, self.totalEndTime, wantsKeyboardEvents=True, wantsMouseEvents=True)
         self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
 
         # Partition tracks:
@@ -193,6 +195,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.verticalSplitter.setMouseTracking(True)
         self.verticalSplitter.addWidget(self.videoPlayerContainer)
         self.verticalSplitter.addWidget(self.timelineScroll)
+        self.verticalSplitter.setMouseTracking(True)
 
         # Size the widgets
         self.verticalSplitter.setSizes([100, 600])
@@ -277,9 +280,15 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
     def find_hovered_timeline_track(self, event_x, event_y):
         hovered_timeline_track_object = None
         for (anIndex, aTimelineTrack) in enumerate(self.eventTrackWidgets):
+            # aTrackFrame = aTimelineTrack.frameGeometry()
+            # aTrackFrame = aTimelineTrack.rect()
+            # aTrackFrame = aTimelineTrack.geometry()
             aTrackFrame = aTimelineTrack.frameGeometry()
+            
+            # print("timeline_track: ", aTrackFrame)
             if aTrackFrame.contains(event_x, event_y):
                 hovered_timeline_track_object = aTimelineTrack
+                print('active_timeline_track[{0}]'.format(anIndex))
                 break
         return hovered_timeline_track_object
 
@@ -317,10 +326,12 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
             relative_duration_offset = potentially_hovered_child_object.compute_relative_offset_duration(datetime)
             text = text + ' -- relative to duration: {0}'.format(relative_duration_offset)
 
-        self.curr_hovered_timeline_track = self.find_hovered_timeline_track(self.cursorX, self.cursorY)
+        self.curr_hovered_timeline_track = self.find_hovered_timeline_track(event.x(), event.y())
         if (self.curr_hovered_timeline_track):
             if (self.curr_hovered_timeline_track.wantsMouseEvents):
                 self.curr_hovered_timeline_track.on_mouse_moved(event)
+        else:
+            print("No hovered timeline track")
 
 
 
