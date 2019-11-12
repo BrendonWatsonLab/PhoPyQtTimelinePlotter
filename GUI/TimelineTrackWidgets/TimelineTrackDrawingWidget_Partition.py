@@ -42,10 +42,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
 
         
 
-
-
     
-
     # Ohhh, paint event is only passing the displayed rectangle in the event, so when it's in a scroll view, only the part that's on the screen is being drawn.
     # But if that's true, why isn't it appearing unchanged when we scroll?
     def paintEvent( self, event ):
@@ -69,7 +66,8 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
 
         # Draw the duration objects
         for (index, obj) in enumerate(self.partitionObjects):
-            self.eventRect[index] = obj.paint( qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
+            obj.update()
+            self.eventRect[index] = obj.paint(qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
         # Draw the instantaneous event objects
         for (index, obj) in enumerate(self.cutObjects):
             self.instantaneousEventRect[index] = obj.paint(qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
@@ -143,6 +141,9 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
                 print("Middle click")
                 # Create the partition cut:
                 was_cut_made = self.cut_partition(cut_partition_index, event.x())
+                if(was_cut_made):
+                    self.update()
+                    # self.update()
             else:
                 print("Unknown click event!")
             
@@ -180,4 +181,6 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
             QToolTip.showText(event.globalPos(), text, self, self.hovered_object_rect)
             self.hover_changed.emit(self.trackID, self.hovered_object_index)
 
-
+    def resizeEvent(self, event):
+            # self.widget.move(self.width() - self.widget.width() - 2, 2)
+            super(TimelineTrackDrawingWidget_Partition, self).resizeEvent(event)

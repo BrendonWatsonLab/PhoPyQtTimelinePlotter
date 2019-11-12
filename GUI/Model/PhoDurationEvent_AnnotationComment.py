@@ -124,14 +124,13 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     def paint(self, painter, totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect):
         # "total*" refers to the parent frame in which this event is to be drawn
         # totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect
-        percentDuration = (self.computeDuration() / totalDuration)
-        offsetStartDuration = self.startTime - totalStartTime
-        percentOffsetStart = offsetStartDuration / totalDuration
-        x = percentOffsetStart * totalParentCanvasRect.width()
-        width = percentDuration * totalParentCanvasRect.width()
-        height = totalParentCanvasRect.height()
-        y = 0.0
-        eventRect = QRect(x, y, width, height)
+        parentOffsetRect = self.compute_parent_offset_rect(totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect.width(), totalParentCanvasRect.height())
+        x = parentOffsetRect.x() + totalParentCanvasRect.x()
+        y = parentOffsetRect.y() + totalParentCanvasRect.y()
+        width = parentOffsetRect.width()
+        height = parentOffsetRect.height()
+
+        finalEventRect = QRect(x,y,width,height)
         # painter.setPen( QtGui.QPen( Qt.darkBlue, 2, join=Qt.MiterJoin ) )
 
         # Construct the nibs:
@@ -208,7 +207,7 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
             painter.drawPolygon(end_poly)
 
         painter.restore()
-        return eventRect
+        return finalEventRect
 
     ## GUI CLASS
 
