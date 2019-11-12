@@ -49,6 +49,9 @@ class BehaviorsManager(QObject):
 
     BEHAVIOR_COL, INFO_COL, COLOR_COL = range(3)
 
+    UnknownType_ID = 21
+    UnknownSubtype_ID = 44
+
     def __init__(self):
         super(BehaviorsManager, self).__init__(None)
         # Color Map:
@@ -95,7 +98,7 @@ class BehaviorsManager(QObject):
         return self.uniqueActivityGroups
 
 
-    # "Types": grouped sets of behaviors
+    # "Types": grouped setsm of behaviors
     def get_type(self, type_id):
         return self.uniqueBehaviors[type_id]
 

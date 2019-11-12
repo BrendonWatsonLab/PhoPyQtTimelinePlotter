@@ -224,6 +224,19 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
                 print("Left click")
             elif event.button() == Qt.RightButton:
                 print("Right click")
+                prevHoveredObj = self.hovered_object
+                if prevHoveredObj:
+                    prevHoveredObj.on_button_released(event)
+                else:
+                    print('partitionTrack: No valid hoverred object')
+
+                prevSelectedPartitionObj = self.get_selected_partition()
+                if (prevSelectedPartitionObj):
+                    prevSelectedPartitionObj.on_button_released(event)
+                else:
+                    print('partitionTrack: No valid selection object')
+
+
             elif event.button() == Qt.MiddleButton:
                 print("Middle click")
                 # Create the partition cut:

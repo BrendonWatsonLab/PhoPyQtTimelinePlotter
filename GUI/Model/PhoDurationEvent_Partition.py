@@ -12,6 +12,9 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QFontMetrics, QPa
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 from GUI.Model.PhoDurationEvent import *
+from app.BehaviorsList import BehaviorsManager
+
+
 
 class PhoDurationEvent_Partition(PhoDurationEvent):
     InstantaneousEventDuration = timedelta(seconds=2)
@@ -30,13 +33,15 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
     # on_edit = pyqtSignal(datetime, datetime, str, str, str)
     # on_edit = pyqtSignal(PhoDurationEvent_Partition)
 
-    def __init__(self, startTime=datetime.now(), endTime=None, name='', subtitle='', body='', color=QColor(51, 204, 255), type_id=1, subtype_id=1, extended_data=dict(), parent=None):
+    def __init__(self, startTime=datetime.now(), endTime=None, name='', subtitle='', body='', color=QColor(51, 204, 255), type_id=BehaviorsManager.UnknownType_ID, subtype_id=BehaviorsManager.UnknownSubtype_ID, extended_data=dict(), parent=None):
         super(PhoDurationEvent_Partition, self).__init__(startTime, endTime, name, color, extended_data, parent=parent)
         self.subtitle = subtitle
         self.body = body
-        
+
         self.type_id = type_id
         self.subtype_id = subtype_id
+
+        self.color = BehaviorsManager().get_subtype_color(self.subtype_id)
 
         # TODO: init gui
 
@@ -50,15 +55,13 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
 
     def showMenu(self, pos):
         menu = QMenu()
-        clear_action = menu.addAction("Clear Selection")
+        clear_action = menu.addAction("Modify Partition")
         action = menu.exec_(self.mapToGlobal(pos))
         # action = menu.exec_(self.mapToParent(pos))
         # action = menu.exec_(pos)
         if action == clear_action:
-            print("Clear action!")
+            print("Modify Partition action!")
             self.on_edit.emit()
-            # self.on_edit.emit(self)
-            # self.comboBox.setCurrentIndex(0)
 
     def onActivated(self, text):
         self.name = text
@@ -70,6 +73,17 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
     def on_button_released(self, event):
         self.is_emphasized = False
         self.is_active = False
+        if event.button() == Qt.LeftButton:
+            print("Left click")
+        elif event.button() == Qt.RightButton:
+            print("Right click")
+            currPos = self.finalEventRect.topLeft()
+            self.showMenu(currPos)
+        elif event.button() == Qt.MiddleButton:
+            print("Middle click")
+        else:
+            print("Unknown click event!")
+
 
     def on_key_pressed(self, event):
         gey = event.key()
