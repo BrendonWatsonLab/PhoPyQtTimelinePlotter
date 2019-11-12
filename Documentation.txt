@@ -22,3 +22,7 @@ GENERAL TODO:
     - Perhaps multiple video tracks allowed, one for original source videos and another for DeepLabCut processed videos for example.
 
 - Need to be able to adjust "zoom".
+
+
+Generate .py files from .ui files: (NOT NEEDED)
+/Users/pho/opt/anaconda3/envs/Py3Qt5/bin/pyuic5 -d /Users/pho/repo/PhoPyQtTimelinePlotter/GUI/SetupWindow/SetupWindow.ui -o /Users/pho/repo/PhoPyQtTimelinePlotter/GUI/SetupWindow/SetupWindow-AutoGen.py
