@@ -14,6 +14,9 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 from GUI.Model.PhoEvent import *
 from GUI.Model.PhoDurationEvent import *
 
+from GUI.UI.TrianglePainter import *
+
+
 class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     InstantaneousEventDuration = timedelta(minutes=30)
     RectCornerRounding = 2
@@ -25,7 +28,10 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     ColorBorderActive = QColor(255, 222, 122)  # Yellowish
 
     NibTriangleHeight = 10.0
-    NibTriangleWidth = 20.0
+    NibTriangleWidth = 5.0
+
+    LeftNibPainter = TrianglePainter(TriangleDrawOption_Horizontal.LeftApex)
+    RightNibPainter = TrianglePainter(TriangleDrawOption_Horizontal.RightApex)
 
 
     def __init__(self, startTime=datetime.now(), endTime=None, name='', title='', subtitle='', color=QColor(51, 255, 102), extended_data=dict()):
@@ -125,19 +131,12 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         # painter.setPen( QtGui.QPen( Qt.darkBlue, 2, join=Qt.MiterJoin ) )
 
         # Construct the nibs:
+        halfNibOffset = (PhoDurationEvent_AnnotationComment.NibTriangleWidth / 2.0)
+
         # Offset the rect by the nibs
         body_y = (y+PhoDurationEvent_AnnotationComment.NibTriangleHeight)
         body_height = (height - PhoDurationEvent_AnnotationComment.NibTriangleHeight)
         bodyRect = QRect(x,body_y, width, body_height)
-
-        # eventRect.setTop(PhoDurationEvent_AnnotationComment.NibTriangleHeight)
-
-        startNibPath = QPainterPath()
-        endNibPath = QPainterPath()
-
-        # PhoDurationEvent_AnnotationComment.NibTriangleHeight
-
-
 
         painter.save()
         painter.setRenderHint(QPainter.Antialiasing)
@@ -158,6 +157,20 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
             painter.setPen(QtGui.QPen(PhoDurationEvent_AnnotationComment.ColorBorderBase, 1.5, join=Qt.MiterJoin))
             painter.setBrush(QBrush(activeColor, Qt.SolidPattern))
 
+        # Draw start triangle nib
+        startPos = x
+        # nibApexXPosition = (startPos+halfNibOffset)
+        # nibExtremaXPosition = (nibApexXPosition+halfNibOffset)
+
+        # poly = QPolygon([QPoint(startPos, 20),
+        #                  QPoint(nibExtremaXPosition, 20),
+        #                  QPoint(nibApexXPosition, 40)])
+        # start_poly = QPolygon([QPoint(startPos, PhoDurationEvent_AnnotationComment.NibTriangleHeight),
+        #                  QPoint(nibExtremaXPosition, PhoDurationEvent_AnnotationComment.NibTriangleHeight),
+        #                  QPoint(nibApexXPosition, 0)])
+        start_poly = PhoDurationEvent_AnnotationComment.LeftNibPainter.get_poly(startPos, PhoDurationEvent_AnnotationComment.NibTriangleHeight, PhoDurationEvent_AnnotationComment.NibTriangleWidth)
+        
+
         if self.endTime is None:
             # Instantaneous type event
             # painter.setPen(Qt.NoPen)
@@ -169,41 +182,31 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
             ## NOTE: Apparently for events as small as the instantaneous events (with a width of 2) the "Brush" or "fill" doesn't matter, only the stroke does.
             painter.setPen(QtGui.QPen(activeColor, penWidth, join=Qt.MiterJoin))
             painter.drawRect(x, body_y, width, body_height)
+
+            # Draw Nib:
+            painter.drawPolygon(start_poly)
         else:
             # Normal duration event (like for videos)
             painter.drawRoundedRect(x, body_y, width, body_height, PhoDurationEvent_AnnotationComment.RectCornerRounding, PhoDurationEvent_AnnotationComment.RectCornerRounding)
             
-            # Draw start triangle nib
-            startPos = x
-            halfNibOffset = (PhoDurationEvent_AnnotationComment.NibTriangleWidth / 2.0)
+            startPos = (x+width)-PhoDurationEvent_AnnotationComment.NibTriangleWidth
+            # nibApexXPosition = (startPos+halfNibOffset)
+            # nibExtremaXPosition = (nibApexXPosition+halfNibOffset)
 
-            nibBottomYPosition = (height - PhoDurationEvent_AnnotationComment.NibTriangleHeight)
-            nibApexXPosition = (startPos+halfNibOffset)
-            nibApexYPosition = 0.0
+            # end_poly = QPolygon([QPoint(startPos, PhoDurationEvent_AnnotationComment.NibTriangleHeight),
+            #                  QPoint(nibExtremaXPosition, PhoDurationEvent_AnnotationComment.NibTriangleHeight),
+            #                  QPoint(nibApexXPosition, 0)])
 
-            nibExtremaXPosition = (nibApexXPosition+halfNibOffset)
-
-            # startNibPath.lineTo(startPos, nibBottomYPosition)
-            # startNibPath.lineTo(nibApexXPosition, nibApexYPosition)
-            # startNibPath.lineTo((startPos+PhoDurationEvent_AnnotationComment.NibTriangleHeight), nibBottomYPosition)
-            # painter.drawPath(startNibPath)
-
-            # poly = QPolygon([QPoint(startPos, 20),
-            #                  QPoint(nibExtremaXPosition, 20),
-            #                  QPoint(nibApexXPosition, 40)])
-            poly = QPolygon([QPoint(startPos, PhoDurationEvent_AnnotationComment.NibTriangleHeight),
-                             QPoint(nibExtremaXPosition, PhoDurationEvent_AnnotationComment.NibTriangleHeight),
-                             QPoint(nibApexXPosition, 0)])
+            end_poly = PhoDurationEvent_AnnotationComment.RightNibPainter.get_poly(startPos, PhoDurationEvent_AnnotationComment.NibTriangleHeight, PhoDurationEvent_AnnotationComment.NibTriangleWidth)
         
             # If it's not an instantaneous event, draw the label
             painter.drawText(bodyRect, Qt.AlignTop|Qt.AlignHCenter, self.title)
             painter.drawText(bodyRect, Qt.AlignHCenter|Qt.AlignCenter, self.subtitle)
             painter.drawText(bodyRect, Qt.AlignBottom|Qt.AlignHCenter, self.name)
 
-            # Draw pointer
-            # painter.setPen(Qt.darkCyan)
-            # painter.setBrush(QBrush(Qt.darkCyan))
-            painter.drawPolygon(poly)
+            # Draw Nibs:
+            painter.drawPolygon(start_poly)
+            painter.drawPolygon(end_poly)
 
         painter.restore()
         return eventRect
