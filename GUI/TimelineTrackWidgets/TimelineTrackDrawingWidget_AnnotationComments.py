@@ -13,7 +13,7 @@ from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import *
 from GUI.Model.PhoDurationEvent_AnnotationComment import *
 from GUI.UI.TextAnnotations.TextAnnotationDialog import *
 
-from app.database.SqlAlchemyDatabase import load_annotation_events_from_database, save_annotation_events_to_database, create_TimestampedAnnotation
+from app.database.SqlAlchemyDatabase import load_annotation_events_from_database, save_annotation_events_to_database, create_TimestampedAnnotation, convert_TimestampedAnnotation
 
 class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
@@ -38,6 +38,18 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
 
         self.annotationEditingDialog = None
         self.annotationDataObjects = []
+        self.annotationDataObjects = load_annotation_events_from_database('/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db')
+        self.rebuildDrawnObjects()
+
+    
+    def rebuildDrawnObjects(self):
+        self.durationObjects = []
+        for aDataObj in self.annotationDataObjects:
+            # Create the graphical annotation object
+            newAnnotation = convert_TimestampedAnnotation(aDataObj)
+            # newAnnotation = PhoDurationEvent_AnnotationComment(start_date, end_date, body, title, subtitle)
+            self.durationObjects.append(newAnnotation)
+
     
     def paintEvent( self, event ):
         qp = QtGui.QPainter()
@@ -186,17 +198,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         self.annotationEditingDialog.on_cancel.connect(self.comment_dialog_canceled)
         self.annotationEditingDialog.set_start_date(cut_datetime)
         self.annotationEditingDialog.set_end_date(cut_datetime)
-        
-
-        # if self.partitionManager.cut_partition(partition_index, cut_datetime):
-        #         # Cut successful!
-        #         print("Cut successful! Cut at ", partition_index)
-        #         self.cutObjects.append(PhoDurationEvent(cut_datetime))
-        #         # Update partitions:
-        #         self.commentObjects = self.partitionManager.partitions
-        #         return True
-        # else:
-        #     return False
+    
         return False
 
     def try_create_comment(self, start_date, end_date, title, subtitle, body):
@@ -209,10 +211,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         newAnnotationObj = create_TimestampedAnnotation(start_date, end_date, title, subtitle, body, '')
         self.annotationDataObjects.append(newAnnotationObj)
         save_annotation_events_to_database('/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db', self.annotationDataObjects)
-
-        # Create the graphical annotation object 
-        newAnnotation = PhoDurationEvent_AnnotationComment(start_date, end_date, body, title, subtitle)
-        self.durationObjects.append(newAnnotation)
+        self.rebuildDrawnObjects()
         self.update()
 
     def comment_dialog_canceled(self):

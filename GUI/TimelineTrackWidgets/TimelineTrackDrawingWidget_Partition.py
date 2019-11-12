@@ -144,13 +144,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
                 print("Unknown click event!")
             
             self.update()
-        
-            
-            
-
-
-
-
+    
     def keyPressEvent(self, event):
         gey = event.key()
         self.func = (None, None)

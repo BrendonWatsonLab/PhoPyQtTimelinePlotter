@@ -9,6 +9,9 @@ from app.database.db_model_extension import ExVideoFile
 
 from app.database.utility_functions import *
 
+# For convert function
+from GUI.Model.PhoDurationEvent_AnnotationComment import *
+
 import sys
 import os
 
@@ -178,6 +181,13 @@ def create_TimestampedAnnotation(start_date, end_date, primary_text, secondary_t
     newObj.tertiary_text = tertiary_text
     newObj.overflow_text = overflow_text
     return newObj
+
+# Converts an annotation database data object to a GUI element
+def convert_TimestampedAnnotation(aTimestampedAnnotationObj):
+    newObj = PhoDurationEvent_AnnotationComment(datetime_from_database(aTimestampedAnnotationObj.start_date), datetime_from_database(aTimestampedAnnotationObj.end_date),
+    aTimestampedAnnotationObj.tertiary_text, aTimestampedAnnotationObj.primary_text, aTimestampedAnnotationObj.secondary_text)
+    return newObj
+
 
 
 if __name__ == '__main__':
