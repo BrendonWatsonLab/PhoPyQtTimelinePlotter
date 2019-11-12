@@ -159,15 +159,6 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
 
         # Draw start triangle nib
         startPos = x
-        # nibApexXPosition = (startPos+halfNibOffset)
-        # nibExtremaXPosition = (nibApexXPosition+halfNibOffset)
-
-        # poly = QPolygon([QPoint(startPos, 20),
-        #                  QPoint(nibExtremaXPosition, 20),
-        #                  QPoint(nibApexXPosition, 40)])
-        # start_poly = QPolygon([QPoint(startPos, PhoDurationEvent_AnnotationComment.NibTriangleHeight),
-        #                  QPoint(nibExtremaXPosition, PhoDurationEvent_AnnotationComment.NibTriangleHeight),
-        #                  QPoint(nibApexXPosition, 0)])
         start_poly = PhoDurationEvent_AnnotationComment.LeftNibPainter.get_poly(startPos, PhoDurationEvent_AnnotationComment.NibTriangleHeight, PhoDurationEvent_AnnotationComment.NibTriangleWidth)
         
 
@@ -190,13 +181,6 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
             painter.drawRoundedRect(x, body_y, width, body_height, PhoDurationEvent_AnnotationComment.RectCornerRounding, PhoDurationEvent_AnnotationComment.RectCornerRounding)
             
             startPos = (x+width)-PhoDurationEvent_AnnotationComment.NibTriangleWidth
-            # nibApexXPosition = (startPos+halfNibOffset)
-            # nibExtremaXPosition = (nibApexXPosition+halfNibOffset)
-
-            # end_poly = QPolygon([QPoint(startPos, PhoDurationEvent_AnnotationComment.NibTriangleHeight),
-            #                  QPoint(nibExtremaXPosition, PhoDurationEvent_AnnotationComment.NibTriangleHeight),
-            #                  QPoint(nibApexXPosition, 0)])
-
             end_poly = PhoDurationEvent_AnnotationComment.RightNibPainter.get_poly(startPos, PhoDurationEvent_AnnotationComment.NibTriangleHeight, PhoDurationEvent_AnnotationComment.NibTriangleWidth)
         
             # If it's not an instantaneous event, draw the label
