@@ -156,6 +156,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.extendedTracksContainerVboxLayout = QVBoxLayout(self)
         self.extendedTracksContainerVboxLayout.addStretch(1)
         self.extendedTracksContainerVboxLayout.addSpacing(2.0)
+        self.extendedTracksContainerVboxLayout.setContentsMargins(0,0,0,0)
 
         self.extendedTracksContainerVboxLayout.addWidget(self.timelineMasterTrackWidget)
         self.timelineMasterTrackWidget.setMinimumSize(minimumWidgetWidth, 50)
@@ -272,11 +273,32 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         duration_offset = self.offset_to_duration(event_x)
         return (self.totalStartTime + duration_offset)
 
+    # Returns the index of the child object that the (x, y) point falls within, or None if it doesn't fall within an event.
+    def find_hovered_timeline_track(self, event_x, event_y):
+        hovered_timeline_track_object = None
+        for (anIndex, aTimelineTrack) in enumerate(self.eventTrackWidgets):
+            aTrackFrame = aTimelineTrack.frameGeometry()
+            if aTrackFrame.contains(event_x, event_y):
+                hovered_timeline_track_object = aTimelineTrack
+                break
+        return hovered_timeline_track_object
+
+
     # Event Handlers:
     def keyPressEvent(self, event):
         # TODO: pass to all children
-        self.mainVideoTrack.keyPressEvent(event)
+        self.mainVideoTrack.on_key_pressed(event)
 
+        # self.curr_hovered_timeline_track = self.find_hovered_timeline_track(event.x(), event.y())
+        # If we have a currently hovered timeline track from the mouseMoveEvent, use it
+        if (self.curr_hovered_timeline_track):
+            if (self.curr_hovered_timeline_track.wantsKeyboardEvents):
+                self.curr_hovered_timeline_track.on_key_pressed(event)
+
+        # Enable "globally active" timetline tracks that receive keypress events even if they aren't hovered.
+        # for aTimelineTrack in self.eventTrackWidgets:
+        #     if (aTimelineTrack.wantsKeyboardEvents):
+        #         aTimelineTrack.on_key_pressed(event)
         
         # self.partitionsTrackWidget.keyPressEvent(event)
 
@@ -294,6 +316,15 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         if potentially_hovered_child_object:
             relative_duration_offset = potentially_hovered_child_object.compute_relative_offset_duration(datetime)
             text = text + ' -- relative to duration: {0}'.format(relative_duration_offset)
+
+        self.curr_hovered_timeline_track = self.find_hovered_timeline_track(self.cursorX, self.cursorY)
+        if (self.curr_hovered_timeline_track):
+            if (self.curr_hovered_timeline_track.wantsMouseEvents):
+                self.curr_hovered_timeline_track.on_mouse_moved(event)
+
+
+
+
 
         self.statusBar().showMessage(text)
 

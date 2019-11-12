@@ -36,16 +36,17 @@ A 0.0 to 1.0 timeline
 """
 class Partitioner(QObject):
 
-    def __init__(self, totalStartTime, totalEndTime, name='', partitions=None, extended_data=dict()):
+    def __init__(self, totalStartTime, totalEndTime, owning_parent_track, name='', partitions=None, extended_data=dict()):
         super(Partitioner, self).__init__(None)
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
+        self.owning_parent_track = owning_parent_track
         self.name = name
         if partitions:
             self.partitions = partitions
         else:
-            self.partitions = [PhoDurationEvent_Partition(self.totalStartTime, self.totalEndTime, '0')] # Create default partition
+            self.partitions = [PhoDurationEvent_Partition(self.totalStartTime, self.totalEndTime, '0', parent=self.owning_parent_track)] # Create default partition
     
         self.extended_data = extended_data
 
@@ -66,7 +67,8 @@ class Partitioner(QObject):
             # only can cut if it's in the appropriate partition.
             # Create a new partition and insert it after the partition to cut. It should span from [cut_datetime, to the end of the cut partition]
             new_partition_index = cut_partition_index+1
-            self.partitions.insert(new_partition_index, PhoDurationEvent_Partition(cut_datetime, partition_to_cut.endTime, str(new_partition_index)))
+            new_partition_obj = PhoDurationEvent_Partition(cut_datetime, partition_to_cut.endTime, str(new_partition_index), parent=self.owning_parent_track)
+            self.partitions.insert(new_partition_index, new_partition_obj)
             self.partitions[cut_partition_index].endTime = cut_datetime # Truncate the partition to cut to the cut_datetime
             return True
         else:

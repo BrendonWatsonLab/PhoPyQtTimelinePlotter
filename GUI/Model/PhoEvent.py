@@ -7,14 +7,14 @@ import sys
 from datetime import datetime, timezone, timedelta
 import numpy as np
 from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
+from PyQt5.QtWidgets import QWidget, QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
-class PhoEvent(QObject):
+class PhoEvent(QWidget):
 
-    def __init__(self, startTime=datetime.now(), name='', color=Qt.black, extended_data=dict()):
-        super(PhoEvent, self).__init__(None)
+    def __init__(self, startTime=datetime.now(), name='', color=Qt.black, extended_data=dict(), parent=None):
+        super(PhoEvent, self).__init__(parent)
         self.name = name
         self.startTime = startTime
         self.color = color
@@ -43,7 +43,7 @@ class PhoEvent(QObject):
     def on_button_released(self, event):
         pass
 
-    def keyPressEvent(self, event):
+    def on_key_pressed(self, event):
         pass
 
     # "pass": specifies that we're leaving this method "virtual" or intensionally empty to be overriden by a subclass.

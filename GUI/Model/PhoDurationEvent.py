@@ -25,8 +25,8 @@ class PhoDurationEvent(PhoEvent):
 
     MainTextFont = QFont('SansSerif', 10)
 
-    def __init__(self, startTime=datetime.now(), endTime=None, name='', color=QColor(51, 204, 255), extended_data=dict()):
-        super(PhoDurationEvent, self).__init__(startTime, name, color, extended_data)
+    def __init__(self, startTime=datetime.now(), endTime=None, name='', color=QColor(51, 204, 255), extended_data=dict(), parent=None):
+        super(PhoDurationEvent, self).__init__(startTime, name, color, extended_data, parent=parent)
         self.endTime = endTime
 
     def __eq__(self, otherEvent):
@@ -88,7 +88,7 @@ class PhoDurationEvent(PhoEvent):
         self.is_emphasized = False
         self.is_active = False
 
-    def keyPressEvent(self, event):
+    def on_key_pressed(self, event):
         gey = event.key()
         self.func = (None, None)
         if gey == Qt.Key_M:
@@ -108,18 +108,27 @@ class PhoDurationEvent(PhoEvent):
         # percent_duration = relative_offset_duration / self.computeDuration()
         return relative_offset_duration
 
-    # "pass": specifies that we're leaving this method "virtual" or intensionally empty to be overriden by a subclass.
-    def paint(self, painter, totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect):
+    def compute_parent_offset_rect(self, totalStartTime, totalEndTime, totalDuration, totalParentWidth, totalParentHeight):
         # "total*" refers to the parent frame in which this event is to be drawn
         # totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect
         percentDuration = (self.computeDuration() / totalDuration)
         offsetStartDuration = self.startTime - totalStartTime
         percentOffsetStart = offsetStartDuration / totalDuration
-        x = percentOffsetStart * totalParentCanvasRect.width()
-        width = percentDuration * totalParentCanvasRect.width()
-        height = totalParentCanvasRect.height()
+        x = percentOffsetStart * totalParentWidth
+        width = percentDuration * totalParentWidth
+        height = totalParentHeight
         y = 0.0
-        eventRect = QRect(x, y, width, height)
+        return QRect(x, y, width, height)
+
+    # "pass": specifies that we're leaving this method "virtual" or intensionally empty to be overriden by a subclass.
+    def paint(self, painter, totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect):
+        parentOffsetRect = self.compute_parent_offset_rect(totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect.width(), totalParentCanvasRect.height())
+        x = parentOffsetRect.x() + totalParentCanvasRect.x()
+        y = parentOffsetRect.y() + totalParentCanvasRect.y()
+        width = parentOffsetRect.width()
+        height = parentOffsetRect.height()
+
+        finalEventRect = QRect(x,y,width,height)
         # painter.setPen( QtGui.QPen( Qt.darkBlue, 2, join=Qt.MiterJoin ) )
 
         painter.save()
@@ -156,10 +165,10 @@ class PhoDurationEvent(PhoEvent):
             # Normal duration event (like for videos)
             painter.drawRoundedRect(x, y, width, height, PhoDurationEvent.RectCornerRounding, PhoDurationEvent.RectCornerRounding)
             # If it's not an instantaneous event, draw the label
-            painter.drawText(eventRect, Qt.AlignCenter, self.name)
+            painter.drawText(finalEventRect, Qt.AlignCenter, self.name)
 
         painter.restore()
-        return eventRect
+        return finalEventRect
 
     ## GUI CLASS
 

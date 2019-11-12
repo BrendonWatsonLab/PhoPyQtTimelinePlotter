@@ -16,8 +16,8 @@ class TimelineTrackDrawingWidget_Events(TimelineTrackDrawingWidgetBase):
     default_shouldDismissSelectionUponMouseButtonRelease = True
     default_itemSelectionMode = ItemSelectionOptions.MultiSelection
 
-    def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime):
-        super(TimelineTrackDrawingWidget_Events, self).__init__(trackID, totalStartTime, totalEndTime)
+    def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime, wantsKeyboardEvents=True, wantsMouseEvents=True):
+        super(TimelineTrackDrawingWidget_Events, self).__init__(trackID, totalStartTime, totalEndTime, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
         self.durationObjects = durationObjects
         self.instantaneousObjects = instantaneousObjects
         self.eventRect = np.repeat(QRect(0,0,0,0), len(durationObjects))
@@ -121,8 +121,7 @@ class TimelineTrackDrawingWidget_Events(TimelineTrackDrawingWidgetBase):
                     # Doesn't already contain the object
                     return
                 
-
-    def keyPressEvent(self, event):
+    def on_key_pressed(self, event):
         gey = event.key()
         self.func = (None, None)
         if gey == Qt.Key_M:
@@ -138,6 +137,9 @@ class TimelineTrackDrawingWidget_Events(TimelineTrackDrawingWidgetBase):
             self.func = (self.drawNumber, {"notePoint": QPoint(100, 100)})
             self.mModified = True
             self.update()
+
+
+
 
     def on_mouse_moved(self, event):
         self.hovered_object_index = self.find_child_object(event.x(), event.y())

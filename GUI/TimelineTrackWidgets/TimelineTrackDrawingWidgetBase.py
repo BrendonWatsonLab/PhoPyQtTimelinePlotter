@@ -24,13 +24,15 @@ class TimelineTrackDrawingWidgetBase(QtWidgets.QWidget):
 
     static_TimeTrackObjectIndex_NoSelection = -1  # The integer value that indicates no object has been selected in the timeline
 
-    def __init__(self, trackID, totalStartTime, totalEndTime):
+    def __init__(self, trackID, totalStartTime, totalEndTime, wantsKeyboardEvents=False, wantsMouseEvents=True):
         super(TimelineTrackDrawingWidgetBase, self).__init__()
         self.trackID = trackID
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
         
+        self.wantsKeyboardEvents = wantsKeyboardEvents
+        self.wantsMouseEvents = wantsMouseEvents
         QToolTip.setFont(QFont('SansSerif', 10))
         
         # # Debug background fill
@@ -40,10 +42,16 @@ class TimelineTrackDrawingWidgetBase(QtWidgets.QWidget):
         # self.setPalette(p)
 
         # self.setToolTip('This is a <b>QWidget</b> widget')
-        self.setMouseTracking(True)
 
-        self.mousePressEvent = self.on_button_clicked
-        self.mouseReleaseEvent = self.on_button_released
+        # Setup input events
+        if (self.wantsKeyboardEvents):
+            self.keyPressEvent = self.on_key_pressed
+            self.keyReleaseEvent = self.on_key_released
+
+        self.setMouseTracking(self.wantsMouseEvents)
+        if (self.wantsMouseEvents):
+            self.mousePressEvent = self.on_button_clicked
+            self.mouseReleaseEvent = self.on_button_released
 
     def minimumSizeHint(self) -> QSize:
         return QSize(500, 50)
@@ -60,7 +68,10 @@ class TimelineTrackDrawingWidgetBase(QtWidgets.QWidget):
     def on_button_released(self, event):
         pass
 
-    def keyPressEvent(self, event):
+    def on_key_pressed(self, event):
+        pass
+
+    def on_key_released(self, event):
         pass
 
     def on_mouse_moved(self, event):

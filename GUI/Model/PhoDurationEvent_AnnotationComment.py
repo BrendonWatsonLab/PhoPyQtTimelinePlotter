@@ -37,8 +37,8 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     LeftNibPainter = TrianglePainter(TriangleDrawOption_Horizontal.LeftApex)
     RightNibPainter = TrianglePainter(TriangleDrawOption_Horizontal.RightApex)
 
-    def __init__(self, startTime=datetime.now(), endTime=None, name='', title='', subtitle='', color=QColor(51, 255, 102), extended_data=dict()):
-        super(PhoDurationEvent_AnnotationComment, self).__init__(startTime, endTime, name, color, extended_data)
+    def __init__(self, startTime=datetime.now(), endTime=None, name='', title='', subtitle='', color=QColor(51, 255, 102), extended_data=dict(), parent=None):
+        super(PhoDurationEvent_AnnotationComment, self).__init__(startTime, endTime, name, color, extended_data, parent=parent)
         self.title = title
         self.subtitle = subtitle
 
@@ -99,7 +99,7 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         self.is_emphasized = False
         self.is_active = False
 
-    def keyPressEvent(self, event):
+    def on_key_pressed(self, event):
         gey = event.key()
         self.func = (None, None)
         if gey == Qt.Key_M:
@@ -124,14 +124,13 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     def paint(self, painter, totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect):
         # "total*" refers to the parent frame in which this event is to be drawn
         # totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect
-        percentDuration = (self.computeDuration() / totalDuration)
-        offsetStartDuration = self.startTime - totalStartTime
-        percentOffsetStart = offsetStartDuration / totalDuration
-        x = percentOffsetStart * totalParentCanvasRect.width()
-        width = percentDuration * totalParentCanvasRect.width()
-        height = totalParentCanvasRect.height()
-        y = 0.0
-        eventRect = QRect(x, y, width, height)
+        parentOffsetRect = self.compute_parent_offset_rect(totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect.width(), totalParentCanvasRect.height())
+        x = parentOffsetRect.x() + totalParentCanvasRect.x()
+        y = parentOffsetRect.y() + totalParentCanvasRect.y()
+        width = parentOffsetRect.width()
+        height = parentOffsetRect.height()
+
+        finalEventRect = QRect(x,y,width,height)
         # painter.setPen( QtGui.QPen( Qt.darkBlue, 2, join=Qt.MiterJoin ) )
 
         # Construct the nibs:
@@ -208,7 +207,7 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
             painter.drawPolygon(end_poly)
 
         painter.restore()
-        return eventRect
+        return finalEventRect
 
     ## GUI CLASS
 
