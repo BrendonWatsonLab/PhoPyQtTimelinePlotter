@@ -11,9 +11,9 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import *
 from GUI.Model.PhoDurationEvent_AnnotationComment import *
-
-
 from GUI.UI.TextAnnotations.TextAnnotationDialog import *
+
+from app.database.SqlAlchemyDatabase import load_annotation_events_from_database, save_annotation_events_to_database, create_TimestampedAnnotation
 
 class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
@@ -37,6 +37,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         self.itemSelectionMode = TimelineTrackDrawingWidget_AnnotationComments.default_itemSelectionMode
 
         self.annotationEditingDialog = None
+        self.annotationDataObjects = []
     
     def paintEvent( self, event ):
         qp = QtGui.QPainter()
@@ -203,6 +204,12 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         if end_date == start_date:
             end_date = None # This is a work-around because "None" value end_dates can't be passed through a PyQt signal
 
+        # Create the database annotation object
+        newAnnotationObj = create_TimestampedAnnotation(start_date, end_date, title, subtitle, body, '')
+        self.annotationDataObjects.append(newAnnotationObj)
+        save_annotation_events_to_database('/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db', self.annotationDataObjects)
+
+        # Create the graphical annotation object 
         newAnnotation = PhoDurationEvent_AnnotationComment(start_date, end_date, body, title, subtitle)
         self.durationObjects.append(newAnnotation)
         self.update()
