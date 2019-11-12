@@ -140,7 +140,6 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
 
             
         self.update()
-        
                 
     def keyPressEvent(self, event):
         gey = event.key()
@@ -175,6 +174,8 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
             QToolTip.showText(event.globalPos(), text, self, self.hovered_object_rect)
             self.hover_changed.emit(self.trackID, self.hovered_object_index)
 
+
+    # Annotation/Comment Specific functions:
     def create_comment(self, cut_x):
         # Creates a new cut at the specified position.
         cut_duration_offset = self.offset_to_duration(cut_x)
@@ -213,7 +214,6 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         newAnnotation = PhoDurationEvent_AnnotationComment(start_date, end_date, body, title, subtitle)
         self.durationObjects.append(newAnnotation)
         self.update()
-
 
     def comment_dialog_canceled(self):
         print('comment_Dialog_canceled')
