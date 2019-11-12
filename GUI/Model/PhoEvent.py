@@ -14,6 +14,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 class PhoEvent(QObject):
 
     def __init__(self, startTime=datetime.now(), name='', color=Qt.black, extended_data=dict()):
+        super(PhoEvent, self).__init__(None)
         self.name = name
         self.startTime = startTime
         self.color = color
