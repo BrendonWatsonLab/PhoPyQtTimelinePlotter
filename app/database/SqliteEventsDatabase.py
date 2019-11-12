@@ -6,7 +6,7 @@ from datetime import datetime
 from GUI.Model.Videos import *
 
 # def create_connection(db_file='G:\Google Drive\Modern Behavior Box\Results - Data\BehavioralBoxDatabase.db'):
-def create_connection(db_file='/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'):
+def create_connection(db_file):
     """ create a database connection to the SQLite database
         specified by the db_file
     :param db_file: database file
@@ -20,9 +20,9 @@ def create_connection(db_file='/Users/pho/repo/PhoPyQtTimelinePlotter/Behavioral
 
     return conn
 
-def save_video_events_to_database(videoEvents):
+def save_video_events_to_database(db_file, videoEvents):
     print("Saving video events to database:")
-    conn = create_connection()
+    conn = create_connection(db_file=db_file)
     num_found_files = len(videoEvents)
     num_added_files = 0
     num_skipped_files = 0
@@ -79,13 +79,13 @@ def save_video_events_to_database(videoEvents):
     return
 
 
-def load_video_events_from_database(as_videoInfo_objects=False):
+def load_video_events_from_database(db_file, as_videoInfo_objects=False):
     """
     as_videoInfo_objects: if true, outputs "VideoInfo" objects instead of an array of dictionaries.
     """
     outputVideoFileInfoList = []
     print("Loading video events from database:")
-    conn = create_connection()
+    conn = create_connection(db_file=db_file)
     # cur = conn.cursor()
     num_found_files = 0
     num_added_files = 0

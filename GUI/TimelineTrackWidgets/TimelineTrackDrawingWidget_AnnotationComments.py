@@ -20,7 +20,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
     default_shouldDismissSelectionUponMouseButtonRelease = True
     default_itemSelectionMode = ItemSelectionOptions.MultiSelection
 
-    def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime, wantsKeyboardEvents=False, wantsMouseEvents=True):
+    def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime, db_file_path, wantsKeyboardEvents=False, wantsMouseEvents=True):
         super(TimelineTrackDrawingWidget_AnnotationComments, self).__init__(trackID, totalStartTime, totalEndTime, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
         self.durationObjects = durationObjects
         self.instantaneousObjects = instantaneousObjects
@@ -36,9 +36,10 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         self.shouldDismissSelectionUponMouseButtonRelease = TimelineTrackDrawingWidget_AnnotationComments.default_shouldDismissSelectionUponMouseButtonRelease
         self.itemSelectionMode = TimelineTrackDrawingWidget_AnnotationComments.default_itemSelectionMode
 
+        self.db_file_path = db_file_path
         self.annotationEditingDialog = None
         self.annotationDataObjects = []
-        self.annotationDataObjects = load_annotation_events_from_database('/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db')
+        self.annotationDataObjects = load_annotation_events_from_database(self.db_file_path)
         self.rebuildDrawnObjects()
 
     # Rebuilds the GUI event objects from the self.annotationDataObjects

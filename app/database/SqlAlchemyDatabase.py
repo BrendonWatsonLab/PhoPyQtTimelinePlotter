@@ -23,7 +23,9 @@ def build_new_database(db_file):
     #Base.metadata.create_all(engine)
     pass
 
-def create_connection(db_file='G:\Google Drive\Modern Behavior Box\Results - Data\BehavioralBoxDatabase.db'):
+# 'G:\Google Drive\Modern Behavior Box\Results - Data\BehavioralBoxDatabase.db'
+
+def create_connection(db_file):
     """ create a database connection to the SQLite database
         specified by the db_file
     :param db_file: database file

@@ -48,14 +48,16 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
     # Only used if GlobalTimelineConstraintOptions is .ConstantOffsetFromMostRecentVideo. Specifies the offset prior to the end of the last video which to start the global timeline.
     ConstantOffsetFromMostRecentVideoDuration = timedelta(days=7)
 
-    def __init__(self, totalStartTime, totalEndTime):
+    def __init__(self, totalStartTime, totalEndTime, db_file_path):
         super(TimelineDrawingWindow, self).__init__() # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/MainWindow/MainWindow.ui", self) # Load the .ui file
+
+        self.db_file_path = db_file_path
         
         self.scaleMultiplier = 4.0
         self.update_global_start_end_times(totalStartTime, totalEndTime)
 
-        self.videoInfoObjects = load_video_events_from_database(as_videoInfo_objects=True)
+        self.videoInfoObjects = load_video_events_from_database(db_file=self.db_file_path, as_videoInfo_objects=True)
         self.build_video_display_events()
 
         self.videoPlayerWindow = None
@@ -133,7 +135,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.eventTrackWidgets = []
 
         # Annotation Comments track:
-        self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(0, [], [], self.totalStartTime, self.totalEndTime, wantsKeyboardEvents=True, wantsMouseEvents=True)
+        self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(0, [], [], self.totalStartTime, self.totalEndTime, self.db_file_path, wantsKeyboardEvents=True, wantsMouseEvents=True)
         self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
 
         # Partition tracks:
