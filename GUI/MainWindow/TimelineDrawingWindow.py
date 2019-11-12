@@ -302,14 +302,14 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
 
         # self.curr_hovered_timeline_track = self.find_hovered_timeline_track(event.x(), event.y())
         # If we have a currently hovered timeline track from the mouseMoveEvent, use it
-        if (self.curr_hovered_timeline_track):
-            if (self.curr_hovered_timeline_track.wantsKeyboardEvents):
-                self.curr_hovered_timeline_track.on_key_pressed(event)
+        # if (self.curr_hovered_timeline_track):
+        #     if (self.curr_hovered_timeline_track.wantsKeyboardEvents):
+        #         self.curr_hovered_timeline_track.on_key_pressed(event)
 
         # Enable "globally active" timetline tracks that receive keypress events even if they aren't hovered.
-        # for aTimelineTrack in self.eventTrackWidgets:
-        #     if (aTimelineTrack.wantsKeyboardEvents):
-        #         aTimelineTrack.on_key_pressed(event)
+        for (anIndex, aTimelineTrack) in enumerate(self.eventTrackWidgets):
+            if (aTimelineTrack.wantsKeyboardEvents):
+                aTimelineTrack.on_key_pressed(event)
         
         # self.partitionsTrackWidget.keyPressEvent(event)
 
@@ -328,15 +328,17 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
             relative_duration_offset = potentially_hovered_child_object.compute_relative_offset_duration(datetime)
             text = text + ' -- relative to duration: {0}'.format(relative_duration_offset)
 
-        self.curr_hovered_timeline_track = self.find_hovered_timeline_track(event.x(), event.y())
-        if (self.curr_hovered_timeline_track):
-            if (self.curr_hovered_timeline_track.wantsMouseEvents):
-                self.curr_hovered_timeline_track.on_mouse_moved(event)
-        else:
-            print("No hovered timeline track")
+        # self.curr_hovered_timeline_track = self.find_hovered_timeline_track(event.x(), event.y())
+        # if (self.curr_hovered_timeline_track):
+        #     if (self.curr_hovered_timeline_track.wantsMouseEvents):
+        #         self.curr_hovered_timeline_track.on_mouse_moved(event)
+        # else:
+        #     print("No hovered timeline track")
 
-
-
+        # Exhaustive event forwarding for all track widgets
+        for (anIndex, aTimelineTrack) in enumerate(self.eventTrackWidgets):
+            if (aTimelineTrack.wantsMouseEvents):
+                aTimelineTrack.on_mouse_moved(event)
 
 
         self.statusBar().showMessage(text)
