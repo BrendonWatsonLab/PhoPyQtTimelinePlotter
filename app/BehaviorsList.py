@@ -103,7 +103,7 @@ class BehaviorsManager(QObject):
         return self.uniqueBehaviors[type_id]
 
     def get_type_color(self, type_id):
-        return self.get_type(type_id)
+        return self.groups_color_dictionary[self.get_type(type_id)]
     
     # "Subtypes": the most specific set of behaviors
     def get_subtype(self, subtype_id):
@@ -112,7 +112,7 @@ class BehaviorsManager(QObject):
     def get_subtype_color(self, subtype_id):
         return self.color_dictionary[self.get_subtype(subtype_id)]
 
-        self.groups_color_dictionary
+        
 
     
 

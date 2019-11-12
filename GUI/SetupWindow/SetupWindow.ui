@@ -25,8 +25,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>776</width>
-         <height>357</height>
+         <width>782</width>
+         <height>406</height>
         </rect>
        </property>
        <attribute name="label">
@@ -55,14 +55,36 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>776</width>
-         <height>357</height>
+         <width>782</width>
+         <height>406</height>
         </rect>
        </property>
        <attribute name="label">
         <string>Partition Track Settings</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QTreeWidget" name="treeWidget_Settings_PartitionTrack">
+          <property name="columnCount">
+           <number>3</number>
+          </property>
+          <column>
+           <property name="text">
+            <string notr="true">1</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string notr="true">2</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string notr="true">3</string>
+           </property>
+          </column>
+         </widget>
+        </item>
         <item>
          <widget class="QFrame" name="frame">
           <property name="frameShape">
@@ -109,8 +131,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>776</width>
-         <height>357</height>
+         <width>782</width>
+         <height>406</height>
         </rect>
        </property>
        <attribute name="label">
@@ -139,8 +161,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>776</width>
-         <height>357</height>
+         <width>782</width>
+         <height>406</height>
         </rect>
        </property>
        <attribute name="label">
@@ -169,8 +191,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>776</width>
-         <height>357</height>
+         <width>782</width>
+         <height>406</height>
         </rect>
        </property>
        <attribute name="label">
@@ -208,7 +230,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

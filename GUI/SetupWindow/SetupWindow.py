@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 # import numpy as np
 
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
-from PyQt5.QtWidgets import QApplication, QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QPushButton, QColorDialog
+from PyQt5.QtWidgets import QApplication, QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QPushButton, QColorDialog, QTreeWidget, QTreeWidgetItem
 # from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
@@ -68,6 +68,32 @@ class SetupWindow(QtWidgets.QMainWindow):
         # create a connection to the double click event
         self.ui.tableWidget_Settings_PartitionTrack.itemDoubleClicked.connect(self.editItem)
         self.updatePartitionOptionsTable()
+
+        self.topLevelNodes = []
+        self.topLeftNodesDict = dict()
+
+        # Add the top-level parent nodes
+        for (aTypeId, aUniqueBehavior) in enumerate(self.behaviorsManager.get_unique_behavior_groups()):
+            aNewNode = QTreeWidgetItem([aUniqueBehavior, str(aTypeId), "String C"])
+            
+            aNewNode.setBackground(0, self.behaviorsManager.groups_color_dictionary[aUniqueBehavior])
+            self.topLevelNodes.append(aNewNode)
+            self.topLeftNodesDict[aUniqueBehavior] = (len(self.topLevelNodes)-1) # get the index of the added node
+
+        # Add the leaf nodes
+        for (aSubtypeID, aUniqueLeafBehavior) in enumerate(self.behaviorsManager.get_unique_behaviors()):
+            parentNodeName = self.behaviorsManager.leaf_to_behavior_groups_dict[aUniqueLeafBehavior]
+            parentNodeIndex = self.topLeftNodesDict[parentNodeName]
+            parentNode = self.topLevelNodes[parentNodeIndex]
+            if parentNode:
+                # found parent
+                aNewNode = QTreeWidgetItem([aUniqueLeafBehavior, "(type: {0}, subtype: {1})".format(str(parentNodeIndex), str(aSubtypeID)), parentNodeName])
+                aNewNode.setBackground(0, self.behaviorsManager.color_dictionary[aUniqueLeafBehavior])
+                parentNode.addChild(aNewNode)
+            else:
+                print('Failed to find the parent node with name: ', parentNodeName)
+            
+        self.ui.treeWidget_Settings_PartitionTrack.addTopLevelItems(self.topLevelNodes)
 
 
     def updatePartitionOptionsTable(self):
