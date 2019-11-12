@@ -5,7 +5,8 @@ from datetime import datetime
 
 from GUI.Model.Videos import *
 
-def create_connection(db_file='G:\Google Drive\Modern Behavior Box\Results - Data\BehavioralBoxDatabase.db'):
+# def create_connection(db_file='G:\Google Drive\Modern Behavior Box\Results - Data\BehavioralBoxDatabase.db'):
+def create_connection(db_file='/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'):
     """ create a database connection to the SQLite database
         specified by the db_file
     :param db_file: database file
@@ -96,7 +97,8 @@ def load_video_events_from_database(as_videoInfo_objects=False):
         duration = float(durationNum) / 1000.0
         anExtension = '.' + anExtension # Add the period back on
         entries = Path(aFullParentPath)
-        aFullPath = entries.joinpath(aFullName).resolve(strict=True)
+        # aFullPath = entries.joinpath(aFullName).resolve(strict=True)
+        aFullPath = entries.joinpath(aFullName).resolve(strict=False)
 
         # Allow being undecided as to whether a video is an original or not
         if (is_original_video is None):

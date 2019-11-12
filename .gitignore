@@ -1,5 +1,6 @@
-﻿*/__pycache__
+*/__pycache__
 GUI/Model/__pycache__
 GUI/TimelineTrackWidgets/__pycache__
 GUI/UI/__pycache__
 **/__pycache__
+**/.DS_Store

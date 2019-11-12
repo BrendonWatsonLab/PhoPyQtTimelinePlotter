@@ -88,4 +88,5 @@ class VideoInfo(QObject):
 
     def get_full_path(self):
         entries = Path(self.fullParentPath)
-        return entries.joinpath(self.fullName).resolve(strict=True)
+        # return entries.joinpath(self.fullName).resolve(strict=True)
+        return entries.joinpath(self.fullName).resolve(strict=False)
