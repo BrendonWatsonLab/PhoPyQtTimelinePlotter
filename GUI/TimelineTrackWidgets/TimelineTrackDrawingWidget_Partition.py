@@ -45,12 +45,9 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
 
         self.activePartitionEditDialog = None
 
-
     def reinitialize_from_partition_manager(self):
         self.partitionObjects = self.partitionManager.partitions
         self.eventRect = np.repeat(QRect(0,0,0,0), len(self.partitionObjects))
-
-
 
     # Called by a specific child partition's menu to indicate that it should be edited in a new Partition Editor Dialog
     @pyqtSlot()    
@@ -73,13 +70,6 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         else:
             print("Couldn't get active partition object to edit!!")
             self.activeEditingPartitionIndex = None
-
-
-    # @pyqtSlot(PhoDurationEvent_Partition)    
-    # def on_partition_modify_event(self, modifiedPartition):
-    #     print("on_partition_modify_event(...)")
-    #     self.activePartitionEditDialog = PartitionEditDialog()
-
 
     # Returns the currently selected partition index or None if none are selected
     def get_selected_partition_index(self):

@@ -18,7 +18,7 @@ from app.database.SqlAlchemyDatabase import load_annotation_events_from_database
 class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
     default_shouldDismissSelectionUponMouseButtonRelease = True
-    default_itemSelectionMode = ItemSelectionOptions.MultiSelection
+    default_itemSelectionMode = ItemSelectionOptions.SingleSelection
 
     def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime, db_file_path, parent=None, wantsKeyboardEvents=False, wantsMouseEvents=True):
         super(TimelineTrackDrawingWidget_AnnotationComments, self).__init__(trackID, totalStartTime, totalEndTime, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
@@ -54,9 +54,6 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
             self.durationObjects.append(newAnnotation)
 
 
-
-
-
     # Returns the currently selected annotation index or None if none are selected
     def get_selected_annotation_index(self):
         if (len(self.selected_duration_object_indicies) > 0):
@@ -81,8 +78,6 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         else:
             return None
 
-            
-    
     def paintEvent( self, event ):
         qp = QtGui.QPainter()
         qp.begin( self )
@@ -214,11 +209,8 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
             self.mModified = True
             self.update()
 
-
     def on_key_released(self, event):
         pass
-
-
 
     def on_mouse_moved(self, event):
         self.hovered_object_index = self.find_child_object(event.x(), event.y())
@@ -244,8 +236,8 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         cut_datetime = self.offset_to_datetime(cut_x)
 
         self.annotationEditingDialog = TextAnnotationDialog()
-        self.annotationEditingDialog.on_commit[datetime, datetime, str, str, str].connect(self.try_create_comment)
         self.annotationEditingDialog.on_commit[datetime, str, str, str].connect(self.try_create_instantaneous_comment)
+        self.annotationEditingDialog.on_commit[datetime, datetime, str, str, str].connect(self.try_create_comment)
         self.annotationEditingDialog.on_cancel.connect(self.comment_dialog_canceled)
         self.annotationEditingDialog.set_start_date(cut_datetime)
         self.annotationEditingDialog.set_end_date(cut_datetime)
