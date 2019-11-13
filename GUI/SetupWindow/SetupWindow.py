@@ -14,8 +14,6 @@ from GUI.UI.AbstractDatabaseAccessingWindow import AbstractDatabaseAccessingWind
 
 from app.BehaviorsList import BehaviorsManager, BehaviorInfoOptions
 
-from app.database.SqlAlchemyDatabase import create_connection
-
 class SetupWindow(AbstractDatabaseAccessingWindow):
     def __init__(self, database_connection):
         super(SetupWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
