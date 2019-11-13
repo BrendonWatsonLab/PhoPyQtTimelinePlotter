@@ -99,7 +99,6 @@ class DatabaseConnectionRef(QObject):
         annotations = session.query(TimestampedAnnotation).options(selectinload(TimestampedAnnotation.Context)).all()
         return annotations
 
-
     def load_context_events_from_database(self):
         print("Loading context events from database:")
         session = self.get_session()
@@ -167,3 +166,77 @@ class DatabaseConnectionRef(QObject):
         session.close()
         print("done.")
         return
+
+    def save_colors_to_database(self, colors):
+        print("Saving colors events to database: {0}".format(self.get_path()))
+        session = self.get_session()
+
+        # Behavior Groups:
+        num_found_records = len(colors)
+        num_added_records = 0
+        num_skipped_records = 0
+        for anOutRecord in colors:
+            try:
+                session.add(anOutRecord)
+                num_added_records = num_added_records + 1
+
+            except Exception as e:
+                print("Other exception! Trying to continue", e)
+                num_skipped_records = num_skipped_records + 1
+                continue
+
+        print('Added ', num_added_records, 'of', num_found_records, 'colors to database.')
+        # Save (commit) the changes
+        session.commit()
+        # We can also close the connection if we are done with it.
+        # Just be sure any changes have been committed or they will be lost.
+        session.close()
+        print("done.")
+        return
+
+    def save_behavior_events_to_database(self, behaviors, behavior_groups):
+        print("Saving behavior/behavior_group events to database: {0}".format(self.get_path()))
+        session = self.get_session()
+
+        # Behavior Groups:
+        num_found_records = len(behavior_groups)
+        num_added_records = 0
+        num_skipped_records = 0
+        for anOutRecord in behavior_groups:
+            try:
+                session.add(anOutRecord)
+                num_added_records = num_added_records + 1
+
+            except Exception as e:
+                print("Other exception! Trying to continue", e)
+                num_skipped_records = num_skipped_records + 1
+                continue
+
+        print('Added ', num_added_records, 'of', num_found_records, 'behavior_groups to database.')
+
+        # Behaviors:
+        num_found_records = len(behaviors)
+        num_added_records = 0
+        num_skipped_records = 0
+        for anOutRecord in behaviors:
+            try:
+                session.add(anOutRecord)
+                num_added_records = num_added_records + 1
+
+            except Exception as e:
+                print("Other exception! Trying to continue", e)
+                num_skipped_records = num_skipped_records + 1
+                continue
+
+        print('Added ', num_added_records, 'of', num_found_records, 'behaviors to database.')
+
+        # Save (commit) the changes
+        session.commit()
+        # We can also close the connection if we are done with it.
+        # Just be sure any changes have been committed or they will be lost.
+        session.close()
+        print("done.")
+        return
+
+    
+    

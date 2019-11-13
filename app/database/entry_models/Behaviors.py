@@ -26,6 +26,15 @@ class Behavior(Base):
 
     parentGroup = relationship('BehaviorGroup', back_populates="behaviors")
 
+    def __init__(self,id,name,description,parent_group,primary_color,secondary_color,note):
+        self.id = id
+        self.name = name
+        self.description = description
+        self.parent_group = parent_group
+        self.primary_color = primary_color
+        self.secondary_color = secondary_color
+        self.note = note
+
 
 class BehaviorGroup(Base):
     __tablename__ = 'behavior_groups'
@@ -42,15 +51,34 @@ class BehaviorGroup(Base):
 
     behaviors = relationship("Behavior", order_by=Behavior.id, back_populates="parentGroup")
 
+    def __init__(self,id,name,description,primary_color,secondary_color,note):
+        self.id = id
+        self.name = name
+        self.description = description
+        self.primary_color = primary_color
+        self.secondary_color = secondary_color
+        self.note = note
+
 
 # A user-assigned color used in the interface
 class CategoryColors(Base):
     __tablename__ = 'category_colors'
 
     id = Column(Integer, primary_key=True)
+    hex_color = Column(Text, nullable=False, unique=True)
     name = Column(Text, nullable=False)
     description = Column(Text)
     colorR = Column(Integer, server_default=text("255"))
     colorG = Column(Integer, server_default=text("255"))
     colorB = Column(Integer, server_default=text("255"))
     note = Column(Text)
+
+    def __init__(self,id,hex_color,name,description,colorR,colorG,colorB,note):
+        self.id = id
+        self.hex_color = hex_color
+        self.name = name
+        self.description = description
+        self.colorR = colorR
+        self.colorG = colorG
+        self.colorB = colorB
+        self.note = note
