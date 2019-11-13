@@ -87,7 +87,7 @@ class Cohort(Base):
     name = Column(Text, nullable=False, server_default=text("'cohort_'"))
     start_date = Column(Integer, nullable=False)
     end_date = Column(Integer)
-    experiment = Column(ForeignKey('Experiments.id', ondelete='SET NULL'))
+    experiment = Column(Integer, ForeignKey('Experiments.id', ondelete='SET NULL'))
 
     Experiment = relationship('Experiment')
 
@@ -97,7 +97,7 @@ class Subcontext(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(Text, nullable=False)
-    parent_context = Column(ForeignKey('Contexts.id'), nullable=False, server_default=text("1"))
+    parent_context = Column(Integer, ForeignKey('Contexts.id'), nullable=False, server_default=text("1"))
     notes = Column(Text)
 
     Context = relationship('Context')
@@ -109,7 +109,7 @@ class TimestampedAnnotation(Base):
     id = Column(Integer, primary_key=True)
     start_date = Column(Integer)
     end_date = Column(Integer)
-    context = Column(ForeignKey('Contexts.id'), server_default=text("1"))
+    context = Column(Integer, ForeignKey('Contexts.id'), server_default=text("1"))
     subcontext = Column(Integer, server_default=text("1"))
     type = Column(Integer, nullable=False, server_default=text("1"))
     subtype = Column(Integer, nullable=False, server_default=text("1"))
@@ -122,7 +122,7 @@ class TimestampedAnnotation(Base):
 
 """
 TimestampedAnnotation:
-    .context = Column(ForeignKey('Contexts.id'), server_default=text("1"))
+    .context = Column(Integer, ForeignKey('Contexts.id'), server_default=text("1"))
     Context = relationship('Context')
 """
 
@@ -133,11 +133,11 @@ class ExperimentalConfigurationEvent(Base):
     id = Column(Integer, primary_key=True)
     start_date = Column(Integer, nullable=False)
     end_date = Column(Integer)
-    experiment_id = Column(ForeignKey('Experiments.id'))
-    cohort_id = Column(ForeignKey('Cohorts.id'))
-    animal_id = Column(ForeignKey('Animals.id'))
-    labjack_id = Column(ForeignKey('Labjacks.serial_number'))
-    behavioralbox_id = Column(ForeignKey('BehavioralBoxes.numerical_id'))
+    experiment_id = Column(Integer, ForeignKey('Experiments.id'))
+    cohort_id = Column(Integer, ForeignKey('Cohorts.id'))
+    animal_id = Column(Integer, ForeignKey('Animals.id'))
+    labjack_id = Column(Integer, ForeignKey('Labjacks.serial_number'))
+    behavioralbox_id = Column(Integer, ForeignKey('BehavioralBoxes.numerical_id'))
     notes = Column(Text)
     event_type = Column(Text)
     event_subtype = Column(Text)
@@ -155,15 +155,15 @@ class VideoFile(Base):
     id = Column(Integer, primary_key=True)
     file_fullname = Column(Text, nullable=False)
     file_basename = Column(Text, nullable=False)
-    file_extension = Column(ForeignKey('staticFileExtensions.extension'), nullable=False)
-    file_video_folder = Column(ForeignKey('fileParentFolders.id'))
+    file_extension = Column(Integer, ForeignKey('staticFileExtensions.extension'), nullable=False)
+    file_video_folder = Column(Integer, ForeignKey('fileParentFolders.id'))
     start_date = Column(Integer, nullable=False)
     end_date = Column(Integer)
     duration = Column(Integer)
-    behavioral_box_id = Column(ForeignKey('BehavioralBoxes.numerical_id'))
-    experiment_id = Column(ForeignKey('Experiments.id'))
-    cohort_id = Column(ForeignKey('Cohorts.id'))
-    animal_id = Column(ForeignKey('Animals.id'))
+    behavioral_box_id = Column(Integer, ForeignKey('BehavioralBoxes.numerical_id'))
+    experiment_id = Column(Integer, ForeignKey('Experiments.id'))
+    cohort_id = Column(Integer, ForeignKey('Cohorts.id'))
+    animal_id = Column(Integer, ForeignKey('Animals.id'))
     is_original_video = Column(Integer)
     notes = Column(Text)
 
