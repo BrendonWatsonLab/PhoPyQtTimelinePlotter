@@ -15,7 +15,7 @@ class TextAnnotationDialog(QtWidgets.QDialog):
     on_cancel = pyqtSignal()
 
      # This defines a signal called 'closed' that takes no arguments.
-    on_commit = pyqtSignal(datetime, datetime, str, str, str)
+    on_commit = pyqtSignal([datetime, str, str, str], [datetime, datetime, str, str, str])
 
 
     def __init__(self):
@@ -33,7 +33,11 @@ class TextAnnotationDialog(QtWidgets.QDialog):
     def accept(self):
         print('accept:')
         # Emit the signal.
-        self.on_commit.emit(self.get_start_date(), self.get_end_date(), self.get_title(), self.get_subtitle(), self.get_body())
+        if (self.get_end_date()):
+            self.on_commit[datetime, datetime, str, str, str].emit(self.get_start_date(), self.get_end_date(), self.get_title(), self.get_subtitle(), self.get_body())
+        else:
+            self.on_commit[datetime, str, str, str].emit(self.get_start_date(), self.get_title(), self.get_subtitle(), self.get_body())
+            
         super(TextAnnotationDialog, self).accept()
 
     def reject(self):

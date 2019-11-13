@@ -18,7 +18,7 @@
     <item>
      <widget class="QToolBox" name="toolBox">
       <property name="currentIndex">
-       <number>1</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="page_Settings_General">
        <property name="geometry">
@@ -93,7 +93,7 @@
           <property name="frameShadow">
            <enum>QFrame::Raised</enum>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_2">
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
            <item>
             <widget class="QTableWidget" name="tableWidget_Settings_PartitionTrack">
              <property name="rowCount">
@@ -179,7 +179,60 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_5">
            <item>
-            <widget class="QTableWidget" name="tableWidget_Settings_CommentTrack"/>
+            <widget class="QTableWidget" name="tableWidget_Settings_CommentTrack">
+             <property name="rowCount">
+              <number>10</number>
+             </property>
+             <property name="columnCount">
+              <number>5</number>
+             </property>
+             <row>
+              <property name="text">
+               <string>New Row</string>
+              </property>
+             </row>
+             <row/>
+             <row/>
+             <row/>
+             <row/>
+             <row/>
+             <row/>
+             <row/>
+             <row/>
+             <row/>
+             <column>
+              <property name="text">
+               <string>Property</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Color</string>
+              </property>
+             </column>
+             <column/>
+             <column/>
+             <column/>
+             <item row="0" column="0">
+              <property name="text">
+               <string>messageColor</string>
+              </property>
+             </item>
+             <item row="0" column="1">
+              <property name="text">
+               <string>test</string>
+              </property>
+              <property name="background">
+               <brush brushstyle="SolidPattern">
+                <color alpha="255">
+                 <red>85</red>
+                 <green>255</green>
+                 <blue>127</blue>
+                </color>
+               </brush>
+              </property>
+             </item>
+            </widget>
            </item>
           </layout>
          </widget>

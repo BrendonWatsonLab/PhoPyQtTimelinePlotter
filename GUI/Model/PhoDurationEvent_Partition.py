@@ -28,7 +28,7 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
 
     MainTextFont = QFont('SansSerif', 10)
 
-    # This defines a signal called 'closed' that takes no arguments.
+    # This defines a signal called 'on_edit' that takes no arguments.
     on_edit = pyqtSignal()
     # on_edit = pyqtSignal(datetime, datetime, str, str, str)
     # on_edit = pyqtSignal(PhoDurationEvent_Partition)

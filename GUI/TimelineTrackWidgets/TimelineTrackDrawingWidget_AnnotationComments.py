@@ -7,13 +7,13 @@ import numpy as np
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget,QTableWidgetItem
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
+from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
 
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import *
 from GUI.Model.PhoDurationEvent_AnnotationComment import *
 from GUI.UI.TextAnnotations.TextAnnotationDialog import *
 
-from app.database.SqlAlchemyDatabase import load_annotation_events_from_database, save_annotation_events_to_database, create_TimestampedAnnotation, convert_TimestampedAnnotation
+from app.database.SqlAlchemyDatabase import load_annotation_events_from_database, save_annotation_events_to_database, create_TimestampedAnnotation, convert_TimestampedAnnotation, modify_TimestampedAnnotation
 
 class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
@@ -38,6 +38,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
 
         self.db_file_path = db_file_path
         self.annotationEditingDialog = None
+        self.activeEditingAnnotationIndex = None
         self.annotationDataObjects = []
         self.annotationDataObjects = load_annotation_events_from_database(self.db_file_path)
         self.rebuildDrawnObjects()
@@ -48,9 +49,39 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         for aDataObj in self.annotationDataObjects:
             # Create the graphical annotation object
             newAnnotation = convert_TimestampedAnnotation(aDataObj)
+            newAnnotation.on_edit.connect(self.on_annotation_modify_event)
             # newAnnotation = PhoDurationEvent_AnnotationComment(start_date, end_date, body, title, subtitle)
             self.durationObjects.append(newAnnotation)
 
+
+
+
+
+    # Returns the currently selected annotation index or None if none are selected
+    def get_selected_annotation_index(self):
+        if (len(self.selected_duration_object_indicies) > 0):
+            # Deselect previously selected item
+            prevSelectedItemIndex = self.selected_duration_object_indicies[0]
+            if (prevSelectedItemIndex):
+                return prevSelectedItemIndex
+            else:
+                return None
+        else:
+            return None
+
+    # Returns the currently selected annotation object or None if none are selected
+    def get_selected_annotation(self):
+        prevSelectedItemIndex = self.get_selected_annotation_index()
+        if (prevSelectedItemIndex):
+            prevSelectedAnnotationObj = self.durationObjects[prevSelectedItemIndex]
+            if (prevSelectedAnnotationObj):
+                return prevSelectedAnnotationObj
+            else:
+                return None
+        else:
+            return None
+
+            
     
     def paintEvent( self, event ):
         qp = QtGui.QPainter()
@@ -128,21 +159,33 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         self.selected_object_index = self.find_child_object(event.x(), event.y())
 
         if event.button() == Qt.LeftButton:
-            print("Left click")
+            print("commentTrack: Left click")
         elif event.button() == Qt.RightButton:
-            print("Right click")
+            print("commentTrack: Right click")
+            prevHoveredObj = self.hovered_object
+            if prevHoveredObj:
+                prevHoveredObj.on_button_released(event)
+            else:
+                print('commentTrack: No valid hoverred object')
+
+            prevSelectedAnnotationObj = self.get_selected_annotation()
+            if (prevSelectedAnnotationObj):
+                prevSelectedAnnotationObj.on_button_released(event)
+            else:
+                print('commentTrack: No valid selection object')
+
         elif event.button() == Qt.MiddleButton:
-            print("Middle click")
-            # Create the partition cut:
+            print("commentTrack: Middle click")
+            # Create the annotation cut:
             was_cut_made = self.create_comment(event.x())
         else:
-            print("Unknown click event!")
+            print("commentTrack: Unknown click event!")
 
         if self.selected_object_index is None:
             # if TimelineTrackDrawingWidget_AnnotationComments.shouldDismissSelectionUponMouseButtonRelease:
             #     self.selection_changed.emit(self.trackID, -1) # Deselect
 
-            # No partitions to create
+            # No annotations to create
             return
         else:
             create_comment_index = self.selected_object_index
@@ -158,15 +201,15 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         gey = event.key()
         self.func = (None, None)
         if gey == Qt.Key_M:
-            print("Key 'm' pressed!")
+            print("commentTrack: Key 'm' pressed!")
         elif gey == Qt.Key_Right:
-            print("Right key pressed!, call drawFundBlock()")
+            print("commentTrack: Right key pressed!, call drawFundBlock()")
             self.func = (self.drawFundBlock, {})
             self.mModified = True
             self.update()
             self.nextRegion()
         elif gey == Qt.Key_5:
-            print("#5 pressed, call drawNumber()")
+            print("commentTrack: #5 pressed, call drawNumber()")
             self.func = (self.drawNumber, {"notePoint": QPoint(100, 100)})
             self.mModified = True
             self.update()
@@ -201,13 +244,15 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         cut_datetime = self.offset_to_datetime(cut_x)
 
         self.annotationEditingDialog = TextAnnotationDialog()
-        self.annotationEditingDialog.on_commit.connect(self.try_create_comment)
+        self.annotationEditingDialog.on_commit[datetime, datetime, str, str, str].connect(self.try_create_comment)
+        self.annotationEditingDialog.on_commit[datetime, str, str, str].connect(self.try_create_instantaneous_comment)
         self.annotationEditingDialog.on_cancel.connect(self.comment_dialog_canceled)
         self.annotationEditingDialog.set_start_date(cut_datetime)
         self.annotationEditingDialog.set_end_date(cut_datetime)
     
         return False
 
+    @pyqtSlot(datetime, datetime, str, str, str)
     def try_create_comment(self, start_date, end_date, title, subtitle, body):
         # Tries to create a new comment
         print('try_create_comment')
@@ -217,12 +262,62 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         # Create the database annotation object
         newAnnotationObj = create_TimestampedAnnotation(start_date, end_date, title, subtitle, body, '')
         self.annotationDataObjects.append(newAnnotationObj)
-        save_annotation_events_to_database('/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db', self.annotationDataObjects)
+        save_annotation_events_to_database(self.db_file_path, self.annotationDataObjects)
         self.rebuildDrawnObjects()
         self.update()
 
+    @pyqtSlot(datetime, str, str, str)
+    def try_create_instantaneous_comment(self, start_date, title, subtitle, body):
+        self.try_create_comment(start_date, None, title, subtitle, body)
+
+    # Called by a specific child annotation's menu to indicate that it should be edited in a new Annotation Editor Dialog
+    @pyqtSlot()    
+    def on_annotation_modify_event(self):
+        print("on_annotation_modify_event(...)")
+        selectedAnnotationIndex = self.get_selected_annotation_index()
+        selectedAnnotationObject = self.get_selected_annotation()
+        if (selectedAnnotationObject):
+            self.activeEditingAnnotationIndex = selectedAnnotationIndex
+            self.annotationEditingDialog = TextAnnotationDialog()
+            self.annotationEditingDialog.on_cancel.connect(self.comment_dialog_canceled)
+
+            self.annotationEditingDialog.set_start_date(selectedAnnotationObject.startTime)
+            self.annotationEditingDialog.set_end_date(selectedAnnotationObject.endTime)
+            # self.annotationEditingDialog.set_type(selectedAnnotationObject.type_id)
+            # self.annotationEditingDialog.set_subtype(selectedAnnotationObject.subtype_id)
+            self.annotationEditingDialog.set_title(selectedAnnotationObject.title)
+            self.annotationEditingDialog.set_subtitle(selectedAnnotationObject.subtitle)
+            self.annotationEditingDialog.set_body(selectedAnnotationObject.name)
+            
+            self.annotationEditingDialog.on_commit[datetime, str, str, str].connect(self.try_update_instantaneous_comment)
+            self.annotationEditingDialog.on_commit[datetime, datetime, str, str, str].connect(self.try_update_comment)
+        else:
+            print("Couldn't get active annotation object to edit!!")
+            self.activeEditingAnnotationIndex = None
+
+
+    @pyqtSlot(datetime, datetime, str, str, str)
+    def try_update_comment(self, start_date, end_date, title, subtitle, body):
+        # Tries to update an existing comment
+        print('try_update_comment')
+        if (self.activeEditingAnnotationIndex):
+            currObjToModify = self.annotationDataObjects[self.activeEditingAnnotationIndex]
+            currObjToModify = modify_TimestampedAnnotation(currObjToModify, start_date, end_date, title, subtitle, body)
+            self.annotationDataObjects[self.activeEditingAnnotationIndex] = currObjToModify
+            save_annotation_events_to_database(self.db_file_path, self.annotationDataObjects)
+            self.rebuildDrawnObjects()
+            self.update()
+        else:
+            print("Error: unsure what comment to update!")
+            return
+
+    @pyqtSlot(datetime, str, str, str)
+    def try_update_instantaneous_comment(self, start_date, title, subtitle, body):
+        self.try_update_comment(start_date, None, title, subtitle, body)
+
     def comment_dialog_canceled(self):
         print('comment_Dialog_canceled')
+        self.activeEditingAnnotationIndex = None
 
         
 
