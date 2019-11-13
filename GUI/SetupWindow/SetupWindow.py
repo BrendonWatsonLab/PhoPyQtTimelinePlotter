@@ -91,12 +91,25 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             aNewNode.setBackground(0, aNodeColor)
             self.topLevelNodes.append(aNewNode)
             self.topLeftNodesDict[aUniqueBehavior] = (len(self.topLevelNodes)-1) # get the index of the added node
-            aDBColor = CategoryColors(None, aNodeColor.name(QColor.HexRgb), aUniqueBehavior, ('Created for ' + aUniqueBehavior), aNodeColor.red(), aNodeColor.green(), aNodeColor.blue(), 'Auto-generated')
-            if (not (aDBColor.hex_color in self.colorsDict.keys())):
-                # If the color is new, add it to the color table in the database
-                self.database_connection.save_colors_to_database([aDBColor])
 
-            aNewDBNode = BehaviorGroup(None, aUniqueBehavior, aUniqueBehavior, aDBColor, default_black_color, 'auto')
+            aNodeColorHexID = aNodeColor.name(QColor.HexRgb)
+            if (not (aNodeColorHexID in self.colorsDict.keys())):
+                # If the color is new, add it to the color table in the database
+                aDBColor = CategoryColors(None, aNodeColorHexID, aUniqueBehavior, ('Created for ' + aUniqueBehavior), aNodeColor.red(), aNodeColor.green(), aNodeColor.blue(), 'Auto-generated')
+                self.database_connection.save_colors_to_database([aDBColor])
+            else:
+                #Else get the existing color
+                aDBColor = self.colorsDict[aNodeColorHexID]
+                            
+            if (not aDBColor.id):
+                print("INVALID COLOR ID!")
+
+            # aNewDBNode = BehaviorGroup(None, aUniqueBehavior, aUniqueBehavior, None, None, 'auto')
+            # aNewDBNode.primaryColor = aDBColor
+            # aNewDBNode.secondaryColor = default_black_color
+
+            aNewDBNode = BehaviorGroup(None, aUniqueBehavior, aUniqueBehavior, aDBColor.id, default_black_color.id, 'auto')
+
             behaviorGroupsDBList.append(aNewDBNode)
 
         # Add the leaf nodes
@@ -107,14 +120,38 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             if parentNode:
                 # found parent
                 aNewNode = QTreeWidgetItem([aUniqueLeafBehavior, "(type: {0}, subtype: {1})".format(str(parentNodeIndex), str(aSubtypeID)), parentNodeName])
-                aNewNode.setBackground(0, self.behaviorsManager.color_dictionary[aUniqueLeafBehavior])
+                aNodeColor = self.behaviorsManager.color_dictionary[aUniqueLeafBehavior]
+                aNewNode.setBackground(0, aNodeColor)
                 parentNode.addChild(aNewNode)
+
+                aNodeColorHexID = aNodeColor.name(QColor.HexRgb)
+                if (not (aNodeColorHexID in self.colorsDict.keys())):
+                    # If the color is new, add it to the color table in the database
+                    aDBColor = CategoryColors(None, aNodeColorHexID, aUniqueLeafBehavior, ('Created for ' + aUniqueLeafBehavior), aNodeColor.red(), aNodeColor.green(), aNodeColor.blue(), 'Auto-generated')
+                    self.database_connection.save_colors_to_database([aDBColor])
+                else:
+                    #Else get the existing color
+                    aDBColor = self.colorsDict[aNodeColorHexID]
+
+                # Get parent node
+                parentDBNode = behaviorGroupsDBList[parentNodeIndex]
+                if (not parentDBNode):
+                    print("Couldn't find parent node!")
+                    parent_node_db_id = None
+                else:
+                    parent_node_db_id = parentDBNode.id
+
+                aNewDBNode = Behavior(None, aUniqueLeafBehavior, aUniqueLeafBehavior, parent_node_db_id, aDBColor.id, default_black_color.id, 'auto')
+
+                behaviorsDBList.append(aNewDBNode)
+
             else:
                 print('Failed to find the parent node with name: ', parentNodeName)
             
         self.ui.treeWidget_Settings_PartitionTrack.addTopLevelItems(self.topLevelNodes)
         
         self.database_connection.save_behavior_events_to_database(behaviorsDBList, behaviorGroupsDBList)
+        self.database_connection.close()
 
 
     def updatePartitionOptionsTable(self):

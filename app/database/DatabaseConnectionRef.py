@@ -148,7 +148,7 @@ class DatabaseConnectionRef(QObject):
         session.commit()
         # We can also close the connection if we are done with it.
         # Just be sure any changes have been committed or they will be lost.
-        session.close()
+        # session.close()
         print("done.")
         return
 
@@ -177,7 +177,7 @@ class DatabaseConnectionRef(QObject):
         session.commit()
         # We can also close the connection if we are done with it.
         # Just be sure any changes have been committed or they will be lost.
-        session.close()
+        # session.close()
         print("done.")
         return
 
@@ -204,7 +204,7 @@ class DatabaseConnectionRef(QObject):
         session.commit()
         # We can also close the connection if we are done with it.
         # Just be sure any changes have been committed or they will be lost.
-        session.close()
+        # session.close()
         print("done.")
         return
 
@@ -251,13 +251,16 @@ class DatabaseConnectionRef(QObject):
             # See https://stackoverflow.com/questions/52075642/how-to-handle-unique-data-in-sqlalchemy-flask-pyhon
             session.commit()
             print("Committed changes!")
-        except IntegrityError:
+        except IntegrityError as e:
             session.rollback() # A constraint failed
-            print("ERROR: Failed to commit changes! Rolling back")
+            print("ERROR: Failed to commit changes! Rolling back", e)
 
+        except Exception as e:
+                print("Other exception! Trying to continue", e)
+                
         # We can also close the connection if we are done with it.
         # Just be sure any changes have been committed or they will be lost.
-        session.close()
+        # session.close()
         print("done.")
         return
 
