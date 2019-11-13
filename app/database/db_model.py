@@ -63,11 +63,11 @@ class FileParentFolder(Base):
     notes = Column(Text)
 
 
-t_sqlite_sequence = Table(
-    'sqlite_sequence', metadata,
-    Column('name', NullType),
-    Column('seq', NullType)
-)
+# t_sqlite_sequence = Table(
+#     'sqlite_sequence', metadata,
+#     Column('name', NullType),
+#     Column('seq', NullType)
+# )
 
 
 class StaticFileExtension(Base):

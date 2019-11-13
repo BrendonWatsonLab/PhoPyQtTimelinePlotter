@@ -36,6 +36,7 @@ class Behavior(Base):
         self.note = note
 
 
+# Parent of Behavior
 class BehaviorGroup(Base):
     __tablename__ = 'behavior_groups'
 

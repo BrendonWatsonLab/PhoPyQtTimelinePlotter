@@ -61,11 +61,21 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
     def initBehaviorsTree(self):
 
         # Make sure the default colors exist in the DB
-        
-        defaultColors = [CategoryColors(None, QColor(0,0,0).name(QColor.HexRgb), 'Black', 'Black', 0, 0, 0, None),
-            CategoryColors(None,QColor(255,255,255).name(QColor.HexRgb),'White', 'White', 255, 255, 255, None)
+        self.colorsDict = self.database_connection.load_colors_from_database()
+        default_black_color_hex = QColor(0,0,0).name(QColor.HexRgb)
+        default_black_color = CategoryColors(None, default_black_color_hex, 'Black', 'Black', 0, 0, 0, None)
+        default_white_color_hex = QColor(255,255,255).name(QColor.HexRgb)
+        default_white_color = CategoryColors(None, default_white_color_hex,'White', 'White', 255, 255, 255, None)
+        defaultColors = [default_black_color,
+            default_white_color
         ]
-        self.database_connection.save_colors_to_database(defaultColors)
+
+        pending_colors_array = []
+        for aPotentialNewColor in defaultColors:
+            if (not (aPotentialNewColor.hex_color in self.colorsDict.keys())):
+                pending_colors_array.append(aPotentialNewColor)
+
+        self.database_connection.save_colors_to_database(pending_colors_array)
 
         # For adding to the DB
         behaviorGroupsDBList = []
@@ -81,8 +91,12 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             aNewNode.setBackground(0, aNodeColor)
             self.topLevelNodes.append(aNewNode)
             self.topLeftNodesDict[aUniqueBehavior] = (len(self.topLevelNodes)-1) # get the index of the added node
-            aDBColor = CategoryColors(None, 'aUniqueBehavior', ('Created for ' + aUniqueBehavior), aNodeColor.red(), aNodeColor.green(), aNodeColor.blue(), 'Auto-generated'),
-            aNewDBNode = BehaviorGroup(None, aUniqueBehavior, aUniqueBehavior, aDBColor, CategoryColors(None, 'Black', 'Black', 0, 0, 0, None), 'auto')
+            aDBColor = CategoryColors(None, aNodeColor.name(QColor.HexRgb), aUniqueBehavior, ('Created for ' + aUniqueBehavior), aNodeColor.red(), aNodeColor.green(), aNodeColor.blue(), 'Auto-generated')
+            if (not (aDBColor.hex_color in self.colorsDict.keys())):
+                # If the color is new, add it to the color table in the database
+                self.database_connection.save_colors_to_database([aDBColor])
+
+            aNewDBNode = BehaviorGroup(None, aUniqueBehavior, aUniqueBehavior, aDBColor, default_black_color, 'auto')
             behaviorGroupsDBList.append(aNewDBNode)
 
         # Add the leaf nodes

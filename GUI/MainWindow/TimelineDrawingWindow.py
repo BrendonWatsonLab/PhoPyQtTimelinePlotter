@@ -237,11 +237,16 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         self.videoDates = np.array(videoDates)
         self.videoEndDates = np.array(videoEndDates)
-        
-        self.earliestVideoTime = self.videoDates.min()
-        self.latestVideoTime = self.videoEndDates.max()
-        print('earliest video: ', self.earliestVideoTime)
-        print('latest video: ', self.latestVideoTime)
+
+        if videoDates:
+            self.earliestVideoTime = self.videoDates.min()
+            self.latestVideoTime = self.videoEndDates.max()
+            print('earliest video: ', self.earliestVideoTime)
+            print('latest video: ', self.latestVideoTime)
+        else:
+            print("No videos loaded! Setting self.latestVideoTime to now")
+            self.latestVideoTime = datetime.now()
+            self.earliestVideoTime = self.latestVideoTime - TimelineDrawingWindow.ConstantOffsetFromMostRecentVideoDuration
 
 
         if TimelineDrawingWindow.GlobalTimelineConstraintOptions is GlobalTimeAdjustmentOptions.ConstrainGlobalToVideoTimeRange:
@@ -250,6 +255,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         elif TimelineDrawingWindow.GlobalTimelineConstraintOptions is GlobalTimeAdjustmentOptions.ConstrainVideosShownToGlobal:
             # Otherwise filter the videos
             ## TODO: Filter the videoEvents, self.videoDates, self.videoEndDates, and labels if we need them to the global self.totalStartTime and self.totalEndTime range
+            print("UNIMPLEMENTED TIME ADJUST MODE!!")
             pass
         elif TimelineDrawingWindow.GlobalTimelineConstraintOptions is GlobalTimeAdjustmentOptions.ConstantOffsetFromMostRecentVideo:
             # Otherwise filter the videos

@@ -3,6 +3,7 @@ from datetime import datetime, timezone, timedelta
 from PyQt5.QtCore import Qt, QObject, QEvent, pyqtSignal
 
 import sqlalchemy as db
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, selectinload, joinedload
 
 # from app.database.SqlAlchemyDatabase import create_connection
@@ -106,6 +107,19 @@ class DatabaseConnectionRef(QObject):
         contexts = session.query(Context).all()
         # print(contexts)
         return contexts
+
+    def load_colors_from_database(self):
+        outputColorsDict = dict()
+        print("Loading colors from database:")
+        session = self.get_session()
+        # context = session.query(Context).first()
+        # contexts = session.query(Context).all()
+        # print(contexts)
+        colors_list = session.query(CategoryColors).all()
+        for aColor in colors_list:
+            outputColorsDict[aColor.hex_color] = aColor
+        return outputColorsDict
+
 
 
     ## SAVING:
@@ -212,7 +226,7 @@ class DatabaseConnectionRef(QObject):
                 num_skipped_records = num_skipped_records + 1
                 continue
 
-        print('Added ', num_added_records, 'of', num_found_records, 'behavior_groups to database.')
+        print('Preparing to add ', num_added_records, 'of', num_found_records, 'behavior_groups to database.')
 
         # Behaviors:
         num_found_records = len(behaviors)
@@ -228,10 +242,19 @@ class DatabaseConnectionRef(QObject):
                 num_skipped_records = num_skipped_records + 1
                 continue
 
-        print('Added ', num_added_records, 'of', num_found_records, 'behaviors to database.')
+        print('Preparing to add ', num_added_records, 'of', num_found_records, 'behaviors to database.')
+
+
 
         # Save (commit) the changes
-        session.commit()
+        try:
+            # See https://stackoverflow.com/questions/52075642/how-to-handle-unique-data-in-sqlalchemy-flask-pyhon
+            session.commit()
+            print("Committed changes!")
+        except IntegrityError:
+            session.rollback() # A constraint failed
+            print("ERROR: Failed to commit changes! Rolling back")
+
         # We can also close the connection if we are done with it.
         # Just be sure any changes have been committed or they will be lost.
         session.close()
