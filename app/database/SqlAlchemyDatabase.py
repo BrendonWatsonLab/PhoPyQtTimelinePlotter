@@ -3,10 +3,15 @@ from sqlalchemy.orm import sessionmaker
 # from db_model import Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, \
 #     ExperimentalConfigurationEvent, VideoFile, Base
 from app.database.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, \
-    ExperimentalConfigurationEvent, Base
+    ExperimentalConfigurationEvent
+
+from app.database.entry_models.DatabaseBase import Base, metadata
+
+
+# Behaviors:
+from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
 
 from app.database.db_model_extension import ExVideoFile
-from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
 
 from app.database.utility_functions import *
 
