@@ -21,8 +21,9 @@ class Behavior(Base):
     secondary_color = Column(Integer, ForeignKey('category_colors.id'), nullable=False, server_default=text("2"))
     note = Column(Text)
 
-    primaryColor = relationship('category_colors')
-    secondaryColor = relationship('category_colors')
+    primaryColor = relationship('CategoryColors', foreign_keys=[primary_color])
+    secondaryColor = relationship('CategoryColors', foreign_keys=[secondary_color])
+
     parentGroup = relationship('BehaviorGroup', back_populates="behaviors")
 
 
@@ -36,8 +37,8 @@ class BehaviorGroup(Base):
     secondary_color = Column(Integer, ForeignKey('category_colors.id'), nullable=False, server_default=text("2"))
     note = Column(Text)
 
-    primaryColor = relationship('CategoryColors')
-    secondaryColor = relationship('CategoryColors')
+    primaryColor = relationship('CategoryColors', foreign_keys=[primary_color])
+    secondaryColor = relationship('CategoryColors', foreign_keys=[secondary_color])
 
     behaviors = relationship("Behavior", order_by=Behavior.id, back_populates="parentGroup")
 
