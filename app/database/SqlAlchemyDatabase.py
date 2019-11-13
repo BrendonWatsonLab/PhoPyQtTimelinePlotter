@@ -36,9 +36,13 @@ def create_connection(db_file):
     DBSession = sessionmaker()
     DBSession.bind = engine
 
-    Base.metadata.create_all(engine)
+    try:    
+        Base.metadata.create_all(engine)  
+    except Exception as e:
+        print("Exception while creating the database tables! Trying to continue", e)
 
     session = DBSession()
+
     return (engine, DBSession, session)
 
 ## LOADING:
@@ -177,7 +181,11 @@ def create_TimestampedAnnotation(start_date, end_date, primary_text, secondary_t
     newObj = TimestampedAnnotation()
     # newObj.context = None
     newObj.start_date = datetime_to_database(start_date)
-    newObj.end_date = datetime_to_database(end_date)
+    if end_date:
+        newObj.end_date = datetime_to_database(end_date)
+    else:
+        newObj.end_date = None
+
     newObj.primary_text = primary_text
     newObj.secondary_text = secondary_text
     newObj.tertiary_text = tertiary_text
@@ -186,9 +194,27 @@ def create_TimestampedAnnotation(start_date, end_date, primary_text, secondary_t
 
 # Converts an annotation database data object to a GUI element
 def convert_TimestampedAnnotation(aTimestampedAnnotationObj):
-    newObj = PhoDurationEvent_AnnotationComment(datetime_from_database(aTimestampedAnnotationObj.start_date), datetime_from_database(aTimestampedAnnotationObj.end_date),
+    end_date = None
+    if aTimestampedAnnotationObj.end_date:
+        end_date = datetime_from_database(aTimestampedAnnotationObj.end_date)
+
+    newObj = PhoDurationEvent_AnnotationComment(datetime_from_database(aTimestampedAnnotationObj.start_date), end_date,
     aTimestampedAnnotationObj.tertiary_text, aTimestampedAnnotationObj.primary_text, aTimestampedAnnotationObj.secondary_text)
     return newObj
+
+# Updates the provided TimestampedAnnotationObj with the data that was provided from the interface
+def modify_TimestampedAnnotation(aTimestampedAnnotationObj, start_date, end_date, title, subtitle, body, overflow_text=''):
+    aTimestampedAnnotationObj.primary_text = title
+    aTimestampedAnnotationObj.secondary_text = subtitle
+    aTimestampedAnnotationObj.tertiary_text = body
+    aTimestampedAnnotationObj.overflow_text = ''
+
+    aTimestampedAnnotationObj.start_date = datetime_to_database(start_date)
+    if end_date:
+        aTimestampedAnnotationObj.end_date = datetime_to_database(end_date)
+    else:
+        aTimestampedAnnotationObj.end_date = None
+    return aTimestampedAnnotationObj
 
 
 
