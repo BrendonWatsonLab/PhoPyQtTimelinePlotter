@@ -18,35 +18,9 @@ class SetupWindow(QtWidgets.QMainWindow):
         super(SetupWindow, self).__init__() # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/SetupWindow/SetupWindow.ui", self) # Load the .ui file
         self.behaviorsManager = BehaviorsManager()
-        # self.partitionInfoOptions = [PartitionInfoOptions('Unpartitioned','Unpartitioned'),
-        #     PartitionInfoOptions('Removed','Removed'),
-        #     PartitionInfoOptions('Sleep','Sleep'),
-        #     PartitionInfoOptions('Stationary','Stationary'),
-        #     PartitionInfoOptions('Active','Active'),
-        #     PartitionInfoOptions('Running','Running')
-        # ]
-
-        # self.partitionInfoOptions = [PartitionInfoOptions('Unpartitioned','Unpartitioned'),
-        #     PartitionInfoOptions('Removed','Removed'),
-        #     PartitionInfoOptions('Sleep','Sleep'),
-        #     PartitionInfoOptions('Stationary','Stationary'),
-        #     PartitionInfoOptions('Active','Active'),
-        #     PartitionInfoOptions('Running','Running')
-        # ]
 
         self.build_from_behaviors_manager()
         self.initUI()
-
-    def build_from_behaviors_manager(self):
-        # uniqueBehaviorsList = self.behaviorsManager.get_unique_behaviors()
-        # uniqueColorsDict = self.behaviorsManager.color_dictionary
-        uniqueBehaviorsList = self.behaviorsManager.get_unique_behavior_groups()
-        uniqueColorsDict = self.behaviorsManager.groups_color_dictionary
-        
-        self.partitionInfoOptions = []
-        for (anIndex, aBehavior) in enumerate(uniqueBehaviorsList):
-            newObj = BehaviorInfoOptions(aBehavior, aBehavior, anIndex, 0, uniqueColorsDict[aBehavior])
-            self.partitionInfoOptions.append(newObj)
 
     def initUI(self):
         self.ui.tableWidget_Settings_PartitionTrack.setColumnCount(5)
@@ -69,6 +43,20 @@ class SetupWindow(QtWidgets.QMainWindow):
         self.ui.tableWidget_Settings_PartitionTrack.itemDoubleClicked.connect(self.editItem)
         self.updatePartitionOptionsTable()
 
+        self.initBehaviorsTree()
+
+    def build_from_behaviors_manager(self):
+        # uniqueBehaviorsList = self.behaviorsManager.get_unique_behaviors()
+        # uniqueColorsDict = self.behaviorsManager.color_dictionary
+        uniqueBehaviorsList = self.behaviorsManager.get_unique_behavior_groups()
+        uniqueColorsDict = self.behaviorsManager.groups_color_dictionary
+        
+        self.partitionInfoOptions = []
+        for (anIndex, aBehavior) in enumerate(uniqueBehaviorsList):
+            newObj = BehaviorInfoOptions(aBehavior, aBehavior, anIndex, 0, uniqueColorsDict[aBehavior])
+            self.partitionInfoOptions.append(newObj)
+
+    def initBehaviorsTree(self):
         self.topLevelNodes = []
         self.topLeftNodesDict = dict()
 
@@ -94,7 +82,6 @@ class SetupWindow(QtWidgets.QMainWindow):
                 print('Failed to find the parent node with name: ', parentNodeName)
             
         self.ui.treeWidget_Settings_PartitionTrack.addTopLevelItems(self.topLevelNodes)
-
 
     def updatePartitionOptionsTable(self):
         for (aRowIndex, aPartitionInfoOption) in enumerate(self.partitionInfoOptions):
