@@ -21,6 +21,45 @@ from GUI.Model.PhoDurationEvent_AnnotationComment import *
 import sys
 import os
 
+
+""" SQLAlchemy: Connects to database backend
+"Declarative": system allows us to create python classes that inherent from "Base" class which maintains a catalog of classes and tables that relate to that base.
+    - Used in the "db_model.py" file
+Within a Base-inheriting class, a "Relationship" object allows retreival of a foreign key (in another table) from the object.
+    - The variable with the "Foreign Key" property is still just an "int" or whatever the raw data type is.
+    - The "backref" property allows members of the table specified by the foreign key to find all instances in this table that belong to it.
+    - The ForeignKey construct constrains the values of a Column to the values present in the named remote column
+
+
+Boilerplate conversions for datatypes etc isn't built in to SQLAlchemy, but instead you're advised to use "Mixin classes" and helper functions.
+
+"Session": the ORM's "handle" to the database
+    - Should be created at application start-up
+
+# Adding objects:
+    - when we call "session.add(an_obj)" the instance is said to "pending". 
+    Nothing is written until a "flush" occurs.
+    When we query that database, all pending info will first be flushed, and then the query will be issued.
+    - We can look at pending modified objects with "session.dirty" and new objects with "session.new"
+    
+# Rolling-back changes:
+    - we can roll-back pending changes using session.rollback()
+
+
+
+"""
+
+
+
+
+
+
+
+
+
+
+
+
 ## INITIAL:
 def build_new_database(db_file):
     ## TODO:
