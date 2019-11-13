@@ -13,6 +13,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 from GUI.UI.AbstractDatabaseAccessingWindow import AbstractDatabaseAccessingWindow
 
 from app.BehaviorsList import BehaviorsManager, BehaviorInfoOptions
+from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
 
 class SetupWindow(AbstractDatabaseAccessingWindow):
     def __init__(self, database_connection):
@@ -58,16 +59,31 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             self.partitionInfoOptions.append(newObj)
 
     def initBehaviorsTree(self):
+
+        # Make sure the default colors exist in the DB
+        
+        defaultColors = [CategoryColors(None, QColor(0,0,0).name(QColor.HexRgb), 'Black', 'Black', 0, 0, 0, None),
+            CategoryColors(None,QColor(255,255,255).name(QColor.HexRgb),'White', 'White', 255, 255, 255, None)
+        ]
+        self.database_connection.save_colors_to_database(defaultColors)
+
+        # For adding to the DB
+        behaviorGroupsDBList = []
+        behaviorsDBList = []
+
         self.topLevelNodes = []
         self.topLeftNodesDict = dict()
 
         # Add the top-level parent nodes
         for (aTypeId, aUniqueBehavior) in enumerate(self.behaviorsManager.get_unique_behavior_groups()):
             aNewNode = QTreeWidgetItem([aUniqueBehavior, str(aTypeId), "String C"])
-            
-            aNewNode.setBackground(0, self.behaviorsManager.groups_color_dictionary[aUniqueBehavior])
+            aNodeColor = self.behaviorsManager.groups_color_dictionary[aUniqueBehavior]
+            aNewNode.setBackground(0, aNodeColor)
             self.topLevelNodes.append(aNewNode)
             self.topLeftNodesDict[aUniqueBehavior] = (len(self.topLevelNodes)-1) # get the index of the added node
+            aDBColor = CategoryColors(None, 'aUniqueBehavior', ('Created for ' + aUniqueBehavior), aNodeColor.red(), aNodeColor.green(), aNodeColor.blue(), 'Auto-generated'),
+            aNewDBNode = BehaviorGroup(None, aUniqueBehavior, aUniqueBehavior, aDBColor, CategoryColors(None, 'Black', 'Black', 0, 0, 0, None), 'auto')
+            behaviorGroupsDBList.append(aNewDBNode)
 
         # Add the leaf nodes
         for (aSubtypeID, aUniqueLeafBehavior) in enumerate(self.behaviorsManager.get_unique_behaviors()):
@@ -83,6 +99,9 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
                 print('Failed to find the parent node with name: ', parentNodeName)
             
         self.ui.treeWidget_Settings_PartitionTrack.addTopLevelItems(self.topLevelNodes)
+        
+        self.database_connection.save_behavior_events_to_database(behaviorsDBList, behaviorGroupsDBList)
+
 
     def updatePartitionOptionsTable(self):
         for (aRowIndex, aPartitionInfoOption) in enumerate(self.partitionInfoOptions):
