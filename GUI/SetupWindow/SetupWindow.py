@@ -10,12 +10,15 @@ from PyQt5.QtWidgets import QApplication, QWidget, QTableWidget, QTableWidgetIte
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
+from GUI.UI.AbstractDatabaseAccessingWindow import AbstractDatabaseAccessingWindow
 
 from app.BehaviorsList import BehaviorsManager, BehaviorInfoOptions
 
-class SetupWindow(QtWidgets.QMainWindow):
-    def __init__(self):
-        super(SetupWindow, self).__init__() # Call the inherited classes __init__ method
+from app.database.SqlAlchemyDatabase import create_connection
+
+class SetupWindow(AbstractDatabaseAccessingWindow):
+    def __init__(self, database_connection):
+        super(SetupWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/SetupWindow/SetupWindow.ui", self) # Load the .ui file
         self.behaviorsManager = BehaviorsManager()
 

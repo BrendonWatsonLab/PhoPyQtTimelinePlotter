@@ -11,6 +11,7 @@ from GUI.MainWindow.TimelineDrawingWindow import *
 
 from GUI.HelpWindow.HelpWindowFinal import *
 
+from app.database.DatabaseConnectionRef import DatabaseConnectionRef
 
 if __name__ == '__main__':
     shouldShowGUIWindows = True
@@ -24,8 +25,9 @@ if __name__ == '__main__':
         # database_file_path = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
         # database_file_path = 'G:\Google Drive\Modern Behavior Box\Results - Data\BehavioralBoxDatabase.db'
         database_file_path = "C:/Users/halechr/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db"
+        database_connection = DatabaseConnectionRef(database_file_path)
 
-        mainWindow = TimelineDrawingWindow(earliestTime, latestTime, database_file_path)
+        mainWindow = TimelineDrawingWindow(database_connection, earliestTime, latestTime)
         windowFlags = mainWindow.windowFlags()
         # print(windowFlags)
         windowFlags |= Qt.WindowContextHelpButtonHint # Add the help button to the window
