@@ -6,6 +6,7 @@ from app.database.db_model import Animal, BehavioralBox, Context, Experiment, La
     ExperimentalConfigurationEvent, Base
 
 from app.database.db_model_extension import ExVideoFile
+from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
 
 from app.database.utility_functions import *
 
