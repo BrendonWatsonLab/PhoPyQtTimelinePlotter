@@ -10,7 +10,9 @@ from GUI.Model.PhoEvent import PhoEvent
 from GUI.Model.PhoDurationEvent import PhoDurationEvent
 from GUI.Model.PhoDurationEvent_Partition import PhoDurationEvent_Partition
 
-from app.BehaviorsList import BehaviorsManager
+# from app.BehaviorsList import BehaviorsManager
+
+from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
 
 # """
 # Represents a partition
@@ -36,16 +38,16 @@ from app.BehaviorsList import BehaviorsManager
 """
 A 0.0 to 1.0 timeline
 """
-class Partitioner(QObject):
-
-    def __init__(self, totalStartTime, totalEndTime, owning_parent_track, name='', partitions=None, extended_data=dict()):
-        super(Partitioner, self).__init__(None)
+class Partitioner(AbstractDatabaseAccessingQObject):
+    # TODO: Could just use its owning_parent_track's database_connection?
+    def __init__(self, totalStartTime, totalEndTime, owning_parent_track, database_connection, name='', partitions=None, extended_data=dict()):
+        super(Partitioner, self).__init__(database_connection)
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
         self.owning_parent_track = owning_parent_track
         self.name = name
-        self.behaviorsManager = BehaviorsManager()
+        # self.behaviorsManager = BehaviorsManager()
         if partitions:
             self.partitions = partitions
         else:

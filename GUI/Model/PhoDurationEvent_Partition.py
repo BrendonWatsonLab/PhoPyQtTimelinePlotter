@@ -41,7 +41,7 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
         self.type_id = type_id
         self.subtype_id = subtype_id
 
-        self.color = BehaviorsManager().get_subtype_color(self.subtype_id)
+        # self.color = BehaviorsManager().get_subtype_color(self.subtype_id)
 
         # TODO: init gui
 
