@@ -2,6 +2,9 @@
 <ui version="4.0">
  <class>SetupWindow</class>
  <widget class="QMainWindow" name="SetupWindow">
+  <property name="windowModality">
+   <enum>Qt::ApplicationModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -13,20 +16,26 @@
   <property name="windowTitle">
    <string>SetupWindow</string>
   </property>
+  <property name="documentMode">
+   <bool>false</bool>
+  </property>
+  <property name="unifiedTitleAndToolBarOnMac">
+   <bool>true</bool>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
      <widget class="QToolBox" name="toolBox">
       <property name="currentIndex">
-       <number>1</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="page_Settings_General">
        <property name="geometry">
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>124</width>
-         <height>124</height>
+         <width>782</width>
+         <height>406</height>
         </rect>
        </property>
        <attribute name="label">
@@ -50,89 +59,13 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="page_Settings_PartitionTrack">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>0</y>
-         <width>776</width>
-         <height>357</height>
-        </rect>
-       </property>
-       <attribute name="label">
-        <string>Partition Track Settings</string>
-       </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="QTreeWidget" name="treeWidget_Settings_PartitionTrack">
-          <property name="columnCount">
-           <number>3</number>
-          </property>
-          <column>
-           <property name="text">
-            <string notr="true">1</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string notr="true">2</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string notr="true">3</string>
-           </property>
-          </column>
-         </widget>
-        </item>
-        <item>
-         <widget class="QFrame" name="frame">
-          <property name="frameShape">
-           <enum>QFrame::StyledPanel</enum>
-          </property>
-          <property name="frameShadow">
-           <enum>QFrame::Raised</enum>
-          </property>
-          <layout class="QHBoxLayout" name="horizontalLayout_2">
-           <item>
-            <widget class="QTableWidget" name="tableWidget_Settings_PartitionTrack">
-             <property name="rowCount">
-              <number>8</number>
-             </property>
-             <property name="columnCount">
-              <number>6</number>
-             </property>
-             <attribute name="horizontalHeaderVisible">
-              <bool>false</bool>
-             </attribute>
-             <row/>
-             <row/>
-             <row/>
-             <row/>
-             <row/>
-             <row/>
-             <row/>
-             <row/>
-             <column/>
-             <column/>
-             <column/>
-             <column/>
-             <column/>
-             <column/>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-       </layout>
-      </widget>
       <widget class="QWidget" name="page_Settings_VideoTrack">
        <property name="geometry">
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>124</width>
-         <height>124</height>
+         <width>782</width>
+         <height>406</height>
         </rect>
        </property>
        <attribute name="label">
@@ -156,13 +89,127 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="page_Settings_PartitionTrack">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>782</width>
+         <height>406</height>
+        </rect>
+       </property>
+       <attribute name="label">
+        <string>Partition Track Settings</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_14">
+        <item>
+         <widget class="QFrame" name="frame">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_12" stretch="0">
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_2">
+             <item>
+              <widget class="QSplitter" name="splitter">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="handleWidth">
+                <number>8</number>
+               </property>
+               <widget class="QTreeWidget" name="treeWidget_Settings_PartitionTrack">
+                <property name="columnCount">
+                 <number>3</number>
+                </property>
+                <column>
+                 <property name="text">
+                  <string notr="true">1</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string notr="true">2</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string notr="true">3</string>
+                 </property>
+                </column>
+               </widget>
+               <widget class="QTableWidget" name="tableWidget_Settings_PartitionTrack">
+                <property name="alternatingRowColors">
+                 <bool>true</bool>
+                </property>
+                <property name="selectionMode">
+                 <enum>QAbstractItemView::SingleSelection</enum>
+                </property>
+                <property name="rowCount">
+                 <number>8</number>
+                </property>
+                <property name="columnCount">
+                 <number>6</number>
+                </property>
+                <attribute name="horizontalHeaderVisible">
+                 <bool>false</bool>
+                </attribute>
+                <attribute name="horizontalHeaderMinimumSectionSize">
+                 <number>29</number>
+                </attribute>
+                <attribute name="verticalHeaderVisible">
+                 <bool>false</bool>
+                </attribute>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <row/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+                <column/>
+               </widget>
+              </widget>
+             </item>
+             <item>
+              <widget class="QDialogButtonBox" name="buttonBox_Settings_PartitionTrack">
+               <property name="standardButtons">
+                <set>QDialogButtonBox::Reset|QDialogButtonBox::RestoreDefaults|QDialogButtonBox::SaveAll</set>
+               </property>
+               <property name="centerButtons">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="page_Settings_CommentTrack">
        <property name="geometry">
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>776</width>
-         <height>357</height>
+         <width>782</width>
+         <height>406</height>
         </rect>
        </property>
        <attribute name="label">
@@ -244,8 +291,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>124</width>
-         <height>124</height>
+         <width>782</width>
+         <height>406</height>
         </rect>
        </property>
        <attribute name="label">
@@ -283,7 +330,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

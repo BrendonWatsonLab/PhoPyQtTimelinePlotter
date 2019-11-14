@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 # import numpy as np
 
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
-from PyQt5.QtWidgets import QApplication, QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QPushButton, QColorDialog, QTreeWidget, QTreeWidgetItem
+from PyQt5.QtWidgets import QApplication, QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QPushButton, QColorDialog, QTreeWidget, QTreeWidgetItem, QDialogButtonBox, QMessageBox
 # from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
@@ -48,6 +48,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         self.ui.tableWidget_Settings_PartitionTrack.itemChanged.connect(self.on_behavior_table_item_changed)
         self.ui.tableWidget_Settings_PartitionTrack.currentItemChanged.connect(self.on_current_behavior_table_item_changed)
 
+        self.ui.buttonBox_Settings_PartitionTrack.clicked.connect(self.on_update_buttonBox_clicked)
         self.initBehaviorsInterfaces()
 
 
@@ -307,6 +308,19 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         else:
             print('editItem() table item {0}: Unknown action'.format(item.text())) 
 
+    # Called when one of the buttons in the button box at the bottom of the window are clicked like "Save all", "Reset", or "Restore Defaults"
+    def on_update_buttonBox_clicked(self, button):
+        sb = self.ui.buttonBox_Settings_PartitionTrack.standardButton(button)
+        if sb == QDialogButtonBox.SaveAll:
+            print('SaveAll Clicked')
+        elif sb == QDialogButtonBox.Reset:
+            print('Reset Clicked')
+        elif sb == QDialogButtonBox.RestoreDefaults:
+            print("RestoreDefaults Clicked")
+        else:
+            print("UNIMPLEMENTED: Unhandled button box button")
+        # and so on...
+    
     
 
 
