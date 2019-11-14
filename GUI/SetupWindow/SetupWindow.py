@@ -25,14 +25,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         self.initUI()
 
     def initUI(self):
-        self.ui.tableWidget_Settings_PartitionTrack.setColumnCount(5)
-        self.ui.tableWidget_Settings_PartitionTrack.setRowCount(len(self.partitionInfoOptions)+1)
-        # Headers
-        self.ui.tableWidget_Settings_PartitionTrack.setItem(0,0,QTableWidgetItem("Name"))
-        self.ui.tableWidget_Settings_PartitionTrack.setItem(0,1,QTableWidgetItem("Descr."))
-        self.ui.tableWidget_Settings_PartitionTrack.setItem(0,2,QTableWidgetItem("Type"))
-        self.ui.tableWidget_Settings_PartitionTrack.setItem(0,3,QTableWidgetItem("Subtype"))
-        self.ui.tableWidget_Settings_PartitionTrack.setItem(0,4,QTableWidgetItem("Color"))
+        
         # self.ui.tableWidget_Settings_PartitionTrack.setH
 
         # if you don't want to allow in-table editing, either disable the table like:
@@ -43,9 +36,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
 
         # create a connection to the double click event
         self.ui.tableWidget_Settings_PartitionTrack.itemDoubleClicked.connect(self.editItem)
-        self.updatePartitionOptionsTable()
-
-        self.initBehaviorsTree()
+        self.initBehaviorsInterfaces()
 
     def build_from_behaviors_manager(self):
         # uniqueBehaviorsList = self.behaviorsManager.get_unique_behaviors()
@@ -157,9 +148,14 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         return 
 
 
-    # Called to rebuild the behaviors tree from the behaviors data loaded from the database
-    def build_behaviors_tree_from_loaded(self):
+    # Called to rebuild the behaviors tree and table from the behaviors data loaded from the database
+    def build_behaviors_interfaces_from_loaded(self):
         
+        # Table
+        self.ui.tableWidget_Settings_PartitionTrack.clear()
+        self.partitionInfoOptions = []
+        
+        # Tree
         self.ui.treeWidget_Settings_PartitionTrack.clear()
         self.topLevelNodes = []
         self.topLeftNodesDict = dict()
@@ -176,6 +172,10 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             aNodeColor = aUniqueBehaviorGroup.primaryColor.get_QColor()
             aNewGroupNode.setBackground(0, aNodeColor)
 
+            # Table Item:
+            newObj = BehaviorInfoOptions(aUniqueBehaviorGroup.name, aUniqueBehaviorGroup.name, aTypeId, 0, aNodeColor)
+            self.partitionInfoOptions.append(newObj)
+
             for (aSubtypeID, aUniqueLeafBehavior) in enumerate(aUniqueBehaviorGroup.behaviors):
                 if aUniqueLeafBehavior.description:
                     extra_string = aUniqueLeafBehavior.description
@@ -191,8 +191,12 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             self.topLevelNodes.append(aNewGroupNode)
             
         self.ui.treeWidget_Settings_PartitionTrack.addTopLevelItems(self.topLevelNodes)
+        # Refresh the table to display the updated data
+        self.updatePartitionOptionsTable()
 
-    def initBehaviorsTree(self):
+
+    # Initializes the UI elements that display/edit the behaviors
+    def initBehaviorsInterfaces(self):
 
         # Load the latest behaviors and colors data from the database
         self.colorsDict = self.database_connection.load_colors_from_database()
@@ -206,16 +210,28 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             if (len(self.behaviorGroups) > 0):
                 needs_init_sample_db = False
             
-
+        # Initializes the DB if that's needed (if it's empty)
         if needs_init_sample_db:
             self.initSampleBehaviorsDatabase()
-        else:
-            self.build_behaviors_tree_from_loaded()        
+        
+        # Build the UI objects either way
+        self.build_behaviors_interfaces_from_loaded()
 
         self.database_connection.close()
 
 
+    # Updates the table interface from the self.partitionInfoObjects variable
     def updatePartitionOptionsTable(self):
+        # Setup Table
+        self.ui.tableWidget_Settings_PartitionTrack.setColumnCount(5)
+        self.ui.tableWidget_Settings_PartitionTrack.setRowCount(len(self.partitionInfoOptions)+1)
+        # Headers
+        self.ui.tableWidget_Settings_PartitionTrack.setItem(0,0,QTableWidgetItem("Name"))
+        self.ui.tableWidget_Settings_PartitionTrack.setItem(0,1,QTableWidgetItem("Descr."))
+        self.ui.tableWidget_Settings_PartitionTrack.setItem(0,2,QTableWidgetItem("Type"))
+        self.ui.tableWidget_Settings_PartitionTrack.setItem(0,3,QTableWidgetItem("Subtype"))
+        self.ui.tableWidget_Settings_PartitionTrack.setItem(0,4,QTableWidgetItem("Color"))
+
         for (aRowIndex, aPartitionInfoOption) in enumerate(self.partitionInfoOptions):
             aDataRowIndex = aRowIndex + 1 # Add one to compensate for the header row
             # self.ui.tableWidget_Settings_PartitionTrack.setItem(aDataRowIndex,0,QTableWidgetItem(str(aRowIndex)))
@@ -226,20 +242,11 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
 
             # Color Item:
             currColorTableWidgetItem = QTableWidgetItem('')
-            # btnCurrTableWidgetCellColorItem = QPushButton(self.ui.tableWidget_Settings_PartitionTrack)
-            # # btnCurrTableWidgetCellColorItem = QPushButton(currColorTableWidgetItem)
-            # btnCurrTableWidgetCellColorItem.setText('color')
-            # btnCurrTableWidgetCellColorItem.setAutoFillBackground(True)
-            # btnCurrTableWidgetCellColorItem.setStyleSheet("background-color: red")
-            # # btnCurrTableWidgetCellColorItem.clicked.connect(self.color_picker)
-
-            # currColorTableWidgetItem.itemDoubleClicked.connect(self.editItem)
-            # currColorTableWidgetItem.setFlags(currColorTableWidgetItem.flags() ^ Qt.ItemIsEditable)
             currColorTableWidgetItem.setBackground(aPartitionInfoOption.color)
             self.ui.tableWidget_Settings_PartitionTrack.setItem(aDataRowIndex,4,currColorTableWidgetItem)
-            # self.ui.tableWidget_Settings_PartitionTrack.setCellWidget(aDataRowIndex, 4, btnCurrTableWidgetCellColorItem)
 
 
+    # Called upon editing a table cell
     def editItem(self, item):        
         if (item.column() == 4):
             print('Color column: selecting')
