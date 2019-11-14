@@ -81,20 +81,9 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
     def reloadModelFromDatabase(self):
         # Load the latest behaviors and colors data from the database
         self.colorsDict = self.database_connection.load_colors_from_database()
-        self.behaviorGroups = self.database_connection.load_behaviors_from_database()
+        self.behaviorGroups = self.database_connection.load_behavior_groups_from_database()
         ## What about self.partitionInfoOptions?
         
-
-
-    def closeConnectionToDatabase(self):
-        self.database_connection.close()
-
-    # Returns true if any models have pending (uncommited) changes
-    def get_has_pending_changes(self):
-        self.user_edited_pending_counts = self.database_connection.get_pending_counts()
-        return self.user_edited_pending_counts.has_pending()
-        
-
 
 ## General Functions:
 
@@ -270,7 +259,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         # Build the UI objects either way
         self.build_behaviors_interfaces_from_loaded()
 
-        # self.closeConnectionToDatabase()
+        # self.database_close()
 
 
     # Updates the table interface from the self.partitionInfoObjects variable
@@ -338,7 +327,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             pass
         else:
             pass
-            # self.closeConnectionToDatabase()
+            # self.database_close()
 
     ## Handlers:
 
@@ -427,52 +416,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             print("UNIMPLEMENTED: Unhandled button box button")
         # and so on...
     
-    # Called on close
-    def closeEvent(self, event):
-        """Generate 'question' dialog on clicking 'X' button in title bar.
 
-        Reimplement the closeEvent() event handler to include a 'Question'
-        dialog with options on how to proceed - Save, Close, Cancel buttons
-        """
-        self.user_edited_pending_counts = self.database_connection.get_pending_counts()
-        shouldClose = True
-        if self.user_edited_pending_counts.has_pending():
-            reply = QMessageBox.question(
-                self, "Message",
-                "Are you sure you want to quit? Any unsaved work will be lost.",
-                QMessageBox.Save | QMessageBox.Close | QMessageBox.Cancel,
-                QMessageBox.Save)
-
-            if reply == QMessageBox.Close:
-                print("User is closing, discarding changes")
-                shouldClose = True
-            elif reply == QMessageBox.Cancel:
-                print("User canceled closing")
-                shouldClose = False
-            elif reply == QMessageBox.Save:
-                print("User clicked save changes!")
-                # Save changes
-
-                # TODO: set shouldClose = True once changes have been saved
-                shouldClose = False
-                pass
-            else:
-                print("UNIMPLEMENTED: unimplemented message box option!")
-                shouldClose = False
-                pass
-
-
-        if shouldClose:
-            print("Closing...")
-            self.closeConnectionToDatabase()
-            event.accept()
-            # super(SetupWindow, self).closeEvent(event)
-            # qApp.quit()
-        else:
-            print("Close has been canceled!")
-            event.ignore()
-    
-        
 
 ## UTILITY Functions:
 

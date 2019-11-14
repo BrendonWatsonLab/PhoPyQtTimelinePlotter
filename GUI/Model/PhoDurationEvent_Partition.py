@@ -19,7 +19,8 @@ from app.BehaviorsList import BehaviorsManager
 class PhoDurationEvent_Partition(PhoDurationEvent):
     InstantaneousEventDuration = timedelta(seconds=2)
     RectCornerRounding = 8
-    ColorBase = QColor(51, 204, 255)  # Teal '#33ccff'
+    # ColorBase = QColor(51, 204, 255)  # Teal '#33ccff'
+    ColorBase = QColor(55, 55, 55)  # Grey
     ColorEmph = QColor(51, 255, 102)  # Green '#33ff66'
     ColorActive = QColor(255, 102, 51)  # Orange
 
@@ -33,7 +34,7 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
     # on_edit = pyqtSignal(datetime, datetime, str, str, str)
     # on_edit = pyqtSignal(PhoDurationEvent_Partition)
 
-    def __init__(self, startTime=datetime.now(), endTime=None, name='', subtitle='', body='', color=QColor(51, 204, 255), type_id=BehaviorsManager.UnknownType_ID, subtype_id=BehaviorsManager.UnknownSubtype_ID, extended_data=dict(), parent=None):
+    def __init__(self, startTime=datetime.now(), endTime=None, name='', subtitle='', body='', color=QColor(55, 55, 55), type_id=BehaviorsManager.UnknownType_ID, subtype_id=BehaviorsManager.UnknownSubtype_ID, extended_data=dict(), parent=None):
         super(PhoDurationEvent_Partition, self).__init__(startTime, endTime, name, color, extended_data, parent=parent)
         self.subtitle = subtitle
         self.body = body
@@ -41,7 +42,7 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
         self.type_id = type_id
         self.subtype_id = subtype_id
 
-        self.color = BehaviorsManager().get_subtype_color(self.subtype_id)
+        # self.color = BehaviorsManager().get_subtype_color(self.subtype_id)
 
         # TODO: init gui
 

@@ -124,15 +124,6 @@ class DatabaseConnectionRef(QObject):
         return output
 
 
-
-    
-
-        
-    
-
-        
-            
-
     def close(self):
         if self.session:
             self.session.close()
@@ -210,18 +201,17 @@ class DatabaseConnectionRef(QObject):
             outputColorsDict[aColor.hex_color] = aColor
         return outputColorsDict
 
-    def load_behaviors_from_database(self):
-        outputAnnotationList = []
-        print("Loading annotation events from database:")
+    def load_behavior_groups_from_database(self):
+        print("Loading behavior_groups from database:")
         session = self.get_session()
-        # context = session.query(Context).first()
-        # contexts = session.query(Context).all()
-        # print(contexts)
-        # behaviors = session.query(Behavior).options(selectinload(Behavior.parentGroup)).all()
         behaviorGroups = session.query(BehaviorGroup).options(selectinload(BehaviorGroup.behaviors)).all()
         return behaviorGroups
 
-
+    def load_behaviors_from_database(self):
+        print("Loading behaviors from database:")
+        session = self.get_session()
+        behaviors = session.query(Behavior).all()
+        return behaviors
 
 
     ## SAVING:

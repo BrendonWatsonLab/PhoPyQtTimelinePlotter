@@ -10,7 +10,9 @@ from GUI.Model.PhoEvent import PhoEvent
 from GUI.Model.PhoDurationEvent import PhoDurationEvent
 from GUI.Model.PhoDurationEvent_Partition import PhoDurationEvent_Partition
 
-from app.BehaviorsList import BehaviorsManager
+# from app.BehaviorsList import BehaviorsManager
+
+from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
 
 # """
 # Represents a partition
@@ -36,16 +38,16 @@ from app.BehaviorsList import BehaviorsManager
 """
 A 0.0 to 1.0 timeline
 """
-class Partitioner(QObject):
-
-    def __init__(self, totalStartTime, totalEndTime, owning_parent_track, name='', partitions=None, extended_data=dict()):
-        super(Partitioner, self).__init__(None)
+class Partitioner(AbstractDatabaseAccessingQObject):
+    # TODO: Could just use its owning_parent_track's database_connection?
+    def __init__(self, totalStartTime, totalEndTime, owning_parent_track, database_connection, name='', partitions=None, extended_data=dict()):
+        super(Partitioner, self).__init__(database_connection)
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
         self.owning_parent_track = owning_parent_track
         self.name = name
-        self.behaviorsManager = BehaviorsManager()
+        # self.behaviorsManager = BehaviorsManager()
         if partitions:
             self.partitions = partitions
         else:
@@ -84,7 +86,7 @@ class Partitioner(QObject):
 
         # The first partition keeps the metadata/info, while the second is initialized to a blank partition
 
-    def modify_partition(self, modify_partition_index, start_date, end_date, title, subtitle, body, type_id, subtype_id):
+    def modify_partition(self, modify_partition_index, start_date, end_date, title, subtitle, body, type_id, subtype_id, color):
         partition_to_modify = self.partitions[modify_partition_index]
         if (not partition_to_modify):
             print('invalid partition to modify!')
@@ -121,16 +123,8 @@ class Partitioner(QObject):
         if (not (partition_to_modify.name == title)):
             partition_to_modify.name = title
 
-        # partition_to_modify.extended_data['subtitle'] = subtitle
-        # partition_to_modify.extended_data['body'] = body
-
-        # partition_to_modify.extended_data['type_id'] = type_id
-        # partition_to_modify.extended_data['subtype_id'] = subtype_id
-
         partition_to_modify.subtitle = subtitle
         partition_to_modify.body = body
-
-        
 
         if (not (partition_to_modify.type_id == type_id)):
             partition_to_modify.type_id = type_id
@@ -138,7 +132,8 @@ class Partitioner(QObject):
 
         if (not (partition_to_modify.subtype_id == subtype_id)):
             partition_to_modify.subtype_id = subtype_id
-            partition_to_modify.color = self.behaviorsManager.get_subtype_color(subtype_id)
+            # partition_to_modify.color = self.behaviorsManager.get_subtype_color(subtype_id)
+            partition_to_modify.color = color
         
 
         # Update in the array

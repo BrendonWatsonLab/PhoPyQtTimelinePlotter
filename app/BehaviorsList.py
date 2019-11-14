@@ -49,8 +49,8 @@ class BehaviorsManager(QObject):
 
     BEHAVIOR_COL, INFO_COL, COLOR_COL = range(3)
 
-    UnknownType_ID = 21
-    UnknownSubtype_ID = 44
+    UnknownType_ID = 22
+    UnknownSubtype_ID = 45
 
     def __init__(self):
         super(BehaviorsManager, self).__init__(None)

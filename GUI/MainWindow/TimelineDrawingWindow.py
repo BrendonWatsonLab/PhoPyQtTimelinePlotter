@@ -124,7 +124,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         # Video Track
         ## TODO: The video tracks must set:
-        self.mainVideoTrack = TimelineTrackDrawingWidget_Events(-1, self.videoEventDisplayObjects, [], self.totalStartTime, self.totalEndTime)
+        self.mainVideoTrack = TimelineTrackDrawingWidget_Events(-1, self.videoEventDisplayObjects, [], self.totalStartTime, self.totalEndTime, self.database_connection)
         self.mainVideoTrack.selection_changed.connect(self.handle_child_selection_event)
         self.mainVideoTrack.hover_changed.connect(self.handle_child_hover_event)
         self.mainVideoTrack.setMouseTracking(True)
@@ -139,10 +139,10 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
 
         # Partition tracks:
-        self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(1, None, [], self.totalStartTime, self.totalEndTime)
+        self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(1, None, [], self.totalStartTime, self.totalEndTime, self.database_connection)
         self.eventTrackWidgets.append(self.partitionsTrackWidget)
 
-        self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(2, None, [], self.totalStartTime, self.totalEndTime)
+        self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(2, None, [], self.totalStartTime, self.totalEndTime, self.database_connection)
         self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
 
         # Build the bottomPanelWidget
