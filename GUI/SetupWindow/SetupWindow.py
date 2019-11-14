@@ -78,6 +78,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
                 pending_colors_array.append(aPotentialNewColor)
 
         self.database_connection.save_colors_to_database(pending_colors_array)
+        self.colorsDict = self.database_connection.load_colors_from_database()
 
         # For adding to the DB
         behaviorGroupsDBList = []
@@ -96,6 +97,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
                 # If the color is new, add it to the color table in the database
                 aDBColor = CategoryColors(None, aNodeColorHexID, aUniqueBehavior, ('Created for ' + aUniqueBehavior), aNodeColor.red(), aNodeColor.green(), aNodeColor.blue(), 'Auto-generated')
                 self.database_connection.save_colors_to_database([aDBColor])
+                self.colorsDict = self.database_connection.load_colors_from_database()
             else:
                 #Else get the existing color
                 aDBColor = self.colorsDict[aNodeColorHexID]
@@ -124,6 +126,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
                     # If the color is new, add it to the color table in the database
                     aDBColor = CategoryColors(None, aNodeColorHexID, aUniqueLeafBehavior, ('Created for ' + aUniqueLeafBehavior), aNodeColor.red(), aNodeColor.green(), aNodeColor.blue(), 'Auto-generated')
                     self.database_connection.save_colors_to_database([aDBColor])
+                    self.colorsDict = self.database_connection.load_colors_from_database()
                 else:
                     #Else get the existing color
                     aDBColor = self.colorsDict[aNodeColorHexID]
