@@ -5,9 +5,9 @@ from datetime import datetime, timezone, timedelta
 # import numpy as np
 
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
-from PyQt5.QtWidgets import QApplication, QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QPushButton, QColorDialog, QTreeWidget, QTreeWidgetItem, QDialogButtonBox, QMessageBox
+from PyQt5.QtWidgets import QApplication, QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QPushButton, QColorDialog, QTreeWidget, QTreeWidgetItem, QDialogButtonBox, QMessageBox, QStyledItemDelegate, QStyle
 # from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
+from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPalette
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 from GUI.UI.AbstractDatabaseAccessingWindow import AbstractDatabaseAccessingWindow
@@ -16,6 +16,15 @@ from app.BehaviorsList import BehaviorsManager, BehaviorInfoOptions
 from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
 
 # from GUI.UI.EditCapableTableView import EditCapableTableView
+
+# Enables not painting the background on selection for the color cells.
+# https://stackoverflow.com/questions/47880568/how-to-set-each-items-selection-color-of-qtablewidget-in-pyqt5
+class ColorDelegate(QStyledItemDelegate):
+    def paint(self, painter, option, index):
+        color = index.data(Qt.UserRole) or Qt.cyan
+        option.palette.setColor(QPalette.Highlight, color)
+        QStyledItemDelegate.paint(self, painter, option, index)
+
 
 class SetupWindow(AbstractDatabaseAccessingWindow):
     def __init__(self, database_connection):
@@ -45,6 +54,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         # self.ui.tableWidget_Settings_PartitionTrack.setFlags(item.flags() ^ Qt.ItemIsEditable)
 
         # create a connection to the double click event
+        self.ui.tableWidget_Settings_PartitionTrack.setItemDelegate(ColorDelegate())
         self.ui.tableWidget_Settings_PartitionTrack.itemDoubleClicked.connect(self.on_begin_edit_behavior_table_item)
 
         # Not sure which function I want to use
@@ -262,6 +272,9 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             # Color Item:
             currColorTableWidgetItem = QTableWidgetItem('')
             currColorTableWidgetItem.setBackground(aPartitionInfoOption.color)
+            currColorTableWidgetItem.setFlags(currColorTableWidgetItem.flags() ^ Qt.ItemIsEditable)
+            currColorTableWidgetItem.setData(Qt.UserRole, aPartitionInfoOption.color) # Set the color as user data on the item
+            # "selection-background-color: #000000;"
             self.ui.tableWidget_Settings_PartitionTrack.setItem(aDataRowIndex,4,currColorTableWidgetItem)
 
     ## Handlers:
@@ -316,12 +329,13 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         elif (item.column() == 4):
             print('Color column: selecting')
             # Get the existing table item color
-            item_color = item.background().color()
-            newRowColor = self.open_color_picker(item_color)
+            original_item_color = item.background().color()
+            newRowColor = self.open_color_picker(original_item_color)
             if newRowColor:
                 self.partitionInfoOptions[item.row()-1].color = newRowColor
                 # Update the row color
                 item.setBackground(newRowColor)
+                item.setData(Qt.UserRole, newRowColor) # Set the color as user data on the item
                 print('Color updated!')
         else:
             print('editItem() table item {0}: Unknown action'.format(item.text())) 
@@ -384,7 +398,14 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
 
     # Displays a color-picker window that the user can select a color from
     def open_color_picker(self, existingColor):
-        color = QColorDialog.getColor(existingColor)
-        return color
-        # self.styleChoice.setStyleSheet("QWidget { background-color: %s}" % color.name())
+        color = QColorDialog.getColor(existingColor, self)
+        if color:
+            if color.isValid():
+                return color
+            else:
+                # User canceled
+                print("User canceled color selection.")
+                return None
+        else:
+            return None
 
