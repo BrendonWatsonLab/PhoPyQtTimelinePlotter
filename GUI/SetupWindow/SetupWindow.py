@@ -58,6 +58,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             newObj = BehaviorInfoOptions(aBehavior, aBehavior, anIndex, 0, uniqueColorsDict[aBehavior])
             self.partitionInfoOptions.append(newObj)
 
+    # Creates both the behavior tree and the behaviors database from a set of hard-coded values defined in behaviorsManager
     def initSampleBehaviorsDatabase(self):
         self.topLevelNodes = []
         self.topLeftNodesDict = dict()
