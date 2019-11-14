@@ -71,8 +71,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         # self.setStyleSheet("QTableView{ selection-background-color: rgba(255, 0, 0, 50);  }")
         # self.setSelectionBehavior(QAbstractItemView.SelectRows)
 
-
-        self.reloadBehaviorsInterfaces(should_initialize_database_from_sample_if_missing=True)
+        self.reloadBehaviorsInterfaces(should_initialize_database_from_sample_if_missing=False)
 
 
 
@@ -83,6 +82,8 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         # Load the latest behaviors and colors data from the database
         self.colorsDict = self.database_connection.load_colors_from_database()
         self.behaviorGroups = self.database_connection.load_behaviors_from_database()
+        ## What about self.partitionInfoOptions?
+        
 
 
     def closeConnectionToDatabase(self):
@@ -99,6 +100,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
 
     # Creates both the behavior tree and the behaviors database from a set of hard-coded values defined in behaviorsManager
     def initSampleBehaviorsDatabase(self):
+        print("INITIALIZING SAMPLE BEHAVIORS DATABASE")
         self.topLevelNodes = []
         self.topLeftNodesDict = dict()
 
@@ -223,7 +225,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             aNewGroupNode.setBackground(0, aNodeColor)
 
             # Table Item:
-            newObj = BehaviorInfoOptions(aUniqueBehaviorGroup.name, aUniqueBehaviorGroup.name, aTypeId, 0, aNodeColor)
+            newObj = BehaviorInfoOptions(aUniqueBehaviorGroup.name, (aUniqueBehaviorGroup.description or aUniqueBehaviorGroup.name), aTypeId, 0, aNodeColor)
             self.partitionInfoOptions.append(newObj)
 
             for (aSubtypeID, aUniqueLeafBehavior) in enumerate(aUniqueBehaviorGroup.behaviors):
@@ -268,7 +270,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         # Build the UI objects either way
         self.build_behaviors_interfaces_from_loaded()
 
-        self.closeConnectionToDatabase()
+        # self.closeConnectionToDatabase()
 
 
     # Updates the table interface from the self.partitionInfoObjects variable
@@ -329,6 +331,10 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
 
         if did_change_occur:
             # Conditionally enable/disable save/revert buttons
+
+            # Rebuild the table and tree
+            # self.build_behaviors_interfaces_from_loaded()
+
             pass
         else:
             pass
@@ -407,10 +413,13 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             print('SaveAll Clicked')
             print("Saving {0} changes...".format(str(self.user_edited_pending_counts)))
             self.database_connection.commit()
+            self.reloadModelFromDatabase()
+            self.build_behaviors_interfaces_from_loaded()
 
         elif sb == QDialogButtonBox.Reset:
             print('Reset Clicked')
             self.reloadBehaviorsInterfaces(should_initialize_database_from_sample_if_missing=False)
+
         elif sb == QDialogButtonBox.RestoreDefaults:
             print("RestoreDefaults Clicked")
             self.open_confirm_restore_defaults_messagebox()
@@ -455,11 +464,13 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
 
         if shouldClose:
             print("Closing...")
-            self.database_connection.close()
-            super(SetupWindow, self).closeEvent(event)
+            self.closeConnectionToDatabase()
+            event.accept()
+            # super(SetupWindow, self).closeEvent(event)
             # qApp.quit()
         else:
             print("Close has been canceled!")
+            event.ignore()
     
         
 
