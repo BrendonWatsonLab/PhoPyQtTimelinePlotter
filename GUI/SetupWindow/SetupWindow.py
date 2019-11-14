@@ -11,7 +11,7 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPalette
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 from app.database.DatabaseConnectionRef import DatabasePendingItemsState, DatabaseConnectionRef
-from GUI.UI.AbstractDatabaseAccessingWindow import AbstractDatabaseAccessingWindow
+from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWindow
 
 from app.BehaviorsList import BehaviorsManager, BehaviorInfoOptions
 from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors

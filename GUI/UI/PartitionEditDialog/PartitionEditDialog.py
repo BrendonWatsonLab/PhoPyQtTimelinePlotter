@@ -10,8 +10,9 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon, QStandardI
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
 from app.BehaviorsList import BehaviorsManager, BehaviorInfoOptions
+from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingDialog
 
-class PartitionEditDialog(QtWidgets.QDialog):
+class PartitionEditDialog(AbstractDatabaseAccessingDialog):
 
      # This defines a signal called 'closed' that takes no arguments.
     on_cancel = pyqtSignal()

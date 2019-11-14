@@ -13,7 +13,7 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
 
-from GUI.UI.AbstractDatabaseAccessingWindow import AbstractDatabaseAccessingWindow
+from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWindow
 
 from GUI.HelpWindow.HelpWindowFinal import *
 
