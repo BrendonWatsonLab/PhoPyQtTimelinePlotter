@@ -26,8 +26,8 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
     default_shouldDismissSelectionUponMouseButtonRelease = False
     default_itemSelectionMode = ItemSelectionOptions.SingleSelection
 
-    def __init__(self, trackID, partitionObjects, cutObjects, totalStartTime, totalEndTime, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
-        super(TimelineTrackDrawingWidget_Partition, self).__init__(trackID, totalStartTime, totalEndTime, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
+    def __init__(self, trackID, partitionObjects, cutObjects, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
+        super(TimelineTrackDrawingWidget_Partition, self).__init__(trackID, totalStartTime, totalEndTime, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
         
         self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, 'partitioner', partitionObjects)
         self.reinitialize_from_partition_manager()
@@ -57,7 +57,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         selectedPartitionObject = self.get_selected_partition()
         if (selectedPartitionObject):
             self.activeEditingPartitionIndex = selectedPartitionIndex
-            self.activePartitionEditDialog = PartitionEditDialog()
+            self.activePartitionEditDialog = PartitionEditDialog(self.database_connection, self)
             self.activePartitionEditDialog.set_start_date(selectedPartitionObject.startTime)
             self.activePartitionEditDialog.set_end_date(selectedPartitionObject.endTime)
             self.activePartitionEditDialog.set_type(selectedPartitionObject.type_id)

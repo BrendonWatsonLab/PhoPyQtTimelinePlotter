@@ -20,8 +20,8 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
     default_shouldDismissSelectionUponMouseButtonRelease = True
     default_itemSelectionMode = ItemSelectionOptions.SingleSelection
 
-    def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime, db_file_path, parent=None, wantsKeyboardEvents=False, wantsMouseEvents=True):
-        super(TimelineTrackDrawingWidget_AnnotationComments, self).__init__(trackID, totalStartTime, totalEndTime, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
+    def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=False, wantsMouseEvents=True):
+        super(TimelineTrackDrawingWidget_AnnotationComments, self).__init__(trackID, totalStartTime, totalEndTime, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
         self.durationObjects = durationObjects
         self.instantaneousObjects = instantaneousObjects
         self.eventRect = np.repeat(QRect(0,0,0,0), len(durationObjects))
@@ -36,11 +36,10 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         self.shouldDismissSelectionUponMouseButtonRelease = TimelineTrackDrawingWidget_AnnotationComments.default_shouldDismissSelectionUponMouseButtonRelease
         self.itemSelectionMode = TimelineTrackDrawingWidget_AnnotationComments.default_itemSelectionMode
 
-        self.db_file_path = db_file_path
         self.annotationEditingDialog = None
         self.activeEditingAnnotationIndex = None
         self.annotationDataObjects = []
-        self.annotationDataObjects = load_annotation_events_from_database(self.db_file_path)
+        self.annotationDataObjects = load_annotation_events_from_database(self.database_connection)
         self.rebuildDrawnObjects()
 
     # Rebuilds the GUI event objects from the self.annotationDataObjects
@@ -254,7 +253,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         # Create the database annotation object
         newAnnotationObj = create_TimestampedAnnotation(start_date, end_date, title, subtitle, body, '')
         self.annotationDataObjects.append(newAnnotationObj)
-        save_annotation_events_to_database(self.db_file_path, self.annotationDataObjects)
+        save_annotation_events_to_database(self.database_connection, self.annotationDataObjects)
         self.rebuildDrawnObjects()
         self.update()
 
@@ -296,7 +295,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
             currObjToModify = self.annotationDataObjects[self.activeEditingAnnotationIndex]
             currObjToModify = modify_TimestampedAnnotation(currObjToModify, start_date, end_date, title, subtitle, body)
             self.annotationDataObjects[self.activeEditingAnnotationIndex] = currObjToModify
-            save_annotation_events_to_database(self.db_file_path, self.annotationDataObjects)
+            save_annotation_events_to_database(self.database_connection, self.annotationDataObjects)
             self.rebuildDrawnObjects()
             self.update()
         else:
