@@ -6,6 +6,8 @@ from sqlalchemy.ext.declarative import declarative_base
 
 from app.database.entry_models.DatabaseBase import Base, metadata
 
+from PyQt5.QtGui import QColor
+
 ## Import Statement:
 # from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
 
@@ -83,3 +85,6 @@ class CategoryColors(Base):
         self.colorG = colorG
         self.colorB = colorB
         self.note = note
+
+    def get_QColor(self):
+        return QColor(self.colorR, self.colorG, self.colorB)

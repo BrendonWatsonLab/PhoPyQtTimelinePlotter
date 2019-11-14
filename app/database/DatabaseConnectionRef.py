@@ -136,6 +136,18 @@ class DatabaseConnectionRef(QObject):
             outputColorsDict[aColor.hex_color] = aColor
         return outputColorsDict
 
+    def load_behaviors_from_database(self):
+        outputAnnotationList = []
+        print("Loading annotation events from database:")
+        session = self.get_session()
+        # context = session.query(Context).first()
+        # contexts = session.query(Context).all()
+        # print(contexts)
+        # behaviors = session.query(Behavior).options(selectinload(Behavior.parentGroup)).all()
+        behaviorGroups = session.query(BehaviorGroup).options(selectinload(BehaviorGroup.behaviors)).all()
+        return behaviorGroups
+
+
 
 
     ## SAVING:
@@ -260,20 +272,8 @@ class DatabaseConnectionRef(QObject):
 
         print('Preparing to add ', num_added_records, 'of', num_found_records, 'behaviors to database.')
 
-
-
         # Save (commit) the changes
-        try:
-            # See https://stackoverflow.com/questions/52075642/how-to-handle-unique-data-in-sqlalchemy-flask-pyhon
-            self.commit()
-            print("Committed changes!")
-        except IntegrityError as e:
-            session.rollback() # A constraint failed
-            print("ERROR: Failed to commit changes! Rolling back", e)
-
-        except Exception as e:
-                print("Other exception! Trying to continue", e)
-                
+        self.commit()
         # We can also close the connection if we are done with it.
         # Just be sure any changes have been committed or they will be lost.
         # session.close()

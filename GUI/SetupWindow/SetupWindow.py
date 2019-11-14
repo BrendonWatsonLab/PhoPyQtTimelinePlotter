@@ -58,10 +58,11 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             newObj = BehaviorInfoOptions(aBehavior, aBehavior, anIndex, 0, uniqueColorsDict[aBehavior])
             self.partitionInfoOptions.append(newObj)
 
-    def initBehaviorsTree(self):
+    def initSampleBehaviorsDatabase(self):
+        self.topLevelNodes = []
+        self.topLeftNodesDict = dict()
 
-        # Make sure the default colors exist in the DB
-        self.colorsDict = self.database_connection.load_colors_from_database()
+        # Create new colors if needed
         default_black_color_hex = QColor(0,0,0).name(QColor.HexRgb)
         default_black_color = CategoryColors(None, default_black_color_hex, 'Black', 'Black', 0, 0, 0, None)
         default_white_color_hex = QColor(255,255,255).name(QColor.HexRgb)
@@ -80,9 +81,6 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         # For adding to the DB
         behaviorGroupsDBList = []
         behaviorsDBList = []
-
-        self.topLevelNodes = []
-        self.topLeftNodesDict = dict()
 
         # Add the top-level parent nodes
         for (aTypeId, aUniqueBehavior) in enumerate(self.behaviorsManager.get_unique_behavior_groups()):
@@ -103,10 +101,6 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
                             
             if (not aDBColor.id):
                 print("INVALID COLOR ID!")
-
-            # aNewDBNode = BehaviorGroup(None, aUniqueBehavior, aUniqueBehavior, None, None, 'auto')
-            # aNewDBNode.primaryColor = aDBColor
-            # aNewDBNode.secondaryColor = default_black_color
 
             aNewDBNode = BehaviorGroup(None, aUniqueBehavior, aUniqueBehavior, aDBColor.id, default_black_color.id, 'auto')
 
@@ -156,6 +150,64 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         self.ui.treeWidget_Settings_PartitionTrack.addTopLevelItems(self.topLevelNodes)
         
         self.database_connection.save_behavior_events_to_database(behaviorsDBList, behaviorGroupsDBList)
+        return 
+
+
+    # Called to rebuild the behaviors tree from the behaviors data loaded from the database
+    def build_behaviors_tree_from_loaded(self):
+        
+        self.ui.treeWidget_Settings_PartitionTrack.clear()
+        self.topLevelNodes = []
+        self.topLeftNodesDict = dict()
+
+         # Add the top-level parent nodes
+        for (aTypeId, aUniqueBehaviorGroup) in enumerate(self.behaviorGroups):
+            # Get loaded item properties
+            if aUniqueBehaviorGroup.description:
+                extra_string = aUniqueBehaviorGroup.description
+            else:
+                extra_string = "String C"
+
+            aNewGroupNode = QTreeWidgetItem([aUniqueBehaviorGroup.name, str(aTypeId), extra_string])
+            aNodeColor = aUniqueBehaviorGroup.primaryColor.get_QColor()
+            aNewGroupNode.setBackground(0, aNodeColor)
+
+            for (aSubtypeID, aUniqueLeafBehavior) in enumerate(aUniqueBehaviorGroup.behaviors):
+                if aUniqueLeafBehavior.description:
+                    extra_string = aUniqueLeafBehavior.description
+                else:
+                    # Otherwise it's the parents' name
+                    extra_string = aUniqueBehaviorGroup.name
+
+                aNewNode = QTreeWidgetItem([aUniqueLeafBehavior.name, "(type: {0}, subtype: {1})".format(str(aTypeId), str(aSubtypeID)), extra_string])
+                aNodeColor = aUniqueLeafBehavior.primaryColor.get_QColor()
+                aNewNode.setBackground(0, aNodeColor)
+                aNewGroupNode.addChild(aNewNode)
+
+            self.topLevelNodes.append(aNewGroupNode)
+            
+        self.ui.treeWidget_Settings_PartitionTrack.addTopLevelItems(self.topLevelNodes)
+
+    def initBehaviorsTree(self):
+
+        # Load the latest behaviors and colors data from the database
+        self.colorsDict = self.database_connection.load_colors_from_database()
+        self.behaviorGroups = self.database_connection.load_behaviors_from_database()
+
+        # Determine if we need to initialize a sample color/behavior database
+        needs_init_sample_db = True
+
+        if self.colorsDict and self.behaviorGroups:
+            # Valid loaded objects
+            if (len(self.behaviorGroups) > 0):
+                needs_init_sample_db = False
+            
+
+        if needs_init_sample_db:
+            self.initSampleBehaviorsDatabase()
+        else:
+            self.build_behaviors_tree_from_loaded()        
+
         self.database_connection.close()
 
 
