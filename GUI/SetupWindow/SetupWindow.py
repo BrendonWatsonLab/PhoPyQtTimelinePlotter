@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QTableWidget, QTableWidgetIte
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPalette
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
+from app.database.DatabaseConnectionRef import DatabasePendingItemsState, DatabaseConnectionRef
 from GUI.UI.AbstractDatabaseAccessingWindow import AbstractDatabaseAccessingWindow
 
 from app.BehaviorsList import BehaviorsManager, BehaviorInfoOptions
@@ -43,6 +44,8 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         # A variable to represent a reference to a QMessageBox dialog that's temporarily displayed.
         self.activeMessageBox = None
 
+        self.user_edited_pending_counts = self.database_connection.get_pending_counts()
+
         self.initUI()
 
     def initUI(self):
@@ -71,8 +74,16 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
 
         self.reloadBehaviorsInterfaces(should_initialize_database_from_sample_if_missing=True)
 
+
+    # Returns true if any models have pending (uncommited) changes
+    def get_has_pending_changes(self):
+        self.user_edited_pending_counts = self.database_connection.get_pending_counts()
+        return self.user_edited_pending_counts.has_pending()
+        
+
 ## Data Model Functions:
     # Updates the member variables from the database
+    # Note: if there are any pending changes, they will be persisted on this action
     def reloadModelFromDatabase(self):
         # Load the latest behaviors and colors data from the database
         self.colorsDict = self.database_connection.load_colors_from_database()
@@ -286,6 +297,40 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             # "selection-background-color: #000000;"
             self.ui.tableWidget_Settings_PartitionTrack.setItem(aDataRowIndex,4,currColorTableWidgetItem)
 
+    # Called when the user edited an item
+    def on_user_updated_behavior_table_item(self, column, row, newValue):
+        # self.get_has_pending_changes()        
+        # self.reloadModelFromDatabase()
+        did_change_occur = False
+
+        if column == 0:
+            # Name column:
+            pass
+        elif column == 1:
+            # Description column:
+            prevValue = self.behaviorGroups[row-1].description
+            # prevValue = self.behaviorsTableEditingPrevValue
+            if (newValue == prevValue):
+                print("Unchanged from original!")
+                return
+            else:
+                print("Value changed from {0} to {1}".format(prevValue, newValue))
+                self.behaviorGroups[row-1].description = newValue
+                did_change_occur = True
+        elif column == 4:
+            # Color column
+            pass
+
+        else:
+            # Other column
+            pass
+
+        if did_change_occur:
+            # Conditionally enable/disable save/revert buttons
+            pass
+
+        self.closeConnectionToDatabase()
+
     ## Handlers:
 
     # Seems to be called programmatically when the table items are added
@@ -298,6 +343,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             if ((self.behaviorsTableEditingIndex[0] == item.column()) and (self.behaviorsTableEditingIndex[1] == item.row())):
                 # Item matches editing item, user might have changed it
                 print("User changed item!")
+                self.on_user_updated_behavior_table_item(item.column(), item.row(), item.text())
             else:
                 # Otherwise, the user activated a new item without editing the edit item, so the editing item is None
                 # print("User didn't edit item")
@@ -352,8 +398,13 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
     # Called when one of the buttons in the button box at the bottom of the window are clicked like "Save all", "Reset", or "Restore Defaults"
     def on_update_buttonBox_clicked(self, button):
         sb = self.ui.buttonBox_Settings_PartitionTrack.standardButton(button)
+        self.user_edited_pending_counts = self.database_connection.get_pending_counts()
+
         if sb == QDialogButtonBox.SaveAll:
             print('SaveAll Clicked')
+            print("Saving {0} changes...".format(str(self.user_edited_pending_counts)))
+            self.database_connection.commit()
+
         elif sb == QDialogButtonBox.Reset:
             print('Reset Clicked')
             self.reloadBehaviorsInterfaces(should_initialize_database_from_sample_if_missing=False)
