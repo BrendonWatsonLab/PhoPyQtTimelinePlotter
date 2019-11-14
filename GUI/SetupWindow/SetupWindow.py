@@ -20,8 +20,10 @@ from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, Categor
 # Enables not painting the background on selection for the color cells.
 # https://stackoverflow.com/questions/47880568/how-to-set-each-items-selection-color-of-qtablewidget-in-pyqt5
 class ColorDelegate(QStyledItemDelegate):
+    DefaultSelectionColor = QColor(41, 142, 230, 200) # A mid-darkish blue with 200/255 opacity
+
     def paint(self, painter, option, index):
-        color = index.data(Qt.UserRole) or Qt.cyan
+        color = index.data(Qt.UserRole) or ColorDelegate.DefaultSelectionColor
         option.palette.setColor(QPalette.Highlight, color)
         QStyledItemDelegate.paint(self, painter, option, index)
 
@@ -62,6 +64,11 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         self.ui.tableWidget_Settings_PartitionTrack.currentItemChanged.connect(self.on_current_behavior_table_item_changed)
 
         self.ui.buttonBox_Settings_PartitionTrack.clicked.connect(self.on_update_buttonBox_clicked)
+
+        # self.setStyleSheet("QTableView{ selection-background-color: rgba(255, 0, 0, 50);  }")
+        # self.setSelectionBehavior(QAbstractItemView.SelectRows)
+
+
         self.reloadBehaviorsInterfaces(should_initialize_database_from_sample_if_missing=True)
 
 ## Data Model Functions:
@@ -180,7 +187,9 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
     def build_behaviors_interfaces_from_loaded(self):
         
         # Table
-        self.ui.tableWidget_Settings_PartitionTrack.clear()
+        # self.ui.tableWidget_Settings_PartitionTrack.clear()
+        self.ui.tableWidget_Settings_PartitionTrack.clearContents()
+        
         self.partitionInfoOptions = []
         
         # Tree
