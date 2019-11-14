@@ -121,16 +121,8 @@ class Partitioner(QObject):
         if (not (partition_to_modify.name == title)):
             partition_to_modify.name = title
 
-        # partition_to_modify.extended_data['subtitle'] = subtitle
-        # partition_to_modify.extended_data['body'] = body
-
-        # partition_to_modify.extended_data['type_id'] = type_id
-        # partition_to_modify.extended_data['subtype_id'] = subtype_id
-
         partition_to_modify.subtitle = subtitle
         partition_to_modify.body = body
-
-        
 
         if (not (partition_to_modify.type_id == type_id)):
             partition_to_modify.type_id = type_id
