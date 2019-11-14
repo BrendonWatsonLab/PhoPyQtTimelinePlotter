@@ -416,52 +416,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             print("UNIMPLEMENTED: Unhandled button box button")
         # and so on...
     
-    # Called on close
-    def closeEvent(self, event):
-        """Generate 'question' dialog on clicking 'X' button in title bar.
 
-        Reimplement the closeEvent() event handler to include a 'Question'
-        dialog with options on how to proceed - Save, Close, Cancel buttons
-        """
-        self.user_edited_pending_counts = self.database_connection.get_pending_counts()
-        shouldClose = True
-        if self.user_edited_pending_counts.has_pending():
-            reply = QMessageBox.question(
-                self, "Message",
-                "Are you sure you want to quit? Any unsaved work will be lost.",
-                QMessageBox.Save | QMessageBox.Close | QMessageBox.Cancel,
-                QMessageBox.Save)
-
-            if reply == QMessageBox.Close:
-                print("User is closing, discarding changes")
-                shouldClose = True
-            elif reply == QMessageBox.Cancel:
-                print("User canceled closing")
-                shouldClose = False
-            elif reply == QMessageBox.Save:
-                print("User clicked save changes!")
-                # Save changes
-
-                # TODO: set shouldClose = True once changes have been saved
-                shouldClose = False
-                pass
-            else:
-                print("UNIMPLEMENTED: unimplemented message box option!")
-                shouldClose = False
-                pass
-
-
-        if shouldClose:
-            print("Closing...")
-            self.database_close()
-            event.accept()
-            # super(SetupWindow, self).closeEvent(event)
-            # qApp.quit()
-        else:
-            print("Close has been canceled!")
-            event.ignore()
-    
-        
 
 ## UTILITY Functions:
 

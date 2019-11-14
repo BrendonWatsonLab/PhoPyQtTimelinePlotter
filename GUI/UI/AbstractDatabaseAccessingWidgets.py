@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 # import numpy as np
 
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QDialog
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QDialog, QMessageBox
 
 from app.database.DatabaseConnectionRef import DatabasePendingItemsState, DatabaseConnectionRef
 
@@ -28,6 +28,12 @@ class AbstractDatabaseAccessingWindow(QtWidgets.QMainWindow):
         else:
             return False
 
+    def database_rollback(self):
+        if self.database_connection:
+            return self.database_connection.rollback()
+        else:
+            return False
+
     def database_close(self):
         if self.database_connection:
             self.database_connection.close()
@@ -45,6 +51,43 @@ class AbstractDatabaseAccessingWindow(QtWidgets.QMainWindow):
     def get_has_pending_changes(self):
         return self.database_connection.get_pending_counts().has_pending()
         
+     # Called on close
+    def closeEvent(self, event):
+        user_edited_pending_counts = self.database_connection.get_pending_counts()
+        shouldClose = True
+        if user_edited_pending_counts.has_pending():
+            reply = QMessageBox.question(
+                self, "Message",
+                "Are you sure you want to quit? Any unsaved work will be lost.",
+                QMessageBox.Save | QMessageBox.Close | QMessageBox.Cancel,
+                QMessageBox.Save)
+
+            if reply == QMessageBox.Close:
+                print("User is closing, discarding changes")
+                self.database_rollback()
+                shouldClose = True
+            elif reply == QMessageBox.Cancel:
+                print("User canceled closing")
+                shouldClose = False
+            elif reply == QMessageBox.Save:
+                print("User clicked save changes!")
+                # Save changes
+                print("Saving {0} changes...".format(str(user_edited_pending_counts)))
+                self.database_commit()
+                shouldClose = True
+                pass
+            else:
+                print("UNIMPLEMENTED: unimplemented message box option!")
+                shouldClose = False
+                pass
+
+        if shouldClose:
+            print("Closing...")
+            self.database_close()
+            event.accept()
+        else:
+            print("Close has been canceled!")
+            event.ignore()
 
             
         
