@@ -18,15 +18,15 @@
     <item>
      <widget class="QToolBox" name="toolBox">
       <property name="currentIndex">
-       <number>3</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="page_Settings_General">
        <property name="geometry">
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>782</width>
-         <height>406</height>
+         <width>124</width>
+         <height>124</height>
         </rect>
        </property>
        <attribute name="label">
@@ -55,8 +55,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>782</width>
-         <height>406</height>
+         <width>776</width>
+         <height>357</height>
         </rect>
        </property>
        <attribute name="label">
@@ -131,8 +131,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>782</width>
-         <height>406</height>
+         <width>124</width>
+         <height>124</height>
         </rect>
        </property>
        <attribute name="label">
@@ -161,8 +161,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>782</width>
-         <height>406</height>
+         <width>776</width>
+         <height>357</height>
         </rect>
        </property>
        <attribute name="label">
@@ -244,8 +244,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>782</width>
-         <height>406</height>
+         <width>124</width>
+         <height>124</height>
         </rect>
        </property>
        <attribute name="label">
@@ -283,7 +283,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

@@ -15,13 +15,14 @@ from GUI.UI.AbstractDatabaseAccessingWindow import AbstractDatabaseAccessingWind
 from app.BehaviorsList import BehaviorsManager, BehaviorInfoOptions
 from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
 
+# from GUI.UI.EditCapableTableView import EditCapableTableView
+
 class SetupWindow(AbstractDatabaseAccessingWindow):
     def __init__(self, database_connection):
         super(SetupWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/SetupWindow/SetupWindow.ui", self) # Load the .ui file
         self.behaviorsManager = BehaviorsManager()
 
-        self.build_from_behaviors_manager()
         self.initUI()
 
     def initUI(self):
@@ -29,25 +30,20 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         # self.ui.tableWidget_Settings_PartitionTrack.setH
 
         # if you don't want to allow in-table editing, either disable the table like:
-        self.ui.tableWidget_Settings_PartitionTrack.setEditTriggers(QTableWidget.NoEditTriggers)
+        # self.ui.tableWidget_Settings_PartitionTrack.setEditTriggers(QTableWidget.NoEditTriggers)
 
         # or specifically for this item
         # self.ui.tableWidget_Settings_PartitionTrack.setFlags(item.flags() ^ Qt.ItemIsEditable)
 
         # create a connection to the double click event
         self.ui.tableWidget_Settings_PartitionTrack.itemDoubleClicked.connect(self.editItem)
+
+        # Not sure which function I want to use
+        self.ui.tableWidget_Settings_PartitionTrack.itemChanged.connect(self.on_item_changed)
+        self.ui.tableWidget_Settings_PartitionTrack.currentItemChanged.connect(self.on_current_item_changed)
+
         self.initBehaviorsInterfaces()
 
-    def build_from_behaviors_manager(self):
-        # uniqueBehaviorsList = self.behaviorsManager.get_unique_behaviors()
-        # uniqueColorsDict = self.behaviorsManager.color_dictionary
-        uniqueBehaviorsList = self.behaviorsManager.get_unique_behavior_groups()
-        uniqueColorsDict = self.behaviorsManager.groups_color_dictionary
-        
-        self.partitionInfoOptions = []
-        for (anIndex, aBehavior) in enumerate(uniqueBehaviorsList):
-            newObj = BehaviorInfoOptions(aBehavior, aBehavior, anIndex, 0, uniqueColorsDict[aBehavior])
-            self.partitionInfoOptions.append(newObj)
 
     # Creates both the behavior tree and the behaviors database from a set of hard-coded values defined in behaviorsManager
     def initSampleBehaviorsDatabase(self):
@@ -246,9 +242,60 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             self.ui.tableWidget_Settings_PartitionTrack.setItem(aDataRowIndex,4,currColorTableWidgetItem)
 
 
-    # Called upon editing a table cell
-    def editItem(self, item):        
-        if (item.column() == 4):
+    # Seems to be called programmatically when the table items are added
+    def on_item_changed(self, item):
+        print('on_item_changed() table item {0}'.format(item.text())) 
+
+        # column is 0-indexed
+        # if (item.column() == 1):
+        #     # Description Column
+        #     print('Description column: editing')
+        #     oldValue = item.text()
+        #     newValue = item.text()
+        #     print('new value: {0}'.format(newValue))
+
+        # elif (item.column() == 4):
+        #     print('Color column: selecting')
+            
+        # else:
+        #     print('on_item_changed() table item {0}: Unknown action'.format(item.text())) 
+
+
+
+    def on_current_item_changed(self, item):
+        print('on_current_item_changed() table item {0}'.format(item.text())) 
+
+        # # column is 0-indexed
+        # if (item.column() == 1):
+        #     # Description Column
+        #     print('Description column: editing')
+        #     oldValue = item.text()
+        #     newValue = item.text()
+        #     print('new value: {0}'.format(newValue))
+
+
+        # elif (item.column() == 4):
+        #     print('Color column: selecting')
+            
+        # else:
+        #     print('on_current_item_changed() table item {0}: Unknown action'.format(item.text())) 
+
+
+    # Called upon starting to edit a table cell
+    def editItem(self, item):
+        
+        # column is 0-indexed
+        if (item.column() == 1):
+            # Description Column
+            print('Description column: editing')
+            # self.current_editing_item_row = item.row()
+            # self.current_editing_item_old_value = item.text()
+            oldValue = item.text()
+            # newValue = item.text()
+            print('old value: {0}'.format(oldValue))
+
+
+        elif (item.column() == 4):
             print('Color column: selecting')
             newRowColor = self.color_picker()
             if newRowColor:
@@ -257,7 +304,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
                 item.setBackground(newRowColor)
                 print('Color updated!')
         else:
-            print('editing table item {0}'.format(item.text())) 
+            print('editItem() table item {0}: Unknown action'.format(item.text())) 
 
     
 
