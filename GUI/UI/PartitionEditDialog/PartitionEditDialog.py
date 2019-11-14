@@ -97,20 +97,18 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
         # transform_to_type = type_id - 1 # To transform from sqlite3 1-based row indexing. The proper way would be searching for the row with a matching ID
         # self.get_type()
         new_selected_behavior_group = self.behaviorGroups[self.ui.comboBox_Type.currentIndex()]
-
+        selected_behavior = self.behaviors[self.ui.comboBox_Subtype.currentIndex()]
         # If we want the subtype to always be compatible with the type, we can change the subtype upon setting the type to an incompatible type
 
-        # for (aSubtypeID, aUniqueLeafBehavior) in enumerate(new_selected_behavior_group.behaviors):
-        #     if aUniqueLeafBehavior.description:
-        #         extra_string = aUniqueLeafBehavior.description
-        #     else:
-        #         # Otherwise it's the parents' name
-        #         extra_string = aUniqueBehaviorGroup.name
+        proper_parent_group = selected_behavior.parentGroup
+        if (proper_parent_group.id == new_selected_behavior_group.id):
+            # The parent is currently already set as the type
+            pass
+        else:
+            # Need to select the child to the first compatible behavior for the parent
+            print("Changing child")
+            self.set_subtype(new_selected_behavior_group.behaviors[0].id)
 
-        #     aNewNode = QTreeWidgetItem([aUniqueLeafBehavior.name, "(type: {0}, subtype: {1})".format(str(aTypeId), str(aSubtypeID)), extra_string])
-        #     aNodeColor = aUniqueLeafBehavior.primaryColor.get_QColor()
-        #     aNewNode.setBackground(0, aNodeColor)
-        #     aNewGroupNode.addChild(aNewNode)
 
     def on_subtype_combobox_changed(self, text):
         print('subtype changed: {0}'.format(text))
