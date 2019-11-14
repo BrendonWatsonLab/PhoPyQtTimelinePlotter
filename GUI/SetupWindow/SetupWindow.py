@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 # import numpy as np
 
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
-from PyQt5.QtWidgets import QApplication, QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QPushButton, QColorDialog, QTreeWidget, QTreeWidgetItem, QDialogButtonBox, QMessageBox, QStyledItemDelegate, QStyle
+from PyQt5.QtWidgets import QApplication, qApp, QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QPushButton, QColorDialog, QTreeWidget, QTreeWidgetItem, QDialogButtonBox, QMessageBox, QStyledItemDelegate, QStyle
 # from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPalette
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
@@ -75,11 +75,6 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         self.reloadBehaviorsInterfaces(should_initialize_database_from_sample_if_missing=True)
 
 
-    # Returns true if any models have pending (uncommited) changes
-    def get_has_pending_changes(self):
-        self.user_edited_pending_counts = self.database_connection.get_pending_counts()
-        return self.user_edited_pending_counts.has_pending()
-        
 
 ## Data Model Functions:
     # Updates the member variables from the database
@@ -92,6 +87,13 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
 
     def closeConnectionToDatabase(self):
         self.database_connection.close()
+
+    # Returns true if any models have pending (uncommited) changes
+    def get_has_pending_changes(self):
+        self.user_edited_pending_counts = self.database_connection.get_pending_counts()
+        return self.user_edited_pending_counts.has_pending()
+        
+
 
 ## General Functions:
 
@@ -328,8 +330,9 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         if did_change_occur:
             # Conditionally enable/disable save/revert buttons
             pass
-
-        self.closeConnectionToDatabase()
+        else:
+            pass
+            # self.closeConnectionToDatabase()
 
     ## Handlers:
 
@@ -415,7 +418,50 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             print("UNIMPLEMENTED: Unhandled button box button")
         # and so on...
     
+    # Called on close
+    def closeEvent(self, event):
+        """Generate 'question' dialog on clicking 'X' button in title bar.
+
+        Reimplement the closeEvent() event handler to include a 'Question'
+        dialog with options on how to proceed - Save, Close, Cancel buttons
+        """
+        self.user_edited_pending_counts = self.database_connection.get_pending_counts()
+        shouldClose = True
+        if self.user_edited_pending_counts.has_pending():
+            reply = QMessageBox.question(
+                self, "Message",
+                "Are you sure you want to quit? Any unsaved work will be lost.",
+                QMessageBox.Save | QMessageBox.Close | QMessageBox.Cancel,
+                QMessageBox.Save)
+
+            if reply == QMessageBox.Close:
+                print("User is closing, discarding changes")
+                shouldClose = True
+            elif reply == QMessageBox.Cancel:
+                print("User canceled closing")
+                shouldClose = False
+            elif reply == QMessageBox.Save:
+                print("User clicked save changes!")
+                # Save changes
+
+                # TODO: set shouldClose = True once changes have been saved
+                shouldClose = False
+                pass
+            else:
+                print("UNIMPLEMENTED: unimplemented message box option!")
+                shouldClose = False
+                pass
+
+
+        if shouldClose:
+            print("Closing...")
+            self.database_connection.close()
+            super(SetupWindow, self).closeEvent(event)
+            # qApp.quit()
+        else:
+            print("Close has been canceled!")
     
+        
 
 ## UTILITY Functions:
 
