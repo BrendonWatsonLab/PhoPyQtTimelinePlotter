@@ -23,6 +23,12 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         self.ui = uic.loadUi("GUI/SetupWindow/SetupWindow.ui", self) # Load the .ui file
         self.behaviorsManager = BehaviorsManager()
 
+        # The most recently selected/activated table cell index (column, row) or None
+        self.behaviorsTableActiveIndex = None
+
+        # The table index currently being edited
+        self.behaviorsTableEditingIndex = None
+
         self.initUI()
 
     def initUI(self):
@@ -244,45 +250,37 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
 
     # Seems to be called programmatically when the table items are added
     def on_item_changed(self, item):
-        print('on_item_changed() table item {0}'.format(item.text())) 
+        # print('on_item_changed() table item (col: {0}, row: {1}): content: {2}'.format(item.column(), item.row(), item.text()))
 
-        # column is 0-indexed
-        # if (item.column() == 1):
-        #     # Description Column
-        #     print('Description column: editing')
-        #     oldValue = item.text()
-        #     newValue = item.text()
-        #     print('new value: {0}'.format(newValue))
+        if (self.behaviorsTableEditingIndex):
+            # print("Editing index: {0}".format(self.behaviorsTableEditingIndex))
+            # If we have an active editing index, see if it matches the changed item, implying the user has edited it
+            if ((self.behaviorsTableEditingIndex[0] == item.column()) and (self.behaviorsTableEditingIndex[1] == item.row())):
+                # Item matches editing item, user might have changed it
+                print("User changed item!")
+            else:
+                # Otherwise, the user activated a new item without editing the edit item, so the editing item is None
+                # print("User didn't edit item")
+                pass
 
-        # elif (item.column() == 4):
-        #     print('Color column: selecting')
-            
-        # else:
-        #     print('on_item_changed() table item {0}: Unknown action'.format(item.text())) 
+            # After this, editing is done, so we set the editing index back to None
+            self.behaviorsTableEditingIndex = None
+        else:
+            # print("Not editing")
+            pass
 
 
-
+    # This is being called whenever the table selection is updated, independent of if the contents of the cell are being edited
     def on_current_item_changed(self, item):
-        print('on_current_item_changed() table item {0}'.format(item.text())) 
+        # print('on_current_item_changed() table item (col: {0}, row: {1}): content: {2}'.format(item.column(), item.row(), item.text()))
+        self.behaviorsTableActiveIndex = (item.column(), item.row())
 
-        # # column is 0-indexed
-        # if (item.column() == 1):
-        #     # Description Column
-        #     print('Description column: editing')
-        #     oldValue = item.text()
-        #     newValue = item.text()
-        #     print('new value: {0}'.format(newValue))
-
-
-        # elif (item.column() == 4):
-        #     print('Color column: selecting')
-            
-        # else:
-        #     print('on_current_item_changed() table item {0}: Unknown action'.format(item.text())) 
 
 
     # Called upon starting to edit a table cell
     def editItem(self, item):
+        # print('editItem() table item (col: {0}, row: {1}): content: {2}'.format(item.column(), item.row(), item.text()))
+        self.behaviorsTableEditingIndex = (item.column(), item.row())
         
         # column is 0-indexed
         if (item.column() == 1):
@@ -292,7 +290,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             # self.current_editing_item_old_value = item.text()
             oldValue = item.text()
             # newValue = item.text()
-            print('old value: {0}'.format(oldValue))
+            # print('old value: {0}'.format(oldValue))
 
 
         elif (item.column() == 4):
