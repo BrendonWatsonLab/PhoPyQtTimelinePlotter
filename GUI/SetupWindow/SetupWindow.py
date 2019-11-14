@@ -81,7 +81,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
     def reloadModelFromDatabase(self):
         # Load the latest behaviors and colors data from the database
         self.colorsDict = self.database_connection.load_colors_from_database()
-        self.behaviorGroups = self.database_connection.load_behaviors_from_database()
+        self.behaviorGroups = self.database_connection.load_behavior_groups_from_database()
         ## What about self.partitionInfoOptions?
         
 
