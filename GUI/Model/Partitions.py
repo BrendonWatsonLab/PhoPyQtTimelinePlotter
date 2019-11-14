@@ -86,7 +86,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
 
         # The first partition keeps the metadata/info, while the second is initialized to a blank partition
 
-    def modify_partition(self, modify_partition_index, start_date, end_date, title, subtitle, body, type_id, subtype_id):
+    def modify_partition(self, modify_partition_index, start_date, end_date, title, subtitle, body, type_id, subtype_id, color):
         partition_to_modify = self.partitions[modify_partition_index]
         if (not partition_to_modify):
             print('invalid partition to modify!')
@@ -132,7 +132,8 @@ class Partitioner(AbstractDatabaseAccessingQObject):
 
         if (not (partition_to_modify.subtype_id == subtype_id)):
             partition_to_modify.subtype_id = subtype_id
-            partition_to_modify.color = self.behaviorsManager.get_subtype_color(subtype_id)
+            # partition_to_modify.color = self.behaviorsManager.get_subtype_color(subtype_id)
+            partition_to_modify.color = color
         
 
         # Update in the array

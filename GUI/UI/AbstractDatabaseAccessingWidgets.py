@@ -6,6 +6,7 @@ from datetime import datetime, timezone, timedelta
 
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QDialog, QMessageBox
+from PyQt5.QtCore import QObject
 
 from app.database.DatabaseConnectionRef import DatabasePendingItemsState, DatabaseConnectionRef
 

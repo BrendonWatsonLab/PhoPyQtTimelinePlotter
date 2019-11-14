@@ -28,7 +28,8 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
 
     def __init__(self, trackID, partitionObjects, cutObjects, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
         super(TimelineTrackDrawingWidget_Partition, self).__init__(trackID, totalStartTime, totalEndTime, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
-        
+        self.reloadModelFromDatabase()
+
         self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, 'partitioner', partitionObjects)
         self.reinitialize_from_partition_manager()
         ## TODO: can reconstruct partitions from cutObjects, but can't recover the specific partition's info.
@@ -44,6 +45,14 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         self.itemSelectionMode = TimelineTrackDrawingWidget_Partition.default_itemSelectionMode
 
         self.activePartitionEditDialog = None
+
+    ## Data Model Functions:
+    # Updates the member variables from the database
+    # Note: if there are any pending changes, they will be persisted on this action
+    def reloadModelFromDatabase(self):
+        # Load the latest behaviors and colors data from the database
+        self.behaviorGroups = self.database_connection.load_behavior_groups_from_database()
+        self.behaviors = self.database_connection.load_behaviors_from_database()
 
     def reinitialize_from_partition_manager(self):
         self.partitionObjects = self.partitionManager.partitions
@@ -292,7 +301,9 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         # Tries to create a new comment
         print('try_update_partition')
         if (self.activeEditingPartitionIndex):
-            self.partitionManager.modify_partition(self.activeEditingPartitionIndex, start_date, end_date, title, subtitle, body, type_id, subtype_id)
+            # Get new color associated with the modified subtype_id
+            newColor = self.behaviors[subtype_id-1].primaryColor.get_QColor()
+            self.partitionManager.modify_partition(self.activeEditingPartitionIndex, start_date, end_date, title, subtitle, body, type_id, subtype_id, newColor)
             print('Modified partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(self.activeEditingPartitionIndex, type_id, subtype_id))
             self.reinitialize_from_partition_manager()
             self.update()
