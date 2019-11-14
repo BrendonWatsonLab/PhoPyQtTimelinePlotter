@@ -23,6 +23,28 @@ import sys
 import os
 
 
+class DatabasePendingItemsState(QObject):
+    def __init__(self, created_count, modified_count):
+        super(DatabasePendingItemsState, self).__init__(None)
+        self.created_count = created_count
+        self.modified_count = modified_count
+
+    def get_created_count(self):
+        return self.created_count
+
+    def get_modified_count(self):
+        return self.modified_count
+
+    def get_total_pending(self):
+        return (self.created_count + self.modified_count)
+
+    def has_pending(self):
+        return (self.get_total_pending() > 0)
+
+    def __str__(self):
+        return '(created: {0}, modified: {1}, total: {2})'.format(self.created_count, self.modified_count, self.get_total_pending())
+
+
 """
 An open reference to the databse shared by the different windows
 """
@@ -57,6 +79,58 @@ class DatabaseConnectionRef(QObject):
                 print("Other exception! Trying to continue", e)
                 return False
 
+
+    def rollback(self):
+        if self.session:
+            try:
+              self.session.rollback()
+              return True
+            except Exception as e:
+                print("rollback: Other exception! Trying to continue", e)
+                return False
+        return False
+
+
+    # Gets the modified records
+    def get_pending_modified(self):
+        if self.session:
+            try:
+              return self.session.dirty
+            except Exception as e:
+                print("get_pending_modified: Other exception! Trying to continue", e)
+                return []
+    
+        return []
+
+    # Gets the new records
+    def get_pending_new(self):
+        if self.session:
+            try:
+              return self.session.new
+            except Exception as e:
+                print("get_pending_new: Other exception! Trying to continue", e)
+                return []
+        
+        return []
+
+    # Gets the pending record counts as a DatabasePendingItemsState object (new, modified, total)
+    def get_pending_counts(self):
+        pending_new = self.get_pending_new()
+        pending_modified = self.get_pending_modified()
+
+        output = DatabasePendingItemsState(len(pending_new), len(pending_modified))
+
+        # return (len(pending_new), len(pending_modified), (len(pending_new) + len(pending_modified)))
+        return output
+
+
+
+    
+
+        
+    
+
+        
             
 
     def close(self):
