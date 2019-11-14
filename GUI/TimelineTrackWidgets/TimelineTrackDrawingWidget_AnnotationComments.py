@@ -39,8 +39,18 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         self.annotationEditingDialog = None
         self.activeEditingAnnotationIndex = None
         self.annotationDataObjects = []
-        self.annotationDataObjects = load_annotation_events_from_database(self.database_connection)
+        self.reloadModelFromDatabase()
         self.rebuildDrawnObjects()
+
+
+    ## Data Model Functions:
+    # Updates the member variables from the database
+    # Note: if there are any pending changes, they will be persisted on this action
+    def reloadModelFromDatabase(self):
+        # Load the latest behaviors and colors data from the database
+        self.annotationDataObjects = self.database_connection.load_annotation_events_from_database()
+        self.contexts = self.database_connection.load_contexts_from_database()
+
 
     # Rebuilds the GUI event objects from the self.annotationDataObjects
     def rebuildDrawnObjects(self):
@@ -230,7 +240,6 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
 
     # Annotation/Comment Specific functions:
     def create_comment(self, cut_x):
-        # Creates a new cut at the specified position.
         cut_duration_offset = self.offset_to_duration(cut_x)
         cut_datetime = self.offset_to_datetime(cut_x)
 
@@ -253,7 +262,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         # Create the database annotation object
         newAnnotationObj = create_TimestampedAnnotation(start_date, end_date, title, subtitle, body, '')
         self.annotationDataObjects.append(newAnnotationObj)
-        save_annotation_events_to_database(self.database_connection, self.annotationDataObjects)
+        self.database_connection.save_annotation_events_to_database(self.annotationDataObjects)
         self.rebuildDrawnObjects()
         self.update()
 
@@ -286,7 +295,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
             print("Couldn't get active annotation object to edit!!")
             self.activeEditingAnnotationIndex = None
 
-
+    # There's a bug in the database design and they're updating but overlapping. Figure this out. A new one is being created each time I change a field. This wasn't happening before.
     @pyqtSlot(datetime, datetime, str, str, str)
     def try_update_comment(self, start_date, end_date, title, subtitle, body):
         # Tries to update an existing comment
@@ -295,7 +304,8 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
             currObjToModify = self.annotationDataObjects[self.activeEditingAnnotationIndex]
             currObjToModify = modify_TimestampedAnnotation(currObjToModify, start_date, end_date, title, subtitle, body)
             self.annotationDataObjects[self.activeEditingAnnotationIndex] = currObjToModify
-            save_annotation_events_to_database(self.database_connection, self.annotationDataObjects)
+            self.database_connection.save_annotation_events_to_database(self.annotationDataObjects)
+            self.reloadModelFromDatabase()
             self.rebuildDrawnObjects()
             self.update()
         else:
