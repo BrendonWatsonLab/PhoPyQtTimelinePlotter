@@ -13,6 +13,8 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
 
+from GUI.UI.AbstractDatabaseAccessingWindow import AbstractDatabaseAccessingWindow
+
 from GUI.HelpWindow.HelpWindowFinal import *
 
 # from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget import *
@@ -34,7 +36,7 @@ class GlobalTimeAdjustmentOptions(Enum):
         ConstantOffsetFromMostRecentVideo = 3  # adjusts the global to a fixed time prior to the end of the most recent video.
 
 
-class TimelineDrawingWindow(QtWidgets.QMainWindow):
+class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     
     static_VideoTrackTrackID = -1 # The integer ID of the main video track
     
@@ -48,16 +50,14 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
     # Only used if GlobalTimelineConstraintOptions is .ConstantOffsetFromMostRecentVideo. Specifies the offset prior to the end of the last video which to start the global timeline.
     ConstantOffsetFromMostRecentVideoDuration = timedelta(days=7)
 
-    def __init__(self, totalStartTime, totalEndTime, db_file_path):
-        super(TimelineDrawingWindow, self).__init__() # Call the inherited classes __init__ method
+    def __init__(self, database_connection, totalStartTime, totalEndTime):
+        super(TimelineDrawingWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/MainWindow/MainWindow.ui", self) # Load the .ui file
 
-        self.db_file_path = db_file_path
-        
         self.scaleMultiplier = 4.0
         self.update_global_start_end_times(totalStartTime, totalEndTime)
 
-        self.videoInfoObjects = load_video_events_from_database(db_file=self.db_file_path, as_videoInfo_objects=True)
+        self.videoInfoObjects = load_video_events_from_database(self.database_connection.get_path(), as_videoInfo_objects=True)
         self.build_video_display_events()
 
         self.videoPlayerWindow = None
@@ -135,7 +135,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         self.eventTrackWidgets = []
 
         # Annotation Comments track:
-        self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(0, [], [], self.totalStartTime, self.totalEndTime, self.db_file_path, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+        self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(0, [], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
         self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
 
         # Partition tracks:
@@ -237,11 +237,16 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
 
         self.videoDates = np.array(videoDates)
         self.videoEndDates = np.array(videoEndDates)
-        
-        self.earliestVideoTime = self.videoDates.min()
-        self.latestVideoTime = self.videoEndDates.max()
-        print('earliest video: ', self.earliestVideoTime)
-        print('latest video: ', self.latestVideoTime)
+
+        if videoDates:
+            self.earliestVideoTime = self.videoDates.min()
+            self.latestVideoTime = self.videoEndDates.max()
+            print('earliest video: ', self.earliestVideoTime)
+            print('latest video: ', self.latestVideoTime)
+        else:
+            print("No videos loaded! Setting self.latestVideoTime to now")
+            self.latestVideoTime = datetime.now()
+            self.earliestVideoTime = self.latestVideoTime - TimelineDrawingWindow.ConstantOffsetFromMostRecentVideoDuration
 
 
         if TimelineDrawingWindow.GlobalTimelineConstraintOptions is GlobalTimeAdjustmentOptions.ConstrainGlobalToVideoTimeRange:
@@ -250,6 +255,7 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
         elif TimelineDrawingWindow.GlobalTimelineConstraintOptions is GlobalTimeAdjustmentOptions.ConstrainVideosShownToGlobal:
             # Otherwise filter the videos
             ## TODO: Filter the videoEvents, self.videoDates, self.videoEndDates, and labels if we need them to the global self.totalStartTime and self.totalEndTime range
+            print("UNIMPLEMENTED TIME ADJUST MODE!!")
             pass
         elif TimelineDrawingWindow.GlobalTimelineConstraintOptions is GlobalTimeAdjustmentOptions.ConstantOffsetFromMostRecentVideo:
             # Otherwise filter the videos
@@ -356,10 +362,11 @@ class TimelineDrawingWindow(QtWidgets.QMainWindow):
     # Shows the Setup/Settings window:
     def handle_showSetupWindow(self):
         if self.setupWindow:
+            self.setupWindow.set_database_connection(self.database_connection)
             self.setupWindow.show()
         else:
             # Create a new setup window
-            self.setupWindow = SetupWindow()
+            self.setupWindow = SetupWindow(self.database_connection)
             self.setupWindow.show()
 
     # Shows the video player window:
