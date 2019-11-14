@@ -29,6 +29,9 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         # The table index currently being edited
         self.behaviorsTableEditingIndex = None
 
+        # A variable to represent a reference to a QMessageBox dialog that's temporarily displayed.
+        self.activeMessageBox = None
+
         self.initUI()
 
     def initUI(self):
@@ -49,8 +52,20 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         self.ui.tableWidget_Settings_PartitionTrack.currentItemChanged.connect(self.on_current_behavior_table_item_changed)
 
         self.ui.buttonBox_Settings_PartitionTrack.clicked.connect(self.on_update_buttonBox_clicked)
-        self.initBehaviorsInterfaces()
+        self.reloadBehaviorsInterfaces(should_initialize_database_from_sample_if_missing=True)
 
+## Data Model Functions:
+    # Updates the member variables from the database
+    def reloadModelFromDatabase(self):
+        # Load the latest behaviors and colors data from the database
+        self.colorsDict = self.database_connection.load_colors_from_database()
+        self.behaviorGroups = self.database_connection.load_behaviors_from_database()
+
+
+    def closeConnectionToDatabase(self):
+        self.database_connection.close()
+
+## General Functions:
 
     # Creates both the behavior tree and the behaviors database from a set of hard-coded values defined in behaviorsManager
     def initSampleBehaviorsDatabase(self):
@@ -199,28 +214,29 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
 
 
     # Initializes the UI elements that display/edit the behaviors
-    def initBehaviorsInterfaces(self):
+    # If should_initialize_database_from_sample_if_missing is true, the database will attempt to be loaded, and if that fails or it's empty it will be created from sample data
+    def reloadBehaviorsInterfaces(self, should_initialize_database_from_sample_if_missing):
 
         # Load the latest behaviors and colors data from the database
-        self.colorsDict = self.database_connection.load_colors_from_database()
-        self.behaviorGroups = self.database_connection.load_behaviors_from_database()
+        self.reloadModelFromDatabase()
 
-        # Determine if we need to initialize a sample color/behavior database
-        needs_init_sample_db = True
+        if should_initialize_database_from_sample_if_missing:
+            # Determine if we need to initialize a sample color/behavior database
+            needs_init_sample_db = True
 
-        if self.colorsDict and self.behaviorGroups:
-            # Valid loaded objects
-            if (len(self.behaviorGroups) > 0):
-                needs_init_sample_db = False
-            
-        # Initializes the DB if that's needed (if it's empty)
-        if needs_init_sample_db:
-            self.initSampleBehaviorsDatabase()
+            if self.colorsDict and self.behaviorGroups:
+                # Valid loaded objects
+                if (len(self.behaviorGroups) > 0):
+                    needs_init_sample_db = False
+                
+            # Initializes the DB if that's needed (if it's empty)
+            if needs_init_sample_db:
+                self.initSampleBehaviorsDatabase()
         
         # Build the UI objects either way
         self.build_behaviors_interfaces_from_loaded()
 
-        self.database_connection.close()
+        self.closeConnectionToDatabase()
 
 
     # Updates the table interface from the self.partitionInfoObjects variable
@@ -275,9 +291,11 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
     # This is being called whenever the table selection is updated, independent of if the contents of the cell are being edited
     def on_current_behavior_table_item_changed(self, item):
         # print('on_current_item_changed() table item (col: {0}, row: {1}): content: {2}'.format(item.column(), item.row(), item.text()))
-        self.behaviorsTableActiveIndex = (item.column(), item.row())
-
-
+        if item:
+            self.behaviorsTableActiveIndex = (item.column(), item.row())
+        else:
+            # No selection
+            self.behaviorsTableEditingIndex = None
 
     # Called upon starting to edit a table cell
     def on_begin_edit_behavior_table_item(self, item):
@@ -315,13 +333,53 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             print('SaveAll Clicked')
         elif sb == QDialogButtonBox.Reset:
             print('Reset Clicked')
+            self.reloadBehaviorsInterfaces(should_initialize_database_from_sample_if_missing=False)
         elif sb == QDialogButtonBox.RestoreDefaults:
             print("RestoreDefaults Clicked")
+            self.open_confirm_restore_defaults_messagebox()
         else:
             print("UNIMPLEMENTED: Unhandled button box button")
         # and so on...
     
     
+
+## UTILITY Functions:
+
+    # Opens a dialog that asks the user to confirm the "Restore Defaults" operation.
+    def open_confirm_restore_defaults_messagebox(self):
+        self.activeMessageBox = QMessageBox()
+        self.activeMessageBox.setIcon(QMessageBox.Warning)
+
+        self.activeMessageBox.setText("This will overwrite the data in the database with the sample data that was hard-coded into the application.")
+        self.activeMessageBox.setInformativeText("You probably don't want to do this unless the database has become corrupted or you're testing!")
+        self.activeMessageBox.setWindowTitle("Restore Sample Data?")
+        # msg.setDetailedText("The details are as follows:")
+        self.activeMessageBox.setStandardButtons(QMessageBox.RestoreDefaults | QMessageBox.Cancel)
+        self.activeMessageBox.setDefaultButton(QMessageBox.Cancel)
+        self.activeMessageBox.buttonClicked.connect(self.on_confirm_restore_defaults_messagebox_callback)
+        
+        retval = self.activeMessageBox.exec_()
+        # print("value of pressed message box button:", retval)
+        
+
+    # Callback of the "Restore Defaults" confirmatory message box
+    def on_confirm_restore_defaults_messagebox_callback(self, button):
+        print("Button pressed is:",button.text())
+        button = self.activeMessageBox.standardButton(button)
+        # sb = self.ui.buttonBox_Settings_PartitionTrack.standardButton(button)
+        if button == QMessageBox.RestoreDefaults:
+            print('Confirm RestoreDefaults Clicked')
+        elif button == QMessageBox.Cancel:
+            print('Cancel Clicked')
+        else:
+            print("UNIMPLEMENTED: Unhandled QMessageBox button")
+
+        # Clear the messagebox variable
+        self.activeMessageBox = None
+        
+
+
+        
 
 
     # Displays a color-picker window that the user can select a color from
