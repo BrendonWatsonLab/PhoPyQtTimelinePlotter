@@ -42,11 +42,11 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         # self.ui.tableWidget_Settings_PartitionTrack.setFlags(item.flags() ^ Qt.ItemIsEditable)
 
         # create a connection to the double click event
-        self.ui.tableWidget_Settings_PartitionTrack.itemDoubleClicked.connect(self.editItem)
+        self.ui.tableWidget_Settings_PartitionTrack.itemDoubleClicked.connect(self.on_begin_edit_behavior_table_item)
 
         # Not sure which function I want to use
-        self.ui.tableWidget_Settings_PartitionTrack.itemChanged.connect(self.on_item_changed)
-        self.ui.tableWidget_Settings_PartitionTrack.currentItemChanged.connect(self.on_current_item_changed)
+        self.ui.tableWidget_Settings_PartitionTrack.itemChanged.connect(self.on_behavior_table_item_changed)
+        self.ui.tableWidget_Settings_PartitionTrack.currentItemChanged.connect(self.on_current_behavior_table_item_changed)
 
         self.initBehaviorsInterfaces()
 
@@ -247,9 +247,10 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             currColorTableWidgetItem.setBackground(aPartitionInfoOption.color)
             self.ui.tableWidget_Settings_PartitionTrack.setItem(aDataRowIndex,4,currColorTableWidgetItem)
 
+    ## Handlers:
 
     # Seems to be called programmatically when the table items are added
-    def on_item_changed(self, item):
+    def on_behavior_table_item_changed(self, item):
         # print('on_item_changed() table item (col: {0}, row: {1}): content: {2}'.format(item.column(), item.row(), item.text()))
 
         if (self.behaviorsTableEditingIndex):
@@ -271,14 +272,14 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
 
 
     # This is being called whenever the table selection is updated, independent of if the contents of the cell are being edited
-    def on_current_item_changed(self, item):
+    def on_current_behavior_table_item_changed(self, item):
         # print('on_current_item_changed() table item (col: {0}, row: {1}): content: {2}'.format(item.column(), item.row(), item.text()))
         self.behaviorsTableActiveIndex = (item.column(), item.row())
 
 
 
     # Called upon starting to edit a table cell
-    def editItem(self, item):
+    def on_begin_edit_behavior_table_item(self, item):
         # print('editItem() table item (col: {0}, row: {1}): content: {2}'.format(item.column(), item.row(), item.text()))
         self.behaviorsTableEditingIndex = (item.column(), item.row())
         
@@ -295,7 +296,9 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
 
         elif (item.column() == 4):
             print('Color column: selecting')
-            newRowColor = self.color_picker()
+            # Get the existing table item color
+            item_color = item.background().color()
+            newRowColor = self.open_color_picker(item_color)
             if newRowColor:
                 self.partitionInfoOptions[item.row()-1].color = newRowColor
                 # Update the row color
@@ -306,8 +309,10 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
 
     
 
-    def color_picker(self):
-        color = QColorDialog.getColor()
+
+    # Displays a color-picker window that the user can select a color from
+    def open_color_picker(self, existingColor):
+        color = QColorDialog.getColor(existingColor)
         return color
         # self.styleChoice.setStyleSheet("QWidget { background-color: %s}" % color.name())
 
