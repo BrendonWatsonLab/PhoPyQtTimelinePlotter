@@ -14,6 +14,9 @@ from app.database.DatabaseConnectionRef import DatabasePendingItemsState, Databa
 from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingDialog
 
+# When you set a subtype, ensure that its parent is selected as the type
+# When you select a type that's incompatible with the current subtype, probably change the subtype to the first of that type
+
 class PartitionEditDialog(AbstractDatabaseAccessingDialog):
 
      # This defines a signal called 'closed' that takes no arguments.
@@ -91,9 +94,39 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
         # types changed
         print('type changed: {0}'.format(text))
         #TODO: update avaialable subtypes
+        # transform_to_type = type_id - 1 # To transform from sqlite3 1-based row indexing. The proper way would be searching for the row with a matching ID
+        # self.get_type()
+        new_selected_behavior_group = self.behaviorGroups[self.ui.comboBox_Type.currentIndex()]
+
+        # If we want the subtype to always be compatible with the type, we can change the subtype upon setting the type to an incompatible type
+
+        # for (aSubtypeID, aUniqueLeafBehavior) in enumerate(new_selected_behavior_group.behaviors):
+        #     if aUniqueLeafBehavior.description:
+        #         extra_string = aUniqueLeafBehavior.description
+        #     else:
+        #         # Otherwise it's the parents' name
+        #         extra_string = aUniqueBehaviorGroup.name
+
+        #     aNewNode = QTreeWidgetItem([aUniqueLeafBehavior.name, "(type: {0}, subtype: {1})".format(str(aTypeId), str(aSubtypeID)), extra_string])
+        #     aNodeColor = aUniqueLeafBehavior.primaryColor.get_QColor()
+        #     aNewNode.setBackground(0, aNodeColor)
+        #     aNewGroupNode.addChild(aNewNode)
 
     def on_subtype_combobox_changed(self, text):
         print('subtype changed: {0}'.format(text))
+        new_selected_behavior = self.behaviors[self.ui.comboBox_Subtype.currentIndex()]
+        new_selected_proper_parent_group = new_selected_behavior.parentGroup
+        selected_behavior_group = self.behaviorGroups[self.ui.comboBox_Type.currentIndex()]
+        if (selected_behavior_group.id == new_selected_proper_parent_group.id):
+            # The parent is currently already set as the type
+            pass
+        else:
+            # Need to select the parent
+            print("Changing parent")
+            self.set_type(new_selected_proper_parent_group.id)
+
+
+        
 
 
     def accept(self):
