@@ -85,17 +85,6 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         ## What about self.partitionInfoOptions?
         
 
-
-    def closeConnectionToDatabase(self):
-        self.database_connection.close()
-
-    # Returns true if any models have pending (uncommited) changes
-    def get_has_pending_changes(self):
-        self.user_edited_pending_counts = self.database_connection.get_pending_counts()
-        return self.user_edited_pending_counts.has_pending()
-        
-
-
 ## General Functions:
 
     # Creates both the behavior tree and the behaviors database from a set of hard-coded values defined in behaviorsManager
@@ -270,7 +259,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         # Build the UI objects either way
         self.build_behaviors_interfaces_from_loaded()
 
-        # self.closeConnectionToDatabase()
+        # self.database_close()
 
 
     # Updates the table interface from the self.partitionInfoObjects variable
@@ -338,7 +327,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             pass
         else:
             pass
-            # self.closeConnectionToDatabase()
+            # self.database_close()
 
     ## Handlers:
 
@@ -464,7 +453,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
 
         if shouldClose:
             print("Closing...")
-            self.closeConnectionToDatabase()
+            self.database_close()
             event.accept()
             # super(SetupWindow, self).closeEvent(event)
             # qApp.quit()

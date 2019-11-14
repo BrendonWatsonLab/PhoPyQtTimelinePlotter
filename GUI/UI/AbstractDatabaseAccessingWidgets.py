@@ -7,6 +7,8 @@ from datetime import datetime, timezone, timedelta
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QDialog
 
+from app.database.DatabaseConnectionRef import DatabasePendingItemsState, DatabaseConnectionRef
+
 # An Abstract QMainWindow superclass that holds a reference to an open database
 class AbstractDatabaseAccessingWindow(QtWidgets.QMainWindow):
     def __init__(self, database_connection, parent=None):
@@ -32,6 +34,17 @@ class AbstractDatabaseAccessingWindow(QtWidgets.QMainWindow):
             return True
         else:
             return False
+
+    # Updates the member variables from the database
+    # Note: if there are any pending changes, they will be persisted on this action
+    def reloadModelFromDatabase(self):
+        pass
+
+    
+    # Returns true if any models have pending (uncommited) changes
+    def get_has_pending_changes(self):
+        return self.database_connection.get_pending_counts().has_pending()
+        
 
             
         
