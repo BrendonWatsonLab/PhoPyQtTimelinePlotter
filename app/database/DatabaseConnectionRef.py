@@ -33,6 +33,7 @@ class DatabaseConnectionRef(QObject):
         self.engine = None
         self.session = None
         self.DBSession = None
+        self.enable_debug_printing = False
 
         self.connect()
 
@@ -41,7 +42,22 @@ class DatabaseConnectionRef(QObject):
     
     def commit(self):
         if self.session:
-            self.session.commit()
+            try:
+                # See https://stackoverflow.com/questions/52075642/how-to-handle-unique-data-in-sqlalchemy-flask-pyhon
+                self.session.commit()
+                if (self.enable_debug_printing):
+                    print("Committed changes!")
+                return True
+            except IntegrityError as e:
+                self.session.rollback() # A constraint failed
+                if (self.enable_debug_printing):
+                    print("ERROR: Failed to commit changes! Rolling back", e)
+                return False
+            except Exception as e:
+                print("Other exception! Trying to continue", e)
+                return False
+
+            
 
     def close(self):
         if self.session:
@@ -145,7 +161,7 @@ class DatabaseConnectionRef(QObject):
         print('Added ', num_added_records, 'of', num_found_records, 'annotation event to database.')
 
         # Save (commit) the changes
-        session.commit()
+        self.commit()
         # We can also close the connection if we are done with it.
         # Just be sure any changes have been committed or they will be lost.
         # session.close()
@@ -174,7 +190,7 @@ class DatabaseConnectionRef(QObject):
         print('Added ', num_added_records, 'of', num_found_records, 'annotation event to database.')
 
         # Save (commit) the changes
-        session.commit()
+        self.commit()
         # We can also close the connection if we are done with it.
         # Just be sure any changes have been committed or they will be lost.
         # session.close()
@@ -201,7 +217,7 @@ class DatabaseConnectionRef(QObject):
 
         print('Added ', num_added_records, 'of', num_found_records, 'colors to database.')
         # Save (commit) the changes
-        session.commit()
+        self.commit()
         # We can also close the connection if we are done with it.
         # Just be sure any changes have been committed or they will be lost.
         # session.close()
@@ -249,7 +265,7 @@ class DatabaseConnectionRef(QObject):
         # Save (commit) the changes
         try:
             # See https://stackoverflow.com/questions/52075642/how-to-handle-unique-data-in-sqlalchemy-flask-pyhon
-            session.commit()
+            self.commit()
             print("Committed changes!")
         except IntegrityError as e:
             session.rollback() # A constraint failed

@@ -13,7 +13,7 @@ class Behavior(Base):
     __tablename__ = 'behaviors'
 
     id = Column(Integer, primary_key=True)
-    name = Column(Text, nullable=False)
+    name = Column(Text, nullable=False, unique=True)
     description = Column(Text)
     parent_group = Column(Integer, ForeignKey('behavior_groups.id'))
 
@@ -41,7 +41,7 @@ class BehaviorGroup(Base):
     __tablename__ = 'behavior_groups'
 
     id = Column(Integer, primary_key=True)
-    name = Column(Text, nullable=False)
+    name = Column(Text, nullable=False, unique=True)
     description = Column(Text)
     primary_color = Column(Integer, ForeignKey('category_colors.id'), nullable=False, server_default=text("1"))
     secondary_color = Column(Integer, ForeignKey('category_colors.id'), nullable=False, server_default=text("2"))

@@ -139,7 +139,12 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
                     print("Couldn't find parent node!")
                     parent_node_db_id = None
                 else:
-                    parent_node_db_id = parentDBNode.id
+                    if parentDBNode.id:
+                        print("Found parent with index {0}".format(parentDBNode.id))
+                        parent_node_db_id = parentDBNode.id
+                    else:
+                        print("couldn't get parent node's .id property, using the index {0}".format(parentNodeIndex + 1))
+                        parent_node_db_id = int(parentNodeIndex + 1)
 
                 aNewDBNode = Behavior(None, aUniqueLeafBehavior, aUniqueLeafBehavior, parent_node_db_id, aDBColor.id, default_black_color.id, 'auto')
 
