@@ -31,7 +31,7 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     BodyTextFont = QFont('SansSerif', 8)
 
     NibTriangleHeight = 10.0
-    NibTriangleWidth = 5.0
+    NibTriangleWidth = 10.0
 
     LeftNibPainter = TrianglePainter(TriangleDrawOption_Horizontal.LeftApex)
     RightNibPainter = TrianglePainter(TriangleDrawOption_Horizontal.RightApex)
