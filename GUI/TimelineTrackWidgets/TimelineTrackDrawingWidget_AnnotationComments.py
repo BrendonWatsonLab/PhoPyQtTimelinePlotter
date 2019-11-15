@@ -57,7 +57,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         self.durationObjects = []
         for aDataObj in self.annotationDataObjects:
             # Create the graphical annotation object
-            newAnnotation = convert_TimestampedAnnotation(aDataObj)
+            newAnnotation = convert_TimestampedAnnotation(aDataObj, self)
             newAnnotation.on_edit.connect(self.on_annotation_modify_event)
             # newAnnotation = PhoDurationEvent_AnnotationComment(start_date, end_date, body, title, subtitle)
             self.durationObjects.append(newAnnotation)

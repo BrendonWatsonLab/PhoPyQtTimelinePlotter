@@ -44,6 +44,9 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         self.title = title
         self.subtitle = subtitle
 
+        # Can I get a double click effect?
+        
+
 
     def showMenu(self, pos):
         menu = QMenu()

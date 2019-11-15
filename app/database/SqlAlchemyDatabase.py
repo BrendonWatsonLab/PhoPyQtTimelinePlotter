@@ -245,13 +245,13 @@ def create_TimestampedAnnotation(start_date, end_date, primary_text, secondary_t
     return newObj
 
 # Converts an annotation database data object to a GUI element
-def convert_TimestampedAnnotation(aTimestampedAnnotationObj):
+def convert_TimestampedAnnotation(aTimestampedAnnotationObj, owning_parent):
     end_date = None
     if aTimestampedAnnotationObj.end_date:
         end_date = datetime_from_database(aTimestampedAnnotationObj.end_date)
 
     newObj = PhoDurationEvent_AnnotationComment(datetime_from_database(aTimestampedAnnotationObj.start_date), end_date,
-    aTimestampedAnnotationObj.tertiary_text, aTimestampedAnnotationObj.primary_text, aTimestampedAnnotationObj.secondary_text)
+    aTimestampedAnnotationObj.tertiary_text, aTimestampedAnnotationObj.primary_text, aTimestampedAnnotationObj.secondary_text, parent=owning_parent)
     return newObj
 
 # Updates the provided TimestampedAnnotationObj with the data that was provided from the interface
