@@ -50,11 +50,15 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     # Only used if GlobalTimelineConstraintOptions is .ConstantOffsetFromMostRecentVideo. Specifies the offset prior to the end of the last video which to start the global timeline.
     ConstantOffsetFromMostRecentVideoDuration = timedelta(days=7)
 
+    # DefaultZoom = 4.0
+    DefaultZoom = 16.0
+    ZoomDelta = 1.0
+
     def __init__(self, database_connection, totalStartTime, totalEndTime):
         super(TimelineDrawingWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/MainWindow/MainWindow.ui", self) # Load the .ui file
 
-        self.scaleMultiplier = 4.0
+        self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
         self.update_global_start_end_times(totalStartTime, totalEndTime)
 
         self.videoInfoObjects = load_video_events_from_database(self.database_connection.get_path(), as_videoInfo_objects=True)
@@ -67,6 +71,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.setMouseTracking(True)
         self.initUI()
         # self.show() # Show the GUI
+
 
 
     def initUI(self):
@@ -97,6 +102,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.ui.actionVideo_Player.triggered.connect(self.handle_showVideoPlayerWindow)
             self.ui.actionSettings.triggered.connect(self.handle_showSetupWindow)
             
+            ## Setup Zoom:
+            self.ui.actionZoom_In.triggered.connect(self.on_zoom_in)
+            self.ui.actionZoom_Default.triggered.connect(self.on_zoom_home)
+            self.ui.actionZoom_Out.triggered.connect(self.on_zoom_out)
+
 
         desiredWindowWidth = 900
         self.resize( desiredWindowWidth, 800 )
@@ -105,7 +115,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         initUI_initMenuBar(self)
 
         # minimumWidgetWidth = 500
-        minimumWidgetWidth = self.width() * self.scaleMultiplier
+        minimumWidgetWidth = self.width() * self.activeScaleMultiplier
 
         # Video Player Container: the container that holds the video player
         self.videoPlayerContainer = QtWidgets.QWidget()
@@ -214,6 +224,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.cursorY = 0.0
         #self.cursorTraceRect = QRect(0,0,0,0)
 
+        
 
     def update_global_start_end_times(self, totalStartTime, totalEndTime):
         self.totalStartTime = totalStartTime
@@ -272,7 +283,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
     # Timeline position/time converion functions:
     def offset_to_percent(self, event_x, event_y):
-        percent_x = event_x / (self.width() * self.scaleMultiplier)
+        percent_x = event_x / (self.width() * self.activeScaleMultiplier)
         percent_y = event_y / self.height()
         return (percent_x, percent_y)
 
@@ -349,6 +360,18 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         self.statusBar().showMessage(text)
 
+    ## Zoom in/default/out events
+    def on_zoom_in(self):
+        self.activeScaleMultiplier = self.activeScaleMultiplier + TimelineDrawingWindow.ZoomDelta
+        self.refresh_child_widget_display()
+
+    def on_zoom_home(self):
+        self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
+        self.refresh_child_widget_display()
+
+    def on_zoom_out(self):
+        self.activeScaleMultiplier = self.activeScaleMultiplier - TimelineDrawingWindow.ZoomDelta
+        self.refresh_child_widget_display()
 
     # Shows the help/instructions window:
     def handle_showHelpWindow(self):
