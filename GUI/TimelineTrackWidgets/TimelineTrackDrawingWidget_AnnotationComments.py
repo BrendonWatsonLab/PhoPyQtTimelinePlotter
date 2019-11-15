@@ -13,7 +13,7 @@ from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import *
 from GUI.Model.PhoDurationEvent_AnnotationComment import *
 from GUI.UI.TextAnnotations.TextAnnotationDialog import *
 
-from app.database.SqlAlchemyDatabase import load_annotation_events_from_database, save_annotation_events_to_database, create_TimestampedAnnotation, convert_TimestampedAnnotation, modify_TimestampedAnnotation
+from app.database.SqlAlchemyDatabase import create_TimestampedAnnotation, convert_TimestampedAnnotation, modify_TimestampedAnnotation
 
 class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
@@ -262,7 +262,8 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         # Create the database annotation object
         newAnnotationObj = create_TimestampedAnnotation(start_date, end_date, title, subtitle, body, '')
         self.annotationDataObjects.append(newAnnotationObj)
-        self.database_connection.save_annotation_events_to_database(self.annotationDataObjects)
+        # self.database_connection.save_annotation_events_to_database(self.annotationDataObjects)
+        self.database_connection.save_annotation_events_to_database([newAnnotationObj])
         self.rebuildDrawnObjects()
         self.update()
 
@@ -306,7 +307,8 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
             currObjToModify = self.annotationDataObjects[self.activeEditingAnnotationIndex]
             currObjToModify = modify_TimestampedAnnotation(currObjToModify, start_date, end_date, title, subtitle, body)
             self.annotationDataObjects[self.activeEditingAnnotationIndex] = currObjToModify
-            self.database_connection.save_annotation_events_to_database(self.annotationDataObjects)
+            # self.database_connection.save_annotation_events_to_database(self.annotationDataObjects)
+            self.database_commit()
             self.reloadModelFromDatabase()
             self.rebuildDrawnObjects()
             self.update()
@@ -323,5 +325,4 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         self.activeEditingAnnotationIndex = None
 
         
-
 
