@@ -85,7 +85,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         if (len(self.selected_partition_object_indicies) > 0):
             # Deselect previously selected item
             prevSelectedItemIndex = self.selected_partition_object_indicies[0]
-            if (prevSelectedItemIndex):
+            if (not (prevSelectedItemIndex is None)):
                 return prevSelectedItemIndex
             else:
                 return None
@@ -95,7 +95,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
     # Returns the currently selected partition object or None if none are selected
     def get_selected_partition(self):
         prevSelectedItemIndex = self.get_selected_partition_index()
-        if (prevSelectedItemIndex):
+        if (not (prevSelectedItemIndex is None)):
             prevSelectedPartitionObj = self.partitionObjects[prevSelectedItemIndex]
             if (prevSelectedPartitionObj):
                 return prevSelectedPartitionObj
@@ -300,7 +300,8 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
     def try_update_partition(self, start_date, end_date, title, subtitle, body, type_id, subtype_id):
         # Tries to create a new comment
         print('try_update_partition')
-        if (self.activeEditingPartitionIndex):
+        
+        if (not (self.activeEditingPartitionIndex is None)):
             # Get new color associated with the modified subtype_id
             newColor = self.behaviors[subtype_id-1].primaryColor.get_QColor()
             self.partitionManager.modify_partition(self.activeEditingPartitionIndex, start_date, end_date, title, subtitle, body, type_id, subtype_id, newColor)

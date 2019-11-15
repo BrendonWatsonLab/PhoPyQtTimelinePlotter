@@ -68,7 +68,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         if (len(self.selected_duration_object_indicies) > 0):
             # Deselect previously selected item
             prevSelectedItemIndex = self.selected_duration_object_indicies[0]
-            if (prevSelectedItemIndex):
+            if (not (prevSelectedItemIndex is None)):
                 return prevSelectedItemIndex
             else:
                 return None
@@ -78,7 +78,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
     # Returns the currently selected annotation object or None if none are selected
     def get_selected_annotation(self):
         prevSelectedItemIndex = self.get_selected_annotation_index()
-        if (prevSelectedItemIndex):
+        if (not (prevSelectedItemIndex is None)):
             prevSelectedAnnotationObj = self.durationObjects[prevSelectedItemIndex]
             if (prevSelectedAnnotationObj):
                 return prevSelectedAnnotationObj
@@ -276,7 +276,8 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
         print("on_annotation_modify_event(...)")
         selectedAnnotationIndex = self.get_selected_annotation_index()
         selectedAnnotationObject = self.get_selected_annotation()
-        if (selectedAnnotationObject):
+
+        if ((not (selectedAnnotationObject is None))):
             self.activeEditingAnnotationIndex = selectedAnnotationIndex
             self.annotationEditingDialog = TextAnnotationDialog()
             self.annotationEditingDialog.on_cancel.connect(self.comment_dialog_canceled)
@@ -300,7 +301,8 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidgetBa
     def try_update_comment(self, start_date, end_date, title, subtitle, body):
         # Tries to update an existing comment
         print('try_update_comment')
-        if (self.activeEditingAnnotationIndex):
+        
+        if (not (self.activeEditingAnnotationIndex is None)):
             currObjToModify = self.annotationDataObjects[self.activeEditingAnnotationIndex]
             currObjToModify = modify_TimestampedAnnotation(currObjToModify, start_date, end_date, title, subtitle, body)
             self.annotationDataObjects[self.activeEditingAnnotationIndex] = currObjToModify
