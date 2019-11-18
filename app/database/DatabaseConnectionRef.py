@@ -10,12 +10,12 @@ from sqlalchemy.orm import sessionmaker, selectinload, joinedload
 
 
 ## DATABASE MODELS:
-from app.database.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, \
-    ExperimentalConfigurationEvent
+from app.database.entry_models.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent
 
 from app.database.entry_models.DatabaseBase import Base, metadata
 from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
-from app.database.db_model_extension import ExVideoFile
+from app.database.entry_models.db_model import StaticFileExtension, FileParentFolder
+from app.database.entry_models.db_model_extension import ExVideoFile
 
 from app.database.utility_functions import *
 
@@ -207,6 +207,23 @@ class DatabaseConnectionRef(QObject):
         behaviors = session.query(Behavior).all()
         return behaviors
 
+    def load_static_file_extensions_from_database(self):
+        print("Loading static_file_extensions from database:")
+        outputFileExtensionsDict = dict()
+        session = self.get_session()
+        objs = session.query(StaticFileExtension).all()
+        for aRecord in objs:
+            outputFileExtensionsDict[aRecord.extension] = aRecord
+        return outputFileExtensionsDict
+
+    def load_file_parent_folders_from_database(self):
+        print("Loading file_parent_folders from database:")
+        session = self.get_session()
+        objs = session.query(FileParentFolder).all()
+       
+        return objs
+    
+    
 
     ## SAVING:
     def save_contexts_to_database(self, contexts):
@@ -288,9 +305,6 @@ class DatabaseConnectionRef(QObject):
         print('Added ', num_added_records, 'of', num_found_records, 'colors to database.')
         # Save (commit) the changes
         self.commit()
-        # We can also close the connection if we are done with it.
-        # Just be sure any changes have been committed or they will be lost.
-        # session.close()
         print("done.")
         return
 
@@ -338,5 +352,50 @@ class DatabaseConnectionRef(QObject):
         print("done.")
         return
 
-    
-    
+    def save_static_file_extensions_to_database(self, static_file_extensions):
+        print("Saving static_file_extensions to database: {0}".format(self.get_path()))
+        session = self.get_session()
+
+        # Behavior Groups:
+        num_found_records = len(static_file_extensions)
+        num_added_records = 0
+        num_skipped_records = 0
+        for anOutRecord in static_file_extensions:
+            try:
+                session.add(anOutRecord)
+                num_added_records = num_added_records + 1
+
+            except Exception as e:
+                print("Other exception! Trying to continue", e)
+                num_skipped_records = num_skipped_records + 1
+                continue
+
+        print('Added ', num_added_records, 'of', num_found_records, 'static_file_extensions to database.')
+        # Save (commit) the changes
+        self.commit()
+        print("done.")
+        return
+
+    def save_file_parent_folders_to_database(self, file_parent_folders):
+        print("Saving file_parent_folders to database: {0}".format(self.get_path()))
+        session = self.get_session()
+
+        # Behavior Groups:
+        num_found_records = len(file_parent_folders)
+        num_added_records = 0
+        num_skipped_records = 0
+        for anOutRecord in file_parent_folders:
+            try:
+                session.add(anOutRecord)
+                num_added_records = num_added_records + 1
+
+            except Exception as e:
+                print("Other exception! Trying to continue", e)
+                num_skipped_records = num_skipped_records + 1
+                continue
+
+        print('Added ', num_added_records, 'of', num_found_records, 'file_parent_folders to database.')
+        # Save (commit) the changes
+        self.commit()
+        print("done.")
+        return

@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
 from app.database.entry_models.DatabaseBase import Base, metadata
-
+from pathlib import Path
 
 # (Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, VideoFile)
 
@@ -63,6 +63,12 @@ class FileParentFolder(Base):
     notes = Column(Text)
 
 
+    @staticmethod
+    def from_path_string(path_string):
+        path = Path(path_string)
+        path.anchor
+
+
 # t_sqlite_sequence = Table(
 #     'sqlite_sequence', metadata,
 #     Column('name', NullType),
@@ -77,6 +83,11 @@ class StaticFileExtension(Base):
     description = Column(Text)
     notes = Column(Text)
     version = Column(Integer, server_default=text("0"))
+
+    @staticmethod
+    def from_path_string(path_string):
+        path = Path(path_string)
+        return StaticFileExtension(path.suffix, None, None, None)
 
 
 class Cohort(Base):
@@ -154,7 +165,8 @@ class VideoFile(Base):
     id = Column(Integer, primary_key=True)
     file_fullname = Column(Text, nullable=False)
     file_basename = Column(Text, nullable=False)
-    file_extension = Column(Integer, ForeignKey('staticFileExtensions.extension'), nullable=False)
+    file_extension = Column(Text, ForeignKey('staticFileExtensions.extension'), nullable=False)
+    # file_extension = Column(Integer, ForeignKey('staticFileExtensions.extension'), nullable=False)
     file_video_folder = Column(Integer, ForeignKey('fileParentFolders.id'))
     start_date = Column(Integer, nullable=False)
     end_date = Column(Integer)

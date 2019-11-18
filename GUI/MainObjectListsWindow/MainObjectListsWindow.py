@@ -12,15 +12,13 @@ from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool
 
-
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWindow
-
-from app.database.SqliteEventsDatabase import load_video_events_from_database
-from app.database.SqlAlchemyDatabase import load_annotation_events_from_database, save_annotation_events_to_database, create_TimestampedAnnotation
 
 from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult
 from app.filesystem.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
 from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
+
+from pathlib import Path
 
 class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
@@ -46,14 +44,15 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         self.setMouseTracking(True)
         self.initUI()
 
+        self.rebuildParentFolders()
         self.find_filesystem_video()
 
         # self.rebuild_from_search_paths()
         
         # self.find_video_metadata()
         # self.show() # Show the GUI
-
-
+        
+        self.reloadModelFromDatabase()
 
     def initUI(self):
 
@@ -77,8 +76,6 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
             self.ui.actionSave.triggered.connect(self.handle_menu_save_event)
             self.ui.actionRefresh.triggered.connect(self.handle_menu_refresh_event)
             
-
-
         desiredWindowWidth = 500
         self.resize( desiredWindowWidth, 800 )
 
@@ -96,6 +93,26 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
         # Complete setup
         self.statusBar()
+
+
+     # Updates the member variables from the database
+    # Note: if there are any pending changes, they will be persisted on this action
+    def reloadModelFromDatabase(self):
+        # Load the latest behaviors and colors data from the database
+        self.fileExtensionDict = self.database_connection.load_static_file_extensions_from_database()
+        self.loadedParentFolders = self.database_connection.load_file_parent_folders_from_database()
+
+        # self.loadedParentFolders
+        
+
+        # self.database_connection.save_file_parent_folders_to_database()
+
+    def rebuildParentFolders(self):
+        for aSearchPath in self.searchPaths:
+            currPath = Path(aSearchPath).resolve()
+            currRootAnchor = currPath.anchor
+            currRemainder = currPath.relative_to(currRootAnchor)
+            print("currPath: {0}; currRootAnchor: {1}; currRemainder: {2}".format(currPath, currRootAnchor, currRemainder))
 
 
     # Rebuilds the entire Tree UI from the self.found_files_lists
