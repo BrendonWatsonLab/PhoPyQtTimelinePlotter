@@ -35,8 +35,9 @@ if __name__ == '__main__':
         
 
 
-        mainListWindow = MainObjectListsWindow(database_connection, video_file_search_paths)
+        
         mainWindow = TimelineDrawingWindow(database_connection, earliestTime, latestTime)
+        mainListWindow = MainObjectListsWindow(database_connection, video_file_search_paths)
         windowFlags = mainWindow.windowFlags()
         # print(windowFlags)
         windowFlags |= Qt.WindowContextHelpButtonHint # Add the help button to the window
@@ -46,17 +47,24 @@ if __name__ == '__main__':
 
         desktop = QtWidgets.QApplication.desktop()
         resolution = desktop.availableGeometry()
+        # screen = QDesktopWidget().screenGeometry()
+
 
         # Style
         app.setStyleSheet(
             "QToolTip { border: 2px solid darkkhaki; padding: 5px; border-radius: 3px; background-color: rgba(255,255,0,0); }");
 
         # run
+
+
         mainListWindow.show()
         mainWindow.show()
 
+        mainWindowGeometry = mainWindow.frameGeometry()
+        sideListWindowGeometry = mainListWindow.frameGeometry()
 
-        # helpWindow = HelpWindowFinal()
-        # helpWindow.show()
+        sideListWindowGeometry.moveTopRight(mainWindowGeometry.topLeft())
+        # mainListWindow.moveTopRight(mainWindowGeometry.topLeft())
+        mainListWindow.move(sideListWindowGeometry.topLeft())
 
         sys.exit( app.exec_() )
