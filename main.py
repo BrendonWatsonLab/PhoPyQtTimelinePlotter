@@ -8,10 +8,11 @@ from GUI.Model.PhoEvent import PhoEvent
 from GUI.Model.PhoDurationEvent import PhoDurationEvent
 
 from GUI.MainWindow.TimelineDrawingWindow import *
-
 from GUI.HelpWindow.HelpWindowFinal import *
+from GUI.MainObjectListsWindow.MainObjectListsWindow import *
 
 from app.database.DatabaseConnectionRef import DatabaseConnectionRef
+
 
 if __name__ == '__main__':
     shouldShowGUIWindows = True
@@ -27,6 +28,11 @@ if __name__ == '__main__':
         database_file_path = "C:/Users/halechr/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db"
         database_connection = DatabaseConnectionRef(database_file_path)
 
+        video_file_search_paths = ["O:/Transcoded Videos/BB01"]
+        
+
+
+        mainListWindow = MainObjectListsWindow(database_connection, video_file_search_paths)
         mainWindow = TimelineDrawingWindow(database_connection, earliestTime, latestTime)
         windowFlags = mainWindow.windowFlags()
         # print(windowFlags)
@@ -43,6 +49,7 @@ if __name__ == '__main__':
             "QToolTip { border: 2px solid darkkhaki; padding: 5px; border-radius: 3px; background-color: rgba(255,255,0,0); }");
 
         # run
+        mainListWindow.show()
         mainWindow.show()
 
 
