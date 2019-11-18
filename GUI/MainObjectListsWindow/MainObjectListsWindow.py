@@ -10,7 +10,7 @@ from PyQt5 import QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea
 from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QAction, qApp, QApplication, QTreeWidgetItem
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
+from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool
 
 
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWindow
@@ -18,7 +18,7 @@ from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWin
 from app.database.SqliteEventsDatabase import load_video_events_from_database
 from app.database.SqlAlchemyDatabase import load_annotation_events_from_database, save_annotation_events_to_database, create_TimestampedAnnotation
 
-from app.VideoUtils import findVideoFiles
+from app.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult, VideoMetadataWorker, VideoMetadataWorkerSignals
 
 class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     
@@ -35,10 +35,15 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
         # self.video_files = findVideoFiles(self.searchPaths[0], shouldPrint=True)
 
+        self.threadpool = QThreadPool()
+        print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
+
+
         self.setMouseTracking(True)
         self.initUI()
 
         self.rebuild_from_search_paths()
+        self.find_video_metadata()
         # self.show() # Show the GUI
 
 
@@ -86,23 +91,46 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
 
     def rebuild_from_search_paths(self):
+        self.ui.treeWidget_VideoFiles.clear()
         self.top_level_nodes = []
         self.found_files_lists = []
+        self.total_found_files = 0
+
         # Clear the top-level nodes
         for aSearchPath in self.searchPaths:        
             aNewGroupNode = QTreeWidgetItem([str(aSearchPath), '', '', ''])
             curr_search_path_video_files = findVideoFiles(aSearchPath, shouldPrint=False)
             self.found_files_lists.append(curr_search_path_video_files)
             for aFoundVideoFile in curr_search_path_video_files:
-                aNewVideoNode = QTreeWidgetItem([str(aFoundVideoFile.full_name), str(aFoundVideoFile.parsed_date), '', str(aFoundVideoFile.is_deeplabcut_labeled_video)])
+                # aFoundVideoFile.parse()
+                potentially_computed_end_date = aFoundVideoFile.get_computed_end_date()
+                if potentially_computed_end_date:
+                    computed_end_date = str(potentially_computed_end_date)
+                else:
+                    computed_end_date = 'Loading...'
+                # aNewVideoNode = QTreeWidgetItem([str(aFoundVideoFile.full_name), str(aFoundVideoFile.parsed_date), str(aFoundVideoFile.get_computed_end_date()), str(aFoundVideoFile.is_deeplabcut_labeled_video)])
+                aNewVideoNode = QTreeWidgetItem([str(aFoundVideoFile.full_name), str(aFoundVideoFile.parsed_date), computed_end_date, str(aFoundVideoFile.is_deeplabcut_labeled_video)])
                 aNewGroupNode.addChild(aNewVideoNode)
+                self.total_found_files = self.total_found_files + 1
+
             self.top_level_nodes.append(aNewGroupNode)
             
             # Eventually will call .parse() on each of them to populate the duration info and end-times. This will be done asynchronously.
         self.ui.treeWidget_VideoFiles.addTopLevelItems(self.top_level_nodes)
 
 
+    # Finds the video metadata in a multithreaded way
+    def find_video_metadata(self):
+        # Pass the function to execute
+        worker = VideoMetadataWorker(self.execute_find_video_metadata_thread) # Any other args, kwargs are passed to the run function
+        worker.signals.result.connect(self.print_output)
+        worker.signals.finished.connect(self.thread_complete)
+        worker.signals.progress.connect(self.progress_fn)
         
+        # Execute
+        self.threadpool.start(worker) 
+
+
     # Event Handlers:
     def keyPressEvent(self, event):
         pass
@@ -123,6 +151,46 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         print("actionRefresh")
         pass
 
+
+    def progress_fn(self, n):
+        print("%d%% done" % n)
+
+    def execute_find_video_metadata_thread(self, progress_callback):
+        currProgress = 0.0
+        parsedFiles = 0
+        for (index, fileList) in enumerate(self.found_files_lists):
+            # Iterate through all found file-lists
+            for (sub_index, aFoundVideoFile) in enumerate(fileList):
+                # Iterate through all found video-files in a given list
+                aFoundVideoFile.parse()
+                parsedFiles = parsedFiles + 1
+                progress_callback.emit(parsedFiles*100/self.total_found_files)
+
+
+        return "Done."
+ 
+    def print_output(self, s):
+        print(s)
+        
+    def thread_complete(self):
+        print("THREAD COMPLETE!")
+        self.rebuild_from_search_paths()
+
+
+    def update_end_date(self, top_level_index, child_index, new_date):
+        curr_top_level_node = self.top_level_nodes[top_level_index]
+        curr_child_node = curr_top_level_node.child(child_index)
+        curr_child_node.setText(2, new_date)
+
+        # for (aTopLevelNodeIndex, aTopLevelNode) in enumerate(self.top_level_nodes):        
+        #     curr_search_path_video_files = self.found_files_lists[aTopLevelNodeIndex]
+
+        #     for aFoundVideoFile in curr_search_path_video_files:
+        #         # aFoundVideoFile.parse()
+        #         # aNewVideoNode = QTreeWidgetItem([str(aFoundVideoFile.full_name), str(aFoundVideoFile.parsed_date), str(aFoundVideoFile.get_computed_end_date()), str(aFoundVideoFile.is_deeplabcut_labeled_video)])
+        #         aNewVideoNode = QTreeWidgetItem([str(aFoundVideoFile.full_name), str(aFoundVideoFile.parsed_date), 'Loading...', str(aFoundVideoFile.is_deeplabcut_labeled_video)])
+        #         aNewGroupNode.addChild(aNewVideoNode)
+        #         self.total_found_files = self.total_found_files + 1
 
 
     # @pyqtSlot(int, int)

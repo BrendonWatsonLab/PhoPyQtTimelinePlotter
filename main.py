@@ -28,7 +28,9 @@ if __name__ == '__main__':
         database_file_path = "C:/Users/halechr/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db"
         database_connection = DatabaseConnectionRef(database_file_path)
 
-        video_file_search_paths = ["O:/Transcoded Videos/BB01"]
+        # video_file_search_paths = ["O:/Transcoded Videos/BB01"]
+        video_file_search_paths = ["O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06"]
+
         
 
 
