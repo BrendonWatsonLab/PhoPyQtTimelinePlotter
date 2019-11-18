@@ -23,6 +23,8 @@ from app.filesystem.VideoMetadataWorkers import VideoMetadataWorker, VideoMetada
 from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
 
 class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
+
+    VideoFileTreeHeaderLabels = ['filename', 'start_date', 'end_date', 'is_labeled']
     
     def __init__(self, database_connection, videoFileSearchPaths):
         super(MainObjectListsWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
@@ -85,6 +87,7 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
         # Setup the tree
         # self.ui.treeWidget_VideoFiles
+        self.ui.treeWidget_VideoFiles.setHeaderLabels(MainObjectListsWindow.VideoFileTreeHeaderLabels)
 
         self.ui.textBrowser_SelectedInfoBox.setText("Hi")
 
@@ -95,35 +98,7 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         self.statusBar()
 
 
-    # def rebuild_from_search_paths(self):
-    #     self.ui.treeWidget_VideoFiles.clear()
-    #     self.top_level_nodes = []
-    #     self.found_files_lists = []
-    #     self.total_found_files = 0
-
-    #     # Clear the top-level nodes
-    #     for aSearchPath in self.searchPaths:        
-    #         aNewGroupNode = QTreeWidgetItem([str(aSearchPath), '', '', ''])
-    #         curr_search_path_video_files = findVideoFiles(aSearchPath, shouldPrint=False)
-    #         self.found_files_lists.append(curr_search_path_video_files)
-    #         for aFoundVideoFile in curr_search_path_video_files:
-    #             # aFoundVideoFile.parse()
-    #             potentially_computed_end_date = aFoundVideoFile.get_computed_end_date()
-    #             if potentially_computed_end_date:
-    #                 computed_end_date = str(potentially_computed_end_date)
-    #             else:
-    #                 computed_end_date = 'Loading...'
-    #             # aNewVideoNode = QTreeWidgetItem([str(aFoundVideoFile.full_name), str(aFoundVideoFile.parsed_date), str(aFoundVideoFile.get_computed_end_date()), str(aFoundVideoFile.is_deeplabcut_labeled_video)])
-    #             aNewVideoNode = QTreeWidgetItem([str(aFoundVideoFile.full_name), str(aFoundVideoFile.parsed_date), computed_end_date, str(aFoundVideoFile.is_deeplabcut_labeled_video)])
-    #             aNewGroupNode.addChild(aNewVideoNode)
-    #             self.total_found_files = self.total_found_files + 1
-
-    #         self.top_level_nodes.append(aNewGroupNode)
-            
-    #         # Eventually will call .parse() on each of them to populate the duration info and end-times. This will be done asynchronously.
-    #     self.ui.treeWidget_VideoFiles.addTopLevelItems(self.top_level_nodes)
-
-
+    # Rebuilds the entire Tree UI from the self.found_files_lists
     def rebuild_from_found_files(self):
         self.ui.treeWidget_VideoFiles.clear()
         self.top_level_nodes = []
@@ -146,9 +121,12 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
             
             # Eventually will call .parse() on each of them to populate the duration info and end-times. This will be done asynchronously.
         self.ui.treeWidget_VideoFiles.addTopLevelItems(self.top_level_nodes)
+        # Expand all items
+        for aTopLevelItem in self.top_level_nodes:
+            self.ui.treeWidget_VideoFiles.expandItem(aTopLevelItem)
 
 
-
+    # Finds the video files in the self.searchPaths in a multithreaded way
     def find_filesystem_video(self):
         # Pass the function to execute
         worker = VideoFilesystemWorker(self.on_find_filesystem_video_execute_thread) # Any other args, kwargs are passed to the run function
@@ -171,6 +149,13 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         # Execute
         self.threadpool.start(worker) 
 
+    # TODO: update end_date without rebuilding the whole table
+    def update_end_date(self, top_level_index, child_index, new_date):
+        curr_top_level_node = self.top_level_nodes[top_level_index]
+        curr_child_node = curr_top_level_node.child(child_index)
+        curr_child_node.setText(2, new_date)
+
+
 
     # Event Handlers:
     def keyPressEvent(self, event):
@@ -191,7 +176,6 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     def handle_menu_refresh_event(self):
         print("actionRefresh")
         pass
-
 
     ## Find_video_metadata:
     def on_find_video_metadata_progress_fn(self, n):
@@ -217,23 +201,6 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     def on_find_video_metadata_thread_complete(self):
         print("THREAD COMPLETE!")
         self.rebuild_from_found_files()
-
-
-    def update_end_date(self, top_level_index, child_index, new_date):
-        curr_top_level_node = self.top_level_nodes[top_level_index]
-        curr_child_node = curr_top_level_node.child(child_index)
-        curr_child_node.setText(2, new_date)
-
-        # for (aTopLevelNodeIndex, aTopLevelNode) in enumerate(self.top_level_nodes):        
-        #     curr_search_path_video_files = self.found_files_lists[aTopLevelNodeIndex]
-
-        #     for aFoundVideoFile in curr_search_path_video_files:
-        #         # aFoundVideoFile.parse()
-        #         # aNewVideoNode = QTreeWidgetItem([str(aFoundVideoFile.full_name), str(aFoundVideoFile.parsed_date), str(aFoundVideoFile.get_computed_end_date()), str(aFoundVideoFile.is_deeplabcut_labeled_video)])
-        #         aNewVideoNode = QTreeWidgetItem([str(aFoundVideoFile.full_name), str(aFoundVideoFile.parsed_date), 'Loading...', str(aFoundVideoFile.is_deeplabcut_labeled_video)])
-        #         aNewGroupNode.addChild(aNewVideoNode)
-        #         self.total_found_files = self.total_found_files + 1
-
 
 
     ## FILESYSTEM:
