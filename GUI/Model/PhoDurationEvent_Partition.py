@@ -42,8 +42,6 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
         self.type_id = type_id
         self.subtype_id = subtype_id
 
-        # self.color = BehaviorsManager().get_subtype_color(self.subtype_id)
-
         # TODO: init gui
 
         # Debug pallete
@@ -85,7 +83,6 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
         else:
             print("Unknown click event!")
 
-
     def on_key_pressed(self, event):
         gey = event.key()
         self.func = (None, None)
@@ -120,9 +117,6 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
         width = parentOffsetRect.width()
         height = parentOffsetRect.height()
         self.finalEventRect = QRect(x,y,width,height)
-
-        # print('Partition paint is called: ', finalEventRect)
-
         return self.finalEventRect
         # return parent_modified_event_rect
         

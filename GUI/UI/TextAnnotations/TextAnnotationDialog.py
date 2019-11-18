@@ -26,8 +26,9 @@ class TextAnnotationDialog(QtWidgets.QDialog):
 
 
     def initUI(self):
-        self.ui.buttonBox.accepted.connect(self.accept)
-        self.ui.buttonBox.rejected.connect(self.reject)
+        # self.ui.buttonBox.accepted.connect(self.accept)
+        # self.ui.buttonBox.rejected.connect(self.reject)
+        pass
 
 
     def accept(self):

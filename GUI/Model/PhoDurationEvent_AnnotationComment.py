@@ -31,7 +31,7 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     BodyTextFont = QFont('SansSerif', 8)
 
     NibTriangleHeight = 10.0
-    NibTriangleWidth = 5.0
+    NibTriangleWidth = 10.0
 
     LeftNibPainter = TrianglePainter(TriangleDrawOption_Horizontal.LeftApex)
     RightNibPainter = TrianglePainter(TriangleDrawOption_Horizontal.RightApex)
@@ -43,6 +43,9 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         super(PhoDurationEvent_AnnotationComment, self).__init__(startTime, endTime, name, color, extended_data, parent=parent)
         self.title = title
         self.subtitle = subtitle
+
+        # Can I get a double click effect?
+        
 
 
     def showMenu(self, pos):

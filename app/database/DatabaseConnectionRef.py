@@ -172,21 +172,15 @@ class DatabaseConnectionRef(QObject):
 
     ## LOADING:=
     def load_annotation_events_from_database(self):
-        outputAnnotationList = []
         print("Loading annotation events from database:")
         session = self.get_session()
-        # context = session.query(Context).first()
-        # contexts = session.query(Context).all()
-        # print(contexts)
         annotations = session.query(TimestampedAnnotation).options(selectinload(TimestampedAnnotation.Context)).all()
         return annotations
 
-    def load_context_events_from_database(self):
-        print("Loading context events from database:")
+    def load_contexts_from_database(self):
+        print("Loading contexts from database:")
         session = self.get_session()
-        # context = session.query(Context).first()
         contexts = session.query(Context).all()
-        # print(contexts)
         return contexts
 
     def load_colors_from_database(self):
@@ -215,8 +209,8 @@ class DatabaseConnectionRef(QObject):
 
 
     ## SAVING:
-    def save_context_events_to_database(self, contexts):
-        print("Saving context events to database: {0}".format(self.get_path()))
+    def save_contexts_to_database(self, contexts):
+        print("Saving contexts to database: {0}".format(self.get_path()))
         session = self.get_session()
         num_found_records = len(contexts)
         num_added_records = 0
@@ -234,7 +228,7 @@ class DatabaseConnectionRef(QObject):
                 continue
 
         # session.add_all(anOutRecord)
-        print('Added ', num_added_records, 'of', num_found_records, 'annotation event to database.')
+        print('Added ', num_added_records, 'of', num_found_records, 'contexts to database.')
 
         # Save (commit) the changes
         self.commit()
@@ -263,7 +257,7 @@ class DatabaseConnectionRef(QObject):
                 continue
 
         # session.add_all(anOutRecord)
-        print('Added ', num_added_records, 'of', num_found_records, 'annotation event to database.')
+        print('Added ', num_added_records, 'of', num_found_records, 'annotation events to database.')
 
         # Save (commit) the changes
         self.commit()
