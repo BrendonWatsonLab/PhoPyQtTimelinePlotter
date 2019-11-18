@@ -220,7 +220,13 @@ class DatabaseConnectionRef(QObject):
         print("Loading file_parent_folders from database:")
         session = self.get_session()
         objs = session.query(FileParentFolder).all()
-       
+        return objs
+
+
+    def load_video_file_info_from_database(self):
+        print("Loading video_file_info from database:")
+        session = self.get_session()
+        objs = session.query(ExVideoFile).all()
         return objs
     
     
@@ -395,6 +401,31 @@ class DatabaseConnectionRef(QObject):
                 continue
 
         print('Added ', num_added_records, 'of', num_found_records, 'file_parent_folders to database.')
+        # Save (commit) the changes
+        self.commit()
+        print("done.")
+        return
+
+
+    def save_video_file_info_to_database(self, video_file_info):
+        print("Saving video_file_info to database: {0}".format(self.get_path()))
+        session = self.get_session()
+
+        # Behavior Groups:
+        num_found_records = len(video_file_info)
+        num_added_records = 0
+        num_skipped_records = 0
+        for anOutRecord in video_file_info:
+            try:
+                session.add(anOutRecord)
+                num_added_records = num_added_records + 1
+
+            except Exception as e:
+                print("Other exception! Trying to continue", e)
+                num_skipped_records = num_skipped_records + 1
+                continue
+
+        print('Added ', num_added_records, 'of', num_found_records, 'video_file_info to database.')
         # Save (commit) the changes
         self.commit()
         print("done.")

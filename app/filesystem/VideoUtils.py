@@ -19,6 +19,9 @@ from PyQt5.QtWidgets import QApplication, QWidget, QTableWidget, QTableWidgetIte
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QStandardItemModel
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QRunnable
 
+from pathlib import Path
+
+from app.database.entry_models.db_model import VideoFile
 
 # # Used to get the video file metadata
 # from hachoir.parser import createParser
@@ -111,6 +114,13 @@ class VideoParsedResults(QObject):
         super(VideoParsedResults, self).__init__(None)
         self.duration = duration
 
+    def get_duration(self):
+        secondsDuration = self.duration
+        if secondsDuration is None:
+            return None
+        else:
+            return timedelta(seconds=secondsDuration)
+
     def get_computed_end_date(self, start_date):
         secondsDuration = self.duration
         datetime_duration_end_object = start_date + timedelta(seconds=secondsDuration)
@@ -126,13 +136,42 @@ class FoundVideoFileResult(FoundFileResult):
             self.is_deeplabcut_labeled_video = is_deeplabcut_labeled_video
             self.video_parsed_results = None
 
+    def get_duration(self):
+        if self.video_parsed_results:
+            return self.video_parsed_results.get_duration()
+        else:
+            return None
+
     def get_computed_end_date(self):
         if self.video_parsed_results:
             return self.video_parsed_results.get_computed_end_date(self.parsed_date)
         else:
             return None
 
+    def get_database_videoFile_record(self, anExperimentID = 1, aCohortID = 1, anAnimalID = 3, notes= ''):
+         # outObj.file_fullname = aPhoDurationVideoEvent.extended_data['fullpath']
+        aFullPath = str(self.path)
+        aFullParentPath = str(self.parent_path)  # The parent path
+        aFullName = self.full_name  # The full name including extension
+        aBaseName = self.base_name  # Excluding the period and extension
+        anExtension = self.file_extension[1:]  # the file extension excluding the period
+        if (not self.behavioral_box_id is None):
+            aBBID = self.behavioral_box_id + 1  # Add one to get a valid index
+        else:
+            aBBID = 1
 
+        if (not self.is_deeplabcut_labeled_video is None):
+            is_deeplabcut_labeled_video = self.is_deeplabcut_labeled_video
+            is_original_video = (not is_deeplabcut_labeled_video)
+        else:
+            is_deeplabcut_labeled_video = None
+            is_original_video = None  # We know nothing about whether it is an original video
+
+        startTime = int(self.parsed_date.timestamp() * 1000.0)
+        endTime = int(self.get_computed_end_date().timestamp() * 1000.0)
+        duration = int(self.get_duration().total_seconds() * 1000.0)
+
+        return VideoFile(None, aFullName, aBaseName, anExtension, aFullParentPath, startTime, endTime, duration, aBBID, anExperimentID, aCohortID, anAnimalID, is_original_video, notes)
 
 
     def parse(self):

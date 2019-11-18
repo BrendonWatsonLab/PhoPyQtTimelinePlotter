@@ -20,7 +20,7 @@ from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFi
 
 from pathlib import Path
 
-from app.database.entry_models.db_model import FileParentFolder
+from app.database.entry_models.db_model import FileParentFolder, StaticFileExtension
 
 class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
@@ -109,6 +109,53 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         # Load the latest behaviors and colors data from the database
         self.fileExtensionDict = self.database_connection.load_static_file_extensions_from_database()
         self.loadedParentFolders = self.database_connection.load_file_parent_folders_from_database()
+        self.loadedVideoFiles = self.database_connection.load_video_file_info_from_database()
+
+
+    def saveVideoFilesToDatabase(self):
+        for (aSearchPathIndex, aSearchPath) in enumerate(self.searchPaths):        
+            parentIDIndex = self.searchPathsParentIDs[aSearchPathIndex]
+            if parentIDIndex is None:
+                # Get the shared parent ID
+                print("ERROR: parent ID is NONE!")
+                continue
+
+
+            arrayIndex = parentIDIndex - 1 # Convert from the database ID to the array of loaded parent object's index
+
+            loaded_parent_folder_obj = self.loadedParentFolders[arrayIndex]
+            
+
+            curr_search_path_video_files = self.found_files_lists[aSearchPathIndex]
+
+            for aFoundVideoFile in curr_search_path_video_files:
+                # Get the appropriate file extension parent
+                currFileExtension = aFoundVideoFile.file_extension[1:].lower()
+                parent_file_extension_obj = None
+                if currFileExtension in self.fileExtensionDict.keys():
+                    parent_file_extension_obj = self.fileExtensionDict[currFileExtension]
+                else:
+                    # Key doesn't exist!
+                    print("extension {0} doesn't exist!".format(currFileExtension))
+                    parent_file_extension_obj = StaticFileExtension(currFileExtension)
+                    # Add it to the database
+                    self.database_connection.save_static_file_extensions_to_database([parent_file_extension_obj])
+
+
+                potentially_computed_end_date = aFoundVideoFile.get_computed_end_date()
+                if potentially_computed_end_date:
+                    computed_end_date = str(potentially_computed_end_date)
+                else:
+                    computed_end_date = 'Loading...'
+
+                aNewVideoFileRecord = aFoundVideoFile.get_database_videoFile_record(None,None,None,'auto')
+                aNewVideoFileRecord.staticFileExtension = parent_file_extension_obj
+                aNewVideoFileRecord.fileParentFolder = loaded_parent_folder_obj
+
+                # Add the video file record
+                self.database_connection.save_video_file_info_to_database([aNewVideoFileRecord])
+
+
 
 
     # Creates new "FileParentFolder" entries in the databse if existing ones can't be found
@@ -220,6 +267,7 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
     def handle_menu_save_event(self):
         print("actionSave")
+        self.saveVideoFilesToDatabase()
         pass
 
     def handle_menu_refresh_event(self):

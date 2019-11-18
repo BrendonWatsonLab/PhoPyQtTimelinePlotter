@@ -6,6 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 from app.database.entry_models.DatabaseBase import Base, metadata
 from pathlib import Path
+from datetime import datetime
 
 # (Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, VideoFile)
 
@@ -197,3 +198,20 @@ class VideoFile(Base):
     experiment = relationship('Experiment')
     staticFileExtension = relationship('StaticFileExtension')
     fileParentFolder = relationship('FileParentFolder')
+
+
+    def __init__(self,id,file_fullname,file_basename,file_extension,file_video_folder,start_date,end_date,duration,behavioral_box_id,experiment_id,cohort_id,animal_id,is_original_video,notes=None):
+        self.id = id
+        self.file_fullname = file_fullname
+        self.file_basename = file_basename
+        self.file_extension = file_extension
+        self.file_video_folder = file_video_folder
+        self.start_date = start_date
+        self.end_date = end_date
+        self.duration = duration
+        self.behavioral_box_id = behavioral_box_id
+        self.experiment_id = experiment_id
+        self.cohort_id = cohort_id
+        self.animal_id = animal_id
+        self.is_original_video = is_original_video
+        self.notes = notes
