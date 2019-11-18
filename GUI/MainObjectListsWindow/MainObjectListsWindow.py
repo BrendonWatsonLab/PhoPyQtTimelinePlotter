@@ -8,7 +8,7 @@ from enum import Enum
 
 from PyQt5 import QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea
-from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QAction, qApp, QApplication
+from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QAction, qApp, QApplication, QTreeWidgetItem
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
@@ -27,6 +27,8 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         self.ui = uic.loadUi("GUI/MainObjectListsWindow/MainObjectListsWindow.ui", self) # Load the .ui file
 
         self.searchPaths = videoFileSearchPaths
+        self.top_level_nodes = []
+        self.found_files_lists = []
 
         # self.videoInfoObjects = load_video_events_from_database(self.database_connection.get_path(), as_videoInfo_objects=True)
         # self.build_video_display_events()
@@ -35,6 +37,8 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
         self.setMouseTracking(True)
         self.initUI()
+
+        self.rebuild_from_search_paths()
         # self.show() # Show the GUI
 
 
@@ -80,6 +84,22 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         # Complete setup
         self.statusBar()
 
+
+    def rebuild_from_search_paths(self):
+        self.top_level_nodes = []
+        self.found_files_lists = []
+        # Clear the top-level nodes
+        for aSearchPath in self.searchPaths:        
+            aNewGroupNode = QTreeWidgetItem([str(aSearchPath), '', '', ''])
+            curr_search_path_video_files = findVideoFiles(aSearchPath, shouldPrint=False)
+            self.found_files_lists.append(curr_search_path_video_files)
+            for aFoundVideoFile in curr_search_path_video_files:
+                aNewVideoNode = QTreeWidgetItem([str(aFoundVideoFile.full_name), str(aFoundVideoFile.parsed_date), '', str(aFoundVideoFile.is_deeplabcut_labeled_video)])
+                aNewGroupNode.addChild(aNewVideoNode)
+            self.top_level_nodes.append(aNewGroupNode)
+            
+            # Eventually will call .parse() on each of them to populate the duration info and end-times. This will be done asynchronously.
+        self.ui.treeWidget_VideoFiles.addTopLevelItems(self.top_level_nodes)
 
 
         
