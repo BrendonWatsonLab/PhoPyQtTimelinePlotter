@@ -24,7 +24,7 @@ from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Events import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Partition import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_AnnotationComments import *
 
-from app.database.SqliteEventsDatabase import load_video_events_from_database
+# from app.database.SqliteEventsDatabase import load_video_events_from_database
 from app.database.SqlAlchemyDatabase import load_annotation_events_from_database, save_annotation_events_to_database, create_TimestampedAnnotation
 
 from GUI.UI.VideoPlayer.main_video_player_window import *
@@ -61,7 +61,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
         self.update_global_start_end_times(totalStartTime, totalEndTime)
 
-        self.videoInfoObjects = load_video_events_from_database(self.database_connection.get_path(), as_videoInfo_objects=True)
+        # self.videoInfoObjects = load_video_events_from_database(self.database_connection.get_path(), as_videoInfo_objects=True)
+        self.videoInfoObjects = []
+
         self.build_video_display_events()
 
         self.videoPlayerWindow = None

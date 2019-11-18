@@ -62,6 +62,12 @@ class FileParentFolder(Base):
     path = Column(Text, nullable=False, server_default=text("'ServerInternal-01\Transcoded Videos\BB00\'"))
     notes = Column(Text)
 
+    def __init__(self,id,fullpath,root,path,notes=None):
+        self.id = id
+        self.fullpath = str(fullpath)
+        self.root = str(root)
+        self.path = str(path)
+        self.notes = notes
 
     @staticmethod
     def from_path_string(path_string):
@@ -83,6 +89,13 @@ class StaticFileExtension(Base):
     description = Column(Text)
     notes = Column(Text)
     version = Column(Integer, server_default=text("0"))
+
+    def __init__(self,extension,description=None,notes=None,version='0'):
+        self.extension = extension
+        self.description = description
+        self.notes = notes
+        self.version = version
+
 
     @staticmethod
     def from_path_string(path_string):

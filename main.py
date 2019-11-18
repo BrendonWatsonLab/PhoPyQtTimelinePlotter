@@ -16,6 +16,8 @@ from app.database.DatabaseConnectionRef import DatabaseConnectionRef
 
 if __name__ == '__main__':
     shouldShowGUIWindows = True
+    shouldShowMainGUIWindow = True
+
     # Show last 7 days worth of data
     earliestTime = dt.datetime.now() - dt.timedelta(days=7)
     latestTime = dt.datetime.now()
@@ -35,15 +37,17 @@ if __name__ == '__main__':
         
 
 
-        
-        mainWindow = TimelineDrawingWindow(database_connection, earliestTime, latestTime)
-        mainListWindow = MainObjectListsWindow(database_connection, video_file_search_paths)
-        windowFlags = mainWindow.windowFlags()
-        # print(windowFlags)
-        windowFlags |= Qt.WindowContextHelpButtonHint # Add the help button to the window
-        # mainWindow.setWindowFlags(windowFlags)
+        if shouldShowMainGUIWindow:
+            mainWindow = TimelineDrawingWindow(database_connection, earliestTime, latestTime)
+            windowFlags = mainWindow.windowFlags()
+            # print(windowFlags)
+            windowFlags |= Qt.WindowContextHelpButtonHint # Add the help button to the window
+            # mainWindow.setWindowFlags(windowFlags)
 
-        # mainWindow.setWindowFlags(Qt.WindowContextHelpButtonHint) # This works for some reason, but gets rid of the minimize, maximize, and close buttons
+            # mainWindow.setWindowFlags(Qt.WindowContextHelpButtonHint) # This works for some reason, but gets rid of the minimize, maximize, and close buttons
+
+    
+        mainListWindow = MainObjectListsWindow(database_connection, video_file_search_paths)
 
         desktop = QtWidgets.QApplication.desktop()
         resolution = desktop.availableGeometry()
@@ -58,13 +62,14 @@ if __name__ == '__main__':
 
 
         mainListWindow.show()
-        mainWindow.show()
 
-        mainWindowGeometry = mainWindow.frameGeometry()
-        sideListWindowGeometry = mainListWindow.frameGeometry()
+        if shouldShowMainGUIWindow:
+            mainWindow.show()
 
-        sideListWindowGeometry.moveTopRight(mainWindowGeometry.topLeft())
-        # mainListWindow.moveTopRight(mainWindowGeometry.topLeft())
-        mainListWindow.move(sideListWindowGeometry.topLeft())
+            mainWindowGeometry = mainWindow.frameGeometry()
+            sideListWindowGeometry = mainListWindow.frameGeometry()
+
+            sideListWindowGeometry.moveTopRight(mainWindowGeometry.topLeft())
+            mainListWindow.move(sideListWindowGeometry.topLeft())
 
         sys.exit( app.exec_() )

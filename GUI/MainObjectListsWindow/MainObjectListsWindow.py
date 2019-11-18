@@ -20,6 +20,8 @@ from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFi
 
 from pathlib import Path
 
+from app.database.entry_models.db_model import FileParentFolder
+
 class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
     VideoFileTreeHeaderLabels = ['filename', 'start_date', 'end_date', 'is_labeled']
@@ -28,7 +30,13 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         super(MainObjectListsWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/MainObjectListsWindow/MainObjectListsWindow.ui", self) # Load the .ui file
 
+        self.reloadModelFromDatabase()
         self.searchPaths = videoFileSearchPaths
+
+        # self.searchPathsParentIDs: indexes into the database's fileParentFolders table.
+        self.searchPathsParentIDs = []
+        self.rebuildParentFolders()
+
         self.top_level_nodes = []
         self.found_files_lists = []
 
@@ -44,7 +52,7 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         self.setMouseTracking(True)
         self.initUI()
 
-        self.rebuildParentFolders()
+        
         self.find_filesystem_video()
 
         # self.rebuild_from_search_paths()
@@ -52,7 +60,6 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         # self.find_video_metadata()
         # self.show() # Show the GUI
         
-        self.reloadModelFromDatabase()
 
     def initUI(self):
 
@@ -96,23 +103,48 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
 
      # Updates the member variables from the database
+    
     # Note: if there are any pending changes, they will be persisted on this action
     def reloadModelFromDatabase(self):
         # Load the latest behaviors and colors data from the database
         self.fileExtensionDict = self.database_connection.load_static_file_extensions_from_database()
         self.loadedParentFolders = self.database_connection.load_file_parent_folders_from_database()
 
-        # self.loadedParentFolders
-        
 
-        # self.database_connection.save_file_parent_folders_to_database()
-
+    # Creates new "FileParentFolder" entries in the databse if existing ones can't be found
     def rebuildParentFolders(self):
-        for aSearchPath in self.searchPaths:
+        unresolvedSearchPaths = self.searchPaths
+        
+        self.searchPathsParentIDs = []
+
+        for (index, aSearchPath) in enumerate(unresolvedSearchPaths):
             currPath = Path(aSearchPath).resolve()
             currRootAnchor = currPath.anchor
             currRemainder = currPath.relative_to(currRootAnchor)
             print("currPath: {0}; currRootAnchor: {1}; currRemainder: {2}".format(currPath, currRootAnchor, currRemainder))
+            self.searchPaths[index] = str(currPath)
+
+            # Iterate through all loaded parents to see if the parent already exists
+            finalParent = None
+            
+            for aParentFolder in self.loadedParentFolders:
+                aParentPath = Path(aParentFolder.fullpath).resolve()
+                if aParentPath.samefile(currPath):
+                    # currPath is the same file as the loaded parent path
+                    print("Found existing parent for {0}".format(currPath))
+                    finalParent = aParentFolder
+            # If we get through all loaded parents and the parent doesn't already exist, add it
+            if finalParent is None:
+                print("Creating new parent {0}".format(currPath))
+                finalParent = FileParentFolder(None, currPath, currRootAnchor, currRemainder, 'auto')
+                self.database_connection.save_file_parent_folders_to_database([finalParent])
+
+            if finalParent is None:
+                print("Still nONE!")
+                self.searchPathsParentIDs.append(None)
+            else:
+                print("     parent id: {0}".format(finalParent.id))
+                self.searchPathsParentIDs.append(finalParent.id)
 
 
     # Rebuilds the entire Tree UI from the self.found_files_lists
