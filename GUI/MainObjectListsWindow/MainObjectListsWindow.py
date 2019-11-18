@@ -18,7 +18,8 @@ from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWin
 from app.database.SqliteEventsDatabase import load_video_events_from_database
 from app.database.SqlAlchemyDatabase import load_annotation_events_from_database, save_annotation_events_to_database, create_TimestampedAnnotation
 
-from app.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult, VideoMetadataWorker, VideoMetadataWorkerSignals
+from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult
+from app.filesystem.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
 
 class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     
