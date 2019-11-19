@@ -85,6 +85,15 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
     #     grad = QLinearGradient(80, 40, 30, 10)
     #     painter.setBrush(QBrush(grad))
     #     painter.drawRect(10, 10, 200, 200)
+    
+    def deselect_all(self):
+        pass
+
+    def select(self, new_selection_index):
+        pass
+
+    def deselect(self, selection_index):
+        pass
 
  
     def on_button_clicked(self, event):

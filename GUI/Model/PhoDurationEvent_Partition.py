@@ -66,12 +66,11 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
         self.name = text
 
     def on_button_clicked(self, event):
-        self.is_emphasized = False
-        self.is_active = True
+        self.set_state_selected()
 
     def on_button_released(self, event):
-        self.is_emphasized = False
-        self.is_active = False
+        self.set_state_deselected()
+
         if event.button() == Qt.LeftButton:
             print("Left click")
         elif event.button() == Qt.RightButton:
