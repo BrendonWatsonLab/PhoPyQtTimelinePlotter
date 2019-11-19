@@ -15,7 +15,7 @@ from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_SelectionBase import Ti
 from GUI.Model.PhoDurationEvent_AnnotationComment import *
 from GUI.UI.TextAnnotations.TextAnnotationDialog import *
 
-from app.database.SqlAlchemyDatabase import create_TimestampedAnnotation, convert_TimestampedAnnotation, modify_TimestampedAnnotation
+from app.database.SqlAlchemyDatabase import create_TimestampedAnnotation, convert_TimestampedAnnotation, modify_TimestampedAnnotation, modify_TimestampedAnnotation_startDate, modify_TimestampedAnnotation_endDate
 
 class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_SelectionBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
@@ -56,15 +56,20 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         self.contexts = self.database_connection.load_contexts_from_database()
 
 
-    # Rebuilds the GUI event objects from the self.annotationDataObjects
+    # Rebuilds the GUI event objects (self.durationObjects) from the self.annotationDataObjects
     def rebuildDrawnObjects(self):
         self.durationObjects = []
-        for aDataObj in self.annotationDataObjects:
+        for (anIndex, aDataObj) in enumerate(self.annotationDataObjects):
             # Create the graphical annotation object
             newAnnotation = convert_TimestampedAnnotation(aDataObj, self)
             newAnnotation.on_edit.connect(self.on_annotation_modify_event)
-            newAnnotation.on_edit_by_dragging_handle.connect(self.try_resize_comment_with_handles)
+            newAnnotation.on_edit_by_dragging_handle_start.connect(self.handleStartSliderValueChange)
+            newAnnotation.on_edit_by_dragging_handle_end.connect(self.handleEndSliderValueChange)
+            # newAnnotation.on_edit_by_dragging_handle.connect(self.try_resize_comment_with_handles)
             # newAnnotation = PhoDurationEvent_AnnotationComment(start_date, end_date, body, title, subtitle)
+            newAnnotationIndex = len(self.durationObjects)
+            newAnnotation.setAccessibleName(str(newAnnotationIndex))
+
             self.durationObjects.append(newAnnotation)
 
 
@@ -170,7 +175,6 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
             #     self.selection_changed.emit(self.trackID, self.selected_object_index)
             
 
-            
         self.update()
                 
     def on_key_pressed(self, event):
@@ -285,15 +289,38 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
 
         
     # Resize Time with Handles:
-    @pyqtSlot(datetime, datetime)
-    def try_resize_comment_with_handles(self, start_date, end_date):
-        # Tries to update an existing comment
-        print('try_resize_comment_with_handles')
+
+    # @pyqtSlot(datetime, datetime)
+    # def try_resize_comment_with_handles(self, start_date, end_date):
+    #     # Tries to update an existing comment
+    #     print('try_resize_comment_with_handles')
         
-        if (not (self.activeEditingAnnotationIndex is None)):
-            currObjToModify = self.annotationDataObjects[self.activeEditingAnnotationIndex]
-            currObjToModify = modify_TimestampedAnnotation(currObjToModify, start_date, end_date, currObjToModify.title, currObjToModify.subtitle, currObjToModify.body)
-            self.annotationDataObjects[self.activeEditingAnnotationIndex] = currObjToModify
+    #     if (not (self.activeEditingAnnotationIndex is None)):
+    #         currObjToModify = self.annotationDataObjects[self.activeEditingAnnotationIndex]
+    #         currObjToModify = modify_TimestampedAnnotation(currObjToModify, start_date, end_date, currObjToModify.title, currObjToModify.subtitle, currObjToModify.body)
+    #         self.annotationDataObjects[self.activeEditingAnnotationIndex] = currObjToModify
+    #         self.database_commit()
+    #         self.reloadModelFromDatabase()
+    #         self.rebuildDrawnObjects()
+    #         self.update()
+    #     else:
+    #         print("Error: unsure what comment to update!")
+    #         return
+
+    @pyqtSlot(str, int)
+    def handleStartSliderValueChange(self, child_name, value):
+        print('handleStartSliderValueChange({0}, {1})'.format(child_name, value))
+        try:
+            child_index = int(child_name)
+        except:
+            print("Error decoding child_index! Aborting handle update!")
+            return
+
+        new_datetime = self.offset_to_datetime(value)
+        currObjToModify = self.annotationDataObjects[child_index]
+        if (not (currObjToModify is None)):
+            currObjToModify = modify_TimestampedAnnotation_startDate(currObjToModify, new_datetime)
+            self.annotationDataObjects[child_index] = currObjToModify
             self.database_commit()
             self.reloadModelFromDatabase()
             self.rebuildDrawnObjects()
@@ -303,3 +330,24 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
             return
 
 
+    @pyqtSlot(str, int)
+    def handleEndSliderValueChange(self, child_name, value):
+        print('handleEndSliderValueChange({0}, {1})'.format(child_name, value))
+        try:
+            child_index = int(child_name)
+        except:
+            print("Error decoding child_index! Aborting handle update!")
+            return
+
+        new_datetime = self.offset_to_datetime(value)
+        currObjToModify = self.annotationDataObjects[child_index]
+        if (not (currObjToModify is None)):
+            currObjToModify = modify_TimestampedAnnotation_endDate(currObjToModify, new_datetime)
+            self.annotationDataObjects[child_index] = currObjToModify
+            self.database_commit()
+            self.reloadModelFromDatabase()
+            self.rebuildDrawnObjects()
+            self.update()
+        else:
+            print("Error: unsure what comment to update!")
+            return

@@ -41,7 +41,8 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     # This defines a signal called 'on_edit' that takes no arguments.
     on_edit = pyqtSignal()
 
-    on_edit_by_dragging_handle = pyqtSignal(datetime, datetime)
+    on_edit_by_dragging_handle_start = pyqtSignal(str, int)
+    on_edit_by_dragging_handle_end = pyqtSignal(str, int)
 
     def __init__(self, startTime=datetime.now(), endTime=None, name='', title='', subtitle='', color=QColor(31, 200, 62), extended_data=dict(), parent=None):
         super(PhoDurationEvent_AnnotationComment, self).__init__(startTime, endTime, name, color, extended_data, parent=parent)
@@ -88,9 +89,11 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         if self.start_poly_is_active:
             startPos = self.finalEventRect.x()
             self._drag_position = startPos
+            self.on_edit_by_dragging_handle_start.emit(self.accessibleName(), self._drag_position)
         elif self.end_poly_is_active:
             startPos = (self.finalEventRect.x() + self.finalEventRect.width()) - PhoDurationEvent_AnnotationComment.NibTriangleWidth
             self._drag_position = startPos
+            self.on_edit_by_dragging_handle_end.emit(self.accessibleName(), self._drag_position)
         else:
             self._drag_position = None
 
@@ -108,11 +111,14 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
                 startPos = self.finalEventRect.x()
                 changeInX =  startPos - self._drag_position
                 print("Change in X: {0}".format(changeInX))
+                self.on_edit_by_dragging_handle_start.emit(self.accessibleName(), self._drag_position)
                 self.start_poly_is_active = False
+
             elif self.end_poly_is_active:
                 startPos = (self.finalEventRect.x() + self.finalEventRect.width()) - PhoDurationEvent_AnnotationComment.NibTriangleWidth
                 changeInX = startPos - self._drag_position
                 print("Change in X: {0}".format(changeInX))
+                self.on_edit_by_dragging_handle_end.emit(self.accessibleName(), self._drag_position)
                 self.end_poly_is_active = False
             else:
                 pass
@@ -141,6 +147,14 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         # If drag active, move the stop.
         if (not (self._drag_position is None)):
             self._drag_position = e.x()
+            # Only allow one active at a time
+            if self.start_poly_is_active:
+                self.on_edit_by_dragging_handle_start.emit(self.accessibleName(), self._drag_position)
+            elif self.end_poly_is_active:
+                self.on_edit_by_dragging_handle_end.emit(self.accessibleName(), self._drag_position)
+            else:
+                pass
+            
             self.update()
 
 
