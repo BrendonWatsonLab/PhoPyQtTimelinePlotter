@@ -54,6 +54,13 @@
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
+          <widget class="QPushButton" name="pushButton_AddSearchDirectory">
+           <property name="text">
+            <string>Add Search Directory</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QTreeWidget" name="treeWidget_VideoFiles">
            <property name="minimumSize">
             <size>

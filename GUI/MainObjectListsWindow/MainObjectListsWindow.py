@@ -94,6 +94,9 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         # Main Vertical Splitter:
         self.ui.mainVerticalSplitter.setSizes([700, 100])
 
+        # Setup the buttons
+        # self.ui.pushButton_AddSearchDirectory.onClicked(self.handle_add_search_directory_activated)
+
         # Complete setup
         self.statusBar()
 
@@ -357,6 +360,9 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         self.rebuild_from_found_files()
         # Find the metadata for all the video
         self.find_video_metadata()
+        
+    def handle_add_search_directory_activated(self):
+        print("handle_add_search_directory_activated")
         
 
     # @pyqtSlot(int, int)

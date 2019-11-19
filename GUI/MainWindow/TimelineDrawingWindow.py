@@ -43,9 +43,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     TraceCursorWidth = 2
     TraceCursorColor = QColor(51, 255, 102)  # Green
 
-    GlobalTimelineConstraintOptions = GlobalTimeAdjustmentOptions.ConstrainVideosShownToGlobal
+    GlobalTimelineConstraintOptions = GlobalTimeAdjustmentOptions.ConstrainGlobalToVideoTimeRange
     # GlobalTimelineConstraintOptions = GlobalTimeAdjustmentOptions.ConstantOffsetFromMostRecentVideo
-    
+
     # ConstrainToVideoTimeRange = True # If true, adjusts the global start and end times for the timeline to the range of the loaded videos.
     # # If false, only shows the videos within the global start and end range
 
@@ -65,12 +65,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         # self.videoInfoObjects = load_video_events_from_database(self.database_connection.get_path(), as_videoInfo_objects=True)
         self.videoInfoObjects = []
-        self.videoFileRecords = self.database_connection.load_video_file_info_from_database()
+        self.reloadModelFromDatabase()
 
-        # Iterate through loaded database records to build videoInfoObjects
-        for aVideoFileRecord in self.videoFileRecords:
-            aVideoInfoObj = aVideoFileRecord.get_video_info_obj()
-            self.videoInfoObjects.append(aVideoInfoObj)
+
 
 
         self.build_video_display_events()
@@ -235,7 +232,13 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.cursorY = 0.0
         #self.cursorTraceRect = QRect(0,0,0,0)
 
-        
+            
+    def reloadModelFromDatabase(self):
+        self.videoFileRecords = self.database_connection.load_video_file_info_from_database()
+        # Iterate through loaded database records to build videoInfoObjects
+        for aVideoFileRecord in self.videoFileRecords:
+            aVideoInfoObj = aVideoFileRecord.get_video_info_obj()
+            self.videoInfoObjects.append(aVideoInfoObj)
 
     def update_global_start_end_times(self, totalStartTime, totalEndTime):
         self.totalStartTime = totalStartTime
