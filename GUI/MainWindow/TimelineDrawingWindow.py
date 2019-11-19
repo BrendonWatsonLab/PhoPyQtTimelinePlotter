@@ -137,14 +137,17 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.timelineMasterTrackWidget = QTimeLine(masterTimelineDurationSeconds, minimumWidgetWidth)
         self.timelineMasterTrackWidget.setMouseTracking(True)
 
-        # Video Track
+        # Video Tracks
         ## TODO: The video tracks must set:
-        self.mainVideoTrack = TimelineTrackDrawingWidget_Events(-1, self.videoEventDisplayObjects, [], self.totalStartTime, self.totalEndTime, self.database_connection)
-        self.mainVideoTrack.selection_changed.connect(self.handle_child_selection_event)
-        self.mainVideoTrack.hover_changed.connect(self.handle_child_hover_event)
-        self.mainVideoTrack.setMouseTracking(True)
-        self.mainVideoTrack.shouldDismissSelectionUponMouseButtonRelease = False
-        self.mainVideoTrack.itemSelectionMode = ItemSelectionOptions.SingleSelection
+        self.videoFileTrackWidgets = []
+
+        # self.allVideoEventDisplayObjects.filter()
+        self.mainVideoTrack = TimelineTrackDrawingWidget_Events(-1, self.trackVideoEventDisplayObjects[0], [], self.totalStartTime, self.totalEndTime, self.database_connection)
+        self.videoFileTrackWidgets.append(self.mainVideoTrack)
+
+        self.labeledVideoTrack = TimelineTrackDrawingWidget_Events(-1, self.trackVideoEventDisplayObjects[1], [], self.totalStartTime, self.totalEndTime, self.database_connection)
+        self.videoFileTrackWidgets.append(self.labeledVideoTrack)
+
 
         # Other Tracks:
         self.eventTrackWidgets = []
@@ -181,12 +184,28 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.timelineMasterTrackWidget.setMinimumSize(minimumWidgetWidth, 50)
         self.timelineMasterTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
-        self.extendedTracksContainerVboxLayout.addWidget(self.mainVideoTrack)
-        self.mainVideoTrack.setMinimumSize(minimumWidgetWidth, 50)
-        self.mainVideoTrack.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+        # self.extendedTracksContainerVboxLayout.addWidget(self.mainVideoTrack)
+        # self.mainVideoTrack.setMinimumSize(minimumWidgetWidth, 50)
+        # self.mainVideoTrack.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
 
         #Layout of Main Window:
+
+       # Loop through the videoFileTrackWidgets and add them
+        for i in range(0, len(self.videoFileTrackWidgets)):
+            currVideoTrackWidget = self.videoFileTrackWidgets[i]
+            # Video track specific setup
+            currVideoTrackWidget.selection_changed.connect(self.handle_child_selection_event)
+            currVideoTrackWidget.hover_changed.connect(self.handle_child_hover_event)
+            currVideoTrackWidget.setMouseTracking(True)
+            currVideoTrackWidget.shouldDismissSelectionUponMouseButtonRelease = False
+            currVideoTrackWidget.itemSelectionMode = ItemSelectionOptions.SingleSelection
+            # General Layout:
+            self.extendedTracksContainerVboxLayout.addWidget(currVideoTrackWidget)
+            currVideoTrackWidget.setMinimumSize(minimumWidgetWidth,50)
+            currVideoTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
 
         # Loop through the eventTrackWidgets and add them
         for i in range(0, len(self.eventTrackWidgets)):
@@ -247,18 +266,33 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         videoDates = []
         videoEndDates = []
         # self.videoLabels = []
-        self.videoEventDisplayObjects = []
+        self.allVideoEventDisplayObjects = []
+        self.trackVideoEventDisplayObjects = [[], []]
         for videoInfoItem in self.videoInfoObjects:
-            if (videoInfoItem.is_original_video):
-                videoDates.append(videoInfoItem.startTime)
-                videoEndDates.append(videoInfoItem.endTime)
-                currExtraInfoDict = videoInfoItem.get_output_dict()
-                # Event Generation
-                currEvent = PhoDurationEvent(videoInfoItem.startTime, videoInfoItem.endTime, videoInfoItem.fullName, QColor(51,204,255), currExtraInfoDict)
-                self.videoEventDisplayObjects.append(currEvent)
+            videoDates.append(videoInfoItem.startTime)
+            videoEndDates.append(videoInfoItem.endTime)
+            currExtraInfoDict = videoInfoItem.get_output_dict()
+            # Event Generation
+            currEvent = PhoDurationEvent(videoInfoItem.startTime, videoInfoItem.endTime, videoInfoItem.fullName, QColor(51,204,255), currExtraInfoDict)
+            self.allVideoEventDisplayObjects.append(currEvent)
+            if videoInfoItem.is_original_video:
+                self.trackVideoEventDisplayObjects[0].append(currEvent)
+            else:
+                self.trackVideoEventDisplayObjects[1].append(currEvent)
+
+
+        # for videoInfoItem in self.videoInfoObjects:
+        #     if (videoInfoItem.is_original_video):
+        #         videoDates.append(videoInfoItem.startTime)
+        #         videoEndDates.append(videoInfoItem.endTime)
+        #         currExtraInfoDict = videoInfoItem.get_output_dict()
+        #         # Event Generation
+        #         currEvent = PhoDurationEvent(videoInfoItem.startTime, videoInfoItem.endTime, videoInfoItem.fullName, QColor(51,204,255), currExtraInfoDict)
+        #         self.videoEventDisplayObjects.append(currEvent)
 
         self.videoDates = np.array(videoDates)
         self.videoEndDates = np.array(videoEndDates)
+        self.allVideoEventDisplayObjects = np.array(self.allVideoEventDisplayObjects)
 
         if videoDates:
             self.earliestVideoTime = self.videoDates.min()
