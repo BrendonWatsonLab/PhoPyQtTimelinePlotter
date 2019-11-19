@@ -33,6 +33,7 @@ class VideoSample:
 
 class QTimeLine(QWidget):
 
+    hoverChanged = pyqtSignal(int)
     positionChanged = pyqtSignal(int)
     selectionChanged = pyqtSignal(VideoSample)
 
@@ -156,10 +157,12 @@ class QTimeLine(QWidget):
     # Mouse movement
     def mouseMoveEvent(self, e):
         self.pos = e.pos()
+        x = self.pos.x()
+
+        self.hoverChanged.emit(x)
 
         # if mouse is being pressed, update pointer
         if self.clicking:
-            x = self.pos.x()
             self.pointerPos = x
             self.positionChanged.emit(x)
             self.checkSelection(x)

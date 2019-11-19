@@ -143,7 +143,10 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         masterTimelineDurationSeconds = self.totalDuration.total_seconds()
         self.timelineMasterTrackWidget = QTimeLine(masterTimelineDurationSeconds, minimumWidgetWidth)
         self.timelineMasterTrackWidget.setMouseTracking(True)
+        self.timelineMasterTrackWidget.hoverChanged.connect(self.handle_timeline_hovered_position_update_event)
+        self.timelineMasterTrackWidget.positionChanged.connect(self.handle_timeline_position_update_event)
 
+    
         # Video Tracks
         ## TODO: The video tracks must set:
         self.videoFileTrackWidgets = []
@@ -595,8 +598,17 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     # Occurs when the user selects an object in the child video track with the mouse
     def handle_child_hover_event(self, trackIndex, trackObjectIndex):
         text = "handle_child_hover_event(...): trackIndex: {0}, trackObjectIndex: {1}".format(trackIndex, trackObjectIndex)
-        print(text)
+        # print(text)
         return
+
+    
+    def handle_timeline_hovered_position_update_event(self, x):
+        print("handle_timeline_hovered_position_update_event({0})".format(x))
+        pass
+
+    def handle_timeline_position_update_event(self, x):
+        print("handle_timeline_position_update_event({0})".format(x))
+        pass
 
     def refresh_child_widget_display(self):
         for i in range(0, len(self.eventTrackWidgets)):
