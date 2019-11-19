@@ -211,10 +211,12 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
             self.update()
             
     def on_mouse_moved(self, event):
+        # print("TimelineTrackDrawingWidget_SelectionBase: mouse move!")
         needs_update = False
 
         if (not self.underMouse()):
             self.clear_hover()
+            self.hover_changed.emit(self.trackID, -1)
             needs_update = True
         else:
             self.hovered_object_index = self.find_child_object(event.x(), event.y())
@@ -227,8 +229,8 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
                 self.hovered_object = self.durationObjects[self.hovered_object_index]
                 self.emphasize(self.hovered_object_index)
                 self.hovered_object_rect = self.eventRect[self.hovered_object_index]
-                text = "event: {0}\nstart_time: {1}\nend_time: {2}\nduration: {3}".format(self.hovered_object.name, self.hovered_object.startTime, self.hovered_object.endTime, self.hovered_object.computeDuration())
-                QToolTip.showText(event.globalPos(), text, self, self.hovered_object_rect)
+                # text = "event: {0}\nstart_time: {1}\nend_time: {2}\nduration: {3}".format(self.hovered_object.name, self.hovered_object.startTime, self.hovered_object.endTime, self.hovered_object.computeDuration())
+                # QToolTip.showText(event.globalPos(), text, self, self.hovered_object_rect)
                 needs_update = True
                 self.hover_changed.emit(self.trackID, self.hovered_object_index)
 

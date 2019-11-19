@@ -141,6 +141,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
 
         if event.button() == Qt.LeftButton:
             print("commentTrack: Left click")
+            
         elif event.button() == Qt.RightButton:
             print("commentTrack: Right click")
             prevHoveredObj = self.hovered_object
