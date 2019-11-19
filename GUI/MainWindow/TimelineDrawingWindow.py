@@ -545,35 +545,47 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     def handle_child_selection_event(self, trackIndex, trackObjectIndex):
         text = "handle_child_selection_event(...): trackIndex: {0}, trackObjectIndex: {1}".format(trackIndex, trackObjectIndex)
         print(text)
-        if trackIndex == TimelineDrawingWindow.static_VideoTrackTrackID:
-            # If it's the video track
-            if trackObjectIndex == TimelineTrackDrawingWidget_Events.static_TimeTrackObjectIndex_NoSelection:
-                # No selection, just clear the filters
-                for i in range(0, len(self.eventTrackWidgets)):
-                    currWidget = self.eventTrackWidgets[i]
-                    currWidget.set_active_filter(self.totalStartTime, self.totalEndTime)
-            else:
-                # Get the selected video object
-                # currHoveredObject = self.mainVideoTrack.hovered_object
+        # if trackIndex == TimelineDrawingWindow.static_VideoTrackTrackID:
 
-                # currSelectedObjectIndex = self.mainVideoTrack.selected_duration_object_indicies[0]
-                currSelectedObjectIndex = trackObjectIndex
-                currSelectedObject = self.mainVideoTrack.durationObjects[trackObjectIndex]
-                
-                if currSelectedObject:
-                    selected_video_path = currSelectedObject.extended_data['path']
-                    print(selected_video_path)
-                    self.try_set_video_player_window_url(str(selected_video_path))
-                # Iterate through the timeline tracks to filter based on the video.
-                # for i in range(0, len(self.eventTrackWidgets)):
-                #     currWidget = self.eventTrackWidgets[i]
-                #     currWidget.set_active_filter(currHoveredObject.startTime, currHoveredObject.endTime)
+        # If it's the video track
+        if trackObjectIndex == TimelineTrackDrawingWidget_Events.static_TimeTrackObjectIndex_NoSelection:
+            # No selection, just clear the filters
+            # for i in range(0, len(self.eventTrackWidgets)):
+            #     currWidget = self.eventTrackWidgets[i]
+            #     currWidget.set_active_filter(self.totalStartTime, self.totalEndTime)
+
+            for aVideoTrackIndex in range(0, len(self.videoFileTrackWidgets)):
+                currVideoTrackWidget = self.videoFileTrackWidgets[aVideoTrackIndex]
+                currVideoTrackWidget.set_active_filter(self.totalStartTime, self.totalEndTime)
+            
+            
+        else:
+            # Get the selected video object
+            # currHoveredObject = self.mainVideoTrack.hovered_object
+
+            # currSelectedObjectIndex = self.mainVideoTrack.selected_duration_object_indicies[0]
+            currSelectedObjectIndex = trackObjectIndex
+            currActiveVideoTrack = self.videoFileTrackWidgets[trackIndex]
+            currSelectedObject = currActiveVideoTrack.durationObjects[trackObjectIndex]
+            
+            if currSelectedObject:
+                selected_video_path = currSelectedObject.extended_data['path']
+                print(selected_video_path)
+                self.try_set_video_player_window_url(str(selected_video_path))
+
+            else:
+                print("invalid object selected!!")
+
+            # Iterate through the timeline tracks to filter based on the video.
+            # for i in range(0, len(self.eventTrackWidgets)):
+            #     currWidget = self.eventTrackWidgets[i]
+            #     currWidget.set_active_filter(currHoveredObject.startTime, currHoveredObject.endTime)
 
 
     # Occurs when the user selects an object in the child video track with the mouse
     def handle_child_hover_event(self, trackIndex, trackObjectIndex):
         text = "handle_child_hover_event(...): trackIndex: {0}, trackObjectIndex: {1}".format(trackIndex, trackObjectIndex)
-        # print(text)
+        print(text)
 
     def refresh_child_widget_display(self):
         for i in range(0, len(self.eventTrackWidgets)):
