@@ -8,6 +8,8 @@ from app.database.entry_models.DatabaseBase import Base, metadata
 from pathlib import Path
 from datetime import datetime
 
+from GUI.Model.Videos import VideoInfo, ExperimentContextInfo
+
 # (Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, VideoFile)
 
 class Animal(Base):
@@ -52,28 +54,6 @@ class Labjack(Base):
     serial_number = Column(Integer, primary_key=True)
     name = Column(Text, server_default=text("'LJ-'"))
     model = Column(Text, server_default=text("'T7'"))
-
-
-class FileParentFolder(Base):
-    __tablename__ = 'fileParentFolders'
-
-    id = Column(Integer, primary_key=True)
-    fullpath = Column(Text, nullable=False, server_default=text("'\\WATSON-BB-OVERS\ServerInternal-01\Transcoded Videos\BB00\'"))
-    root = Column(Text, nullable=False, server_default=text("'\\WATSON-BB-OVERS\'"))
-    path = Column(Text, nullable=False, server_default=text("'ServerInternal-01\Transcoded Videos\BB00\'"))
-    notes = Column(Text)
-
-    def __init__(self,id,fullpath,root,path,notes=None):
-        self.id = id
-        self.fullpath = str(fullpath)
-        self.root = str(root)
-        self.path = str(path)
-        self.notes = notes
-
-    @staticmethod
-    def from_path_string(path_string):
-        path = Path(path_string)
-        path.anchor
 
 
 # t_sqlite_sequence = Table(
@@ -197,8 +177,7 @@ class VideoFile(Base):
     cohort = relationship('Cohort')
     experiment = relationship('Experiment')
     staticFileExtension = relationship('StaticFileExtension')
-    fileParentFolder = relationship('FileParentFolder')
-
+    fileParentFolder = relationship('FileParentFolder', back_populates="videoFiles")
 
     def __init__(self,id,file_fullname,file_basename,file_extension,file_video_folder,start_date,end_date,duration,behavioral_box_id,experiment_id,cohort_id,animal_id,is_original_video,notes=None):
         self.id = id
@@ -215,3 +194,107 @@ class VideoFile(Base):
         self.animal_id = animal_id
         self.is_original_video = is_original_video
         self.notes = notes
+
+    # def __init__(self,id,file_fullname,file_basename,file_extension,file_video_folder,start_date,end_date,duration,behavioral_box_id,experiment_id,cohort_id,animal_id,is_original_video,notes=None):
+    #     self.id = id
+    #     self.file_fullname = file_fullname
+    #     self.file_basename = file_basename
+    #     self.file_extension = file_extension
+    #     self.file_video_folder = file_video_folder
+    #     self.start_date = int(start_date.timestamp() * 1000.0)
+    #     self.end_date = int(end_date.timestamp() * 1000.0)
+    #     self.duration = int(duration.total_seconds() * 1000.0)
+    #     self.behavioral_box_id = behavioral_box_id
+    #     self.experiment_id = experiment_id
+    #     self.cohort_id = cohort_id
+    #     self.animal_id = animal_id
+    #     if (not aPhoDurationVideoEvent.extended_data['is_deeplabcut_labeled_video'] is None):
+    #         is_deeplabcut_labeled_video = aPhoDurationVideoEvent.extended_data['is_deeplabcut_labeled_video']
+    #         is_original_video = (not is_deeplabcut_labeled_video)
+    #     else:
+    #         is_deeplabcut_labeled_video = None
+    #         is_original_video = None  # We know nothing about whether it is an original video
+
+    #     self.is_original_video = is_original_video
+    #     self.notes = notes
+
+    def get_start_date(self):
+        return datetime.fromtimestamp(float(self.start_date) / 1000.0)
+
+    def get_end_date(self):
+        return datetime.fromtimestamp(float(self.end_date) / 1000.0)
+
+    def get_duration(self):
+        return float(self.duration) / 1000.0
+
+    def get_extension(self):
+        return ('.' + self.file_extension)  # Add the period back on
+
+    def get_full_path(self):
+        entries = Path(self.file_video_folder)
+        return entries.joinpath(self.file_fullname).resolve(strict=True)
+
+    def get_is_original_video(self):
+        # Allow being undecided as to whether a video is an original or not
+        if (self.is_original_video is None):
+            return None
+        else:
+            return self.is_original_video
+
+
+    def get_is_deeplabcut_labeled_video(self):
+        # Allow being undecided as to whether a video is an original or not
+        if (self.is_original_video is None):
+            return None
+        else:
+            return (not self.is_original_video)
+
+
+    def get_behavioral_box_id(self):
+        if (self.behavioral_box_id is None):
+            return None
+        else:
+            return (self.behavioral_box_id - 1)
+
+    def get_currProperties(self):
+        return {'duration': self.get_duration()}
+
+    def get_extendedProperties(self):
+        return {'behavioral_box_id': self.behavioral_box_id}
+
+    def get_output_dict(self):
+        return {'base_name': self.file_basename, 'file_fullname': self.file_fullname, 'file_extension': self.get_extension(), 'parent_path': self.file_video_folder, 'path': self.get_full_path(), 'parsed_date': self.get_start_date(), 'computed_end_date': self.get_end_date(), 'is_deeplabcut_labeled_video': self.get_is_deeplabcut_labeled_video(), 'properties': self.get_currProperties(), 'extended_properties': self.get_extendedProperties()}
+
+    def get_video_info_obj(self):
+        parentFolder = self.fileParentFolder
+        aFullParentPath = parentFolder.fullpath
+        newExperimentContextInfoObj = ExperimentContextInfo(self.id, self.get_behavioral_box_id(), self.experiment_id, self.cohort_id, self.animal_id, self.notes)
+        newVideoInfoObj = VideoInfo(self.file_fullname, self.file_basename, self.get_extension(), aFullParentPath, \
+             self.get_start_date().replace(tzinfo=None), self.get_end_date().replace(tzinfo=None), self.get_duration(), self.get_is_original_video(), newExperimentContextInfoObj)
+        return newVideoInfoObj
+
+
+
+class FileParentFolder(Base):
+    __tablename__ = 'fileParentFolders'
+
+    id = Column(Integer, primary_key=True)
+    fullpath = Column(Text, nullable=False, server_default=text("'\\WATSON-BB-OVERS\ServerInternal-01\Transcoded Videos\BB00\'"))
+    root = Column(Text, nullable=False, server_default=text("'\\WATSON-BB-OVERS\'"))
+    path = Column(Text, nullable=False, server_default=text("'ServerInternal-01\Transcoded Videos\BB00\'"))
+    notes = Column(Text)
+
+    videoFiles = relationship("VideoFile", order_by=VideoFile.start_date, back_populates="fileParentFolder")
+
+    def __init__(self,id,fullpath,root,path,notes=None):
+        self.id = id
+        self.fullpath = str(fullpath)
+        self.root = str(root)
+        self.path = str(path)
+        self.notes = notes
+
+    @staticmethod
+    def from_path_string(path_string):
+        path = Path(path_string)
+        path.anchor
+

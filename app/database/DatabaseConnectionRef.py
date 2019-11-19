@@ -22,6 +22,8 @@ from app.database.utility_functions import *
 import sys
 import os
 
+from GUI.Model.Videos import VideoInfo
+
 
 class DatabasePendingItemsState(QObject):
     def __init__(self, created_count, modified_count):
@@ -216,10 +218,13 @@ class DatabaseConnectionRef(QObject):
             outputFileExtensionsDict[aRecord.extension] = aRecord
         return outputFileExtensionsDict
 
-    def load_file_parent_folders_from_database(self):
+    def load_file_parent_folders_from_database(self, include_video_files=True):
         print("Loading file_parent_folders from database:")
         session = self.get_session()
-        objs = session.query(FileParentFolder).all()
+        if include_video_files:
+            objs = session.query(FileParentFolder).options(selectinload(FileParentFolder.videoFiles)).all()
+        else:
+            objs = session.query(FileParentFolder).all()
         return objs
 
 

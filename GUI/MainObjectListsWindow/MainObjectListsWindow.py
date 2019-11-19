@@ -108,11 +108,19 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     def reloadModelFromDatabase(self):
         # Load the latest behaviors and colors data from the database
         self.fileExtensionDict = self.database_connection.load_static_file_extensions_from_database()
-        self.loadedParentFolders = self.database_connection.load_file_parent_folders_from_database()
+        self.loadedParentFolders = self.database_connection.load_file_parent_folders_from_database(include_video_files=True)
+
+        for aLoadedParentFolder in self.loadedParentFolders:
+            loadedVideoFiles = aLoadedParentFolder.videoFiles
+            #TODO: parse loadedVideoFiles into the regular objects that are loaded, and then add them to the self.found_files_lists
+            # self.found_files_lists.append()
+
         self.loadedVideoFiles = self.database_connection.load_video_file_info_from_database()
 
 
+
     def saveVideoFilesToDatabase(self):
+
         for (aSearchPathIndex, aSearchPath) in enumerate(self.searchPaths):        
             parentIDIndex = self.searchPathsParentIDs[aSearchPathIndex]
             if parentIDIndex is None:
@@ -120,9 +128,7 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
                 print("ERROR: parent ID is NONE!")
                 continue
 
-
             arrayIndex = parentIDIndex - 1 # Convert from the database ID to the array of loaded parent object's index
-
             loaded_parent_folder_obj = self.loadedParentFolders[arrayIndex]
             
 

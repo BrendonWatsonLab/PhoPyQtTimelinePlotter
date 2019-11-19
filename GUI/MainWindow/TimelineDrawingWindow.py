@@ -43,7 +43,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     TraceCursorWidth = 2
     TraceCursorColor = QColor(51, 255, 102)  # Green
 
-    GlobalTimelineConstraintOptions = GlobalTimeAdjustmentOptions.ConstantOffsetFromMostRecentVideo
+    GlobalTimelineConstraintOptions = GlobalTimeAdjustmentOptions.ConstrainVideosShownToGlobal
+    # GlobalTimelineConstraintOptions = GlobalTimeAdjustmentOptions.ConstantOffsetFromMostRecentVideo
+    
     # ConstrainToVideoTimeRange = True # If true, adjusts the global start and end times for the timeline to the range of the loaded videos.
     # # If false, only shows the videos within the global start and end range
 
@@ -63,6 +65,13 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         # self.videoInfoObjects = load_video_events_from_database(self.database_connection.get_path(), as_videoInfo_objects=True)
         self.videoInfoObjects = []
+        self.videoFileRecords = self.database_connection.load_video_file_info_from_database()
+
+        # Iterate through loaded database records to build videoInfoObjects
+        for aVideoFileRecord in self.videoFileRecords:
+            aVideoInfoObj = aVideoFileRecord.get_video_info_obj()
+            self.videoInfoObjects.append(aVideoInfoObj)
+
 
         self.build_video_display_events()
 
