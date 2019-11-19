@@ -150,11 +150,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         # self.allVideoEventDisplayObjects.filter()
         currTrackIndex = 0
-        self.mainVideoTrack = TimelineTrackDrawingWidget_Events(currTrackIndex, self.trackVideoEventDisplayObjects[0], [], self.totalStartTime, self.totalEndTime, self.database_connection)
+        self.mainVideoTrack = TimelineTrackDrawingWidget_Events(currTrackIndex, self.trackVideoEventDisplayObjects[0], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
         self.videoFileTrackWidgets.append(self.mainVideoTrack)
 
         currTrackIndex = currTrackIndex + 1
-        self.labeledVideoTrack = TimelineTrackDrawingWidget_Events(currTrackIndex, self.trackVideoEventDisplayObjects[1], [], self.totalStartTime, self.totalEndTime, self.database_connection)
+        self.labeledVideoTrack = TimelineTrackDrawingWidget_Events(currTrackIndex, self.trackVideoEventDisplayObjects[1], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
         self.videoFileTrackWidgets.append(self.labeledVideoTrack)
 
 

@@ -71,7 +71,7 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
         return clicked_object_index
 
     def deselect_all(self):
-        print("deselect_all()")
+        # print("deselect_all()")
         while (len(self.selected_duration_object_indicies) > 0):
             prevSelectedItemIndex = self.selected_duration_object_indicies[0]
             self.selected_duration_object_indicies.remove(prevSelectedItemIndex)
