@@ -96,6 +96,15 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
     def deselect(self, selection_index):
         pass
 
+    def deemphasize_all(self):
+        pass
+
+    def emphasize(self, new_emph_index):
+        pass
+
+    def deemphasize(self, emph_index):
+        pass
+
  
     def on_button_clicked(self, event):
         pass

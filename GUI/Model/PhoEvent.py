@@ -42,6 +42,12 @@ class PhoEvent(QWidget):
         self.is_emphasized = False
         self.is_active = False
 
+    def set_state_emphasized(self):
+        self.is_emphasized = True
+
+    def set_state_deemphasized(self):
+        self.is_emphasized = False
+
     # def move(self, deltaX, deltaY):
     #     self.x += deltaX
     #     self.y += deltaY

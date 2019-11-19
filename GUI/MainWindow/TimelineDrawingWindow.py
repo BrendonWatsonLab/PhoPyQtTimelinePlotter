@@ -376,7 +376,10 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     # Event Handlers:
     def keyPressEvent(self, event):
         # TODO: pass to all children
-        self.mainVideoTrack.on_key_pressed(event)
+        # self.mainVideoTrack.on_key_pressed(event)
+        for (anIndex, aTimelineVideoTrack) in enumerate(self.videoFileTrackWidgets):
+            if (aTimelineVideoTrack.wantsKeyboardEvents):
+                aTimelineVideoTrack.on_key_pressed(event)
 
         # self.curr_hovered_timeline_track = self.find_hovered_timeline_track(event.x(), event.y())
         # If we have a currently hovered timeline track from the mouseMoveEvent, use it
@@ -398,21 +401,16 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         datetime = self.offset_to_datetime(self.cursorX)
         text = "window x: {0},  duration: {1}, datetime: {2}".format(self.cursorX, duration_offset, datetime)
         # Call the on_mouse_moved handler for the video track which will update its .hovered_object property, which is then read and used for relative offsets
-        # self.partitionsTrackWidget.on_mouse_moved(event)
-        self.mainVideoTrack.on_mouse_moved(event)
+
+        for (anIndex, aTimelineVideoTrack) in enumerate(self.videoFileTrackWidgets):
+            potentially_hovered_child_object = aTimelineVideoTrack.hovered_object
+            if potentially_hovered_child_object:
+                relative_duration_offset = potentially_hovered_child_object.compute_relative_offset_duration(datetime)
+                text = text + ' -- relative to duration: {0}'.format(relative_duration_offset)
+                break
+
         # TODO: Need to use offset into scroll view instead of window?
-        potentially_hovered_child_object = self.mainVideoTrack.hovered_object
-        if potentially_hovered_child_object:
-            relative_duration_offset = potentially_hovered_child_object.compute_relative_offset_duration(datetime)
-            text = text + ' -- relative to duration: {0}'.format(relative_duration_offset)
-
-        # self.curr_hovered_timeline_track = self.find_hovered_timeline_track(event.x(), event.y())
-        # if (self.curr_hovered_timeline_track):
-        #     if (self.curr_hovered_timeline_track.wantsMouseEvents):
-        #         self.curr_hovered_timeline_track.on_mouse_moved(event)
-        # else:
-        #     print("No hovered timeline track")
-
+        
         # Exhaustive event forwarding for all track widgets
         for (anIndex, aTimelineTrack) in enumerate(self.eventTrackWidgets):
             if (aTimelineTrack.wantsMouseEvents):
@@ -597,7 +595,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     # Occurs when the user selects an object in the child video track with the mouse
     def handle_child_hover_event(self, trackIndex, trackObjectIndex):
         text = "handle_child_hover_event(...): trackIndex: {0}, trackObjectIndex: {1}".format(trackIndex, trackObjectIndex)
-        # print(text)
+        print(text)
         return
 
     def refresh_child_widget_display(self):
