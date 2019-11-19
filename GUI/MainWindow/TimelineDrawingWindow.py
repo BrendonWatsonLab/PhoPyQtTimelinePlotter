@@ -556,7 +556,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
             for aVideoTrackIndex in range(0, len(self.videoFileTrackWidgets)):
                 currVideoTrackWidget = self.videoFileTrackWidgets[aVideoTrackIndex]
-                currVideoTrackWidget.set_active_filter(self.totalStartTime, self.totalEndTime)
+                # currVideoTrackWidget.set_active_filter(self.totalStartTime, self.totalEndTime)
+                currVideoTrackWidget.deselect_all()
+                currVideoTrackWidget.update()
             
             
         else:
@@ -568,6 +570,16 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             currActiveVideoTrack = self.videoFileTrackWidgets[trackIndex]
             currSelectedObject = currActiveVideoTrack.durationObjects[trackObjectIndex]
             
+            # Deselect any other video timelines
+            for aVideoTrackIndex in range(0, len(self.videoFileTrackWidgets)):
+                if (aVideoTrackIndex == trackIndex):
+                    # Skip the active track
+                    continue
+                else:
+                    currVideoTrackWidget = self.videoFileTrackWidgets[aVideoTrackIndex]
+                    currVideoTrackWidget.deselect_all()
+                    currVideoTrackWidget.update()
+
             if currSelectedObject:
                 selected_video_path = currSelectedObject.extended_data['path']
                 print(selected_video_path)
@@ -585,7 +597,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     # Occurs when the user selects an object in the child video track with the mouse
     def handle_child_hover_event(self, trackIndex, trackObjectIndex):
         text = "handle_child_hover_event(...): trackIndex: {0}, trackObjectIndex: {1}".format(trackIndex, trackObjectIndex)
-        print(text)
+        # print(text)
+        return
 
     def refresh_child_widget_display(self):
         for i in range(0, len(self.eventTrackWidgets)):
