@@ -30,8 +30,8 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         super(MainObjectListsWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/MainObjectListsWindow/MainObjectListsWindow.ui", self) # Load the .ui file
 
-        self.found_files_lists = []
         self.searchPaths = videoFileSearchPaths
+        self.found_files_lists = []
         self.reloadModelFromDatabase()
 
         # self.searchPathsParentIDs: indexes into the database's fileParentFolders table.
@@ -52,13 +52,9 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         self.setMouseTracking(True)
         self.initUI()
 
-        # self.find_filesystem_video()
-        self.rebuild_from_found_files()
+        self.find_filesystem_video()
+        # self.rebuild_from_found_files()
         
-        # self.rebuild_from_search_paths()
-        
-        # self.find_video_metadata()
-        # self.show() # Show the GUI
         
 
     def initUI(self):
@@ -140,8 +136,8 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
             arrayIndex = parentIDIndex - 1 # Convert from the database ID to the array of loaded parent object's index
             loaded_parent_folder_obj = self.loadedParentFolders[arrayIndex]
             
-
             curr_search_path_video_files = self.found_files_lists[aSearchPathIndex]
+            existing_database_video_files = loaded_parent_folder_obj.videoFiles
 
             for aFoundVideoFile in curr_search_path_video_files:
                 # Get the appropriate file extension parent
@@ -163,12 +159,25 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
                 else:
                     computed_end_date = 'Loading...'
 
-                aNewVideoFileRecord = aFoundVideoFile.get_database_videoFile_record(None,None,None,'auto')
-                aNewVideoFileRecord.staticFileExtension = parent_file_extension_obj
-                aNewVideoFileRecord.fileParentFolder = loaded_parent_folder_obj
 
-                # Add the video file record
-                self.database_connection.save_video_file_info_to_database([aNewVideoFileRecord])
+                # Check if the videoFile exists:
+                need_create_new_video_file = True
+                for anExistingVideoFile in existing_database_video_files:
+                    if (anExistingVideoFile.file_fullname == aFoundVideoFile.full_name):
+                        # print("File already exists, skipping...")
+                        need_create_new_video_file = False
+                        break
+                    else:
+                        continue
+
+                if need_create_new_video_file:
+                    # Create the video file if needed
+                    aNewVideoFileRecord = aFoundVideoFile.get_database_videoFile_record(None,None,None,'auto')
+                    aNewVideoFileRecord.staticFileExtension = parent_file_extension_obj
+                    aNewVideoFileRecord.fileParentFolder = loaded_parent_folder_obj
+
+                    # Add the video file record
+                    self.database_connection.save_video_file_info_to_database([aNewVideoFileRecord])
 
 
 
@@ -189,6 +198,7 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
             # Iterate through all loaded parents to see if the parent already exists
             finalParent = None
             
+            # Database folders
             for aParentFolder in self.loadedParentFolders:
                 aParentPath = Path(aParentFolder.fullpath).resolve()
                 if aParentPath.samefile(currPath):
@@ -233,9 +243,12 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
             # Eventually will call .parse() on each of them to populate the duration info and end-times. This will be done asynchronously.
         self.ui.treeWidget_VideoFiles.addTopLevelItems(self.top_level_nodes)
         # Expand all items
+        self.expand_top_level_nodes()
+
+
+    def expand_top_level_nodes(self):
         for aTopLevelItem in self.top_level_nodes:
             self.ui.treeWidget_VideoFiles.expandItem(aTopLevelItem)
-
 
     # Finds the video files in the self.searchPaths in a multithreaded way
     def find_filesystem_video(self):

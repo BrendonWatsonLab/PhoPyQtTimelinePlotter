@@ -25,7 +25,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 ## IMPORT:
 # from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult
-
+from app.database.entry_models.db_model import *
 
 # Basler emulation style:
 videoFileNameParsingRegex = re.compile(r'.*_(?P<date>\d{4}\d{2}\d{2})_(?P<time>\d{2}\d{2}\d{2}\d{3})')
@@ -171,20 +171,7 @@ class FoundVideoFileResult(FoundFileResult):
 
 
     def parse(self):
-        # TODO: parse the video to find at least the duration
-
-
-
-
-
-        # #For Windows
-        # a = str(subprocess.check_output('C:/Common/bin/ffmpeg/bin/ffprobe -i  "'+self.path+'" 2>&1 |findstr "Duration"',shell=True)) 
-        # a = a.split(",")[0].split("Duration:")[1].strip()
-
-        # h, m, s = a.split(':')
-        # duration = int(h) * 3600 + int(m) * 60 + float(s)
-
-
+        # parse the video to find at least the duration
         duration = video_duration(self.path)
         # currProperties = get_media_properties(currPathString)
         self.video_parsed_results = VideoParsedResults(duration)
