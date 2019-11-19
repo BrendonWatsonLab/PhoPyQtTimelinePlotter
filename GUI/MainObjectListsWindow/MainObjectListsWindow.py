@@ -41,6 +41,16 @@ class ParentDirectoryCache(QObject):
     def get_full_path(self):
         return str(self.full_path)
 
+    def get_path_obj(self):
+        return Path(self.get_full_path()).resolve()
+
+    def get_root_anchor(self):
+        return self.get_path_obj().anchor
+
+    def get_non_root_remainder(self):
+        currPath = self.get_path_obj()
+        return currPath.relative_to(self.get_root_anchor())
+
     def set_database_video_files(self, new_db_video_files):
         self.database_video_files = new_db_video_files
         for aLoadedVideoFileRecord in self.database_video_files:
@@ -64,7 +74,8 @@ class ParentDirectoryCache(QObject):
     def get_database_parent_folder(self):
         return self.database_parent_folder_obj
 
-    
+    def get_combined_video_files(self):
+        return self.finalOutputParsedVideoResultFiles
 
 
 
@@ -75,6 +86,13 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     # VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadOnlyFromDatabase
     VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
     
+
+    TreeItem_Default_Font = QtGui.QFont("Times", 9)
+    TreeItem_Default_Foreground = QBrush(Qt.black)
+
+    TreeItem_Emphasized_Font = QtGui.QFont("Times", 11)
+    TreeItem_Emphasized_Foreground = QBrush(Qt.darkBlue)
+
 
     def __init__(self, database_connection, videoFileSearchPaths):
         super(MainObjectListsWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
@@ -100,10 +118,6 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
         self.reload_data()
         
-        
-        
-        
-
     def initUI(self):
 
         """ View Hierarchy:
@@ -143,6 +157,9 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
         # Setup the buttons
         self.ui.pushButton_AddSearchDirectory.clicked.connect(self.handle_add_search_directory_activated)
+        self.ui.toolButton_Load.clicked.connect(self.handle_menu_load_event)
+        self.ui.toolButton_SaveSelected.clicked.connect(self.handle_save_selection_action)
+        self.ui.toolButton_GetConversionList.clicked.connect(self.handle_get_conversion_list_action)
 
         # Complete setup
         self.statusBar()
@@ -247,63 +264,6 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
 
 
-        # for (aSearchPathIndex, aSearchPath) in enumerate(self.searchPaths):        
-        #     # parentIDIndex = self.searchPathsParentIDs[aSearchPathIndex]
-        #     if parentIDIndex is None:
-        #         # Get the shared parent ID
-        #         print("ERROR: parent ID is NONE!")
-        #         continue
-
-        #     arrayIndex = parentIDIndex - 1 # Convert from the database ID to the array of loaded parent object's index
-        #     loaded_parent_folder_obj = self.loadedParentFolders[arrayIndex]
-            
-        #     curr_search_path_video_files = self.found_files_lists[aSearchPathIndex]
-        #     existing_database_video_files = loaded_parent_folder_obj.videoFiles
-
-        #     for aFoundVideoFile in curr_search_path_video_files:
-        #         # Get the appropriate file extension parent
-        #         currFileExtension = aFoundVideoFile.file_extension[1:].lower()
-        #         parent_file_extension_obj = None
-        #         if currFileExtension in self.fileExtensionDict.keys():
-        #             parent_file_extension_obj = self.fileExtensionDict[currFileExtension]
-        #         else:
-        #             # Key doesn't exist!
-        #             print("extension {0} doesn't exist!".format(currFileExtension))
-        #             parent_file_extension_obj = StaticFileExtension(currFileExtension)
-        #             # Add it to the database
-        #             self.database_connection.save_static_file_extensions_to_database([parent_file_extension_obj])
-
-
-        #         potentially_computed_end_date = aFoundVideoFile.get_computed_end_date()
-        #         if potentially_computed_end_date:
-        #             computed_end_date = str(potentially_computed_end_date)
-        #         else:
-        #             computed_end_date = 'Loading...'
-
-
-        #         # Check if the videoFile exists:
-        #         need_create_new_video_file = True
-        #         for anExistingVideoFile in existing_database_video_files:
-        #             if (anExistingVideoFile.file_fullname == aFoundVideoFile.full_name):
-        #                 # print("File already exists, skipping...")
-        #                 need_create_new_video_file = False
-        #                 break
-        #             else:
-        #                 continue
-
-        #         if need_create_new_video_file:
-        #             # Create the video file if needed
-                    
-        #             aNewVideoFileRecord = VideoFile.from_parsed_video_result_obj(aFoundVideoFile,None,None,None,'auto')
-        #             # aNewVideoFileRecord = aFoundVideoFile.get_database_videoFile_record(None,None,None,'auto')
-        #             aNewVideoFileRecord.staticFileExtension = parent_file_extension_obj
-        #             aNewVideoFileRecord.fileParentFolder = loaded_parent_folder_obj
-
-        #             # Add the video file record
-        #             self.database_connection.save_video_file_info_to_database([aNewVideoFileRecord])
-
-
-
 
     # Creates new "FileParentFolder" entries in the databse if existing ones can't be found
     def rebuildParentFolders(self):
@@ -370,8 +330,6 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         # for (aSearchPathIndex, aSearchPath) in enumerate(self.searchPaths):
         for (key_path, cache_value) in self.cache.items():        
             aNewGroupNode = QTreeWidgetItem([key_path, '', '', ''])
-            # curr_search_path_video_files = self.found_files_lists[aSearchPathIndex]
-
             curr_search_path_video_files = cache_value.get_filesystem_video_files()
 
             for aFoundVideoFile in curr_search_path_video_files:
@@ -381,6 +339,10 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
                 else:
                     computed_end_date = 'Loading...'
                 aNewVideoNode = QTreeWidgetItem([str(aFoundVideoFile.full_name), str(aFoundVideoFile.parsed_date), computed_end_date, str(aFoundVideoFile.is_deeplabcut_labeled_video)])
+                # aNewVideoNode.setIcon(0,QIcon("your icon path or file name "))
+                aNewVideoNode.setForeground(0, MainObjectListsWindow.TreeItem_Default_Foreground)
+                aNewVideoNode.setFont(0, MainObjectListsWindow.TreeItem_Default_Font)
+                
                 aNewGroupNode.addChild(aNewVideoNode)
 
             self.top_level_nodes.append(aNewGroupNode)
@@ -535,7 +497,33 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
             self.reload_on_search_paths_changed()
             # self.refreshAll()
             self.reload_data()
-        
+
+
+
+
+    def handle_save_selection_action(self):
+        print("handle_save_selection_action()")
+
+    def handle_get_conversion_list_action(self):
+        print("handle_get_conversion_list_action()")
+        pairsList = []
+        # Find children folders with different roots
+        for (key_path, cache_value) in self.cache.items():
+            curr_cache_root_anchor = cache_value.get_root_anchor()
+            curr_cache_remainder = cache_value.get_non_root_remainder()
+            for (other_key_path, other_cache_value) in self.cache.items():
+                other_curr_cache_root_anchor = other_cache_value.get_root_anchor()
+                other_curr_cache_remainder = other_cache_value.get_non_root_remainder()
+                if (key_path == other_key_path):
+                    # Don't allow identical files
+                    continue
+                else:
+                    if (curr_cache_remainder == other_curr_cache_remainder):
+                        # Found a matching candidate!
+                        pairsList.append((key_path, other_key_path))
+            
+        print("found matching pairs: {0}".format(str(pairsList)))
+
 
     # @pyqtSlot(int, int)
     # Occurs when the user selects an object in the child video track with the mouse
