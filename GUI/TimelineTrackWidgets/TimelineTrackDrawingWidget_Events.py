@@ -9,26 +9,21 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QLinearGradient
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
-from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import *
+from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import TimelineTrackDrawingWidgetBase, ItemSelectionOptions
+from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_SelectionBase import TimelineTrackDrawingWidget_SelectionBase
 
-class TimelineTrackDrawingWidget_Events(TimelineTrackDrawingWidgetBase):
+class TimelineTrackDrawingWidget_Events(TimelineTrackDrawingWidget_SelectionBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
     default_shouldDismissSelectionUponMouseButtonRelease = True
     default_itemSelectionMode = ItemSelectionOptions.MultiSelection
 
     def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
-        super(TimelineTrackDrawingWidget_Events, self).__init__(trackID, totalStartTime, totalEndTime, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
-        self.durationObjects = durationObjects
+        super(TimelineTrackDrawingWidget_Events, self).__init__(trackID, totalStartTime, totalEndTime, durationObjects, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
+        # self.durationObjects = durationObjects
         self.instantaneousObjects = instantaneousObjects
-        self.eventRect = np.repeat(QRect(0,0,0,0), len(durationObjects))
+        # self.eventRect = np.repeat(QRect(0,0,0,0), len(durationObjects))
         self.instantaneousEventRect = np.repeat(QRect(0,0,0,0), len(instantaneousObjects))
-        # Hovered Object
-        self.hovered_object_index = None
-        self.hovered_object = None
-        self.hovered_object_rect = None
         # Selected Object
-        # self.selected_object_index = None
-        self.selected_duration_object_indicies = []
         self.shouldDismissSelectionUponMouseButtonRelease = TimelineTrackDrawingWidget_Events.default_shouldDismissSelectionUponMouseButtonRelease
         self.itemSelectionMode = TimelineTrackDrawingWidget_Events.default_itemSelectionMode
     
@@ -68,14 +63,6 @@ class TimelineTrackDrawingWidget_Events(TimelineTrackDrawingWidgetBase):
 
         qp.end()
 
-    # Returns the index of the child object that the (x, y) point falls within, or None if it doesn't fall within an event.
-    def find_child_object(self, event_x, event_y):
-        clicked_object_index = None
-        for (index, aRect) in enumerate(self.eventRect):
-            if aRect.contains(event_x, event_y):
-                clicked_object_index = index
-                break
-        return clicked_object_index
 
     def set_active_filter(self, start_datetime, end_datetime):
         # Draw the duration objects
