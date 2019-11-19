@@ -70,27 +70,11 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
 
     # Returns the currently selected annotation index or None if none are selected
     def get_selected_annotation_index(self):
-        if (len(self.selected_duration_object_indicies) > 0):
-            # Deselect previously selected item
-            prevSelectedItemIndex = self.selected_duration_object_indicies[0]
-            if (not (prevSelectedItemIndex is None)):
-                return prevSelectedItemIndex
-            else:
-                return None
-        else:
-            return None
+        return self.get_selected_event_index()
 
     # Returns the currently selected annotation object or None if none are selected
     def get_selected_annotation(self):
-        prevSelectedItemIndex = self.get_selected_annotation_index()
-        if (not (prevSelectedItemIndex is None)):
-            prevSelectedAnnotationObj = self.durationObjects[prevSelectedItemIndex]
-            if (prevSelectedAnnotationObj):
-                return prevSelectedAnnotationObj
-            else:
-                return None
-        else:
-            return None
+        return self.get_selected_duration_obj()
 
     def paintEvent( self, event ):
         qp = QtGui.QPainter()
@@ -99,12 +83,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         self.eventRect = np.repeat(QRect(0,0,0,0), len(self.durationObjects))
         self.instantaneousEventRect = np.repeat(QRect(0, 0, 0, 0), len(self.instantaneousObjects))
 
-        # Draw the trace cursor
-        # qp.setPen(QtGui.QPen(EventsDrawingWindow.TraceCursorColor, 20.0, join=Qt.MiterJoin))
-        # qp.drawRect(event.rect().x(), event.rect().y(), EventsDrawingWindow.TraceCursorWidth, self.height())
-
         ## TODO: Use viewport information to only draw the currently displayed rectangles instead of having to draw it all at once.
-        # drawRect = event.rect()
         drawRect = self.rect()
 
         # Draw the duration objects
@@ -128,36 +107,28 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
 
     def mouseDoubleClickEvent(self, event):
         print("Mouse double clicked! ({0},{1})".format(event.x(), event.y()))
-        was_annotation_made = self.create_comment(event.x())
-        pass
 
-    def on_button_clicked(self, event):
         newlySelectedObjectIndex = self.find_child_object(event.x(), event.y())
 
         if newlySelectedObjectIndex is None:
-            self.selected_duration_object_indicies = [] # Empty all the objects
-            self.selection_changed.emit(self.trackID, -1)
+            print("Creating new annotation....")
+            was_annotation_made = self.create_comment(event.x())
         else:
             # Select the object
-            if (self.selected_duration_object_indicies.__contains__(newlySelectedObjectIndex)):
-                # Already contains the object.
-                return
-            else:
-                # If in single selection mode, be sure to deselect any previous selections before selecting a new one.
-                if (self.itemSelectionMode is ItemSelectionOptions.SingleSelection):
-                    if (len(self.selected_duration_object_indicies) > 0):
-                        # Deselect previously selected item
-                        prevSelectedItemIndex = self.selected_duration_object_indicies[0]
-                        self.selected_duration_object_indicies.remove(prevSelectedItemIndex)
-                        self.durationObjects[prevSelectedItemIndex].on_button_released(event)
-                        # self.selection_changed.emit(self.trackID, newlySelectedObjectIndex) # TODO: need to update the selection to deselect the old event?
-                        
-
+            didSelectionChange = self.select(newlySelectedObjectIndex)
+            if (didSelectionChange):
                 # Doesn't already contain the object
-                self.selected_duration_object_indicies.append(newlySelectedObjectIndex)
                 self.durationObjects[newlySelectedObjectIndex].on_button_clicked(event)
                 self.update()
                 self.selection_changed.emit(self.trackID, newlySelectedObjectIndex)
+
+            # Called once the selected annotation object has been set 
+            self.on_annotation_modify_event()
+        
+        pass
+
+    def on_button_clicked(self, event):
+        super().on_button_clicked(event)
 
     def on_button_released(self, event):
         # Check if we want to dismiss the selection when the mouse button is released (requiring the user to hold down the button to see the results)
@@ -223,20 +194,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         pass
 
     def on_mouse_moved(self, event):
-        self.hovered_object_index = self.find_child_object(event.x(), event.y())
-        # print("on_mouse_moved()",event.x(), event.y(), self.hovered_object_index)
-        if self.hovered_object_index is None:
-            # No object hovered
-            QToolTip.hideText()
-            self.hovered_object = None
-            self.hovered_object_rect = None
-            self.hover_changed.emit(self.trackID, -1)
-        else:
-            self.hovered_object = self.durationObjects[self.hovered_object_index]
-            self.hovered_object_rect = self.eventRect[self.hovered_object_index]
-            text = "event: {0}\nstart_time: {1}\nend_time: {2}\nduration: {3}".format(self.hovered_object.name, self.hovered_object.startTime, self.hovered_object.endTime, self.hovered_object.computeDuration())
-            QToolTip.showText(event.globalPos(), text, self, self.hovered_object_rect)
-            self.hover_changed.emit(self.trackID, self.hovered_object_index)
+        super().on_mouse_moved(event)
 
     
     # Annotation/Comment Specific functions:
