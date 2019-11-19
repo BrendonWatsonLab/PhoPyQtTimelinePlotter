@@ -77,8 +77,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.initUI()
         # self.show() # Show the GUI
 
-
-
     def initUI(self):
 
         """ View Hierarchy:
@@ -120,7 +118,13 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         initUI_initMenuBar(self)
 
         # minimumWidgetWidth = 500
-        minimumWidgetWidth = self.width() * self.activeScaleMultiplier
+        minimumWidgetWidth = self.get_minimum_track_width()
+
+        # Toolbar
+        # self.ui.dockWidget_FooterToolbar
+        self.ui.doubleSpinBox_currentZoom.setValue(self.activeScaleMultiplier)
+        self.ui.lblActiveViewportDuration.setText(str(self.totalDuration))
+
 
         # Video Player Container: the container that holds the video player
         self.videoPlayerContainer = QtWidgets.QWidget()
@@ -406,17 +410,34 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.statusBar().showMessage(text)
 
     ## Zoom in/default/out events
+    def get_minimum_track_width(self):
+        return  (self.width() * self.activeScaleMultiplier)
+
     def on_zoom_in(self):
         self.activeScaleMultiplier = self.activeScaleMultiplier + TimelineDrawingWindow.ZoomDelta
-        self.refresh_child_widget_display()
+        self.ui.doubleSpinBox_currentZoom.setValue(self.activeScaleMultiplier)
+        # self.ui.lblActiveViewportDuration.setText(str(self.totalDuration))
+        self.resize_children_on_zoom()
+        # self.refresh_child_widget_display()
 
     def on_zoom_home(self):
         self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
-        self.refresh_child_widget_display()
+        self.ui.doubleSpinBox_currentZoom.setValue(self.activeScaleMultiplier)
+        self.resize_children_on_zoom()
+        # self.refresh_child_widget_display()
 
     def on_zoom_out(self):
         self.activeScaleMultiplier = self.activeScaleMultiplier - TimelineDrawingWindow.ZoomDelta
-        self.refresh_child_widget_display()
+        self.ui.doubleSpinBox_currentZoom.setValue(self.activeScaleMultiplier)
+        self.resize_children_on_zoom()
+        # self.refresh_child_widget_display()
+
+    def resize_children_on_zoom(self):
+        newMinWidth = self.get_minimum_track_width()
+        self.extendedTracksContainer.setFixedWidth(newMinWidth)
+        self.update()
+
+
 
     # Shows the help/instructions window:
     def handle_showHelpWindow(self):
