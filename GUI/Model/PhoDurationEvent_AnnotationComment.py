@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 import numpy as np
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QMenu
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPainterPath, QPolygon, QFontMetrics
+from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPainterPath, QPolygon, QFontMetrics, QRegion
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 from GUI.Model.PhoEvent import *
@@ -215,7 +215,10 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         # Draw start triangle nib
         startPos = x
         self.start_poly = PhoDurationEvent_AnnotationComment.LeftNibPainter.get_poly(startPos, PhoDurationEvent_AnnotationComment.NibTriangleHeight, PhoDurationEvent_AnnotationComment.NibTriangleWidth)
+        self.start_poly_region = QRegion(self.start_poly)
         
+        self.body_region = QRegion(x, body_y, width, body_height)
+
         if self.endTime is None:
             # Instantaneous type event
             # painter.setPen(Qt.NoPen)
@@ -227,7 +230,7 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
             ## NOTE: Apparently for events as small as the instantaneous events (with a width of 2) the "Brush" or "fill" doesn't matter, only the stroke does.
             painter.setPen(QtGui.QPen(activeColor, penWidth, join=Qt.MiterJoin))
             painter.drawRect(x, body_y, width, body_height)
-
+            
             # Draw Nib:
             if self.start_poly_is_active:
                 painter.setPen(QtGui.QPen(PhoDurationEvent_AnnotationComment.ColorBorderActive, 1.0, join=Qt.MiterJoin))
@@ -236,14 +239,21 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
                 painter.setPen(QtGui.QPen(PhoDurationEvent_AnnotationComment.ColorBorderBase, penWidth, join=Qt.MiterJoin))
                 painter.setBrush(QBrush(activeColor, Qt.SolidPattern))
 
+            self.final_region_mask = self.body_region.united(self.start_poly_region)
+            painter.setClipRegion(self.final_region_mask)
+
             painter.drawPolygon(self.start_poly)
         else:
             # Normal duration event (like for videos)
             painter.drawRoundedRect(x, body_y, width, body_height, PhoDurationEvent_AnnotationComment.RectCornerRounding, PhoDurationEvent_AnnotationComment.RectCornerRounding)
-            
+
             startPos = (x+width)-PhoDurationEvent_AnnotationComment.NibTriangleWidth
             self.end_poly = PhoDurationEvent_AnnotationComment.RightNibPainter.get_poly(startPos, PhoDurationEvent_AnnotationComment.NibTriangleHeight, PhoDurationEvent_AnnotationComment.NibTriangleWidth)
-        
+            self.end_poly_region = QRegion(self.end_poly)
+
+            self.final_region_mask = self.body_region.united(self.start_poly_region).united(self.end_poly_region)
+            painter.setClipRegion(self.final_region_mask)
+
             # If it's not an instantaneous event, draw the label
             self.titleHeight = self.precompute_text_height(PhoDurationEvent_AnnotationComment.MainTextFont)
             self.titleLabelRect = QRect(x, body_y, width, self.titleHeight)
@@ -283,6 +293,8 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
             painter.drawPolygon(self.end_poly)
 
         painter.restore()
+
+        self.setMask(self.final_region_mask)
         return self.finalEventRect
 
     ## GUI CLASS
