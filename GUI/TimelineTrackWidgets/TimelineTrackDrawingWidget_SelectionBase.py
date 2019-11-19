@@ -175,7 +175,6 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
             # No Durations to create
             return
         else:
-            cut_partition_index = newlySelectedObjectIndex
             if self.shouldDismissSelectionUponMouseButtonRelease:
                 didSelectionChange = self.deselect(newlySelectedObjectIndex)
                 if (not didSelectionChange):
@@ -186,7 +185,28 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
                     self.durationObjects[newlySelectedObjectIndex].on_button_released(event)
                     self.selection_changed.emit(self.trackID, newlySelectedObjectIndex) #TODO: do we need to do this?
                     needs_update = True
-            
+
+        if event.button() == Qt.LeftButton:
+            print("SelectionBase Track: Left click")
+        elif event.button() == Qt.RightButton:
+            print("SelectionBase Track: Right click")
+            prevHoveredObj = self.hovered_object
+            if prevHoveredObj:
+                prevHoveredObj.on_button_released(event)
+            else:
+                print('SelectionBase Track: No valid hoverred object')
+
+            prevSelectedPartitionObj = self.get_selected_duration_obj()
+            if (prevSelectedPartitionObj):
+                prevSelectedPartitionObj.on_button_released(event)
+            else:
+                print('SelectionBase Track: No valid selection object')
+
+        elif event.button() == Qt.MiddleButton:
+            print("SelectionBase Track: Middle click")
+        else:
+            print("SelectionBase Track: Unknown click event!")
+
         if needs_update:
             self.update()
             

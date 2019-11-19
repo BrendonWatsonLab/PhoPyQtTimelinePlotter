@@ -606,11 +606,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
     
     def handle_timeline_hovered_position_update_event(self, x):
-        print("handle_timeline_hovered_position_update_event({0})".format(x))
+        # print("handle_timeline_hovered_position_update_event({0})".format(x))
         pass
 
     def handle_timeline_position_update_event(self, x):
-        print("handle_timeline_position_update_event({0})".format(x))
+        # print("handle_timeline_position_update_event({0})".format(x))
         pass
 
     def refresh_child_widget_display(self):

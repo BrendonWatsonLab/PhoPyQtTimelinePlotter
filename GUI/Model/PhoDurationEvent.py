@@ -7,7 +7,7 @@ import sys
 from datetime import datetime, timezone, timedelta
 import numpy as np
 from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
+from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QMenu
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QFontMetrics
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
@@ -24,6 +24,12 @@ class PhoDurationEvent(PhoEvent):
     ColorBorderActive = QColor(255, 222, 122)  # Yellowish
 
     MainTextFont = QFont('SansSerif', 10)
+
+    # This defines a signal called 'on_edit' that takes no arguments.
+    on_info = pyqtSignal()
+    on_edit = pyqtSignal()
+    on_annotate = pyqtSignal()
+    on_delete = pyqtSignal()
 
     def __init__(self, startTime=datetime.now(), endTime=None, name='', color=QColor(51, 204, 255), extended_data=dict(), parent=None):
         super(PhoDurationEvent, self).__init__(startTime, name, color, extended_data, parent=parent)
@@ -76,15 +82,50 @@ class PhoDurationEvent(PhoEvent):
         else:
             return PhoDurationEvent.InstantaneousEventDuration
 
-    # def move(self, deltaX, deltaY):
-    #     self.x += deltaX
-    #     self.y += deltaY
+    def showMenu(self, pos):
+        menu = QMenu()
+        info_action = menu.addAction("Get Info")
+        modify_action = menu.addAction("Modify...")
+        annotation_action = menu.addAction("Create annotation...")
+        delete_action = menu.addAction("Delete...")
+
+        action = menu.exec_(self.mapToGlobal(pos))
+        # action = menu.exec_(self.mapToParent(pos))
+        # action = menu.exec_(pos)
+        if action == info_action:
+            print("Get Info action!")
+            self.on_info.emit()
+        elif action == modify_action:
+            print("Modify action!")
+            self.on_edit.emit()
+        elif action == annotation_action:
+            print("Annotation action!")
+            self.on_annotate.emit()
+        elif action == delete_action:
+            print("Delete action!")
+            self.on_delete.emit()
+        # elif action == modify_action:
+        #     print("Get Info action!")
+        #     self.on_edit.emit()
+        else:
+            print("Unknown menu option!!")
 
     def on_button_clicked(self, event):
         self.set_state_selected()
 
     def on_button_released(self, event):
         self.set_state_deselected()
+        if event.button() == Qt.LeftButton:
+            print("Left click")
+        elif event.button() == Qt.RightButton:
+            print("Right click")
+            currPos = self.finalEventRect.topLeft()
+            self.showMenu(currPos)
+        elif event.button() == Qt.MiddleButton:
+            print("Middle click")
+        else:
+            print("Unknown click event!")
+
 
     def on_key_pressed(self, event):
         gey = event.key()
@@ -126,7 +167,7 @@ class PhoDurationEvent(PhoEvent):
         width = parentOffsetRect.width()
         height = parentOffsetRect.height()
 
-        finalEventRect = QRect(x,y,width,height)
+        self.finalEventRect = QRect(x,y,width,height)
         # painter.setPen( QtGui.QPen( Qt.darkBlue, 2, join=Qt.MiterJoin ) )
 
         painter.save()
@@ -163,10 +204,10 @@ class PhoDurationEvent(PhoEvent):
             # Normal duration event (like for videos)
             painter.drawRoundedRect(x, y, width, height, PhoDurationEvent.RectCornerRounding, PhoDurationEvent.RectCornerRounding)
             # If it's not an instantaneous event, draw the label
-            painter.drawText(finalEventRect, Qt.AlignCenter, self.name)
+            painter.drawText(self.finalEventRect, Qt.AlignCenter, self.name)
 
         painter.restore()
-        return finalEventRect
+        return self.finalEventRect
 
     ## GUI CLASS
 
