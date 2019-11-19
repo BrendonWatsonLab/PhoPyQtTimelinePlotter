@@ -22,10 +22,20 @@ from pathlib import Path
 
 from app.database.entry_models.db_model import FileParentFolder, StaticFileExtension, VideoFile
 
+class CachedVideoFileLoadingOptions(Enum):
+        LoadOnlyFromDatabase = 1 # Only loads the video file records from the sqlite database. Doesn't search the disk for new video files or update existing ones
+        LoadDatabaseAndSearchVideoFileSearchPaths = 2 #  Load the video file records from the sqlite database AND search the video file search paths for new or updated video files.
+
+
+
 class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
     VideoFileTreeHeaderLabels = ['filename', 'start_date', 'end_date', 'is_labeled']
     
+    VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadOnlyFromDatabase
+    # VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
+    
+
     def __init__(self, database_connection, videoFileSearchPaths):
         super(MainObjectListsWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/MainObjectListsWindow/MainObjectListsWindow.ui", self) # Load the .ui file
@@ -52,8 +62,18 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         self.setMouseTracking(True)
         self.initUI()
 
-        self.find_filesystem_video()
-        # self.rebuild_from_found_files()
+        # Load the video files depending on the setting.
+        if MainObjectListsWindow.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadOnlyFromDatabase:
+            print("Only loading video files from database. Ignoring search paths...")
+            self.rebuild_from_found_files()
+        elif MainObjectListsWindow.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths:
+            print("Loading video files from database and searching search paths...")
+            self.find_filesystem_video()
+        else:
+            print("MainObjectListsWindow ERROR: Unexpected enum type!")
+            pass
+        
+        
         
         
 
@@ -101,8 +121,9 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         self.statusBar()
 
 
-     # Updates the member variables from the database
+    # TODO: should build parent nodes from a combination of the loaded parents and the search paths (if we're in a mode to load search paths)
     
+    # Updates the member variables from the database
     # Note: if there are any pending changes, they will be persisted on this action
     def reloadModelFromDatabase(self):
         # Load the latest behaviors and colors data from the database
