@@ -114,6 +114,12 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.ui.actionZoom_Default.triggered.connect(self.on_zoom_home)
             self.ui.actionZoom_Out.triggered.connect(self.on_zoom_out)
 
+            ## Navigation Menus:
+            # on_jump_to_start, on_jump_previous, on_jump_next, on_jump_to_end
+            self.ui.actionJump_to_Start.triggered.connect(self.on_jump_to_start)
+            self.ui.actionJump_to_Previous.triggered.connect(self.on_jump_previous)
+            self.ui.actionJump_to_Next.triggered.connect(self.on_jump_next)
+            self.ui.actionJump_to_End.triggered.connect(self.on_jump_to_end)
 
         desiredWindowWidth = 900
         self.resize( desiredWindowWidth, 800 )
@@ -478,6 +484,27 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         newMinWidth = self.get_minimum_track_width()
         self.extendedTracksContainer.setFixedWidth(newMinWidth)
         self.update()
+
+    ## Navigation:
+    
+    def on_jump_to_start(self):
+        self.timelineScroll.horizontalScrollBar().setValue(self.timelineScroll.horizontalScrollBar().minimum())
+        self.on_active_zoom_changed()
+        
+
+    def on_jump_previous(self):
+        # self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
+        self.on_active_zoom_changed()
+
+    def on_jump_next(self):
+        # self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
+        self.on_active_zoom_changed()
+
+    def on_jump_to_end(self):
+        # verticalScrollBar()->setValue(ui->scrollArea->verticalScrollBar()->maximum());
+        self.timelineScroll.horizontalScrollBar().setValue(self.timelineScroll.horizontalScrollBar().maximum())
+        self.on_active_zoom_changed()
+
 
 
 
