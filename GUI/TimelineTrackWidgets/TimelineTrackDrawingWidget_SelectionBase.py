@@ -150,6 +150,8 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
             self.update()
             
     def on_mouse_moved(self, event):
+        if (not self.underMouse()):
+            return
         self.hovered_object_index = self.find_child_object(event.x(), event.y())
         if self.hovered_object_index is None:
             # No object hovered

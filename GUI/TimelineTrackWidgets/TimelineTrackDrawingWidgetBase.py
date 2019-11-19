@@ -54,6 +54,7 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
         if (self.wantsMouseEvents):
             self.mousePressEvent = self.on_button_clicked
             self.mouseReleaseEvent = self.on_button_released
+            self.mouseMoveEvent = self.on_mouse_moved
 
     def minimumSizeHint(self) -> QSize:
         return QSize(500, 50)
@@ -110,6 +111,9 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
 
     def on_mouse_moved(self, event):
         pass
+
+    def get_is_under_mouse(self):
+        return self.underMouse()
 
     # Timeline position/time converion functions:
     # Get scale from length
