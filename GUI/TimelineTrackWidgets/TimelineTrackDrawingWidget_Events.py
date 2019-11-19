@@ -26,6 +26,14 @@ class TimelineTrackDrawingWidget_Events(TimelineTrackDrawingWidget_SelectionBase
         # Selected Object
         self.shouldDismissSelectionUponMouseButtonRelease = TimelineTrackDrawingWidget_Events.default_shouldDismissSelectionUponMouseButtonRelease
         self.itemSelectionMode = TimelineTrackDrawingWidget_Events.default_itemSelectionMode
+
+        # Set up signals
+        for aDurationObject in self.durationObjects:
+            aDurationObject.on_info.connect(self.on_child_action_info)
+            aDurationObject.on_edit.connect(self.on_child_action_modify)
+            aDurationObject.on_annotate.connect(self.on_child_action_comment)
+            aDurationObject.on_delete.connect(self.on_child_action_delete)
+
     
     def paintEvent( self, event ):
         qp = QtGui.QPainter()
@@ -63,7 +71,6 @@ class TimelineTrackDrawingWidget_Events(TimelineTrackDrawingWidget_SelectionBase
 
         qp.end()
 
-
     def set_active_filter(self, start_datetime, end_datetime):
         # Draw the duration objects
         for (index, obj) in enumerate(self.durationObjects):
@@ -79,7 +86,6 @@ class TimelineTrackDrawingWidget_Events(TimelineTrackDrawingWidget_SelectionBase
     def on_button_released(self, event):
         super().on_button_released(event)
 
-                
     def on_key_pressed(self, event):
         gey = event.key()
         self.func = (None, None)
@@ -97,24 +103,23 @@ class TimelineTrackDrawingWidget_Events(TimelineTrackDrawingWidget_SelectionBase
             self.mModified = True
             self.update()
 
-
-
-
     def on_mouse_moved(self, event):
         super().on_mouse_moved(event)
-        # self.hovered_object_index = self.find_child_object(event.x(), event.y())
-        # # print("on_mouse_moved()",event.x(), event.y(), self.hovered_object_index)
-        # if self.hovered_object_index is None:
-        #     # No object hovered
-        #     QToolTip.hideText()
-        #     self.hovered_object = None
-        #     self.hovered_object_rect = None
-        #     self.hover_changed.emit(self.trackID, -1)
-        # else:
-        #     self.hovered_object = self.durationObjects[self.hovered_object_index]
-        #     self.hovered_object_rect = self.eventRect[self.hovered_object_index]
-        #     text = "event: {0}\nstart_time: {1}\nend_time: {2}\nduration: {3}".format(self.hovered_object.name, self.hovered_object.startTime, self.hovered_object.endTime, self.hovered_object.computeDuration())
-        #     QToolTip.showText(event.globalPos(), text, self, self.hovered_object_rect)
-        #     self.hover_changed.emit(self.trackID, self.hovered_object_index)
 
 
+    # Menu Event Handlers:
+    def on_child_action_info(self):
+        print("on_child_action_info()")
+        pass
+
+    def on_child_action_modify(self):
+        print("on_child_action_modify()")
+        pass
+
+    def on_child_action_comment(self):
+        print("on_child_action_comment()")
+        pass
+
+    def on_child_action_delete(self):
+        print("on_child_action_delete()")
+        pass
