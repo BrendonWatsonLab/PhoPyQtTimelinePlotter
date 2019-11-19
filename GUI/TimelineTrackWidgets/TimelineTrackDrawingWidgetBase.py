@@ -6,7 +6,7 @@ from datetime import datetime, timezone, timedelta
 import numpy as np
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget,QTableWidgetItem
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPalette
+from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPalette, QLinearGradient
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 from enum import Enum
 
@@ -63,6 +63,29 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
         
     def paintEvent( self, event ):
         pass
+
+
+    def get_background_gradient(self, height):
+        middleColor = QColor(40,40,40,64)
+        edgeColor = QColor(38,38,38,255)
+        transitionColor = QColor(255,255,255,200)
+        innerGlowColor = QColor(255,255,255,64)
+
+        gradientKeysMain = [(0.09, edgeColor),(0.095, transitionColor),(0.1, innerGlowColor), (0.16, middleColor),
+        (0.84, middleColor),(0.9, innerGlowColor),(0.905, transitionColor), (0.91, edgeColor)]
+
+        # Draw the linear horizontal gradient.
+        out_gradient = QLinearGradient(0, 0, 0, height)
+        for stop, color in gradientKeysMain:
+            out_gradient.setColorAt(stop, QColor(color))
+
+        return out_gradient
+
+    # def paintBackground(self, event):
+    #     grad = QLinearGradient(80, 40, 30, 10)
+    #     painter.setBrush(QBrush(grad))
+    #     painter.drawRect(10, 10, 200, 200)
+
  
     def on_button_clicked(self, event):
         pass

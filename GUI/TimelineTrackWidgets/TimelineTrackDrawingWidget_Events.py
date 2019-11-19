@@ -6,7 +6,7 @@ from datetime import datetime, timezone, timedelta
 import numpy as np
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget,QTableWidgetItem
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
+from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QLinearGradient
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import *
@@ -46,6 +46,18 @@ class TimelineTrackDrawingWidget_Events(TimelineTrackDrawingWidgetBase):
         ## TODO: Use viewport information to only draw the currently displayed rectangles instead of having to draw it all at once.
         # drawRect = event.rect()
         drawRect = self.rect()
+
+        # qp.setPen(QPen(Qt.black, 5, Qt.SolidLine))
+        # grad = QLinearGradient(80, 40, 30, 10)
+        # qp.setBrush(QBrush(grad))
+        # qp.drawRect(drawRect.x(), drawRect.y(), drawRect.width(), drawRect.height())
+        # Draw the linear horizontal gradient.
+        lgrad = self.get_background_gradient(drawRect.height())
+
+        # lgrad = QLinearGradient(drawRect.topLeft(), drawRect.bottomLeft())
+        # lgrad.setColorAt(0.0, Qt.red)
+        # lgrad.setColorAt(1.0, Qt.yellow)
+        qp.fillRect(drawRect, lgrad)
 
         # Draw the duration objects
         for (index, obj) in enumerate(self.durationObjects):
