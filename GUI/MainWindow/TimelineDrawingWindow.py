@@ -126,6 +126,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # Toolbar
         # self.ui.dockWidget_FooterToolbar
         self.ui.doubleSpinBox_currentZoom.setValue(self.activeScaleMultiplier)
+        # self.ui.doubleSpinBox_currentZoom.valueChanged.connect(self.on_zoom_custom)
+        self.ui.doubleSpinBox_currentZoom.editingFinished.connect(self.on_finish_editing_zoom_custom)
 
         # Video Player Container: the container that holds the video player
         self.videoPlayerContainer = QtWidgets.QWidget()
@@ -443,9 +445,21 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.activeScaleMultiplier = max(TimelineDrawingWindow.MinZoomLevel, (self.activeScaleMultiplier - TimelineDrawingWindow.ZoomDelta))
         self.on_active_zoom_changed()
 
+    # def on_zoom_custom(self, double_newZoom):
+    #     print("on_zoom_custom({0})".format(double_newZoom))
+        
+    def on_finish_editing_zoom_custom(self):
+        print("on_finish_editing_zoom_custom()")
+        double_newZoom = self.ui.doubleSpinBox_currentZoom.value()
+        print("new_zoom: {0}".format(double_newZoom))
+        self.activeScaleMultiplier = double_newZoom
+        self.on_active_zoom_changed()
+
     # Called after self.activeScaleMultiplier is changed to update everything else
     def on_active_zoom_changed(self):
+        self.ui.doubleSpinBox_currentZoom.blockSignals(True)
         self.ui.doubleSpinBox_currentZoom.setValue(self.activeScaleMultiplier)
+        self.ui.doubleSpinBox_currentZoom.blockSignals(False)
         self.ui.lblActiveTotalTimelineDuration.setText(str(self.totalDuration))
         self.ui.lblActiveViewportDuration.setText(str(self.get_active_viewport_duration()))
         self.resize_children_on_zoom()

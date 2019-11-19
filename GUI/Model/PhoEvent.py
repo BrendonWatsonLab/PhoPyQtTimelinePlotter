@@ -33,6 +33,15 @@ class PhoEvent(QWidget):
     def __str__(self):
         return 'Event {0}: startTime: {1}, color: {2}, extended_data: {3}'.format(self.name, self.startTime, self.color, str(self.extended_data))
 
+
+    def set_state_selected(self):
+        self.is_emphasized = False
+        self.is_active = True
+
+    def set_state_deselected(self):
+        self.is_emphasized = False
+        self.is_active = False
+
     # def move(self, deltaX, deltaY):
     #     self.x += deltaX
     #     self.y += deltaY

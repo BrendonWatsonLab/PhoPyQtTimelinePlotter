@@ -81,12 +81,10 @@ class PhoDurationEvent(PhoEvent):
     #     self.y += deltaY
 
     def on_button_clicked(self, event):
-        self.is_emphasized = False
-        self.is_active = True
+        self.set_state_selected()
 
     def on_button_released(self, event):
-        self.is_emphasized = False
-        self.is_active = False
+        self.set_state_deselected()
 
     def on_key_pressed(self, event):
         gey = event.key()
