@@ -55,6 +55,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     # DefaultZoom = 4.0
     DefaultZoom = 16.0
     ZoomDelta = 1.0
+    MinZoomLevel = 0.1
+    MaxZoomLevel = 2600.0
+    
 
     def __init__(self, database_connection, totalStartTime, totalEndTime):
         super(TimelineDrawingWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
@@ -123,8 +126,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # Toolbar
         # self.ui.dockWidget_FooterToolbar
         self.ui.doubleSpinBox_currentZoom.setValue(self.activeScaleMultiplier)
-        self.ui.lblActiveViewportDuration.setText(str(self.totalDuration))
-
 
         # Video Player Container: the container that holds the video player
         self.videoPlayerContainer = QtWidgets.QWidget()
@@ -246,6 +247,10 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.statusBar()
 
         self.setWindowTitle('Pho Timeline Test Drawing Window')
+
+        # Toolbar
+        self.ui.lblActiveViewportDuration.setText(str(self.get_active_viewport_duration()))
+        self.ui.lblActiveTotalTimelineDuration.setText(str(self.totalDuration))
 
         # Cursor tracking
         self.cursorX = 0.0
@@ -413,22 +418,36 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     def get_minimum_track_width(self):
         return  (self.width() * self.activeScaleMultiplier)
 
+    def get_viewport_width(self):
+        return self.timelineScroll.width()
+
+    # Returns the percent of the total duration that the active viewport is currently displaying
+    def get_active_percent_viewport_total(self):
+        return (float(self.get_viewport_width()) / float(self.get_minimum_track_width()))
+
+    # Returns the duration of the currently displayed viewport
+    def get_active_viewport_duration(self):
+        currPercent = self.get_active_percent_viewport_total()
+        return (currPercent * self.totalDuration)
+
+
     def on_zoom_in(self):
-        self.activeScaleMultiplier = self.activeScaleMultiplier + TimelineDrawingWindow.ZoomDelta
-        self.ui.doubleSpinBox_currentZoom.setValue(self.activeScaleMultiplier)
-        # self.ui.lblActiveViewportDuration.setText(str(self.totalDuration))
-        self.resize_children_on_zoom()
-        # self.refresh_child_widget_display()
+        self.activeScaleMultiplier = min(TimelineDrawingWindow.MaxZoomLevel, (self.activeScaleMultiplier + TimelineDrawingWindow.ZoomDelta))
+        self.on_active_zoom_changed()
 
     def on_zoom_home(self):
         self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
-        self.ui.doubleSpinBox_currentZoom.setValue(self.activeScaleMultiplier)
-        self.resize_children_on_zoom()
-        # self.refresh_child_widget_display()
+        self.on_active_zoom_changed()
 
     def on_zoom_out(self):
-        self.activeScaleMultiplier = self.activeScaleMultiplier - TimelineDrawingWindow.ZoomDelta
+        self.activeScaleMultiplier = max(TimelineDrawingWindow.MinZoomLevel, (self.activeScaleMultiplier - TimelineDrawingWindow.ZoomDelta))
+        self.on_active_zoom_changed()
+
+    # Called after self.activeScaleMultiplier is changed to update everything else
+    def on_active_zoom_changed(self):
         self.ui.doubleSpinBox_currentZoom.setValue(self.activeScaleMultiplier)
+        self.ui.lblActiveTotalTimelineDuration.setText(str(self.totalDuration))
+        self.ui.lblActiveViewportDuration.setText(str(self.get_active_viewport_duration()))
         self.resize_children_on_zoom()
         # self.refresh_child_widget_display()
 
