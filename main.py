@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
         database_file_path = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
         # database_file_path = 'G:\Google Drive\Modern Behavior Box\Results - Data\BehavioralBoxDatabase.db'
-        database_file_path = "C:/Users/halechr/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db"
+        # database_file_path = "C:/Users/halechr/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db"
         database_connection = DatabaseConnectionRef(database_file_path)
 
         # video_file_search_paths = ["O:/Transcoded Videos/BB01"]
