@@ -41,6 +41,8 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     # This defines a signal called 'on_edit' that takes no arguments.
     on_edit = pyqtSignal()
 
+    on_edit_by_dragging_handle = pyqtSignal(datetime, datetime)
+
     def __init__(self, startTime=datetime.now(), endTime=None, name='', title='', subtitle='', color=QColor(31, 200, 62), extended_data=dict(), parent=None):
         super(PhoDurationEvent_AnnotationComment, self).__init__(startTime, endTime, name, color, extended_data, parent=parent)
         self.title = title

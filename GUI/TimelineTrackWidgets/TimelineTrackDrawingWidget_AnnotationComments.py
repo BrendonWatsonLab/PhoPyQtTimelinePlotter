@@ -61,6 +61,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
             # Create the graphical annotation object
             newAnnotation = convert_TimestampedAnnotation(aDataObj, self)
             newAnnotation.on_edit.connect(self.on_annotation_modify_event)
+            newAnnotation.on_edit_by_dragging_handle.connect(self.try_resize_comment_with_handles)
             # newAnnotation = PhoDurationEvent_AnnotationComment(start_date, end_date, body, title, subtitle)
             self.durationObjects.append(newAnnotation)
 
@@ -230,7 +231,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
             QToolTip.showText(event.globalPos(), text, self, self.hovered_object_rect)
             self.hover_changed.emit(self.trackID, self.hovered_object_index)
 
-
+    
     # Annotation/Comment Specific functions:
     def create_comment(self, cut_x):
         cut_duration_offset = self.offset_to_duration(cut_x)
@@ -318,4 +319,22 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         self.activeEditingAnnotationIndex = None
 
         
+    # Resize Time with Handles:
+    @pyqtSlot(datetime, datetime)
+    def try_resize_comment_with_handles(self, start_date, end_date):
+        # Tries to update an existing comment
+        print('try_resize_comment_with_handles')
+        
+        if (not (self.activeEditingAnnotationIndex is None)):
+            currObjToModify = self.annotationDataObjects[self.activeEditingAnnotationIndex]
+            currObjToModify = modify_TimestampedAnnotation(currObjToModify, start_date, end_date, currObjToModify.title, currObjToModify.subtitle, currObjToModify.body)
+            self.annotationDataObjects[self.activeEditingAnnotationIndex] = currObjToModify
+            self.database_commit()
+            self.reloadModelFromDatabase()
+            self.rebuildDrawnObjects()
+            self.update()
+        else:
+            print("Error: unsure what comment to update!")
+            return
+
 

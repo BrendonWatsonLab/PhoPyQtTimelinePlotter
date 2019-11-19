@@ -308,16 +308,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             else:
                 self.trackVideoEventDisplayObjects[1].append(currEvent)
 
-
-        # for videoInfoItem in self.videoInfoObjects:
-        #     if (videoInfoItem.is_original_video):
-        #         videoDates.append(videoInfoItem.startTime)
-        #         videoEndDates.append(videoInfoItem.endTime)
-        #         currExtraInfoDict = videoInfoItem.get_output_dict()
-        #         # Event Generation
-        #         currEvent = PhoDurationEvent(videoInfoItem.startTime, videoInfoItem.endTime, videoInfoItem.fullName, QColor(51,204,255), currExtraInfoDict)
-        #         self.videoEventDisplayObjects.append(currEvent)
-
         self.videoDates = np.array(videoDates)
         self.videoEndDates = np.array(videoEndDates)
         self.allVideoEventDisplayObjects = np.array(self.allVideoEventDisplayObjects)
