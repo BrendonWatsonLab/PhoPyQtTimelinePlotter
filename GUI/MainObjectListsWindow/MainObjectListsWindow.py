@@ -509,6 +509,8 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         unconvertedFiles = dict()
         convertedFiles = dict()
 
+        needs_conversion_files = []
+
         pairsList = []
         # Find children folders with different roots
         for (key_path, cache_value) in self.cache.items():
@@ -528,11 +530,15 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
        
         for (aKey_basename, converted_file_value) in convertedFiles.items():
             if (aKey_basename in unconvertedFiles.keys()):
-                unconvertedFiles[aKey_basename] = None # Remove the key
+                # unconvertedFiles[aKey_basename] = None # Remove the key
+                del unconvertedFiles[aKey_basename]
 
+        for (anOutputUnconvertedFileKey, anOutputUnconvertedFileValue) in unconvertedFiles.items():
+            needs_conversion_files.append(anOutputUnconvertedFileValue.path)
 
         # print("found matching pairs: {0}".format(str(pairsList)))
-        print("unique unconverted files: {0}".format(str(unconvertedFiles)))
+        # print("unique unconverted files: {0}".format(str(unconvertedFiles)))
+        print("unique unconverted files: {0}".format(str(needs_conversion_files)))
         
 
 
