@@ -20,11 +20,12 @@ from GUI.HelpWindow.HelpWindowFinal import *
 # from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget import *
 from GUI.UI.qtimeline import *
 
+from GUI.UI.ExtendedTracksContainerWidget import ExtendedTracksContainerWidget
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Events import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Partition import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_AnnotationComments import *
 
-from app.database.SqliteEventsDatabase import load_video_events_from_database
+# from app.database.SqliteEventsDatabase import load_video_events_from_database
 from app.database.SqlAlchemyDatabase import load_annotation_events_from_database, save_annotation_events_to_database, create_TimestampedAnnotation
 
 from GUI.UI.VideoPlayer.main_video_player_window import *
@@ -43,7 +44,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     TraceCursorWidth = 2
     TraceCursorColor = QColor(51, 255, 102)  # Green
 
-    GlobalTimelineConstraintOptions = GlobalTimeAdjustmentOptions.ConstantOffsetFromMostRecentVideo
+    GlobalTimelineConstraintOptions = GlobalTimeAdjustmentOptions.ConstrainGlobalToVideoTimeRange
+    # GlobalTimelineConstraintOptions = GlobalTimeAdjustmentOptions.ConstantOffsetFromMostRecentVideo
+
     # ConstrainToVideoTimeRange = True # If true, adjusts the global start and end times for the timeline to the range of the loaded videos.
     # # If false, only shows the videos within the global start and end range
 
@@ -53,6 +56,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     # DefaultZoom = 4.0
     DefaultZoom = 16.0
     ZoomDelta = 1.0
+    MinZoomLevel = 0.1
+    MaxZoomLevel = 2600.0
+    
 
     def __init__(self, database_connection, totalStartTime, totalEndTime):
         super(TimelineDrawingWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
@@ -61,7 +67,10 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
         self.update_global_start_end_times(totalStartTime, totalEndTime)
 
-        self.videoInfoObjects = load_video_events_from_database(self.database_connection.get_path(), as_videoInfo_objects=True)
+        # self.videoInfoObjects = load_video_events_from_database(self.database_connection.get_path(), as_videoInfo_objects=True)
+        self.videoInfoObjects = []
+        self.reloadModelFromDatabase()
+
         self.build_video_display_events()
 
         self.videoPlayerWindow = None
@@ -71,8 +80,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.setMouseTracking(True)
         self.initUI()
         # self.show() # Show the GUI
-
-
 
     def initUI(self):
 
@@ -115,7 +122,13 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         initUI_initMenuBar(self)
 
         # minimumWidgetWidth = 500
-        minimumWidgetWidth = self.width() * self.activeScaleMultiplier
+        minimumWidgetWidth = self.get_minimum_track_width()
+
+        # Toolbar
+        # self.ui.dockWidget_FooterToolbar
+        self.ui.doubleSpinBox_currentZoom.setValue(self.activeScaleMultiplier)
+        # self.ui.doubleSpinBox_currentZoom.valueChanged.connect(self.on_zoom_custom)
+        self.ui.doubleSpinBox_currentZoom.editingFinished.connect(self.on_finish_editing_zoom_custom)
 
         # Video Player Container: the container that holds the video player
         self.videoPlayerContainer = QtWidgets.QWidget()
@@ -131,35 +144,48 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         masterTimelineDurationSeconds = self.totalDuration.total_seconds()
         self.timelineMasterTrackWidget = QTimeLine(masterTimelineDurationSeconds, minimumWidgetWidth)
         self.timelineMasterTrackWidget.setMouseTracking(True)
+        self.timelineMasterTrackWidget.hoverChanged.connect(self.handle_timeline_hovered_position_update_event)
+        self.timelineMasterTrackWidget.positionChanged.connect(self.handle_timeline_position_update_event)
 
-        # Video Track
+    
+        # Video Tracks
         ## TODO: The video tracks must set:
-        self.mainVideoTrack = TimelineTrackDrawingWidget_Events(-1, self.videoEventDisplayObjects, [], self.totalStartTime, self.totalEndTime, self.database_connection)
-        self.mainVideoTrack.selection_changed.connect(self.handle_child_selection_event)
-        self.mainVideoTrack.hover_changed.connect(self.handle_child_hover_event)
-        self.mainVideoTrack.setMouseTracking(True)
-        self.mainVideoTrack.shouldDismissSelectionUponMouseButtonRelease = False
-        self.mainVideoTrack.itemSelectionMode = ItemSelectionOptions.SingleSelection
+        self.videoFileTrackWidgets = []
+
+        # self.allVideoEventDisplayObjects.filter()
+        currTrackIndex = 0
+        self.mainVideoTrack = TimelineTrackDrawingWidget_Events(currTrackIndex, self.trackVideoEventDisplayObjects[0], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+        self.videoFileTrackWidgets.append(self.mainVideoTrack)
+
+        currTrackIndex = currTrackIndex + 1
+        self.labeledVideoTrack = TimelineTrackDrawingWidget_Events(currTrackIndex, self.trackVideoEventDisplayObjects[1], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+        self.videoFileTrackWidgets.append(self.labeledVideoTrack)
+
 
         # Other Tracks:
         self.eventTrackWidgets = []
 
         # Annotation Comments track:
-        self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(0, [], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+        currTrackIndex = currTrackIndex + 1
+        self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(currTrackIndex, [], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
         self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
 
         # Partition tracks:
-        self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(1, None, [], self.totalStartTime, self.totalEndTime, self.database_connection)
+        currTrackIndex = currTrackIndex + 1
+        self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection)
         self.eventTrackWidgets.append(self.partitionsTrackWidget)
 
-        self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(2, None, [], self.totalStartTime, self.totalEndTime, self.database_connection)
+        currTrackIndex = currTrackIndex + 1
+        self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection)
         self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
 
         # Build the bottomPanelWidget
-        self.extendedTracksContainer = QtWidgets.QWidget()
+        self.extendedTracksContainer = ExtendedTracksContainerWidget(masterTimelineDurationSeconds, minimumWidgetWidth, self)
         self.extendedTracksContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.extendedTracksContainer.setAutoFillBackground(True)
         self.extendedTracksContainer.setMouseTracking(True)
+        self.extendedTracksContainer.hoverChanged.connect(self.handle_timeline_hovered_position_update_event)
+        self.timelineMasterTrackWidget.hoverChanged.connect(self.extendedTracksContainer.on_update_hover)
 
         # Debug Pallete
         # p = self.labjackEventsContainer.palette()
@@ -176,12 +202,28 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.timelineMasterTrackWidget.setMinimumSize(minimumWidgetWidth, 50)
         self.timelineMasterTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
-        self.extendedTracksContainerVboxLayout.addWidget(self.mainVideoTrack)
-        self.mainVideoTrack.setMinimumSize(minimumWidgetWidth, 50)
-        self.mainVideoTrack.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+        # self.extendedTracksContainerVboxLayout.addWidget(self.mainVideoTrack)
+        # self.mainVideoTrack.setMinimumSize(minimumWidgetWidth, 50)
+        # self.mainVideoTrack.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
 
         #Layout of Main Window:
+
+       # Loop through the videoFileTrackWidgets and add them
+        for i in range(0, len(self.videoFileTrackWidgets)):
+            currVideoTrackWidget = self.videoFileTrackWidgets[i]
+            # Video track specific setup
+            currVideoTrackWidget.selection_changed.connect(self.handle_child_selection_event)
+            currVideoTrackWidget.hover_changed.connect(self.handle_child_hover_event)
+            currVideoTrackWidget.setMouseTracking(True)
+            currVideoTrackWidget.shouldDismissSelectionUponMouseButtonRelease = False
+            currVideoTrackWidget.itemSelectionMode = ItemSelectionOptions.SingleSelection
+            # General Layout:
+            self.extendedTracksContainerVboxLayout.addWidget(currVideoTrackWidget)
+            currVideoTrackWidget.setMinimumSize(minimumWidgetWidth,50)
+            currVideoTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
 
         # Loop through the eventTrackWidgets and add them
         for i in range(0, len(self.eventTrackWidgets)):
@@ -219,12 +261,22 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         self.setWindowTitle('Pho Timeline Test Drawing Window')
 
+        # Toolbar
+        self.ui.lblActiveViewportDuration.setText(str(self.get_active_viewport_duration()))
+        self.ui.lblActiveTotalTimelineDuration.setText(str(self.totalDuration))
+
         # Cursor tracking
         self.cursorX = 0.0
         self.cursorY = 0.0
         #self.cursorTraceRect = QRect(0,0,0,0)
 
-        
+            
+    def reloadModelFromDatabase(self):
+        self.videoFileRecords = self.database_connection.load_video_file_info_from_database()
+        # Iterate through loaded database records to build videoInfoObjects
+        for aVideoFileRecord in self.videoFileRecords:
+            aVideoInfoObj = aVideoFileRecord.get_video_info_obj()
+            self.videoInfoObjects.append(aVideoInfoObj)
 
     def update_global_start_end_times(self, totalStartTime, totalEndTime):
         self.totalStartTime = totalStartTime
@@ -236,18 +288,33 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         videoDates = []
         videoEndDates = []
         # self.videoLabels = []
-        self.videoEventDisplayObjects = []
+        self.allVideoEventDisplayObjects = []
+        self.trackVideoEventDisplayObjects = [[], []]
         for videoInfoItem in self.videoInfoObjects:
-            if (videoInfoItem.is_original_video):
-                videoDates.append(videoInfoItem.startTime)
-                videoEndDates.append(videoInfoItem.endTime)
-                currExtraInfoDict = videoInfoItem.get_output_dict()
-                # Event Generation
-                currEvent = PhoDurationEvent(videoInfoItem.startTime, videoInfoItem.endTime, videoInfoItem.fullName, QColor(51,204,255), currExtraInfoDict)
-                self.videoEventDisplayObjects.append(currEvent)
+            videoDates.append(videoInfoItem.startTime)
+            videoEndDates.append(videoInfoItem.endTime)
+            currExtraInfoDict = videoInfoItem.get_output_dict()
+            # Event Generation
+            currEvent = PhoDurationEvent(videoInfoItem.startTime, videoInfoItem.endTime, videoInfoItem.fullName, QColor(51,204,255), currExtraInfoDict)
+            self.allVideoEventDisplayObjects.append(currEvent)
+            if videoInfoItem.is_original_video:
+                self.trackVideoEventDisplayObjects[0].append(currEvent)
+            else:
+                self.trackVideoEventDisplayObjects[1].append(currEvent)
+
+
+        # for videoInfoItem in self.videoInfoObjects:
+        #     if (videoInfoItem.is_original_video):
+        #         videoDates.append(videoInfoItem.startTime)
+        #         videoEndDates.append(videoInfoItem.endTime)
+        #         currExtraInfoDict = videoInfoItem.get_output_dict()
+        #         # Event Generation
+        #         currEvent = PhoDurationEvent(videoInfoItem.startTime, videoInfoItem.endTime, videoInfoItem.fullName, QColor(51,204,255), currExtraInfoDict)
+        #         self.videoEventDisplayObjects.append(currEvent)
 
         self.videoDates = np.array(videoDates)
         self.videoEndDates = np.array(videoEndDates)
+        self.allVideoEventDisplayObjects = np.array(self.allVideoEventDisplayObjects)
 
         if videoDates:
             self.earliestVideoTime = self.videoDates.min()
@@ -315,7 +382,10 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     # Event Handlers:
     def keyPressEvent(self, event):
         # TODO: pass to all children
-        self.mainVideoTrack.on_key_pressed(event)
+        # self.mainVideoTrack.on_key_pressed(event)
+        for (anIndex, aTimelineVideoTrack) in enumerate(self.videoFileTrackWidgets):
+            if (aTimelineVideoTrack.wantsKeyboardEvents):
+                aTimelineVideoTrack.on_key_pressed(event)
 
         # self.curr_hovered_timeline_track = self.find_hovered_timeline_track(event.x(), event.y())
         # If we have a currently hovered timeline track from the mouseMoveEvent, use it
@@ -337,21 +407,16 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         datetime = self.offset_to_datetime(self.cursorX)
         text = "window x: {0},  duration: {1}, datetime: {2}".format(self.cursorX, duration_offset, datetime)
         # Call the on_mouse_moved handler for the video track which will update its .hovered_object property, which is then read and used for relative offsets
-        # self.partitionsTrackWidget.on_mouse_moved(event)
-        self.mainVideoTrack.on_mouse_moved(event)
+
+        for (anIndex, aTimelineVideoTrack) in enumerate(self.videoFileTrackWidgets):
+            potentially_hovered_child_object = aTimelineVideoTrack.hovered_object
+            if potentially_hovered_child_object:
+                relative_duration_offset = potentially_hovered_child_object.compute_relative_offset_duration(datetime)
+                text = text + ' -- relative to duration: {0}'.format(relative_duration_offset)
+                break
+
         # TODO: Need to use offset into scroll view instead of window?
-        potentially_hovered_child_object = self.mainVideoTrack.hovered_object
-        if potentially_hovered_child_object:
-            relative_duration_offset = potentially_hovered_child_object.compute_relative_offset_duration(datetime)
-            text = text + ' -- relative to duration: {0}'.format(relative_duration_offset)
-
-        # self.curr_hovered_timeline_track = self.find_hovered_timeline_track(event.x(), event.y())
-        # if (self.curr_hovered_timeline_track):
-        #     if (self.curr_hovered_timeline_track.wantsMouseEvents):
-        #         self.curr_hovered_timeline_track.on_mouse_moved(event)
-        # else:
-        #     print("No hovered timeline track")
-
+        
         # Exhaustive event forwarding for all track widgets
         for (anIndex, aTimelineTrack) in enumerate(self.eventTrackWidgets):
             if (aTimelineTrack.wantsMouseEvents):
@@ -361,17 +426,60 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.statusBar().showMessage(text)
 
     ## Zoom in/default/out events
+    def get_minimum_track_width(self):
+        return  (self.width() * self.activeScaleMultiplier)
+
+    def get_viewport_width(self):
+        return self.timelineScroll.width()
+
+    # Returns the percent of the total duration that the active viewport is currently displaying
+    def get_active_percent_viewport_total(self):
+        return (float(self.get_viewport_width()) / float(self.get_minimum_track_width()))
+
+    # Returns the duration of the currently displayed viewport
+    def get_active_viewport_duration(self):
+        currPercent = self.get_active_percent_viewport_total()
+        return (currPercent * self.totalDuration)
+
+
     def on_zoom_in(self):
-        self.activeScaleMultiplier = self.activeScaleMultiplier + TimelineDrawingWindow.ZoomDelta
-        self.refresh_child_widget_display()
+        self.activeScaleMultiplier = min(TimelineDrawingWindow.MaxZoomLevel, (self.activeScaleMultiplier + TimelineDrawingWindow.ZoomDelta))
+        self.on_active_zoom_changed()
 
     def on_zoom_home(self):
         self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
-        self.refresh_child_widget_display()
+        self.on_active_zoom_changed()
 
     def on_zoom_out(self):
-        self.activeScaleMultiplier = self.activeScaleMultiplier - TimelineDrawingWindow.ZoomDelta
-        self.refresh_child_widget_display()
+        self.activeScaleMultiplier = max(TimelineDrawingWindow.MinZoomLevel, (self.activeScaleMultiplier - TimelineDrawingWindow.ZoomDelta))
+        self.on_active_zoom_changed()
+
+    # def on_zoom_custom(self, double_newZoom):
+    #     print("on_zoom_custom({0})".format(double_newZoom))
+        
+    def on_finish_editing_zoom_custom(self):
+        print("on_finish_editing_zoom_custom()")
+        double_newZoom = self.ui.doubleSpinBox_currentZoom.value()
+        print("new_zoom: {0}".format(double_newZoom))
+        self.activeScaleMultiplier = double_newZoom
+        self.on_active_zoom_changed()
+
+    # Called after self.activeScaleMultiplier is changed to update everything else
+    def on_active_zoom_changed(self):
+        self.ui.doubleSpinBox_currentZoom.blockSignals(True)
+        self.ui.doubleSpinBox_currentZoom.setValue(self.activeScaleMultiplier)
+        self.ui.doubleSpinBox_currentZoom.blockSignals(False)
+        self.ui.lblActiveTotalTimelineDuration.setText(str(self.totalDuration))
+        self.ui.lblActiveViewportDuration.setText(str(self.get_active_viewport_duration()))
+        self.resize_children_on_zoom()
+        # self.refresh_child_widget_display()
+
+    def resize_children_on_zoom(self):
+        newMinWidth = self.get_minimum_track_width()
+        self.extendedTracksContainer.setFixedWidth(newMinWidth)
+        self.update()
+
+
 
     # Shows the help/instructions window:
     def handle_showHelpWindow(self):
@@ -410,10 +518,28 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         else:
             # Create a new videoPlayerWindow window
             print("Creating new Video Player Window...")
-            self.videoPlayerWindow = MainVideoPlayerWindow()
-            self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
-            self.videoPlayerWindow.set_video_filename(url)
-            # self.videoPlayerWindow.show()
+            try:
+                self.videoPlayerWindow = MainVideoPlayerWindow()
+            except Exception as e:
+                print("Error Spawning Video Window:", e)
+                return False
+
+            
+            try:
+                self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
+            except Exception as e:
+                print("Error Setting timestamp filename for Video Window:", e)
+                return False
+
+
+            try:
+                self.videoPlayerWindow.set_video_filename(url)
+            except Exception as e:
+                print("Error Setting video filename for Video Window:", e)
+                return False
+
+            return True
+
 
         
         
@@ -423,35 +549,69 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     def handle_child_selection_event(self, trackIndex, trackObjectIndex):
         text = "handle_child_selection_event(...): trackIndex: {0}, trackObjectIndex: {1}".format(trackIndex, trackObjectIndex)
         print(text)
-        if trackIndex == TimelineDrawingWindow.static_VideoTrackTrackID:
-            # If it's the video track
-            if trackObjectIndex == TimelineTrackDrawingWidget_Events.static_TimeTrackObjectIndex_NoSelection:
-                # No selection, just clear the filters
-                for i in range(0, len(self.eventTrackWidgets)):
-                    currWidget = self.eventTrackWidgets[i]
-                    currWidget.set_active_filter(self.totalStartTime, self.totalEndTime)
-            else:
-                # Get the selected video object
-                # currHoveredObject = self.mainVideoTrack.hovered_object
+        # if trackIndex == TimelineDrawingWindow.static_VideoTrackTrackID:
 
-                # currSelectedObjectIndex = self.mainVideoTrack.selected_duration_object_indicies[0]
-                currSelectedObjectIndex = trackObjectIndex
-                currSelectedObject = self.mainVideoTrack.durationObjects[trackObjectIndex]
-                
-                if currSelectedObject:
-                    selected_video_path = currSelectedObject.extended_data['path']
-                    print(selected_video_path)
-                    self.try_set_video_player_window_url(str(selected_video_path))
-                # Iterate through the timeline tracks to filter based on the video.
-                # for i in range(0, len(self.eventTrackWidgets)):
-                #     currWidget = self.eventTrackWidgets[i]
-                #     currWidget.set_active_filter(currHoveredObject.startTime, currHoveredObject.endTime)
+        # If it's the video track
+        if trackObjectIndex == TimelineTrackDrawingWidget_Events.static_TimeTrackObjectIndex_NoSelection:
+            # No selection, just clear the filters
+            # for i in range(0, len(self.eventTrackWidgets)):
+            #     currWidget = self.eventTrackWidgets[i]
+            #     currWidget.set_active_filter(self.totalStartTime, self.totalEndTime)
+
+            for aVideoTrackIndex in range(0, len(self.videoFileTrackWidgets)):
+                currVideoTrackWidget = self.videoFileTrackWidgets[aVideoTrackIndex]
+                # currVideoTrackWidget.set_active_filter(self.totalStartTime, self.totalEndTime)
+                currVideoTrackWidget.deselect_all()
+                currVideoTrackWidget.update()
+            
+            
+        else:
+            # Get the selected video object
+            # currHoveredObject = self.mainVideoTrack.hovered_object
+
+            # currSelectedObjectIndex = self.mainVideoTrack.selected_duration_object_indicies[0]
+            currSelectedObjectIndex = trackObjectIndex
+            currActiveVideoTrack = self.videoFileTrackWidgets[trackIndex]
+            currSelectedObject = currActiveVideoTrack.durationObjects[trackObjectIndex]
+            
+            # Deselect any other video timelines
+            for aVideoTrackIndex in range(0, len(self.videoFileTrackWidgets)):
+                if (aVideoTrackIndex == trackIndex):
+                    # Skip the active track
+                    continue
+                else:
+                    currVideoTrackWidget = self.videoFileTrackWidgets[aVideoTrackIndex]
+                    currVideoTrackWidget.deselect_all()
+                    currVideoTrackWidget.update()
+
+            if currSelectedObject:
+                selected_video_path = currSelectedObject.extended_data['path']
+                print(selected_video_path)
+                self.try_set_video_player_window_url(str(selected_video_path))
+
+            else:
+                print("invalid object selected!!")
+
+            # Iterate through the timeline tracks to filter based on the video.
+            # for i in range(0, len(self.eventTrackWidgets)):
+            #     currWidget = self.eventTrackWidgets[i]
+            #     currWidget.set_active_filter(currHoveredObject.startTime, currHoveredObject.endTime)
 
 
     # Occurs when the user selects an object in the child video track with the mouse
     def handle_child_hover_event(self, trackIndex, trackObjectIndex):
         text = "handle_child_hover_event(...): trackIndex: {0}, trackObjectIndex: {1}".format(trackIndex, trackObjectIndex)
         # print(text)
+        return
+
+    
+    def handle_timeline_hovered_position_update_event(self, x):
+        # print("handle_timeline_hovered_position_update_event({0})".format(x))
+        pass
+
+    def handle_timeline_position_update_event(self, x):
+        # print("handle_timeline_position_update_event({0})".format(x))
+        pass
 
     def refresh_child_widget_display(self):
         for i in range(0, len(self.eventTrackWidgets)):

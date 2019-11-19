@@ -47,7 +47,6 @@ class MainVideoPlayerWindow(QMainWindow):
 
         self.startDirectory = None
 
-
         self.timestamp_model = TimestampModel(None, self)
         self.proxy_model = QSortFilterProxyModel(self)
         self.ui.list_timestamp.setModel(self.timestamp_model)
@@ -59,7 +58,6 @@ class MainVideoPlayerWindow(QMainWindow):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_ui)
         self.timer.timeout.connect(self.timer_handler)
-        self.timer.start(self.timer_period)
 
         self.vlc_instance = vlc.Instance()
         self.media_player = self.vlc_instance.media_player_new()
@@ -192,6 +190,7 @@ class MainVideoPlayerWindow(QMainWindow):
         self.media_player.video_set_mouse_input(False)
         self.media_player.video_set_key_input(False)
 
+        self.timer.start(self.timer_period)
         self.ui.show()
 
     # Timestamp entries:
@@ -242,6 +241,9 @@ class MainVideoPlayerWindow(QMainWindow):
 
     # self.update_ui(): called when the timer fires
     def update_ui(self):
+        if self.media_player is None:
+            return
+
         self.ui.slider_progress.blockSignals(True)
         self.ui.slider_progress.setValue(
             self.media_player.get_position() * 10000

@@ -48,9 +48,17 @@ class Partitioner(AbstractDatabaseAccessingQObject):
         self.owning_parent_track = owning_parent_track
         self.name = name
         # self.behaviorsManager = BehaviorsManager()
-        if partitions:
-            self.partitions = partitions
+        needs_initialize_partitions = False
+        if (not (partitions is None)):
+            if (len(partitions) > 0):
+                self.partitions = partitions
+                needs_initialize_partitions = False
+            else:
+                needs_initialize_partitions = True
         else:
+            needs_initialize_partitions = True
+
+        if needs_initialize_partitions:
             new_partition_obj = PhoDurationEvent_Partition(self.totalStartTime, self.totalEndTime, '0', parent=self.owning_parent_track)
             new_partition_obj.on_edit.connect(self.owning_parent_track.on_partition_modify_event)
             self.partitions = [new_partition_obj] # Create default partition

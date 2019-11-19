@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker, selectinload, joinedload
 
 # from db_model import Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, \
 #     ExperimentalConfigurationEvent, VideoFile, Base
-from app.database.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, \
+from app.database.entry_models.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, \
     ExperimentalConfigurationEvent
 
 from app.database.entry_models.DatabaseBase import Base, metadata
@@ -14,7 +14,7 @@ from app.database.entry_models.DatabaseBase import Base, metadata
 # Behaviors:
 from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
 
-from app.database.db_model_extension import ExVideoFile
+from app.database.entry_models.db_model_extension import ExVideoFile
 
 from app.database.utility_functions import *
 

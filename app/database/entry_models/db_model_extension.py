@@ -2,7 +2,7 @@ from pathlib import Path
 from datetime import datetime
 
 ## This file exists to extend the classes auto-generated in db_model.py
-from app.database.db_model import VideoFile
+from app.database.entry_models.db_model import VideoFile
 
 class ExVideoFile(VideoFile):
 
@@ -36,35 +36,3 @@ class ExVideoFile(VideoFile):
         return ExVideoFile(None, aFullName, aBaseName, anExtension, aFullParentPath, startTime, endTime, duration, aBBID, anExperimentID, aCohortID, anAnimalID, is_original_video, notes)
 
     factory = staticmethod(factory)
-
-    def get_start_date(self):
-        return datetime.fromtimestamp(float(self.start_date) / 1000.0)
-
-    def get_end_date(self):
-        return datetime.fromtimestamp(float(self.end_date) / 1000.0)
-
-    def get_duration(self):
-        return float(self.duration) / 1000.0
-
-    def get_extension(self):
-        return ('.' + self.file_extension)  # Add the period back on
-
-    def get_full_path(self):
-        entries = Path(self.file_video_folder)
-        return entries.joinpath(self.file_fullname).resolve(strict=True)
-
-    def get_is_deeplabcut_labeled_video(self):
-        # Allow being undecided as to whether a video is an original or not
-        if (self.is_original_video is None):
-            return None
-        else:
-            return (not self.is_original_video)
-
-    def get_currProperties(self):
-        return {'duration': self.get_duration()}
-
-    def get_extendedProperties(self):
-        return {'behavioral_box_id': self.behavioral_box_id}
-
-    def get_output_dict(self):
-        return {'base_name': self.file_basename, 'file_fullname': self.file_fullname, 'file_extension': self.get_extension(), 'parent_path': self.file_video_folder, 'path': self.get_full_path(), 'parsed_date': self.get_start_date(), 'computed_end_date': self.get_end_date(), 'is_deeplabcut_labeled_video': self.get_is_deeplabcut_labeled_video(), 'properties': self.get_currProperties(), 'extended_properties': self.get_extendedProperties()}

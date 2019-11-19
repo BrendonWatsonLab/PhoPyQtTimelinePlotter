@@ -33,11 +33,16 @@ class VideoSample:
 
 class QTimeLine(QWidget):
 
+    hoverChanged = pyqtSignal(int)
     positionChanged = pyqtSignal(int)
     selectionChanged = pyqtSignal(VideoSample)
 
+    defaultActiveColor = Qt.darkCyan
+    defaultNowColor = Qt.red
+
+
     def __init__(self, duration, length):
-        super(QWidget, self).__init__()
+        super(QTimeLine, self).__init__()
         self.duration = duration
         self.length = length
 
@@ -52,6 +57,8 @@ class QTimeLine(QWidget):
         self.clicking = False  # Check if mouse left button is being pressed
         self.is_in = False  # check if user is in the widget
         self.videoSamples = []  # List of videos samples
+        self.activeColor = QTimeLine.defaultActiveColor
+        self.nowColor = QTimeLine.defaultNowColor
 
         self.setMouseTracking(True)  # Mouse events
         self.setAutoFillBackground(True)  # background
@@ -80,8 +87,9 @@ class QTimeLine(QWidget):
         while w <= self.width():
             qp.drawText(w - 50, 0, 100, 100, Qt.AlignHCenter, self.get_time_string(w * scale))
             w += 100
-        # Draw down line
-        qp.setPen(QPen(Qt.darkCyan, 5, Qt.SolidLine))
+
+        # Draw bottom horizontal baseline line
+        qp.setPen(QPen(self.activeColor, 5, Qt.SolidLine))
         qp.drawLine(0, 40, self.width(), 40)
 
         # Draw dash lines
@@ -96,6 +104,7 @@ class QTimeLine(QWidget):
             point += 10
 
         if self.pos is not None and self.is_in:
+            qp.setPen(QPen(self.nowColor))
             qp.drawLine(self.pos.x(), 0, self.pos.x(), 40)
 
         if self.pointerPos is not None:
@@ -146,8 +155,8 @@ class QTimeLine(QWidget):
         qp.setClipPath(path)
 
         # Draw pointer
-        qp.setPen(Qt.darkCyan)
-        qp.setBrush(QBrush(Qt.darkCyan))
+        qp.setPen(self.activeColor)
+        qp.setBrush(QBrush(self.activeColor))
 
         qp.drawPolygon(poly)
         qp.drawLine(line)
@@ -156,10 +165,12 @@ class QTimeLine(QWidget):
     # Mouse movement
     def mouseMoveEvent(self, e):
         self.pos = e.pos()
+        x = self.pos.x()
+
+        self.hoverChanged.emit(x)
 
         # if mouse is being pressed, update pointer
         if self.clicking:
-            x = self.pos.x()
             self.pointerPos = x
             self.positionChanged.emit(x)
             self.checkSelection(x)
@@ -199,7 +210,7 @@ class QTimeLine(QWidget):
         # Check if user clicked in video sample
         for sample in self.videoSamples:
             if sample.startPos < x < sample.endPos:
-                sample.color = Qt.darkCyan
+                sample.color = self.activeColor
                 if self.selectedSample is not sample:
                     self.selectedSample = sample
                     self.selectionChanged.emit(sample)
