@@ -8,7 +8,7 @@ from enum import Enum
 
 from PyQt5 import QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea
-from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QAction, qApp, QApplication, QTreeWidgetItem
+from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QAction, qApp, QApplication, QTreeWidgetItem, QFileDialog 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool
 
@@ -35,9 +35,7 @@ class ParentDirectoryCache(QObject):
         self.database_parent_folder_obj = None
         self.database_video_files = []
         
-        
         self.found_filesystem_video_files = []
-
         self.finalOutputParsedVideoResultFiles = []
 
     def get_full_path(self):
@@ -81,17 +79,10 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     def __init__(self, database_connection, videoFileSearchPaths):
         super(MainObjectListsWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/MainObjectListsWindow/MainObjectListsWindow.ui", self) # Load the .ui file
-
-
         self.cache = dict()
         
         self.searchPaths = videoFileSearchPaths
-        # self.found_files_lists = []
-        self.reloadModelFromDatabase()
-
-        # self.searchPathsParentIDs: indexes into the database's fileParentFolders table.
-        # self.searchPathsParentIDs = []
-        self.rebuildParentFolders()
+        self.reload_on_search_paths_changed()
 
         self.top_level_nodes = []
 
@@ -107,16 +98,7 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         self.setMouseTracking(True)
         self.initUI()
 
-        # Load the video files depending on the setting.
-        if MainObjectListsWindow.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadOnlyFromDatabase:
-            print("Only loading video files from database. Ignoring search paths...")
-            self.rebuild_from_found_files()
-        elif MainObjectListsWindow.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths:
-            print("Loading video files from database and searching search paths...")
-            self.find_filesystem_video()
-        else:
-            print("MainObjectListsWindow ERROR: Unexpected enum type!")
-            pass
+        self.reload_data()
         
         
         
@@ -160,11 +142,29 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         self.ui.mainVerticalSplitter.setSizes([700, 100])
 
         # Setup the buttons
-        # self.ui.pushButton_AddSearchDirectory.onClicked(self.handle_add_search_directory_activated)
+        self.ui.pushButton_AddSearchDirectory.clicked.connect(self.handle_add_search_directory_activated)
 
         # Complete setup
         self.statusBar()
 
+
+    def reload_on_search_paths_changed(self):
+        self.reloadModelFromDatabase()
+        self.rebuildParentFolders()
+
+
+
+    def reload_data(self):
+        # Load the video files depending on the setting.
+        if MainObjectListsWindow.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadOnlyFromDatabase:
+            print("Only loading video files from database. Ignoring search paths...")
+            self.rebuild_from_found_files()
+        elif MainObjectListsWindow.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths:
+            print("Loading video files from database and searching search paths...")
+            self.find_filesystem_video()
+        else:
+            print("MainObjectListsWindow ERROR: Unexpected enum type!")
+            pass
 
     # TODO: should build parent nodes from a combination of the loaded parents and the search paths (if we're in a mode to load search paths)
     
@@ -507,7 +507,34 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         
     def handle_add_search_directory_activated(self):
         print("handle_add_search_directory_activated")
-        self.s
+        # options = QFileDialog.Options()
+        # options |= QFileDialog.DontUseNativeDialog
+        # # fileName, _ = QtWidgets.QFileDialog.getOpenFileName(
+        # #                 None,
+        # #                 "QFileDialog.getOpenFileName()",
+        # #                 "",
+        # #                 "All Files (*);;Python Files (*.py)",
+        # #                 options=options)
+        # folderName, _ = QFileDialog.getExistingDirectory(
+        #                 None,
+        #                 "Select Directory containing Video Files")
+
+        # startingDir = cmds.workspace(q=True, rootDirectory=True)
+        startingDir = str(Path.home().resolve())
+        destDir = QFileDialog.getExistingDirectory(None, 
+                                                         'Open working directory', 
+                                                         startingDir, 
+                                                         QFileDialog.ShowDirsOnly)
+
+
+
+        if destDir:
+            print("getting folder name: {0}".format(str(destDir)))
+            # self.model.setFileName( fileName )
+            self.searchPaths.append(destDir)
+            self.reload_on_search_paths_changed()
+            # self.refreshAll()
+            self.reload_data()
         
 
     # @pyqtSlot(int, int)
