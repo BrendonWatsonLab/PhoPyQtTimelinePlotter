@@ -509,10 +509,28 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         else:
             # Create a new videoPlayerWindow window
             print("Creating new Video Player Window...")
-            self.videoPlayerWindow = MainVideoPlayerWindow()
-            self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
-            self.videoPlayerWindow.set_video_filename(url)
-            # self.videoPlayerWindow.show()
+            try:
+                self.videoPlayerWindow = MainVideoPlayerWindow()
+            except Exception as e:
+                print("Error Spawning Video Window:", e)
+                return False
+
+            
+            try:
+                self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
+            except Exception as e:
+                print("Error Setting timestamp filename for Video Window:", e)
+                return False
+
+
+            try:
+                self.videoPlayerWindow.set_video_filename(url)
+            except Exception as e:
+                print("Error Setting video filename for Video Window:", e)
+                return False
+
+            return True
+
 
         
         
