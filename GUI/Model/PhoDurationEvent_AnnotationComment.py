@@ -121,6 +121,8 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         
         # Clear drag position
         self._drag_position = None
+        self.start_poly_is_active = False
+        self.end_poly_is_active = False
         
         if event.button() == Qt.LeftButton:
             print("PhoDurationEvent_AnnotationComment: Left click")
@@ -133,9 +135,11 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         else:
             print("PhoDurationEvent_AnnotationComment: Unknown click event!")
 
+        self.update()
+
     def mouseMoveEvent(self, e):
         # If drag active, move the stop.
-        if self._drag_position:
+        if (not (self._drag_position is None)):
             self._drag_position = e.x()
             self.update()
 

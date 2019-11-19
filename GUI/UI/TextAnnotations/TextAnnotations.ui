@@ -26,7 +26,14 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QDateTimeEdit" name="dateTimeEdit_Start"/>
+        <widget class="QDateTimeEdit" name="dateTimeEdit_Start">
+         <property name="wrapping">
+          <bool>true</bool>
+         </property>
+         <property name="currentSection">
+          <enum>QDateTimeEdit::HourSection</enum>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
@@ -41,6 +48,12 @@
       <widget class="QDateTimeEdit" name="dateTimeEdit_End">
        <property name="enabled">
         <bool>true</bool>
+       </property>
+       <property name="wrapping">
+        <bool>true</bool>
+       </property>
+       <property name="currentSection">
+        <enum>QDateTimeEdit::HourSection</enum>
        </property>
       </widget>
      </item>

@@ -38,6 +38,8 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         self.shouldDismissSelectionUponMouseButtonRelease = TimelineTrackDrawingWidget_AnnotationComments.default_shouldDismissSelectionUponMouseButtonRelease
         self.itemSelectionMode = TimelineTrackDrawingWidget_AnnotationComments.default_itemSelectionMode
 
+        self.setMouseTracking(True)
+
         self.annotationEditingDialog = None
         self.activeEditingAnnotationIndex = None
         self.annotationDataObjects = []
@@ -123,6 +125,11 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         for (index, obj) in enumerate(self.instantaneousObjects):
             obj.is_deemphasized = not obj.overlaps_range(start_datetime, end_datetime)
         self.update()
+
+    def mouseDoubleClickEvent(self, event):
+        print("Mouse double clicked! ({0},{1})".format(event.x(), event.y()))
+        was_annotation_made = self.create_comment(event.x())
+        pass
 
     def on_button_clicked(self, event):
         newlySelectedObjectIndex = self.find_child_object(event.x(), event.y())
