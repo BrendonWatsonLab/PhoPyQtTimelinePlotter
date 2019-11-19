@@ -288,6 +288,33 @@ class VideoFile(Base):
         return newResultsObj
 
 
+    @staticmethod
+    def from_parsed_video_result_obj(aParsedVideoResultObj, anExperimentID = 1, aCohortID = 1, anAnimalID = 3, notes= ''):
+        aFullPath = str(aParsedVideoResultObj.path)
+        aFullParentPath = str(aParsedVideoResultObj.parent_path)  # The parent path
+        aFullName = aParsedVideoResultObj.full_name  # The full name including extension
+        aBaseName = aParsedVideoResultObj.base_name  # Excluding the period and extension
+        anExtension = aParsedVideoResultObj.file_extension[1:]  # the file extension excluding the period
+        if (not aParsedVideoResultObj.behavioral_box_id is None):
+            aBBID = aParsedVideoResultObj.behavioral_box_id + 1  # Add one to get a valid index
+        else:
+            aBBID = 1
+
+        if (not aParsedVideoResultObj.is_deeplabcut_labeled_video is None):
+            is_deeplabcut_labeled_video = aParsedVideoResultObj.is_deeplabcut_labeled_video
+            is_original_video = (not is_deeplabcut_labeled_video)
+        else:
+            is_deeplabcut_labeled_video = None
+            is_original_video = None  # We know nothing about whether it is an original video
+
+        startTime = int(aParsedVideoResultObj.parsed_date.timestamp() * 1000.0)
+        endTime = int(aParsedVideoResultObj.get_computed_end_date().timestamp() * 1000.0)
+        duration = int(aParsedVideoResultObj.get_duration().total_seconds() * 1000.0)
+
+        return VideoFile(None, aFullName, aBaseName, anExtension, aFullParentPath, startTime, endTime, duration, aBBID, anExperimentID, aCohortID, anAnimalID, is_original_video, notes)
+
+
+
 
 
 class FileParentFolder(Base):

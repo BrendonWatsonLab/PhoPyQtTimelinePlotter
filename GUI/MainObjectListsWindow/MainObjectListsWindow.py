@@ -20,7 +20,7 @@ from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFi
 
 from pathlib import Path
 
-from app.database.entry_models.db_model import FileParentFolder, StaticFileExtension
+from app.database.entry_models.db_model import FileParentFolder, StaticFileExtension, VideoFile
 
 class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
@@ -175,7 +175,9 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
                 if need_create_new_video_file:
                     # Create the video file if needed
-                    aNewVideoFileRecord = aFoundVideoFile.get_database_videoFile_record(None,None,None,'auto')
+                    
+                    aNewVideoFileRecord = VideoFile.from_parsed_video_result_obj(aFoundVideoFile,None,None,None,'auto')
+                    # aNewVideoFileRecord = aFoundVideoFile.get_database_videoFile_record(None,None,None,'auto')
                     aNewVideoFileRecord.staticFileExtension = parent_file_extension_obj
                     aNewVideoFileRecord.fileParentFolder = loaded_parent_folder_obj
 

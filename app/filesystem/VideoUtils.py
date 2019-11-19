@@ -25,7 +25,6 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 ## IMPORT:
 # from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult
-from app.database.entry_models.db_model import *
 
 # Basler emulation style:
 videoFileNameParsingRegex = re.compile(r'.*_(?P<date>\d{4}\d{2}\d{2})_(?P<time>\d{2}\d{2}\d{2}\d{3})')
@@ -143,32 +142,6 @@ class FoundVideoFileResult(FoundFileResult):
             return self.video_parsed_results.get_computed_end_date(self.parsed_date)
         else:
             return None
-
-    def get_database_videoFile_record(self, anExperimentID = 1, aCohortID = 1, anAnimalID = 3, notes= ''):
-         # outObj.file_fullname = aPhoDurationVideoEvent.extended_data['fullpath']
-        aFullPath = str(self.path)
-        aFullParentPath = str(self.parent_path)  # The parent path
-        aFullName = self.full_name  # The full name including extension
-        aBaseName = self.base_name  # Excluding the period and extension
-        anExtension = self.file_extension[1:]  # the file extension excluding the period
-        if (not self.behavioral_box_id is None):
-            aBBID = self.behavioral_box_id + 1  # Add one to get a valid index
-        else:
-            aBBID = 1
-
-        if (not self.is_deeplabcut_labeled_video is None):
-            is_deeplabcut_labeled_video = self.is_deeplabcut_labeled_video
-            is_original_video = (not is_deeplabcut_labeled_video)
-        else:
-            is_deeplabcut_labeled_video = None
-            is_original_video = None  # We know nothing about whether it is an original video
-
-        startTime = int(self.parsed_date.timestamp() * 1000.0)
-        endTime = int(self.get_computed_end_date().timestamp() * 1000.0)
-        duration = int(self.get_duration().total_seconds() * 1000.0)
-
-        return VideoFile(None, aFullName, aBaseName, anExtension, aFullParentPath, startTime, endTime, duration, aBBID, anExperimentID, aCohortID, anAnimalID, is_original_video, notes)
-
 
     def parse(self):
         # parse the video to find at least the duration
