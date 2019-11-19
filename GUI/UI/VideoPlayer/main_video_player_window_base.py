@@ -40,7 +40,6 @@ class MainVideoPlayerWindowBase(QMainWindow):
 
         self.startDirectory = None
 
-
         self.timestamp_model = TimestampModel(None, self)
         self.proxy_model = QSortFilterProxyModel(self)
         self.ui.list_timestamp.setModel(self.timestamp_model)
