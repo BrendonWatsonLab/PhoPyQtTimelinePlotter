@@ -27,25 +27,70 @@ class CachedVideoFileLoadingOptions(Enum):
         LoadDatabaseAndSearchVideoFileSearchPaths = 2 #  Load the video file records from the sqlite database AND search the video file search paths for new or updated video files.
 
 
+class ParentDirectoryCache(QObject):
+    def __init__(self, full_path):
+        super(ParentDirectoryCache, self).__init__(None)
+        self.full_path = full_path
+
+        self.database_parent_folder_obj = None
+        self.database_video_files = []
+        
+        
+        self.found_filesystem_video_files = []
+
+        self.finalOutputParsedVideoResultFiles = []
+
+    def get_full_path(self):
+        return str(self.full_path)
+
+    def set_database_video_files(self, new_db_video_files):
+        self.database_video_files = new_db_video_files
+        for aLoadedVideoFileRecord in self.database_video_files:
+            newObj = aLoadedVideoFileRecord.get_parsed_video_result_obj()
+            self.finalOutputParsedVideoResultFiles.append(newObj)
+
+    def set_found_filesystem_video_files(self, new_found_filesystem_video_files):
+        self.found_filesystem_video_files = new_found_filesystem_video_files
+        for aLoadedVideoFileRecord in self.found_filesystem_video_files:
+            self.finalOutputParsedVideoResultFiles.append(aLoadedVideoFileRecord)
+        
+    def get_filesystem_video_files(self):
+        return self.found_filesystem_video_files
+
+    def get_database_video_files(self):
+        return self.database_video_files
+
+    def set_database_parent_folder_obj(self, new_db_parent):
+        self.database_parent_folder_obj = new_db_parent
+
+    def get_database_parent_folder(self):
+        return self.database_parent_folder_obj
+
+    
+
+
 
 class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
     VideoFileTreeHeaderLabels = ['filename', 'start_date', 'end_date', 'is_labeled']
     
-    VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadOnlyFromDatabase
-    # VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
+    # VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadOnlyFromDatabase
+    VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
     
 
     def __init__(self, database_connection, videoFileSearchPaths):
         super(MainObjectListsWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/MainObjectListsWindow/MainObjectListsWindow.ui", self) # Load the .ui file
 
+
+        self.cache = dict()
+        
         self.searchPaths = videoFileSearchPaths
-        self.found_files_lists = []
+        # self.found_files_lists = []
         self.reloadModelFromDatabase()
 
         # self.searchPathsParentIDs: indexes into the database's fileParentFolders table.
-        self.searchPathsParentIDs = []
+        # self.searchPathsParentIDs = []
         self.rebuildParentFolders()
 
         self.top_level_nodes = []
@@ -132,13 +177,17 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         self.loadedVideoFiles = []
 
         for aLoadedParentFolder in self.loadedParentFolders:
+            self.cache[aLoadedParentFolder.fullpath] = ParentDirectoryCache(aLoadedParentFolder.fullpath)
             loadedVideoFiles = aLoadedParentFolder.videoFiles
-            currOutList = []
-            for aLoadedVideoFileRecord in loadedVideoFiles:
-                self.loadedVideoFiles.append(aLoadedVideoFileRecord)
-                newObj = aLoadedVideoFileRecord.get_parsed_video_result_obj()
-                currOutList.append(newObj)
-            self.found_files_lists.append(currOutList)
+            self.cache[aLoadedParentFolder.fullpath].set_database_parent_folder_obj(aLoadedParentFolder)
+            self.cache[aLoadedParentFolder.fullpath].set_database_video_files(loadedVideoFiles)
+
+            # currOutList = []
+            # for aLoadedVideoFileRecord in loadedVideoFiles:
+            #     self.loadedVideoFiles.append(aLoadedVideoFileRecord)
+            #     newObj = aLoadedVideoFileRecord.get_parsed_video_result_obj()
+            #     currOutList.append(newObj)
+            # self.found_files_lists.append(currOutList)
 
 
             #TODO: parse loadedVideoFiles into the regular objects that are loaded, and then add them to the self.found_files_lists
@@ -150,19 +199,10 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
     def saveVideoFilesToDatabase(self):
 
-        for (aSearchPathIndex, aSearchPath) in enumerate(self.searchPaths):        
-            parentIDIndex = self.searchPathsParentIDs[aSearchPathIndex]
-            if parentIDIndex is None:
-                # Get the shared parent ID
-                print("ERROR: parent ID is NONE!")
-                continue
-
-            arrayIndex = parentIDIndex - 1 # Convert from the database ID to the array of loaded parent object's index
-            loaded_parent_folder_obj = self.loadedParentFolders[arrayIndex]
-            
-            curr_search_path_video_files = self.found_files_lists[aSearchPathIndex]
-            existing_database_video_files = loaded_parent_folder_obj.videoFiles
-
+        for (key_path, cache_value) in self.cache.items():
+            loaded_parent_folder_obj = cache_value.get_database_parent_folder()
+            curr_search_path_video_files = cache_value.get_filesystem_video_files()
+            existing_database_video_files = cache_value.get_database_video_files()
             for aFoundVideoFile in curr_search_path_video_files:
                 # Get the appropriate file extension parent
                 currFileExtension = aFoundVideoFile.file_extension[1:].lower()
@@ -207,19 +247,85 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
 
 
+        # for (aSearchPathIndex, aSearchPath) in enumerate(self.searchPaths):        
+        #     # parentIDIndex = self.searchPathsParentIDs[aSearchPathIndex]
+        #     if parentIDIndex is None:
+        #         # Get the shared parent ID
+        #         print("ERROR: parent ID is NONE!")
+        #         continue
+
+        #     arrayIndex = parentIDIndex - 1 # Convert from the database ID to the array of loaded parent object's index
+        #     loaded_parent_folder_obj = self.loadedParentFolders[arrayIndex]
+            
+        #     curr_search_path_video_files = self.found_files_lists[aSearchPathIndex]
+        #     existing_database_video_files = loaded_parent_folder_obj.videoFiles
+
+        #     for aFoundVideoFile in curr_search_path_video_files:
+        #         # Get the appropriate file extension parent
+        #         currFileExtension = aFoundVideoFile.file_extension[1:].lower()
+        #         parent_file_extension_obj = None
+        #         if currFileExtension in self.fileExtensionDict.keys():
+        #             parent_file_extension_obj = self.fileExtensionDict[currFileExtension]
+        #         else:
+        #             # Key doesn't exist!
+        #             print("extension {0} doesn't exist!".format(currFileExtension))
+        #             parent_file_extension_obj = StaticFileExtension(currFileExtension)
+        #             # Add it to the database
+        #             self.database_connection.save_static_file_extensions_to_database([parent_file_extension_obj])
+
+
+        #         potentially_computed_end_date = aFoundVideoFile.get_computed_end_date()
+        #         if potentially_computed_end_date:
+        #             computed_end_date = str(potentially_computed_end_date)
+        #         else:
+        #             computed_end_date = 'Loading...'
+
+
+        #         # Check if the videoFile exists:
+        #         need_create_new_video_file = True
+        #         for anExistingVideoFile in existing_database_video_files:
+        #             if (anExistingVideoFile.file_fullname == aFoundVideoFile.full_name):
+        #                 # print("File already exists, skipping...")
+        #                 need_create_new_video_file = False
+        #                 break
+        #             else:
+        #                 continue
+
+        #         if need_create_new_video_file:
+        #             # Create the video file if needed
+                    
+        #             aNewVideoFileRecord = VideoFile.from_parsed_video_result_obj(aFoundVideoFile,None,None,None,'auto')
+        #             # aNewVideoFileRecord = aFoundVideoFile.get_database_videoFile_record(None,None,None,'auto')
+        #             aNewVideoFileRecord.staticFileExtension = parent_file_extension_obj
+        #             aNewVideoFileRecord.fileParentFolder = loaded_parent_folder_obj
+
+        #             # Add the video file record
+        #             self.database_connection.save_video_file_info_to_database([aNewVideoFileRecord])
+
+
+
 
     # Creates new "FileParentFolder" entries in the databse if existing ones can't be found
     def rebuildParentFolders(self):
         unresolvedSearchPaths = self.searchPaths
-        
-        self.searchPathsParentIDs = []
+        # self.searchPathsParentIDs = []
 
         for (index, aSearchPath) in enumerate(unresolvedSearchPaths):
             currPath = Path(aSearchPath).resolve()
             currRootAnchor = currPath.anchor
             currRemainder = currPath.relative_to(currRootAnchor)
             print("currPath: {0}; currRootAnchor: {1}; currRemainder: {2}".format(currPath, currRootAnchor, currRemainder))
-            self.searchPaths[index] = str(currPath)
+            
+            aFinalSearchPath = str(currPath)
+            self.searchPaths[index] = aFinalSearchPath
+
+            if (not (aFinalSearchPath in self.cache.keys())):
+                # Parent doesn't yet exist in cache
+                self.cache[aFinalSearchPath] = ParentDirectoryCache(aFinalSearchPath)
+            else:
+                # Parent already exists
+                self.cache[aFinalSearchPath]
+            
 
             # Iterate through all loaded parents to see if the parent already exists
             finalParent = None
@@ -227,22 +333,32 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
             # Database folders
             for aParentFolder in self.loadedParentFolders:
                 aParentPath = Path(aParentFolder.fullpath).resolve()
+                # Try to match to the loaded parent objects from the database
+                self.cache[aFinalSearchPath]
+
+
                 if aParentPath.samefile(currPath):
                     # currPath is the same file as the loaded parent path
                     print("Found existing parent for {0}".format(currPath))
                     finalParent = aParentFolder
+
             # If we get through all loaded parents and the parent doesn't already exist, add it
             if finalParent is None:
                 print("Creating new parent {0}".format(currPath))
                 finalParent = FileParentFolder(None, currPath, currRootAnchor, currRemainder, 'auto')
+                # Save parent to database
                 self.database_connection.save_file_parent_folders_to_database([finalParent])
+                # Set parent to the newly created database parent object
+                self.cache[aFinalSearchPath].set_database_parent_folder_obj(finalParent)
 
             if finalParent is None:
                 print("Still nONE!")
-                self.searchPathsParentIDs.append(None)
+                # self.searchPathsParentIDs.append(None)
+                self.cache[aFinalSearchPath].set_database_parent_folder_obj(None)
             else:
                 print("     parent id: {0}".format(finalParent.id))
-                self.searchPathsParentIDs.append(finalParent.id)
+                # self.searchPathsParentIDs.append(finalParent.id)
+                self.cache[aFinalSearchPath].set_database_parent_folder_obj(finalParent)
 
 
     # Rebuilds the entire Tree UI from the self.found_files_lists
@@ -251,9 +367,12 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         self.top_level_nodes = []
 
         # Clear the top-level nodes
-        for (aSearchPathIndex, aSearchPath) in enumerate(self.searchPaths):        
-            aNewGroupNode = QTreeWidgetItem([str(aSearchPath), '', '', ''])
-            curr_search_path_video_files = self.found_files_lists[aSearchPathIndex]
+        # for (aSearchPathIndex, aSearchPath) in enumerate(self.searchPaths):
+        for (key_path, cache_value) in self.cache.items():        
+            aNewGroupNode = QTreeWidgetItem([key_path, '', '', ''])
+            # curr_search_path_video_files = self.found_files_lists[aSearchPathIndex]
+
+            curr_search_path_video_files = cache_value.get_filesystem_video_files()
 
             for aFoundVideoFile in curr_search_path_video_files:
                 potentially_computed_end_date = aFoundVideoFile.get_computed_end_date()
@@ -335,9 +454,9 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     def on_find_video_metadata_execute_thread(self, progress_callback):
         currProgress = 0.0
         parsedFiles = 0
-        for (index, fileList) in enumerate(self.found_files_lists):
+        for (key_path, cache_value) in self.cache.items():
             # Iterate through all found file-lists
-            for (sub_index, aFoundVideoFile) in enumerate(fileList):
+            for (sub_index, aFoundVideoFile) in enumerate(cache_value.get_filesystem_video_files()):
                 # Iterate through all found video-files in a given list
                 aFoundVideoFile.parse()
                 parsedFiles = parsedFiles + 1
@@ -360,14 +479,16 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
     def on_find_filesystem_video_execute_thread(self, progress_callback):
         searchedSearchPaths = 0
-        self.found_files_lists = []
+        # self.found_files_lists = []
+        # TODO: clear old files from cache?
         self.total_found_files = 0
         self.total_search_paths = len(self.searchPaths)
 
         # Clear the top-level nodes
         for aSearchPath in self.searchPaths:
             curr_search_path_video_files = findVideoFiles(aSearchPath, shouldPrint=False)
-            self.found_files_lists.append(curr_search_path_video_files)
+            # self.found_files_lists.append(curr_search_path_video_files)
+            self.cache[aSearchPath].set_found_filesystem_video_files(curr_search_path_video_files)
             self.total_found_files = self.total_found_files + len(curr_search_path_video_files)
             searchedSearchPaths = searchedSearchPaths + 1
             progress_callback.emit(searchedSearchPaths*100/self.total_search_paths)
@@ -386,6 +507,7 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         
     def handle_add_search_directory_activated(self):
         print("handle_add_search_directory_activated")
+        self.s
         
 
     # @pyqtSlot(int, int)
