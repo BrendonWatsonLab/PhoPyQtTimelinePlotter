@@ -10,3 +10,9 @@ QLineEdit:read-only {
     border: 1px solid #B0B0B0;
     border-radius: 2px;
 }
+/* QToolTip { 
+    border: 2px solid darkkhaki;
+    padding: 5px;
+    border-radius: 3px;
+    background-color: rgba(255,255,0,0);
+} */

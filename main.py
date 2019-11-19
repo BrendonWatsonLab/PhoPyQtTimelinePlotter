@@ -57,8 +57,9 @@ if __name__ == '__main__':
 
 
         # Style
-        app.setStyleSheet(
-            "QToolTip { border: 2px solid darkkhaki; padding: 5px; border-radius: 3px; background-color: rgba(255,255,0,0); }");
+        app.setStyleSheet(open("GUI/application.qss", "r").read())
+        # app.setStyleSheet(
+        #     "QToolTip { border: 2px solid darkkhaki; padding: 5px; border-radius: 3px; background-color: rgba(255,255,0,0); }");
 
         # run
 
