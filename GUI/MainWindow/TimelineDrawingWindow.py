@@ -20,6 +20,7 @@ from GUI.HelpWindow.HelpWindowFinal import *
 # from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget import *
 from GUI.UI.qtimeline import *
 
+from GUI.UI.ExtendedTracksContainerWidget import ExtendedTracksContainerWidget
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Events import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Partition import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_AnnotationComments import *
@@ -179,10 +180,12 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
 
         # Build the bottomPanelWidget
-        self.extendedTracksContainer = QtWidgets.QWidget()
+        self.extendedTracksContainer = ExtendedTracksContainerWidget(masterTimelineDurationSeconds, minimumWidgetWidth, self)
         self.extendedTracksContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.extendedTracksContainer.setAutoFillBackground(True)
         self.extendedTracksContainer.setMouseTracking(True)
+        self.extendedTracksContainer.hoverChanged.connect(self.handle_timeline_hovered_position_update_event)
+        self.timelineMasterTrackWidget.hoverChanged.connect(self.extendedTracksContainer.on_update_hover)
 
         # Debug Pallete
         # p = self.labjackEventsContainer.palette()
