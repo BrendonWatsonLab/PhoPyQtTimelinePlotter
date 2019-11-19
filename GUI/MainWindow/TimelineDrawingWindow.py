@@ -67,9 +67,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.videoInfoObjects = []
         self.reloadModelFromDatabase()
 
-
-
-
         self.build_video_display_events()
 
         self.videoPlayerWindow = None
