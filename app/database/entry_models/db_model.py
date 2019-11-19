@@ -233,7 +233,7 @@ class VideoFile(Base):
 
     def get_full_path(self):
         entries = Path(self.get_parent_path())
-        return entries.joinpath(self.file_fullname).resolve(strict=True)
+        return entries.joinpath(self.file_fullname).resolve(strict=False)
 
     def get_parent_path(self):
         parentFolder = self.fileParentFolder
