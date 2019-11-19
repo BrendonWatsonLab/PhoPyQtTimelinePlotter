@@ -30,15 +30,16 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         super(MainObjectListsWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/MainObjectListsWindow/MainObjectListsWindow.ui", self) # Load the .ui file
 
-        self.reloadModelFromDatabase()
+        self.found_files_lists = []
         self.searchPaths = videoFileSearchPaths
+        self.reloadModelFromDatabase()
 
         # self.searchPathsParentIDs: indexes into the database's fileParentFolders table.
         self.searchPathsParentIDs = []
         self.rebuildParentFolders()
 
         self.top_level_nodes = []
-        self.found_files_lists = []
+
 
         # self.videoInfoObjects = load_video_events_from_database(self.database_connection.get_path(), as_videoInfo_objects=True)
         # self.build_video_display_events()
@@ -48,13 +49,12 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         self.threadpool = QThreadPool()
         print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
 
-
         self.setMouseTracking(True)
         self.initUI()
 
+        # self.find_filesystem_video()
+        self.rebuild_from_found_files()
         
-        self.find_filesystem_video()
-
         # self.rebuild_from_search_paths()
         
         # self.find_video_metadata()
@@ -109,13 +109,22 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         # Load the latest behaviors and colors data from the database
         self.fileExtensionDict = self.database_connection.load_static_file_extensions_from_database()
         self.loadedParentFolders = self.database_connection.load_file_parent_folders_from_database(include_video_files=True)
+        self.loadedVideoFiles = []
 
         for aLoadedParentFolder in self.loadedParentFolders:
             loadedVideoFiles = aLoadedParentFolder.videoFiles
+            currOutList = []
+            for aLoadedVideoFileRecord in loadedVideoFiles:
+                self.loadedVideoFiles.append(aLoadedVideoFileRecord)
+                newObj = aLoadedVideoFileRecord.get_parsed_video_result_obj()
+                currOutList.append(newObj)
+            self.found_files_lists.append(currOutList)
+
+
             #TODO: parse loadedVideoFiles into the regular objects that are loaded, and then add them to the self.found_files_lists
             # self.found_files_lists.append()
 
-        self.loadedVideoFiles = self.database_connection.load_video_file_info_from_database()
+        # self.loadedVideoFiles = self.database_connection.load_video_file_info_from_database()
 
 
 

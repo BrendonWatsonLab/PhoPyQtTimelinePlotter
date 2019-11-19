@@ -10,6 +10,7 @@ from datetime import datetime
 
 from GUI.Model.Videos import VideoInfo, ExperimentContextInfo
 
+from app.filesystem.VideoUtils import VideoParsedResults, FoundVideoFileResult
 # (Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, VideoFile)
 
 class Animal(Base):
@@ -231,8 +232,14 @@ class VideoFile(Base):
         return ('.' + self.file_extension)  # Add the period back on
 
     def get_full_path(self):
-        entries = Path(self.file_video_folder)
+        entries = Path(self.get_parent_path())
         return entries.joinpath(self.file_fullname).resolve(strict=True)
+
+    def get_parent_path(self):
+        parentFolder = self.fileParentFolder
+        aFullParentPath = parentFolder.fullpath
+        return aFullParentPath
+
 
     def get_is_original_video(self):
         # Allow being undecided as to whether a video is an original or not
@@ -272,6 +279,14 @@ class VideoFile(Base):
         newVideoInfoObj = VideoInfo(self.file_fullname, self.file_basename, self.get_extension(), aFullParentPath, \
              self.get_start_date().replace(tzinfo=None), self.get_end_date().replace(tzinfo=None), self.get_duration(), self.get_is_original_video(), newExperimentContextInfoObj)
         return newVideoInfoObj
+
+    def get_parsed_video_result_obj(self):
+        parsedResults = VideoParsedResults(self.get_duration())
+        newResultsObj = FoundVideoFileResult(str(self.get_full_path()), self.get_parent_path(), self.file_basename, self.file_fullname, self.get_extension(), \
+            self.get_start_date().replace(tzinfo=None), self.get_behavioral_box_id(), self.get_is_deeplabcut_labeled_video())
+        newResultsObj.video_parsed_results = parsedResults
+        return newResultsObj
+
 
 
 

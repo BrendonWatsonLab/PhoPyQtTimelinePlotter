@@ -19,10 +19,6 @@ from PyQt5.QtWidgets import QApplication, QWidget, QTableWidget, QTableWidgetIte
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QStandardItemModel
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QRunnable
 
-from pathlib import Path
-
-from app.database.entry_models.db_model import VideoFile
-
 # # Used to get the video file metadata
 # from hachoir.parser import createParser
 # from hachoir.metadata import extractMetadata
