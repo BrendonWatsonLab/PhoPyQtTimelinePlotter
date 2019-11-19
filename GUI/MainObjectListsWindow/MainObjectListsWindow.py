@@ -506,23 +506,34 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
     def handle_get_conversion_list_action(self):
         print("handle_get_conversion_list_action()")
+        unconvertedFiles = dict()
+        convertedFiles = dict()
+
         pairsList = []
         # Find children folders with different roots
         for (key_path, cache_value) in self.cache.items():
             curr_cache_root_anchor = cache_value.get_root_anchor()
             curr_cache_remainder = cache_value.get_non_root_remainder()
-            for (other_key_path, other_cache_value) in self.cache.items():
-                other_curr_cache_root_anchor = other_cache_value.get_root_anchor()
-                other_curr_cache_remainder = other_cache_value.get_non_root_remainder()
-                if (key_path == other_key_path):
-                    # Don't allow identical files
-                    continue
-                else:
-                    if (curr_cache_remainder == other_curr_cache_remainder):
-                        # Found a matching candidate!
-                        pairsList.append((key_path, other_key_path))
             
-        print("found matching pairs: {0}".format(str(pairsList)))
+            for aVideoFile in cache_value.get_combined_video_files():
+                currFileExtension = aVideoFile.file_extension[1:].lower()
+                if currFileExtension == 'mp4':
+                    # Converted
+                    convertedFiles[aVideoFile.base_name] = aVideoFile
+                else:
+                    # non-converted
+                    unconvertedFiles[aVideoFile.base_name] = aVideoFile
+            
+           
+       
+        for (aKey_basename, converted_file_value) in convertedFiles.items():
+            if (aKey_basename in unconvertedFiles.keys()):
+                unconvertedFiles[aKey_basename] = None # Remove the key
+
+
+        # print("found matching pairs: {0}".format(str(pairsList)))
+        print("unique unconverted files: {0}".format(str(unconvertedFiles)))
+        
 
 
     # @pyqtSlot(int, int)
