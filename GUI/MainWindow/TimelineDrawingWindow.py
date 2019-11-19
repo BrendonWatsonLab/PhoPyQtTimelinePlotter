@@ -149,10 +149,12 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.videoFileTrackWidgets = []
 
         # self.allVideoEventDisplayObjects.filter()
-        self.mainVideoTrack = TimelineTrackDrawingWidget_Events(-1, self.trackVideoEventDisplayObjects[0], [], self.totalStartTime, self.totalEndTime, self.database_connection)
+        currTrackIndex = 0
+        self.mainVideoTrack = TimelineTrackDrawingWidget_Events(currTrackIndex, self.trackVideoEventDisplayObjects[0], [], self.totalStartTime, self.totalEndTime, self.database_connection)
         self.videoFileTrackWidgets.append(self.mainVideoTrack)
 
-        self.labeledVideoTrack = TimelineTrackDrawingWidget_Events(-1, self.trackVideoEventDisplayObjects[1], [], self.totalStartTime, self.totalEndTime, self.database_connection)
+        currTrackIndex = currTrackIndex + 1
+        self.labeledVideoTrack = TimelineTrackDrawingWidget_Events(currTrackIndex, self.trackVideoEventDisplayObjects[1], [], self.totalStartTime, self.totalEndTime, self.database_connection)
         self.videoFileTrackWidgets.append(self.labeledVideoTrack)
 
 
@@ -160,14 +162,17 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.eventTrackWidgets = []
 
         # Annotation Comments track:
-        self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(0, [], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+        currTrackIndex = currTrackIndex + 1
+        self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(currTrackIndex, [], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
         self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
 
         # Partition tracks:
-        self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(1, None, [], self.totalStartTime, self.totalEndTime, self.database_connection)
+        currTrackIndex = currTrackIndex + 1
+        self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection)
         self.eventTrackWidgets.append(self.partitionsTrackWidget)
 
-        self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(2, None, [], self.totalStartTime, self.totalEndTime, self.database_connection)
+        currTrackIndex = currTrackIndex + 1
+        self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection)
         self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
 
         # Build the bottomPanelWidget
