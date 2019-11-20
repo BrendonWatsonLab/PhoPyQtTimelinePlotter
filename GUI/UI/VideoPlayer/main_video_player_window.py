@@ -269,7 +269,6 @@ class MainVideoPlayerWindow(QMainWindow):
             return
         self.proxy_model.removeRow(selected[0].row()) and self.mapper.submit()
 
-
     def set_media_position(self, position):
         percentage = position / 10000.0
         self.media_player.set_position(percentage)
@@ -442,7 +441,6 @@ class MainVideoPlayerWindow(QMainWindow):
             self.media_start_time = 0
             self.media_end_time = -1
 
-
     def run(self):
         """
         Execute the loop
@@ -513,6 +511,17 @@ class MainVideoPlayerWindow(QMainWindow):
         self.media_is_playing = not self.media_is_playing
         self.play_pause_model.setState(not self.media_is_playing)
 
+    # Updates the window title with the filename
+    # TODO: doesn't work
+    def update_window_title(self):
+        if (self.video_filename is None):
+            # self.setWindowFilePath(None)
+            self.setWindowTitle("Video Player: No Video")
+            pass
+        else:
+            # self.setWindowFilePath(self.video_filename)
+            self.setWindowTitle("Video Player: " + str(self.video_filename))
+            pass
 
     # After a new media has been set, this function is called to start playing for a short bit to display the first few frames of the video
     def update_preview_frame(self):
@@ -810,10 +819,6 @@ class MainVideoPlayerWindow(QMainWindow):
             self.ui.entry_end_time.setReadOnly(True)
             self.ui.entry_description.setReadOnly(True)
 
-    
-
-
-
     def set_video_filename(self, filename):
         """
         Set the video filename
@@ -822,11 +827,11 @@ class MainVideoPlayerWindow(QMainWindow):
             self._show_error("Cannot access video file " + filename)
             return
 
-        self.startDirectory = os.path.pardir
-        self.video_filename = filename
-
         # Close the previous file:
         self.media_stop()
+
+        self.startDirectory = os.path.pardir
+        self.video_filename = filename
 
         media = self.vlc_instance.media_new(self.video_filename)
         media.parse()
@@ -848,7 +853,7 @@ class MainVideoPlayerWindow(QMainWindow):
             elif sys.platform == "darwin": # for MacOS
                 self.media_player.set_nsobject(self.ui.frame_video.winId())
             self.ui.entry_video.setText(self.video_filename)
-
+            self.update_window_title()
             self.update_video_file_labels_on_file_change()
             self.media_started_playing = False
             self.media_is_playing = False
