@@ -21,6 +21,7 @@ from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFi
 from pathlib import Path
 
 from app.database.entry_models.db_model import FileParentFolder, StaticFileExtension, VideoFile
+from app.filesystem.VideoConversionHelpers import HandbrakeConversionQueue, save_handbrake_conversion_queue
 
 class CachedVideoFileLoadingOptions(Enum):
         LoadOnlyFromDatabase = 1 # Only loads the video file records from the sqlite database. Doesn't search the disk for new video files or update existing ones
@@ -509,7 +510,16 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         unconvertedFiles = dict()
         convertedFiles = dict()
 
+
+        
+        unconvertedParentPaths = dict()
+        convertedParentPaths = dict()
+
+
+        
+
         needs_conversion_files = []
+        handbrake_conversion_queue = []
 
         pairsList = []
         # Find children folders with different roots
@@ -522,25 +532,44 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
                 if currFileExtension == 'mp4':
                     # Converted
                     convertedFiles[aVideoFile.base_name] = aVideoFile
+                    convertedParentPaths[aVideoFile.parent_path] = None
                 else:
                     # non-converted
                     unconvertedFiles[aVideoFile.base_name] = aVideoFile
-            
+                    unconvertedParentPaths[aVideoFile.parent_path] = None
            
        
         for (aKey_basename, converted_file_value) in convertedFiles.items():
             if (aKey_basename in unconvertedFiles.keys()):
+                # Get the converted/unconverted parent paths to set up the bidirectional mapping
+                theUnconvertedParentPath = unconvertedFiles[aKey_basename].parent_path
+                theConvertedParentPath = converted_file_value.parent_path
+
+                convertedParentPaths[theConvertedParentPath] = theUnconvertedParentPath
+                # The item exists in the unconverted array, remove it from it.
+                unconvertedParentPaths[theUnconvertedParentPath] = theConvertedParentPath
                 # unconvertedFiles[aKey_basename] = None # Remove the key
                 del unconvertedFiles[aKey_basename]
 
         for (anOutputUnconvertedFileKey, anOutputUnconvertedFileValue) in unconvertedFiles.items():
             needs_conversion_files.append(anOutputUnconvertedFileValue.path)
 
+            # get basename
+            new_full_name = anOutputUnconvertedFileValue.base_name + '.mp4'
+
+            # Check the converted map to see if the unconverted parent path has an entry we can look up
+            theConvertedParentPath = unconvertedParentPaths[anOutputUnconvertedFileValue.parent_path]
+
+            new_full_path = theConvertedParentPath + new_full_name
+            ## TODO: working on file conversions
+
+            new_job = HandbrakeConversionQueue(anOutputUnconvertedFileValue.path, new_full_path)
+
         # print("found matching pairs: {0}".format(str(pairsList)))
         # print("unique unconverted files: {0}".format(str(unconvertedFiles)))
         print("unique unconverted files: {0}".format(str(needs_conversion_files)))
         
-
+        HandbrakeConversionQueue, save_handbrake_conversion_queue
 
     # @pyqtSlot(int, int)
     # Occurs when the user selects an object in the child video track with the mouse
