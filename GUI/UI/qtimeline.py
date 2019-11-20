@@ -4,7 +4,7 @@ import tempfile
 from base64 import b64encode
 
 from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import Qt, QPoint, QLine, QRect, QRectF, pyqtSignal
+from PyQt5.QtCore import Qt, QPoint, QLine, QRect, QRectF, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QPainter, QColor, QFont, QBrush, QPalette, QPen, QPolygon, QPainterPath, QPixmap
 from PyQt5.QtWidgets import QWidget, QFrame, QScrollArea, QVBoxLayout
 import sys
@@ -105,9 +105,13 @@ class QTimeLine(QWidget):
                 qp.drawLine(3 * point, 40, 3 * point, 20)
             point += 10
 
-        if self.pos is not None and self.is_in:
-            qp.setPen(QPen(self.nowColor))
-            qp.drawLine(self.pos.x(), 0, self.pos.x(), 40)
+
+        # Draw hover line
+        if self.pos is not None:
+            if (self.is_in or self.is_driven_externally): 
+                qp.setPen(QPen(self.nowColor))
+                qp.drawLine(self.pos.x(), 0, self.pos.x(), self.height())
+
 
         if self.pointerPos is not None:
             line = QLine(QPoint(self.pointerTimePos/self.getScale(), 40),
@@ -250,3 +254,9 @@ class QTimeLine(QWidget):
     # Set Font
     def setTextFont(self, font):
         self.font = font
+
+    @pyqtSlot(int)
+    def on_update_hover(self, x):
+        self.is_driven_externally = True
+        self.pos = QPoint(x, 0)
+        self.update()

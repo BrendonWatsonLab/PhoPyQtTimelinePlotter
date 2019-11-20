@@ -448,6 +448,10 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         currPercent = self.get_active_percent_viewport_total()
         return (currPercent * self.totalDuration)
 
+    # Given the percent offset of the total duration, gets the x-offset for the timeline tracks (not the viewport, its contents)
+    def percent_offset_to_track_offset(self, track_percent):
+        return float(self.get_minimum_track_width()) * float(track_percent)
+
     ## Datetime functions copied from the versions created for the PhoDurationEvent class
     # returns true if the absolute_datetime falls within the current entire timeline. Not the viewport
     def contains_date(self, absolute_datetime):
@@ -675,14 +679,29 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     @pyqtSlot(float)
     def on_video_playback_position_updated(self, timeline_percent_offset):
         print("on_video_playback_position_updated({0})".format(str(timeline_percent_offset)))
-        self.timelineMasterTrackWidget.on_update_hover(timeline_percent_offset)
-        self.extendedTracksContainer.on_update_hover(timeline_percent_offset)
+        timeline_x_offset = self.percent_offset_to_track_offset(timeline_percent_offset)
+
+        self.timelineMasterTrackWidget.blockSignals(True)
+        self.extendedTracksContainer.blockSignals(True)
+
+        self.timelineMasterTrackWidget.on_update_hover(timeline_x_offset)
+        self.extendedTracksContainer.on_update_hover(timeline_x_offset)
+        
+        self.extendedTracksContainer.blockSignals(False)
+        self.timelineMasterTrackWidget.blockSignals(False)
 
     # Called when the timeline or background container of the track view is hovered
     @pyqtSlot(int)
     def on_playhead_hover_position_updated(self, x):
-        # self.extendedTracksContainer.on_update_hover
+        print("on_playhead_hover_position_updated({0})".format(str(x)))
+        self.timelineMasterTrackWidget.blockSignals(True)
+        self.extendedTracksContainer.blockSignals(True)
 
-        self.is_driven_externally = True
-        self.pos = QPoint(x, 0)
-        self.update()
+        self.timelineMasterTrackWidget.on_update_hover(x)
+        self.extendedTracksContainer.on_update_hover(x)
+
+        self.extendedTracksContainer.blockSignals(False)
+        self.timelineMasterTrackWidget.blockSignals(False)
+        
+
+        # self.extendedTracksContainer.on_update_hover
