@@ -195,7 +195,14 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.extendedTracksContainer.setAutoFillBackground(True)
         self.extendedTracksContainer.setMouseTracking(True)
         self.extendedTracksContainer.hoverChanged.connect(self.handle_timeline_hovered_position_update_event)
-        self.timelineMasterTrackWidget.hoverChanged.connect(self.extendedTracksContainer.on_update_hover)
+
+        # bind to self to detect changes
+        self.timelineMasterTrackWidget.hoverChanged.connect(self.on_playhead_hover_position_updated)
+        self.extendedTracksContainer.hoverChanged.connect(self.on_playhead_hover_position_updated)
+
+        # self.timelineMasterTrackWidget.hoverChanged.connect(self.extendedTracksContainer.on_update_hover)
+        
+
 
         # Debug Pallete
         # p = self.labjackEventsContainer.palette()
@@ -441,6 +448,21 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         currPercent = self.get_active_percent_viewport_total()
         return (currPercent * self.totalDuration)
 
+    ## Datetime functions copied from the versions created for the PhoDurationEvent class
+    # returns true if the absolute_datetime falls within the current entire timeline. Not the viewport
+    def contains_date(self, absolute_datetime):
+        return ((self.totalStartTime <= absolute_datetime) and (self.totalEndTime >= absolute_datetime))
+
+    # Returns the duration of the time relative to this timeline.
+    def compute_relative_offset_duration(self, time):
+        relative_offset_duration = time - self.totalStartTime
+        return relative_offset_duration
+
+    # Returns the absolute (wall/world) time for a relative_duration into the timeline
+    def compute_absolute_time(self, relative_duration):
+        return (self.totalStartTime + relative_duration)
+
+
 
     def on_zoom_in(self):
         self.activeScaleMultiplier = min(TimelineDrawingWindow.MaxZoomLevel, (self.activeScaleMultiplier + TimelineDrawingWindow.ZoomDelta))
@@ -612,7 +634,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                 currActiveVideoTrack.set_now_playing(trackObjectIndex)
                 
                 self.try_set_video_player_window_url(str(selected_video_path))
-                self.videoPlayerWindow.movieLink = DataMovieLinkInfo(currSelectedObject, self.videoPlayerWindow, parent=self)
+                self.videoPlayerWindow.movieLink = DataMovieLinkInfo(currSelectedObject, self.videoPlayerWindow, self, parent=self)
 
             else:
                 print("invalid object selected!!")
@@ -644,7 +666,23 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             currWidget.update()
 
 
-    @pyqtSlot(datetime)
-    def on_video_playback_position_updated(self, datetime):
-        print("on_video_playback_position_updated({0})".format(str(datetime)))
+    # @pyqtSlot(datetime)
+    # def on_video_playback_position_updated(self, datetime):
+    #     print("on_video_playback_position_updated({0})".format(str(datetime)))
+    #     self.timelineMasterTrackWidget
+    #     # self.extendedTracksContainer.on_update_hover()
 
+    @pyqtSlot(float)
+    def on_video_playback_position_updated(self, timeline_percent_offset):
+        print("on_video_playback_position_updated({0})".format(str(timeline_percent_offset)))
+        self.timelineMasterTrackWidget.on_update_hover(timeline_percent_offset)
+        self.extendedTracksContainer.on_update_hover(timeline_percent_offset)
+
+    # Called when the timeline or background container of the track view is hovered
+    @pyqtSlot(int)
+    def on_playhead_hover_position_updated(self, x):
+        # self.extendedTracksContainer.on_update_hover
+
+        self.is_driven_externally = True
+        self.pos = QPoint(x, 0)
+        self.update()

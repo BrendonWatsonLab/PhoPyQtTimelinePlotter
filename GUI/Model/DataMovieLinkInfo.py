@@ -24,7 +24,7 @@ class DataMovieLinkInfo(QObject):
 
     # videoFileUrlChanged = pyqtSignal(str)
 
-    video_playback_position_changed = pyqtSignal(datetime) # signal emitted when the video window changes the playback position. Sent to main timeline window
+    video_playback_position_changed = pyqtSignal(float) # signal emitted when the video window changes the playback position. Sent to main timeline window
 
     timeline_datetime_position_changed = pyqtSignal(float) # signal emitted when the timeline changes the playhead position. Sent to video player window.
 
@@ -32,23 +32,23 @@ class DataMovieLinkInfo(QObject):
     # //video_playback_state_changed
     # video_playback_position_updated
 
-    def __init__(self, videoEventObj, videoPlayerWindowRef, parent=None, sync_option=DataMovieLink_SyncOption.Bidirectional):
+    def __init__(self, videoEventObj, videoPlayerWindowRef, mainTimelineWindowRef, parent=None, sync_option=DataMovieLink_SyncOption.Bidirectional):
         super(DataMovieLinkInfo, self).__init__(parent=parent)
         self.videoDurationEventObj = videoEventObj
         self.videoPlayerWindow = videoPlayerWindowRef
+        self.mainTimelineWindowRef = mainTimelineWindowRef
         # Connect to update self when video window playback position changes
         self.videoPlayerWindow.video_playback_position_updated.connect(self.update_video_playback_position)
 
         # TODO: Connect to update video playback window when self changes
         # self.videoPlayerWindow.video_playback_position_updated.connect(self.update_video_playback_position)
 
-        if (parent):
-            self.video_playback_position_changed.connect(parent.on_video_playback_position_updated)
-        else:
-            print("ERROR: no parent!!")
+        self.video_playback_position_changed.connect(self.mainTimelineWindowRef.on_video_playback_position_updated)
+
 
         self.sync_option = sync_option
 
+    # video window
     def get_video_url(self):
         return self.videoDurationEventObj.get_video_url()
 
@@ -60,6 +60,16 @@ class DataMovieLinkInfo(QObject):
 
     def get_video_end_time(self):
         return self.videoDurationEventObj.endTime
+
+    # timeline window
+    def get_timeline_duration(self):
+        return self.mainTimelineWindowRef.totalDuration
+    
+    def get_timeline_start_time(self):
+        return self.mainTimelineWindowRef.totalStartTime
+
+    def get_timeline_end_time(self):
+        return self.mainTimelineWindowRef.totalEndTime       
 
 
     # Given a video playback duration % (0.0 - 1.0), returns the real-world absolute time corresponding to it
@@ -78,11 +88,30 @@ class DataMovieLinkInfo(QObject):
             return (video_duration_relative_offset / self.get_video_duration())
 
 
+    # Returns the percent offset of the absolute_time in the current timeline
+    def compute_timeline_percent_offset(self, absolute_time):
+        # check if absolute_time is within the timeline
+        if (not self.mainTimelineWindowRef.contains_date(absolute_time)):
+            return None
+        else:
+            timeline_duration_relative_offset = self.mainTimelineWindowRef.compute_relative_offset_duration(absolute_time)
+            return (timeline_duration_relative_offset / self.get_timeline_duration())
+
+
+    def compute_absolute_time(self, video_duration_percent):
+        video_duration_relative_offset = video_duration_percent * self.get_video_duration()
+        return self.videoDurationEventObj.compute_absolute_time(video_duration_relative_offset)
+
+
+
+
     # update_video_playback_position(...): called from the video player window's slider updated event
     @pyqtSlot(float)
     def update_video_playback_position(self, updatedRelativePercentVideoPlaybackPosition):
         absolute_datetime = self.compute_absolute_time(updatedRelativePercentVideoPlaybackPosition)
-        self.video_playback_position_changed.emit(absolute_datetime)
+        relative_timeline_percent_offset = self.compute_timeline_percent_offset(absolute_datetime)
+        # self.video_playback_position_changed.emit(absolute_datetime)
+        self.video_playback_position_changed.emit(relative_timeline_percent_offset)
 
 
     # update_timeline_playhead_position(...): called from the main timeline window when the playhead is updated

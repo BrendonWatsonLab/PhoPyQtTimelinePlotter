@@ -159,7 +159,6 @@ class PhoDurationEvent(PhoEvent):
         # percent_duration = relative_offset_duration / self.computeDuration()
         return relative_offset_duration
 
-
     # Returns the absolute (wall/world) time for a relative_duration into the event)
     def compute_absolute_time(self, relative_duration):
         return (self.startTime + relative_duration)

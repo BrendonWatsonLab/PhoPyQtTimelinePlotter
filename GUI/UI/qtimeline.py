@@ -60,6 +60,8 @@ class QTimeLine(QWidget):
         self.activeColor = QTimeLine.defaultActiveColor
         self.nowColor = QTimeLine.defaultNowColor
 
+        self.is_driven_externally = False
+
         self.setMouseTracking(True)  # Mouse events
         self.setAutoFillBackground(True)  # background
 
@@ -199,6 +201,7 @@ class QTimeLine(QWidget):
     # Enter
     def enterEvent(self, e):
         self.is_in = True
+        self.is_driven_externally = False
 
     # Leave
     def leaveEvent(self, e):
