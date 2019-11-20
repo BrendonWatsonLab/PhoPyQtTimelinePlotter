@@ -606,8 +606,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                     currVideoTrackWidget.update()
 
             if currSelectedObject:
-                selected_video_path = currSelectedObject.extended_data['path']
+                selected_video_path = currSelectedObject.get_video_url()
                 print(selected_video_path)
+                currActiveVideoTrack.set_now_playing(trackObjectIndex)
                 self.try_set_video_player_window_url(str(selected_video_path))
 
             else:
