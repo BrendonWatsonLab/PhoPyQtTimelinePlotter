@@ -26,6 +26,52 @@ self.update_ui():
 self.media_time_change_handler(...) is called on VLC's MediaPlayerTimeChanged event:
     - 
 """
+
+
+""" Classes belonging to the main media widget
+lblVideoName
+lblVideoSubtitle
+dateTimeEdit
+lblCurrentFrame
+spinBoxCurrentFrame
+lblTotalFrames
+lblCurrentTime
+lblTotalDuration
+lblFileFPS
+spinBoxFrameJumpMultiplier
+
+btnSkipLeft
+btnSkipRight
+btnLeft
+btnRight
+
+button_play_pause
+button_full_screen
+
+button_speed_up
+doubleSpinBoxPlaybackSpeed
+button_slow_down
+
+button_mark_start
+button_mark_end
+
+slider_progress
+
+## DATA MODEL:
+self.media_start_time = None
+        self.media_end_time = None
+        self.restart_needed = False
+        self.timer_period = 100
+        self.is_full_screen = False
+        self.media_started_playing = False
+        self.media_is_playing = False
+        self.original_geometry = None
+play_pause_model
+
+
+"""
+
+
 class MainVideoPlayerWindow(QMainWindow):
     """
     The main window class
@@ -55,15 +101,26 @@ class MainVideoPlayerWindow(QMainWindow):
             and self.run()
         )
 
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_ui)
-        self.timer.timeout.connect(self.timer_handler)
-
         self.vlc_instance = vlc.Instance()
         self.media_player = self.vlc_instance.media_player_new()
         self.is_display_initial_frame_playback = False
         # if sys.platform == "darwin":  # for MacOS
         #     self.ui.frame_video = QMacCocoaViewContainer(0)
+
+
+        
+        self.initUI()
+
+    def initUI(self):
+
+        # TODO: bind the signals and such to self.ui.timestampSidebarWidget
+        # self.ui.timestampSidebarWidget.
+
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_ui)
+        self.timer.timeout.connect(self.timer_handler)
+
 
         self.ui.frame_video.doubleClicked.connect(self.toggle_full_screen)
         self.ui.frame_video.wheel.connect(self.wheel_handler)
