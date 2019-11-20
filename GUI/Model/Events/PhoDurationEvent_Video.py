@@ -23,9 +23,8 @@ class PhoDurationEvent_Video(PhoDurationEvent):
     IsPlayingIndicatorBorderWidth = 2
     IsPlayingIndicatorFractionOfHeight = 0.08
 
-    def __init__(self, startTime=datetime.now(), endTime=None, name='', color=QColor(51, 204, 255), extended_data=dict(), parent=None):
+    def __init__(self, startTime, endTime, name='', color=QColor(51, 204, 255), extended_data=dict(), parent=None):
         super(PhoDurationEvent_Video, self).__init__(startTime, endTime, name, color, extended_data, parent=parent)
-        self.endTime = endTime
         self.isPlayingVideo = False
 
     def set_is_playing(self, new_is_playing_state):

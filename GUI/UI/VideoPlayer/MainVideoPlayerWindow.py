@@ -15,6 +15,8 @@ from PyQt5.QtCore import QDir, QTimer, Qt, QModelIndex, QSortFilterProxyModel
 from lib import vlc
 from app.model import TimestampModel, ToggleButtonModel, TimestampDelta
 
+from GUI.Model.DataMovieLinkInfo import *
+
 """
 The software displays/plays a video file with variable speed and navigation settings.
 The software runs a timer, which calls both self.timer_handler() and self.update_ui().
@@ -76,6 +78,10 @@ class MainVideoPlayerWindow(QMainWindow):
     """
     The main window class
     """
+
+    video_playback_position_updated = pyqtSignal(float) # video_playback_position_updated:  called when the playback position of the video changes. Either due to playing, or after a user event
+    video_playback_state_changed = pyqtSignal() # video_playback_state_changed: called when play/pause state changes
+
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
         self.ui = uic.loadUi("GUI/UI/VideoPlayer/MainVideoPlayerWindow.ui")
@@ -106,6 +112,9 @@ class MainVideoPlayerWindow(QMainWindow):
         self.is_display_initial_frame_playback = False
         # if sys.platform == "darwin":  # for MacOS
         #     self.ui.frame_video = QMacCocoaViewContainer(0)
+
+        self.movieLink = None
+        # self.movieLink = DataMovieLinkInfo(self.video_file_url, self, parent=parent)
 
 
         
@@ -249,6 +258,10 @@ class MainVideoPlayerWindow(QMainWindow):
 
         self.timer.start(self.timer_period)
         self.ui.show()
+
+    # Movie Link:
+    def get_movie_link(self):
+        return self.movieLink
 
     # Timestamp entries:
     def add_entry(self):
@@ -395,6 +408,11 @@ class MainVideoPlayerWindow(QMainWindow):
     # media_time_change_handler(...) is called on VLC's MediaPlayerTimeChanged event
     def media_time_change_handler(self, _):
         print('Time changed!')
+
+        if (not (self.media_player is None)):
+            currPos = self.media_player.get_position()
+            self.video_playback_position_updated.emit(currPos)
+
         if (self.is_display_initial_frame_playback):
             # self.is_display_initial_frame_playback: true to indicate that we're just trying to play the media long enough to get the first frame, so it's not a black square
             # Pause
@@ -405,6 +423,8 @@ class MainVideoPlayerWindow(QMainWindow):
             return
         if self.media_player.get_time() > self.media_end_time:
             self.restart_needed = True
+
+        
 
     def update_slider_highlight(self):
         if self.ui.list_timestamp.selectionModel().hasSelection():
@@ -454,7 +474,7 @@ class MainVideoPlayerWindow(QMainWindow):
         try:
             self.update_slider_highlight()
             self.media_player.play()
-            self.media_player.set_time(self.media_start_time)
+            self.media_player.set_time(self.media_start_time) # Looks like the media playback time is actually being set from the slider.
             self.media_started_playing = True
             self.media_is_playing = True
             self.play_pause_model.setState(False)
@@ -510,10 +530,12 @@ class MainVideoPlayerWindow(QMainWindow):
         # Called after the play, pause, stop state changed
         self.media_is_playing = not self.media_is_playing
         self.play_pause_model.setState(not self.media_is_playing)
+        self.video_playback_state_changed.emit()
 
     # Updates the window title with the filename
     # TODO: doesn't work
     def update_window_title(self):
+        print("update_window_title(): {0}".format(self.video_filename))
         if (self.video_filename is None):
             # self.setWindowFilePath(None)
             self.setWindowTitle("Video Player: No Video")

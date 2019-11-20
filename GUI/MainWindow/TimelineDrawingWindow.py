@@ -535,6 +535,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             print("Using existing Video Player Window...")
             self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
             self.videoPlayerWindow.set_video_filename(url)
+
             # self.videoPlayerWindow.show()
         else:
             # Create a new videoPlayerWindow window
@@ -609,7 +610,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                 selected_video_path = currSelectedObject.get_video_url()
                 print(selected_video_path)
                 currActiveVideoTrack.set_now_playing(trackObjectIndex)
+                
                 self.try_set_video_player_window_url(str(selected_video_path))
+                self.videoPlayerWindow.movieLink = DataMovieLinkInfo(currSelectedObject, self.videoPlayerWindow, parent=self)
 
             else:
                 print("invalid object selected!!")
@@ -639,4 +642,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         for i in range(0, len(self.eventTrackWidgets)):
             currWidget = self.eventTrackWidgets[i]
             currWidget.update()
+
+
+    @pyqtSlot(datetime)
+    def on_video_playback_position_updated(self, datetime):
+        print("on_video_playback_position_updated({0})".format(str(datetime)))
 

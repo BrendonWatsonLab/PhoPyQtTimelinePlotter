@@ -71,6 +71,13 @@ class PhoDurationEvent(PhoEvent):
             else:
                 return False
 
+    # returns true if the absolute_datetime falls within the event. Always false for an instantaneous event
+    def contains(self, absolute_datetime):
+        if (self.is_instantaneous_event()):
+            return False
+        else:
+            return ((self.startTime <= absolute_datetime) and (self.endTime >= absolute_datetime))
+
     def precompute_text_height(self, font):
         qm = QFontMetrics(font)
         return qm.height()
@@ -151,6 +158,11 @@ class PhoDurationEvent(PhoEvent):
         relative_offset_duration = time - self.startTime
         # percent_duration = relative_offset_duration / self.computeDuration()
         return relative_offset_duration
+
+
+    # Returns the absolute (wall/world) time for a relative_duration into the event)
+    def compute_absolute_time(self, relative_duration):
+        return (self.startTime + relative_duration)
 
     def compute_parent_offset_rect(self, totalStartTime, totalEndTime, totalDuration, totalParentWidth, totalParentHeight):
         # "total*" refers to the parent frame in which this event is to be drawn
