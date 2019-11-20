@@ -17,7 +17,7 @@ from app.database.DatabaseConnectionRef import DatabaseConnectionRef
 if __name__ == '__main__':
     shouldShowGUIWindows = True
     shouldShowMainGUIWindow = True
-    shouldShowListGUIWindow = False
+    shouldShowListGUIWindow = True
 
     # Show last 7 days worth of data
     earliestTime = dt.datetime.now() - dt.timedelta(days=7)
@@ -26,9 +26,9 @@ if __name__ == '__main__':
         # create the application and the main window
         app = QtWidgets.QApplication( sys.argv )
 
-        database_file_path = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
+        # database_file_path = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
         # database_file_path = 'G:\Google Drive\Modern Behavior Box\Results - Data\BehavioralBoxDatabase.db'
-        # database_file_path = "C:/Users/halechr/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db"
+        database_file_path = "C:/Users/halechr/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db"
         database_connection = DatabaseConnectionRef(database_file_path)
 
         # video_file_search_paths = ["O:/Transcoded Videos/BB01"]
@@ -47,7 +47,9 @@ if __name__ == '__main__':
 
     
         if shouldShowListGUIWindow:
-            video_file_search_paths = ["O:/Transcoded Videos/BB00", "O:/Transcoded Videos/BB01", "O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]     
+            # video_file_search_paths = ["O:/Transcoded Videos/BB00", "O:/Transcoded Videos/BB01", "O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]     
+            # video_file_search_paths = ["O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]     
+            video_file_search_paths = ["O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]     
             mainListWindow = MainObjectListsWindow(database_connection, video_file_search_paths)
 
 

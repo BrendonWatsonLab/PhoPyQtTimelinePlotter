@@ -269,6 +269,35 @@ def modify_TimestampedAnnotation(aTimestampedAnnotationObj, start_date, end_date
     return aTimestampedAnnotationObj
 
 
+# Only updates the startDate
+def modify_TimestampedAnnotation_startDate(aTimestampedAnnotationObj, start_date):
+    aTimestampedAnnotationObj.start_date = datetime_to_database(start_date)
+    activeEndDate = aTimestampedAnnotationObj.end_date
+    if activeEndDate:
+        if (activeEndDate < aTimestampedAnnotationObj.start_date):
+            # The start/end dates are reversed! Swap them!
+            print("Swapping start/end dates!")
+            aTimestampedAnnotationObj.end_date = aTimestampedAnnotationObj.start_date
+            aTimestampedAnnotationObj.start_date = activeEndDate
+            
+    return aTimestampedAnnotationObj
+
+
+# Only updates the startDate
+def modify_TimestampedAnnotation_endDate(aTimestampedAnnotationObj, end_date):
+    if end_date:
+        aTimestampedAnnotationObj.end_date = datetime_to_database(end_date)
+        activeEndDate = aTimestampedAnnotationObj.end_date
+        if activeEndDate:
+            if (activeEndDate < aTimestampedAnnotationObj.start_date):
+                # The start/end dates are reversed! Swap them!
+                print("Swapping start/end dates!")
+                aTimestampedAnnotationObj.end_date = aTimestampedAnnotationObj.start_date
+                aTimestampedAnnotationObj.start_date = activeEndDate
+    else:
+        aTimestampedAnnotationObj.end_date = None
+
+    return aTimestampedAnnotationObj
 
 if __name__ == '__main__':
     # load_annotation_events_from_database()

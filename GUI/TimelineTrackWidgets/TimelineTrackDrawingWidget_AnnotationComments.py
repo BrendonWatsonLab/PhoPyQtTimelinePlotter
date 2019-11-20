@@ -15,7 +15,7 @@ from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_SelectionBase import Ti
 from GUI.Model.PhoDurationEvent_AnnotationComment import *
 from GUI.UI.TextAnnotations.TextAnnotationDialog import *
 
-from app.database.SqlAlchemyDatabase import create_TimestampedAnnotation, convert_TimestampedAnnotation, modify_TimestampedAnnotation
+from app.database.SqlAlchemyDatabase import create_TimestampedAnnotation, convert_TimestampedAnnotation, modify_TimestampedAnnotation, modify_TimestampedAnnotation_startDate, modify_TimestampedAnnotation_endDate
 
 class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_SelectionBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
@@ -38,6 +38,8 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         self.shouldDismissSelectionUponMouseButtonRelease = TimelineTrackDrawingWidget_AnnotationComments.default_shouldDismissSelectionUponMouseButtonRelease
         self.itemSelectionMode = TimelineTrackDrawingWidget_AnnotationComments.default_itemSelectionMode
 
+        self.setMouseTracking(True)
+
         self.annotationEditingDialog = None
         self.activeEditingAnnotationIndex = None
         self.annotationDataObjects = []
@@ -54,40 +56,30 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         self.contexts = self.database_connection.load_contexts_from_database()
 
 
-    # Rebuilds the GUI event objects from the self.annotationDataObjects
+    # Rebuilds the GUI event objects (self.durationObjects) from the self.annotationDataObjects
     def rebuildDrawnObjects(self):
         self.durationObjects = []
-        for aDataObj in self.annotationDataObjects:
+        for (anIndex, aDataObj) in enumerate(self.annotationDataObjects):
             # Create the graphical annotation object
             newAnnotation = convert_TimestampedAnnotation(aDataObj, self)
             newAnnotation.on_edit.connect(self.on_annotation_modify_event)
+            newAnnotation.on_edit_by_dragging_handle_start.connect(self.handleStartSliderValueChange)
+            newAnnotation.on_edit_by_dragging_handle_end.connect(self.handleEndSliderValueChange)
+            # newAnnotation.on_edit_by_dragging_handle.connect(self.try_resize_comment_with_handles)
             # newAnnotation = PhoDurationEvent_AnnotationComment(start_date, end_date, body, title, subtitle)
+            newAnnotationIndex = len(self.durationObjects)
+            newAnnotation.setAccessibleName(str(newAnnotationIndex))
+
             self.durationObjects.append(newAnnotation)
 
 
     # Returns the currently selected annotation index or None if none are selected
     def get_selected_annotation_index(self):
-        if (len(self.selected_duration_object_indicies) > 0):
-            # Deselect previously selected item
-            prevSelectedItemIndex = self.selected_duration_object_indicies[0]
-            if (not (prevSelectedItemIndex is None)):
-                return prevSelectedItemIndex
-            else:
-                return None
-        else:
-            return None
+        return self.get_selected_event_index()
 
     # Returns the currently selected annotation object or None if none are selected
     def get_selected_annotation(self):
-        prevSelectedItemIndex = self.get_selected_annotation_index()
-        if (not (prevSelectedItemIndex is None)):
-            prevSelectedAnnotationObj = self.durationObjects[prevSelectedItemIndex]
-            if (prevSelectedAnnotationObj):
-                return prevSelectedAnnotationObj
-            else:
-                return None
-        else:
-            return None
+        return self.get_selected_duration_obj()
 
     def paintEvent( self, event ):
         qp = QtGui.QPainter()
@@ -96,12 +88,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         self.eventRect = np.repeat(QRect(0,0,0,0), len(self.durationObjects))
         self.instantaneousEventRect = np.repeat(QRect(0, 0, 0, 0), len(self.instantaneousObjects))
 
-        # Draw the trace cursor
-        # qp.setPen(QtGui.QPen(EventsDrawingWindow.TraceCursorColor, 20.0, join=Qt.MiterJoin))
-        # qp.drawRect(event.rect().x(), event.rect().y(), EventsDrawingWindow.TraceCursorWidth, self.height())
-
         ## TODO: Use viewport information to only draw the currently displayed rectangles instead of having to draw it all at once.
-        # drawRect = event.rect()
         drawRect = self.rect()
 
         # Draw the duration objects
@@ -123,33 +110,30 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
             obj.is_deemphasized = not obj.overlaps_range(start_datetime, end_datetime)
         self.update()
 
-    def on_button_clicked(self, event):
+    def mouseDoubleClickEvent(self, event):
+        print("Mouse double clicked! ({0},{1})".format(event.x(), event.y()))
+
         newlySelectedObjectIndex = self.find_child_object(event.x(), event.y())
 
         if newlySelectedObjectIndex is None:
-            self.selected_duration_object_indicies = [] # Empty all the objects
-            self.selection_changed.emit(self.trackID, -1)
+            print("Creating new annotation....")
+            was_annotation_made = self.create_comment(event.x())
         else:
             # Select the object
-            if (self.selected_duration_object_indicies.__contains__(newlySelectedObjectIndex)):
-                # Already contains the object.
-                return
-            else:
-                # If in single selection mode, be sure to deselect any previous selections before selecting a new one.
-                if (self.itemSelectionMode is ItemSelectionOptions.SingleSelection):
-                    if (len(self.selected_duration_object_indicies) > 0):
-                        # Deselect previously selected item
-                        prevSelectedItemIndex = self.selected_duration_object_indicies[0]
-                        self.selected_duration_object_indicies.remove(prevSelectedItemIndex)
-                        self.durationObjects[prevSelectedItemIndex].on_button_released(event)
-                        # self.selection_changed.emit(self.trackID, newlySelectedObjectIndex) # TODO: need to update the selection to deselect the old event?
-                        
-
+            didSelectionChange = self.select(newlySelectedObjectIndex)
+            if (didSelectionChange):
                 # Doesn't already contain the object
-                self.selected_duration_object_indicies.append(newlySelectedObjectIndex)
                 self.durationObjects[newlySelectedObjectIndex].on_button_clicked(event)
                 self.update()
                 self.selection_changed.emit(self.trackID, newlySelectedObjectIndex)
+
+            # Called once the selected annotation object has been set 
+            self.on_annotation_modify_event()
+        
+        pass
+
+    def on_button_clicked(self, event):
+        super().on_button_clicked(event)
 
     def on_button_released(self, event):
         # Check if we want to dismiss the selection when the mouse button is released (requiring the user to hold down the button to see the results)
@@ -157,6 +141,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
 
         if event.button() == Qt.LeftButton:
             print("commentTrack: Left click")
+            
         elif event.button() == Qt.RightButton:
             print("commentTrack: Right click")
             prevHoveredObj = self.hovered_object
@@ -191,7 +176,6 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
             #     self.selection_changed.emit(self.trackID, self.selected_object_index)
             
 
-            
         self.update()
                 
     def on_key_pressed(self, event):
@@ -215,22 +199,9 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         pass
 
     def on_mouse_moved(self, event):
-        self.hovered_object_index = self.find_child_object(event.x(), event.y())
-        # print("on_mouse_moved()",event.x(), event.y(), self.hovered_object_index)
-        if self.hovered_object_index is None:
-            # No object hovered
-            QToolTip.hideText()
-            self.hovered_object = None
-            self.hovered_object_rect = None
-            self.hover_changed.emit(self.trackID, -1)
-        else:
-            self.hovered_object = self.durationObjects[self.hovered_object_index]
-            self.hovered_object_rect = self.eventRect[self.hovered_object_index]
-            text = "event: {0}\nstart_time: {1}\nend_time: {2}\nduration: {3}".format(self.hovered_object.name, self.hovered_object.startTime, self.hovered_object.endTime, self.hovered_object.computeDuration())
-            QToolTip.showText(event.globalPos(), text, self, self.hovered_object_rect)
-            self.hover_changed.emit(self.trackID, self.hovered_object_index)
+        super().on_mouse_moved(event)
 
-
+    
     # Annotation/Comment Specific functions:
     def create_comment(self, cut_x):
         cut_duration_offset = self.offset_to_duration(cut_x)
@@ -318,4 +289,66 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         self.activeEditingAnnotationIndex = None
 
         
+    # Resize Time with Handles:
 
+    # @pyqtSlot(datetime, datetime)
+    # def try_resize_comment_with_handles(self, start_date, end_date):
+    #     # Tries to update an existing comment
+    #     print('try_resize_comment_with_handles')
+        
+    #     if (not (self.activeEditingAnnotationIndex is None)):
+    #         currObjToModify = self.annotationDataObjects[self.activeEditingAnnotationIndex]
+    #         currObjToModify = modify_TimestampedAnnotation(currObjToModify, start_date, end_date, currObjToModify.title, currObjToModify.subtitle, currObjToModify.body)
+    #         self.annotationDataObjects[self.activeEditingAnnotationIndex] = currObjToModify
+    #         self.database_commit()
+    #         self.reloadModelFromDatabase()
+    #         self.rebuildDrawnObjects()
+    #         self.update()
+    #     else:
+    #         print("Error: unsure what comment to update!")
+    #         return
+
+    @pyqtSlot(str, int)
+    def handleStartSliderValueChange(self, child_name, value):
+        print('handleStartSliderValueChange({0}, {1})'.format(child_name, value))
+        try:
+            child_index = int(child_name)
+        except:
+            print("Error decoding child_index! Aborting handle update!")
+            return
+
+        new_datetime = self.offset_to_datetime(value)
+        currObjToModify = self.annotationDataObjects[child_index]
+        if (not (currObjToModify is None)):
+            currObjToModify = modify_TimestampedAnnotation_startDate(currObjToModify, new_datetime)
+            self.annotationDataObjects[child_index] = currObjToModify
+            self.database_commit()
+            self.reloadModelFromDatabase()
+            self.rebuildDrawnObjects()
+            self.update()
+        else:
+            print("Error: unsure what comment to update!")
+            return
+
+
+    @pyqtSlot(str, int)
+    def handleEndSliderValueChange(self, child_name, value):
+        print('handleEndSliderValueChange({0}, {1})'.format(child_name, value))
+        try:
+            child_index = int(child_name)
+        except:
+            print("Error decoding child_index! Aborting handle update!")
+            return
+
+        new_datetime = self.offset_to_datetime(value)
+        currObjToModify = self.annotationDataObjects[child_index]
+        if (not (currObjToModify is None)):
+            currObjToModify = modify_TimestampedAnnotation_endDate(currObjToModify, new_datetime)
+            self.annotationDataObjects[child_index] = currObjToModify
+            self.database_commit()
+            self.reloadModelFromDatabase()
+            self.rebuildDrawnObjects()
+            self.update()
+        else:
+            print("Error: unsure what comment to update!")
+            return

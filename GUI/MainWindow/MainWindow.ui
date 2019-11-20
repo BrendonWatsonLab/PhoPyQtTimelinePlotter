@@ -76,6 +76,11 @@
     <addaction name="actionZoom_Out"/>
     <addaction name="actionZoom_Default"/>
     <addaction name="actionZoom_In"/>
+    <addaction name="separator"/>
+    <addaction name="actionJump_to_Start"/>
+    <addaction name="actionJump_to_Previous"/>
+    <addaction name="actionJump_to_Next"/>
+    <addaction name="actionJump_to_End"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuHelp"/>
@@ -227,6 +232,26 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+=</string>
+   </property>
+  </action>
+  <action name="actionJump_to_Start">
+   <property name="text">
+    <string>Jump to Start</string>
+   </property>
+  </action>
+  <action name="actionJump_to_Previous">
+   <property name="text">
+    <string>Jump to Previous</string>
+   </property>
+  </action>
+  <action name="actionJump_to_Next">
+   <property name="text">
+    <string>Jump to Next</string>
+   </property>
+  </action>
+  <action name="actionJump_to_End">
+   <property name="text">
+    <string>Jump to End</string>
    </property>
   </action>
  </widget>

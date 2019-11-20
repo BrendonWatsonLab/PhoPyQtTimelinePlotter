@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 import numpy as np
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QMenu
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPainterPath, QPolygon, QFontMetrics
+from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPainterPath, QPolygon, QFontMetrics, QRegion
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 from GUI.Model.PhoEvent import *
@@ -22,6 +22,8 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     ColorBase = QColor(51, 255, 102)  # Teal
     ColorEmph = QColor(31, 200, 62)  # Green
     ColorActive = QColor(255, 102, 51)  # Orange
+
+    ColorNibHandleActive = QColor(255, 102, 51)  # Orange
 
     ColorBorderBase = QColor('#e0e0e0')  # Whiteish
     ColorBorderActive = QColor(255, 222, 122)  # Yellowish
@@ -39,15 +41,25 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     # This defines a signal called 'on_edit' that takes no arguments.
     on_edit = pyqtSignal()
 
+    on_edit_by_dragging_handle_start = pyqtSignal(str, int)
+    on_edit_by_dragging_handle_end = pyqtSignal(str, int)
+
     def __init__(self, startTime=datetime.now(), endTime=None, name='', title='', subtitle='', color=QColor(31, 200, 62), extended_data=dict(), parent=None):
         super(PhoDurationEvent_AnnotationComment, self).__init__(startTime, endTime, name, color, extended_data, parent=parent)
         self.title = title
         self.subtitle = subtitle
 
+        self.finalEventRect = QRect()
+        self.start_poly = None
+        self.start_poly_is_active = False
+
+        self.end_poly = None
+        self.end_poly_is_active = False
+
+        self._drag_position = None
+
         # Can I get a double click effect?
         
-
-
     def showMenu(self, pos):
         menu = QMenu()
         clear_action = menu.addAction("Modify Comment")
@@ -58,13 +70,66 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
             print("PhoDurationEvent_AnnotationComment: Modify Comment action!")
             self.on_edit.emit()
 
-
     def on_button_clicked(self, event):
-        self.set_state_selected()
+        # self.set_state_selected()
+
+        if self.start_poly:
+            currPoint = event.pos()
+            self.start_poly_is_active = self.start_poly.containsPoint(currPoint, Qt.OddEvenFill)
+        else:
+            self.start_poly_is_active = False
+
+        if self.end_poly:
+            currPoint = event.pos()
+            self.end_poly_is_active = self.end_poly.containsPoint(currPoint, Qt.OddEvenFill)
+        else:
+            self.end_poly_is_active = False
+
+        # Only allow one active at a time
+        if self.start_poly_is_active:
+            startPos = self.finalEventRect.x()
+            self._drag_position = startPos
+            self.on_edit_by_dragging_handle_start.emit(self.accessibleName(), self._drag_position)
+        elif self.end_poly_is_active:
+            startPos = (self.finalEventRect.x() + self.finalEventRect.width()) - PhoDurationEvent_AnnotationComment.NibTriangleWidth
+            self._drag_position = startPos
+            self.on_edit_by_dragging_handle_end.emit(self.accessibleName(), self._drag_position)
+        else:
+            self._drag_position = None
+
+        self.update()
+            
 
     def on_button_released(self, event):
         self.set_state_deselected()
 
+        if (not (self._drag_position is None)):
+            changeInX = 0.0
+            print(self._drag_position)
+            # Only allow one active at a time
+            if self.start_poly_is_active:
+                startPos = self.finalEventRect.x()
+                changeInX =  startPos - self._drag_position
+                print("Change in X: {0}".format(changeInX))
+                self.on_edit_by_dragging_handle_start.emit(self.accessibleName(), self._drag_position)
+                self.start_poly_is_active = False
+
+            elif self.end_poly_is_active:
+                startPos = (self.finalEventRect.x() + self.finalEventRect.width()) - PhoDurationEvent_AnnotationComment.NibTriangleWidth
+                changeInX = startPos - self._drag_position
+                print("Change in X: {0}".format(changeInX))
+                self.on_edit_by_dragging_handle_end.emit(self.accessibleName(), self._drag_position)
+                self.end_poly_is_active = False
+            else:
+                pass
+        
+        #TODO: use the delta to compute the change
+        
+        # Clear drag position
+        self._drag_position = None
+        self.start_poly_is_active = False
+        self.end_poly_is_active = False
+        
         if event.button() == Qt.LeftButton:
             print("PhoDurationEvent_AnnotationComment: Left click")
         elif event.button() == Qt.RightButton:
@@ -76,6 +141,23 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         else:
             print("PhoDurationEvent_AnnotationComment: Unknown click event!")
 
+        self.update()
+
+    def mouseMoveEvent(self, e):
+        # If drag active, move the stop.
+        if (not (self._drag_position is None)):
+            self._drag_position = e.x()
+            # Only allow one active at a time
+            if self.start_poly_is_active:
+                self.on_edit_by_dragging_handle_start.emit(self.accessibleName(), self._drag_position)
+            elif self.end_poly_is_active:
+                self.on_edit_by_dragging_handle_end.emit(self.accessibleName(), self._drag_position)
+            else:
+                pass
+            
+            self.update()
+
+
     def on_key_pressed(self, event):
         gey = event.key()
         self.func = (None, None)
@@ -85,7 +167,10 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
             print("PhoDurationEvent_AnnotationComment: Right key pressed!, call drawFundBlock()")
             # self.func = (self.drawFundBlock, {})
             self.mModified = True
+
         
+
+
 
     # "pass": specifies that we're leaving this method "virtual" or intensionally empty to be overriden by a subclass.
     def paint(self, painter, totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect):
@@ -129,8 +214,11 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
 
         # Draw start triangle nib
         startPos = x
-        start_poly = PhoDurationEvent_AnnotationComment.LeftNibPainter.get_poly(startPos, PhoDurationEvent_AnnotationComment.NibTriangleHeight, PhoDurationEvent_AnnotationComment.NibTriangleWidth)
+        self.start_poly = PhoDurationEvent_AnnotationComment.LeftNibPainter.get_poly(startPos, PhoDurationEvent_AnnotationComment.NibTriangleHeight, PhoDurationEvent_AnnotationComment.NibTriangleWidth)
+        self.start_poly_region = QRegion(self.start_poly)
         
+        self.body_region = QRegion(x, body_y, width, body_height)
+
         if self.endTime is None:
             # Instantaneous type event
             # painter.setPen(Qt.NoPen)
@@ -142,16 +230,30 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
             ## NOTE: Apparently for events as small as the instantaneous events (with a width of 2) the "Brush" or "fill" doesn't matter, only the stroke does.
             painter.setPen(QtGui.QPen(activeColor, penWidth, join=Qt.MiterJoin))
             painter.drawRect(x, body_y, width, body_height)
-
+            
             # Draw Nib:
-            painter.drawPolygon(start_poly)
+            if self.start_poly_is_active:
+                painter.setPen(QtGui.QPen(PhoDurationEvent_AnnotationComment.ColorBorderActive, 1.0, join=Qt.MiterJoin))
+                painter.setBrush(QBrush(PhoDurationEvent_AnnotationComment.ColorNibHandleActive, Qt.SolidPattern))
+            else:
+                painter.setPen(QtGui.QPen(PhoDurationEvent_AnnotationComment.ColorBorderBase, penWidth, join=Qt.MiterJoin))
+                painter.setBrush(QBrush(activeColor, Qt.SolidPattern))
+
+            self.final_region_mask = self.body_region.united(self.start_poly_region)
+            painter.setClipRegion(self.final_region_mask)
+
+            painter.drawPolygon(self.start_poly)
         else:
             # Normal duration event (like for videos)
             painter.drawRoundedRect(x, body_y, width, body_height, PhoDurationEvent_AnnotationComment.RectCornerRounding, PhoDurationEvent_AnnotationComment.RectCornerRounding)
-            
+
             startPos = (x+width)-PhoDurationEvent_AnnotationComment.NibTriangleWidth
-            end_poly = PhoDurationEvent_AnnotationComment.RightNibPainter.get_poly(startPos, PhoDurationEvent_AnnotationComment.NibTriangleHeight, PhoDurationEvent_AnnotationComment.NibTriangleWidth)
-        
+            self.end_poly = PhoDurationEvent_AnnotationComment.RightNibPainter.get_poly(startPos, PhoDurationEvent_AnnotationComment.NibTriangleHeight, PhoDurationEvent_AnnotationComment.NibTriangleWidth)
+            self.end_poly_region = QRegion(self.end_poly)
+
+            self.final_region_mask = self.body_region.united(self.start_poly_region).united(self.end_poly_region)
+            painter.setClipRegion(self.final_region_mask)
+
             # If it's not an instantaneous event, draw the label
             self.titleHeight = self.precompute_text_height(PhoDurationEvent_AnnotationComment.MainTextFont)
             self.titleLabelRect = QRect(x, body_y, width, self.titleHeight)
@@ -172,10 +274,27 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
             painter.drawText(self.bodyTextLabelRect, Qt.AlignCenter, self.name)
 
             # Draw Nibs:
-            painter.drawPolygon(start_poly)
-            painter.drawPolygon(end_poly)
+            if self.start_poly_is_active:
+                painter.setPen(QtGui.QPen(PhoDurationEvent_AnnotationComment.ColorBorderActive, 1.0, join=Qt.MiterJoin))
+                painter.setBrush(QBrush(PhoDurationEvent_AnnotationComment.ColorNibHandleActive, Qt.SolidPattern))
+            else:
+                painter.setPen(QtGui.QPen(PhoDurationEvent_AnnotationComment.ColorBorderBase, 0.8, join=Qt.MiterJoin))
+                painter.setBrush(QBrush(activeColor, Qt.SolidPattern))
+
+            painter.drawPolygon(self.start_poly)
+
+            if self.end_poly_is_active:
+                painter.setPen(QtGui.QPen(PhoDurationEvent_AnnotationComment.ColorBorderActive, 1.0, join=Qt.MiterJoin))
+                painter.setBrush(QBrush(PhoDurationEvent_AnnotationComment.ColorNibHandleActive, Qt.SolidPattern))
+            else:
+                painter.setPen(QtGui.QPen(PhoDurationEvent_AnnotationComment.ColorBorderBase, 0.8, join=Qt.MiterJoin))
+                painter.setBrush(QBrush(activeColor, Qt.SolidPattern))
+
+            painter.drawPolygon(self.end_poly)
 
         painter.restore()
+
+        self.setMask(self.final_region_mask)
         return self.finalEventRect
 
     ## GUI CLASS
