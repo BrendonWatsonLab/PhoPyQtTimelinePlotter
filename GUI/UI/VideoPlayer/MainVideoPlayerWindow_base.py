@@ -25,7 +25,7 @@ class MainVideoPlayerWindowBase(QMainWindow):
     """
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
-        self.ui = uic.loadUi("GUI/UI/VideoPlayer/main_video_player_window.ui")
+        self.ui = uic.loadUi("GUI/UI/VideoPlayer/MainVideoPlayerWindow.ui")
 
         self.timestamp_filename = None
         self.video_filename = None
