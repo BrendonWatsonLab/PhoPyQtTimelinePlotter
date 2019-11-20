@@ -11,8 +11,8 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPainterPath, QPolygon, QFontMetrics, QRegion
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
-from GUI.Model.PhoEvent import *
-from GUI.Model.PhoDurationEvent import *
+from GUI.Model.Events.PhoEvent import *
+from GUI.Model.Events.PhoDurationEvent import *
 
 from GUI.UI.TrianglePainter import *
 
@@ -219,7 +219,7 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         
         self.body_region = QRegion(x, body_y, width, body_height)
 
-        if self.endTime is None:
+        if self.is_instantaneous_event():
             # Instantaneous type event
             # painter.setPen(Qt.NoPen)
             if self.is_emphasized:

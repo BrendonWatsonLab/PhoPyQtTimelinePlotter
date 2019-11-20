@@ -11,10 +11,8 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QFontMetrics, QPalette
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
-from GUI.Model.PhoDurationEvent import *
+from GUI.Model.Events.PhoDurationEvent import *
 from app.BehaviorsList import BehaviorsManager
-
-
 
 class PhoDurationEvent_Partition(PhoDurationEvent):
     InstantaneousEventDuration = timedelta(seconds=2)

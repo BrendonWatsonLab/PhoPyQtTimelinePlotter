@@ -21,7 +21,7 @@ from GUI.HelpWindow.HelpWindowFinal import *
 from GUI.UI.qtimeline import *
 
 from GUI.UI.ExtendedTracksContainerWidget import ExtendedTracksContainerWidget
-from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Events import *
+from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Videos import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Partition import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_AnnotationComments import *
 
@@ -30,6 +30,8 @@ from app.database.SqlAlchemyDatabase import load_annotation_events_from_database
 
 from GUI.UI.VideoPlayer.main_video_player_window import *
 from GUI.SetupWindow.SetupWindow import *
+
+from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
 
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.
@@ -162,11 +164,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         # self.allVideoEventDisplayObjects.filter()
         currTrackIndex = 0
-        self.mainVideoTrack = TimelineTrackDrawingWidget_Events(currTrackIndex, self.trackVideoEventDisplayObjects[0], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+        self.mainVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[0], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
         self.videoFileTrackWidgets.append(self.mainVideoTrack)
 
         currTrackIndex = currTrackIndex + 1
-        self.labeledVideoTrack = TimelineTrackDrawingWidget_Events(currTrackIndex, self.trackVideoEventDisplayObjects[1], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+        self.labeledVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[1], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
         self.videoFileTrackWidgets.append(self.labeledVideoTrack)
 
 
@@ -303,7 +305,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             videoEndDates.append(videoInfoItem.endTime)
             currExtraInfoDict = videoInfoItem.get_output_dict()
             # Event Generation
-            currEvent = PhoDurationEvent(videoInfoItem.startTime, videoInfoItem.endTime, videoInfoItem.fullName, QColor(51,204,255), currExtraInfoDict)
+            currEvent = PhoDurationEvent_Video(videoInfoItem.startTime, videoInfoItem.endTime, videoInfoItem.fullName, QColor(51,204,255), currExtraInfoDict)
             self.allVideoEventDisplayObjects.append(currEvent)
             if videoInfoItem.is_original_video:
                 self.trackVideoEventDisplayObjects[0].append(currEvent)
@@ -521,7 +523,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
     # Shows the video player window:
     def handle_showVideoPlayerWindow(self):
-        if self.videoPlayerWindow:
+        if (not (self.videoPlayerWindow is None)):
             self.videoPlayerWindow.show()
         else:
             # Create a new videoPlayerWindow window
@@ -529,7 +531,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.videoPlayerWindow.show()
 
     def try_set_video_player_window_url(self, url):
-        if self.videoPlayerWindow:
+        if (not (self.videoPlayerWindow is None)):
             print("Using existing Video Player Window...")
             self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
             self.videoPlayerWindow.set_video_filename(url)
@@ -571,7 +573,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # if trackIndex == TimelineDrawingWindow.static_VideoTrackTrackID:
 
         # If it's the video track
-        if trackObjectIndex == TimelineTrackDrawingWidget_Events.static_TimeTrackObjectIndex_NoSelection:
+        if trackObjectIndex == TimelineTrackDrawingWidget_Videos.static_TimeTrackObjectIndex_NoSelection:
             # No selection, just clear the filters
             # for i in range(0, len(self.eventTrackWidgets)):
             #     currWidget = self.eventTrackWidgets[i]

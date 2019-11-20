@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QFontMetrics
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
-from GUI.Model.PhoEvent import *
+from GUI.Model.Events.PhoEvent import *
 
 class PhoDurationEvent(PhoEvent):
     InstantaneousEventDuration = timedelta(seconds=2)
@@ -31,6 +31,8 @@ class PhoDurationEvent(PhoEvent):
     on_annotate = pyqtSignal()
     on_delete = pyqtSignal()
 
+    
+
     def __init__(self, startTime=datetime.now(), endTime=None, name='', color=QColor(51, 204, 255), extended_data=dict(), parent=None):
         super(PhoDurationEvent, self).__init__(startTime, name, color, extended_data, parent=parent)
         self.endTime = endTime
@@ -46,6 +48,10 @@ class PhoDurationEvent(PhoEvent):
     def is_entirely_greater_than(self, otherEvent):
         # Returns true if this event is entirely greater than the otherEvent (meaning it both starts AND completes after the end of the otherEvent)
         return self.startTime > otherEvent.endTime and self.endTime > otherEvent.endTime
+
+    # returns true if this is an instantaneous event (meaning it doesn't have an endTime)
+    def is_instantaneous_event(self):
+        return (self.endTime is None)
 
     def overlaps_range(self, range_start_datetime, range_end_datetime):
         # Returns true if the event overlaps a given datetime range
@@ -126,7 +132,6 @@ class PhoDurationEvent(PhoEvent):
         else:
             print("Unknown click event!")
 
-
     def on_key_pressed(self, event):
         gey = event.key()
         self.func = (None, None)
@@ -159,6 +164,58 @@ class PhoDurationEvent(PhoEvent):
         y = 0.0
         return QRect(x, y, width, height)
 
+    # Sets the painter's config based on the current object's state (active, emphasized, deemph, etc)
+    def set_painter_config(self, aPainter):
+        currFillColor = self.color
+
+        currPenColor = PhoDurationEvent.ColorBorderBase
+        currPenWidth = 1.0
+        
+        currActiveBrush = None
+        currActivePen = None
+
+        if self.is_deemphasized:
+            currFillColor = Qt.lightGray
+        else:
+            # de-emphasized overrides emphasized status
+            if self.is_emphasized:
+                currFillColor = PhoDurationEvent.ColorEmph
+            else:
+                currFillColor = self.color
+
+        # Override if active (selected)
+        if self.is_active:
+            currPenWidth = 4.0
+            currPenColor = PhoDurationEvent.ColorBorderActive # For active events, override the pen color too
+            currFillColor = PhoDurationEvent.ColorActive # For active events, override the color with the current active color
+
+        else:
+            currPenWidth = 1.5
+            currPenColor = PhoDurationEvent.ColorBorderBase
+            
+        
+        # Instantaneous type event: for instantaneous events, we must render them in their characteristic color (which is the fill color) with a fixed width so they can be visible and recognized
+        if self.is_instantaneous_event():
+            
+            # painter.setPen(Qt.NoPen)
+            if self.is_emphasized:
+                currPenWidth = 1.0
+            else:
+                currPenWidth = 0.2
+
+            ## NOTE: Apparently for events as small as the instantaneous events (with a width of 2) the "Brush" or "fill" doesn't matter, only the stroke does.
+            # we must render them in their characteristic color (which is the fill color)
+            currPenColor = currFillColor
+
+
+        currActivePen = QtGui.QPen(currPenColor, currPenWidth, join=Qt.MiterJoin)
+        currActiveBrush = QBrush(currFillColor, Qt.SolidPattern)
+
+        aPainter.setPen(currActivePen)
+        aPainter.setBrush(currActiveBrush)
+        return
+
+
     # "pass": specifies that we're leaving this method "virtual" or intensionally empty to be overriden by a subclass.
     def paint(self, painter, totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect):
         parentOffsetRect = self.compute_parent_offset_rect(totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect.width(), totalParentCanvasRect.height())
@@ -173,32 +230,33 @@ class PhoDurationEvent(PhoEvent):
         painter.save()
         painter.setRenderHint(QPainter.Antialiasing)
 
-        if self.is_deemphasized:
-            activeColor = Qt.lightGray
-        else:
-            # de-emphasized overrides emphasized status
-            if self.is_emphasized:
-                activeColor = PhoDurationEvent.ColorEmph
-            else:
-                activeColor = self.color
+        # if self.is_deemphasized:
+        #     activeColor = Qt.lightGray
+        # else:
+        #     # de-emphasized overrides emphasized status
+        #     if self.is_emphasized:
+        #         activeColor = PhoDurationEvent.ColorEmph
+        #     else:
+        #         activeColor = self.color
 
-        if self.is_active:
-            painter.setPen(QtGui.QPen(PhoDurationEvent.ColorBorderActive, 4.0, join=Qt.MiterJoin))
-            painter.setBrush(QBrush(PhoDurationEvent.ColorActive, Qt.SolidPattern))
-        else:
-            painter.setPen(QtGui.QPen(PhoDurationEvent.ColorBorderBase, 1.5, join=Qt.MiterJoin))
-            painter.setBrush(QBrush(activeColor, Qt.SolidPattern))
+        # if self.is_active:
+        #     painter.setPen(QtGui.QPen(PhoDurationEvent.ColorBorderActive, 4.0, join=Qt.MiterJoin))
+        #     painter.setBrush(QBrush(PhoDurationEvent.ColorActive, Qt.SolidPattern))
+        # else:
+        #     painter.setPen(QtGui.QPen(PhoDurationEvent.ColorBorderBase, 1.5, join=Qt.MiterJoin))
+        #     painter.setBrush(QBrush(currActiveColor, Qt.SolidPattern))
 
-        if self.endTime is None:
+        self.set_painter_config(painter)
+
+        if self.is_instantaneous_event():
             # Instantaneous type event
-            # painter.setPen(Qt.NoPen)
-            if self.is_emphasized:
-                penWidth = 1.0
-            else:
-                penWidth = 0.2
+            # if self.is_emphasized:
+            #     currPenWidth = 1.0
+            # else:
+            #     currPenWidth = 0.2
 
-            ## NOTE: Apparently for events as small as the instantaneous events (with a width of 2) the "Brush" or "fill" doesn't matter, only the stroke does.
-            painter.setPen(QtGui.QPen(activeColor, penWidth, join=Qt.MiterJoin))
+            # ## NOTE: Apparently for events as small as the instantaneous events (with a width of 2) the "Brush" or "fill" doesn't matter, only the stroke does.
+            # painter.setPen(QtGui.QPen(currActiveColor, currPenWidth, join=Qt.MiterJoin))
             painter.drawRect(x, y, width, height)
         else:
             # Normal duration event (like for videos)
