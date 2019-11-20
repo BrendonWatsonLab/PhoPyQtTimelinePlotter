@@ -123,6 +123,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         desiredWindowWidth = 900
         self.resize( desiredWindowWidth, 800 )
+        
+        self.setWindowFilePath(self.database_connection.get_path())
 
         # Setup the menubar
         initUI_initMenuBar(self)
