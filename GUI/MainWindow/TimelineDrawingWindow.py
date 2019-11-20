@@ -525,7 +525,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.videoPlayerWindow.show()
         else:
             # Create a new videoPlayerWindow window
-            self.videoPlayerWindow = MainVideoPlayerWindow()
+            self.videoPlayerWindow = MainVideoPlayerWindow(parent=self)
             self.videoPlayerWindow.show()
 
     def try_set_video_player_window_url(self, url):
@@ -538,7 +538,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             # Create a new videoPlayerWindow window
             print("Creating new Video Player Window...")
             try:
-                self.videoPlayerWindow = MainVideoPlayerWindow()
+                self.videoPlayerWindow = MainVideoPlayerWindow(parent=self)
             except Exception as e:
                 print("Error Spawning Video Window:", e)
                 return False
