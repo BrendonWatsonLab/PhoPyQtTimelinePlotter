@@ -684,8 +684,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.timelineMasterTrackWidget.blockSignals(True)
         self.extendedTracksContainer.blockSignals(True)
 
-        self.timelineMasterTrackWidget.on_update_hover(timeline_x_offset)
-        self.extendedTracksContainer.on_update_hover(timeline_x_offset)
+        self.timelineMasterTrackWidget.on_update_video_line(timeline_x_offset)
+        self.extendedTracksContainer.on_update_video_line(timeline_x_offset)
         
         self.extendedTracksContainer.blockSignals(False)
         self.timelineMasterTrackWidget.blockSignals(False)
