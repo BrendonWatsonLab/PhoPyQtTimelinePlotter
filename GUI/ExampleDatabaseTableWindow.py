@@ -1,6 +1,6 @@
 # coding: utf-8
 from PyQt5 import QtGui, QtWidgets, uic
-from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea
+from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea, QTabWidget
 from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QAbstractItemView, QTableView, QWidget, QAction, qApp, QApplication, QTreeWidgetItem, QFileDialog, QInputDialog, QMenu
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool, QItemSelectionModel, QPersistentModelIndex
@@ -31,8 +31,22 @@ from app.database.entry_models.db_model import Animal, VideoFile, BehavioralBox,
 
 
 class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
+
+    ActiveTableTabs = [Animal, Cohort, Experiment, BehavioralBox, Labjack]
+    ActiveTableTabStrings = ["Animal", "Cohort", "Experiment", "BehavioralBox", "Labjack"]
+
     def __init__(self, database_connection):
         super().__init__(database_connection) # Call the inherited classes __init__ method
+
+        self.activeActionTabIndex = 0
+        self.models = []
+        self.tables = []
+        self.table_selection_models = []
+        for (i, tableRecordClass) in enumerate(ExampleDatabaseTableWindow.ActiveTableTabs):
+            self.models.append(None)
+            self.tables.append(None)
+            self.table_selection_models.append(None)
+        
         self.reloadModelFromDatabase()
 
         self.setMouseTracking(True)
@@ -56,6 +70,62 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
         # Setup the menubar
         initUI_initMenuBar(self)
 
+
+        # Initialize tab screen
+        self.tabs = QTabWidget()
+
+
+        # # self.tab1 = QWidget()
+        # self.tab2 = QWidget()
+        # self.tabs.resize(300,200)
+        
+        # # Add tabs
+        # self.tabs.addTab(self.tab1,"Tab 1")
+        # self.tabs.addTab(self.tab2,"Tab 2")
+        
+        # # Create first tab
+        # self.tab1.layout = QVBoxLayout(self)
+
+        # self.tab1.layout.addWidget(self.pushButton1)
+        # self.tab1.setLayout(self.tab1.layout)
+
+
+        for (i, tableRecordClass) in enumerate(ExampleDatabaseTableWindow.ActiveTableTabs):
+            currTabNameStr = ExampleDatabaseTableWindow.ActiveTableTabStrings[i]
+
+            exec( 'self.tab'+str(i)+'= QWidget() ' )
+            # self.tab1 = QWidget()
+            exec( 'self.tabs.addTab(self.tab'+str(i)+', "'+currTabNameStr+'")' )
+            # self.tabs.addTab(self.tab1,"Tab 1")
+            exec('self.tab'+str(i)+'.layout = QVBoxLayout(self)')
+            # self.tab1.layout = QVBoxLayout(self)
+
+            self.tables[i] = QTableView(self)
+            self.tables[i].setModel(self.models[i])
+            self.tables[i].setSelectionBehavior(QAbstractItemView.SelectRows)
+            self.tables[i].setContextMenuPolicy(Qt.CustomContextMenu)
+            self.tables[i].customContextMenuRequested.connect(self.display_context_menu)
+            self.tables[i].setSelectionMode(QAbstractItemView.SingleSelection)
+
+            self.table_selection_models[i] = QItemSelectionModel(self.models[i])
+            self.tables[i].setModel(self.table_selection_models[i].model())
+            self.tables[i].setSelectionModel(self.table_selection_models[i])
+            self.table_selection_models[i].selectionChanged.connect(self.update_current_record)
+
+            exec( 'self.tab'+str(i)+'.layout.addWidget(self.tables['+str(i)+'])' )
+            # self.tab1.layout.addWidget(self.tables[i])
+
+            exec( 'self.tab'+str(i)+'.setLayout(self.tab'+str(i)+'.layout)')
+            # self.tab1.setLayout(self.tab1.layout)
+
+            currBtnAddNewRecord = QPushButton("New", self)
+            currBtnAddNewRecord.released.connect(self.handle_add_new_record_pressed)
+            # mainLayout.addWidget(currBtnAddNewRecord)
+            exec( 'self.tab'+str(i)+'.layout.addWidget(currBtnAddNewRecord)' )
+                   
+
+        self.tabs.resize(300,200)
+
         # for i in range(5):
         #     exec( 'myGroupBox'+str(i)+'= QGroupBox() ' )
         #     exec( 'myLayout'+str(i)+' = QHBoxLayout()' )       
@@ -70,39 +140,56 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
         #     exec( 'mainLayout.addWidget(myGroupBox'+str(i)+')' )
 
 
-        self.table = QTableView(self)
-        self.table.setModel(self.model)
-        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.table.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.table.customContextMenuRequested.connect(self.display_context_menu)
-        # self.table.doubleClicked.connect(self.edit_trial)
-        self.table.setSelectionMode(QAbstractItemView.SingleSelection)
+        # self.table = QTableView(self)
+        # self.table.setModel(self.model)
+        # self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        # self.table.setContextMenuPolicy(Qt.CustomContextMenu)
+        # self.table.customContextMenuRequested.connect(self.display_context_menu)
+        # self.table.setSelectionMode(QAbstractItemView.SingleSelection)
 
-        self.table_selection_model = QItemSelectionModel(self.model)
-        self.table.setModel(self.table_selection_model.model())
-        self.table.setSelectionModel(self.table_selection_model)
-        self.table_selection_model.selectionChanged.connect(self.update_current_record)
+        # self.table_selection_model = QItemSelectionModel(self.model)
+        # self.table.setModel(self.table_selection_model.model())
+        # self.table.setSelectionModel(self.table_selection_model)
+        # self.table_selection_model.selectionChanged.connect(self.update_current_record)
 
-        mainLayout.addWidget(self.table)
 
-        self.btnAddNewRecord = QPushButton("New", self)
-        self.btnAddNewRecord.released.connect(self.handle_add_new_record_pressed)
-        mainLayout.addWidget(self.btnAddNewRecord)
+        # mainLayout.addWidget(self.table)
+
+
+         # Add tabs to widget
+        # self.layout.addWidget(self.tabs)
+        # self.setLayout(self.layout)
+
+
+        # mainLayout.addWidget(self.table)
+
+        # self.btnAddNewRecord = QPushButton("New", self)
+        # self.btnAddNewRecord.released.connect(self.handle_add_new_record_pressed)
+        # mainLayout.addWidget(self.btnAddNewRecord)
+
+        mainLayout.addWidget(self.tabs)
 
         mainQWidget.setLayout(mainLayout)        
         self.setCentralWidget(mainQWidget) 
 
-        self.table.resizeColumnsToContents()
+        for (aTableIndex, aTable) in enumerate(self.tables):
+            aTable.resizeColumnsToContents()
+
+        # self.table.resizeColumnsToContents()
 
 
     # Updates the member variables from the database
     # Note: if there are any pending changes, they will be persisted on this action
     def reloadModelFromDatabase(self):
+        # self.model = []
+        
+        for (i, tableRecordClass) in enumerate(ExampleDatabaseTableWindow.ActiveTableTabs):
+            self.models[i] = self.database_connection.get_table_model(tableRecordClass)
         
         # self.model = self.database_connection.get_animal_table_model()
         # self.model = self.database_connection.get_table_model(FileParentFolder)
         # self.model = self.database_connection.get_table_model(VideoFile)
-        self.model = self.database_connection.get_table_model(BehavioralBox)
+        # self.model = self.database_connection.get_table_model(BehavioralBox)
         
 
     def handle_add_new_record_pressed(self):
@@ -187,22 +274,30 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
             return
         
         print("done.")
+
+    def get_active_tab_index(self):
+        ## TODO
+        return None
         
 
     def create_new_record(self):
+        self.activeActionTabIndex = self.get_active_tab_index()
         dialog = QInputDialog(self)
         dialog.setLabelText("Please enter the name for the new Record.")
         dialog.textValueSelected.connect(self.store_new_record)
         dialog.exec()
 
     def store_new_record(self, name):
-        rec = BehavioralBox()
+        self.currClass = ExampleDatabaseTableWindow.ActiveTableTabs[self.activeActionTabIndex]
+
+        # rec = BehavioralBox()
+        rec = self.currClass()
         rec.name = name
         
         self.database_connection.session.add(rec)
         self.database_connection.session.commit()
         print("storing new record")
-        self.model.refresh()
+        self.model[self.activeActionTabIndex].refresh()
 
     def update_current_record(self, x, y):
-        self.current_record = self.table_selection_model.currentIndex().data(Qt.EditRole)
+        self.current_record = self.table_selection_models[i].currentIndex().data(Qt.EditRole)
