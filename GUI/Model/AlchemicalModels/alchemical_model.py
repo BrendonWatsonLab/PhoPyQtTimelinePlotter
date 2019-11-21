@@ -4,9 +4,12 @@
 """
 Qt data models that bind to SQLAlchemy queries
 """
+from PyQt5 import QtCore
+from PyQt5.QtCore import Qt, QVariant
 from PyQt5.QtWidgets import QMessageBox 
 from PyQt5.QtSql import QSqlTableModel
-from PyQt5.Qt import QVariant, Qt
+# from PyQt5.Qt import QVariant, Qt
+
 
 
 class SqlAlchemyTableModel(QSqlTableModel):
@@ -129,7 +132,8 @@ class SqlAlchemyTableModel(QSqlTableModel):
         name = self.fields[index.column()][2]
 
         try:
-            setattr(row, name, value.toString())
+            # setattr(row, name, value.toString())
+            setattr(row, name, value) #
             self.session.commit()
         except Exception as ex:
             # FIXME: data layer should not open GUI Messagebox!

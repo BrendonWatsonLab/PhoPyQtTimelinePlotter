@@ -8,6 +8,7 @@ SQLAlchemy types for dealing with QVariants & various QTypes (like QString)
 
 import datetime
 
+from PyQt5 import QtCore
 from PyQt5.QtCore import QVariant
 from sqlalchemy import types
 
