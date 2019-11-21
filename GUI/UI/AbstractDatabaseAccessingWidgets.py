@@ -13,6 +13,8 @@ from app.database.DatabaseConnectionRef import DatabasePendingItemsState, Databa
 #from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWidget
 # from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
 
+ShouldCloseConnectionOnlyOnQuit = True
+
 # An Abstract QMainWindow superclass that holds a reference to an open database
 class AbstractDatabaseAccessingWindow(QtWidgets.QMainWindow):
     def __init__(self, database_connection, parent=None):
@@ -87,7 +89,10 @@ class AbstractDatabaseAccessingWindow(QtWidgets.QMainWindow):
 
         if shouldClose:
             print("Closing...")
-            self.database_close()
+            if (not ShouldCloseConnectionOnlyOnQuit):
+                self.database_close()
+            else:
+                pass # skip closing the database on a window close
             event.accept()
         else:
             print("Close has been canceled!")
@@ -171,7 +176,10 @@ class AbstractDatabaseAccessingDialog(QtWidgets.QDialog):
 
         if shouldClose:
             print("Closing...")
-            self.database_close()
+            if (not ShouldCloseConnectionOnlyOnQuit):
+                self.database_close()
+            else:
+                pass # skip closing the database on a window close
             event.accept()
         else:
             print("Close has been canceled!")
@@ -256,7 +264,10 @@ class AbstractDatabaseAccessingWidget(QtWidgets.QWidget):
 
         if shouldClose:
             print("Closing...")
-            self.database_close()
+            if (not ShouldCloseConnectionOnlyOnQuit):
+                self.database_close()
+            else:
+                pass # skip closing the database on a window close
             event.accept()
         else:
             print("Close has been canceled!")
@@ -291,6 +302,7 @@ class AbstractDatabaseAccessingQObject(QObject):
 
     def database_close(self):
         if self.database_connection:
+            ShouldCloseConnectionOnlyOnQuit
             self.database_connection.close()
             return True
         else:

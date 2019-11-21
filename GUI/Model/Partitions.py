@@ -14,6 +14,7 @@ from GUI.Model.Events.PhoDurationEvent_Partition import PhoDurationEvent_Partiti
 
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
 
+from app.database.entry_models.db_model import CategoricalDurationLabel, Context, Subcontext
 # """
 # Represents a partition
 # """
@@ -94,6 +95,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
 
         # The first partition keeps the metadata/info, while the second is initialized to a blank partition
 
+    # Called when the Partition Edit Dialog returns with an accept message. Called from TimelineTrackDrawingWidget_Partition's try_update_partition(...) function
     def modify_partition(self, modify_partition_index, start_date, end_date, title, subtitle, body, type_id, subtype_id, color):
         partition_to_modify = self.partitions[modify_partition_index]
         if (not partition_to_modify):
@@ -146,3 +148,38 @@ class Partitioner(AbstractDatabaseAccessingQObject):
 
         # Update in the array
         self.partitions[modify_partition_index] = partition_to_modify
+
+
+    def save_partitions_to_database(self):
+        newBehaviorContext = Context(None, "Behavior")
+        newBehaviorSubcontext = Subcontext(None, "Manual", newBehaviorContext)
+
+        
+
+        # Tries to save the active partitions out to the database
+        for (index, aPartitionObj) in enumerate(self.partitions):
+            newPartRecord = CategoricalDurationLabel()
+            newPartRecord.start_date = aPartitionObj.startTime
+            newPartRecord.end_date = aPartitionObj.endTime
+            
+            newPartRecord.label_created_date = datetime.now()
+            newPartRecord.label_created_user = "Unknown User"
+            # Set the last updated properties to the creation properties (since we just created it)
+            newPartRecord.last_updated_user = newPartRecord.label_created_user
+            newPartRecord.last_updated_date = newPartRecord.label_created_date
+
+            newPartRecord.Context = newBehaviorContext
+            newPartRecord.Subcontext = newBehaviorSubcontext
+            
+
+            newPartRecord.type_id = aPartitionObj.type_id
+            newPartRecord.subtype_id = aPartitionObj.subtype_id
+            newPartRecord.tertiarytype_id = None
+
+            newPartRecord.primary_text = aPartitionObj.name
+            newPartRecord.secondary_text = aPartitionObj.subtitle
+            newPartRecord.tertiary_text = aPartitionObj.body
+
+            newPartRecord.notes = 'auto'
+            
+

@@ -14,78 +14,92 @@ from GUI.ExampleDatabaseTableWindow import ExampleDatabaseTableWindow
 
 from app.database.DatabaseConnectionRef import DatabaseConnectionRef
 
+# The main application
+class TimelineApplication(QApplication):
 
-if __name__ == '__main__':
     shouldShowGUIWindows = True
     shouldShowMainGUIWindow = True
     shouldShowListGUIWindow = False
     shouldShowExampleWindow = True
 
-    # Show last 7 days worth of data
-    earliestTime = dt.datetime.now() - dt.timedelta(days=7)
-    latestTime = dt.datetime.now()
-    if (shouldShowGUIWindows):
-        # create the application and the main window
-        app = QtWidgets.QApplication( sys.argv )
+    def __init__(self, args):
+        super(TimelineApplication, self).__init__(args)
+         # self.database_file_path = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
+        # self.database_file_path = 'G:\Google Drive\Modern Behavior Box\Results - Data\BehavioralBoxDatabase.db'
+        self.database_file_path = "C:/Users/halechr/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db"
+        self.database_connection = DatabaseConnectionRef(self.database_file_path)
 
-        # database_file_path = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
-        # database_file_path = 'G:\Google Drive\Modern Behavior Box\Results - Data\BehavioralBoxDatabase.db'
-        database_file_path = "C:/Users/halechr/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db"
-        database_connection = DatabaseConnectionRef(database_file_path)
+        # Show last 7 days worth of data
+        self.earliestTime = dt.datetime.now() - dt.timedelta(days=7)
+        self.latestTime = dt.datetime.now()
 
-        # video_file_search_paths = ["O:/Transcoded Videos/BB01"]
-        # video_file_search_paths = ["O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06"]
-        # video_file_search_paths = ["O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]
+        # self.video_file_search_paths = ["O:/Transcoded Videos/BB01"]
+        # self.video_file_search_paths = ["O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06"]
+        # self.video_file_search_paths = ["O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]
 
-        if shouldShowExampleWindow:
-            exampleWindow = ExampleDatabaseTableWindow(database_connection)
+        if TimelineApplication.shouldShowExampleWindow:
+            self.exampleWindow = ExampleDatabaseTableWindow(self.database_connection)
 
         
-        if shouldShowMainGUIWindow:
-            mainWindow = TimelineDrawingWindow(database_connection, earliestTime, latestTime)
-            windowFlags = mainWindow.windowFlags()
+        if TimelineApplication.shouldShowMainGUIWindow:
+            self.mainWindow = TimelineDrawingWindow(self.database_connection, self.earliestTime, self.latestTime)
+            self.windowFlags = self.mainWindow.windowFlags()
             # print(windowFlags)
-            windowFlags |= Qt.WindowContextHelpButtonHint # Add the help button to the window
+            self.windowFlags |= Qt.WindowContextHelpButtonHint # Add the help button to the window
             # mainWindow.setWindowFlags(windowFlags)
 
             # mainWindow.setWindowFlags(Qt.WindowContextHelpButtonHint) # This works for some reason, but gets rid of the minimize, maximize, and close buttons
 
     
-        if shouldShowListGUIWindow:
-            video_file_search_paths = ["O:/Transcoded Videos/BB00", "O:/Transcoded Videos/BB01", "O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]     
-            # video_file_search_paths = ["O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]     
-            # video_file_search_paths = ["O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]
-            mainListWindow = MainObjectListsWindow(database_connection, video_file_search_paths)
+        if TimelineApplication.shouldShowListGUIWindow:
+            self.video_file_search_paths = ["O:/Transcoded Videos/BB00", "O:/Transcoded Videos/BB01", "O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]     
+            # self.video_file_search_paths = ["O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]     
+            # self.video_file_search_paths = ["O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]
+            self.mainListWindow = MainObjectListsWindow(self.database_connection, self.video_file_search_paths)
 
 
-        desktop = QtWidgets.QApplication.desktop()
-        resolution = desktop.availableGeometry()
+        self.desktop = QtWidgets.QApplication.desktop()
+        self.resolution = self.desktop.availableGeometry()
         # screen = QDesktopWidget().screenGeometry()
 
-
-        # Style
-        app.setStyleSheet(open("GUI/application.qss", "r").read())
-        # app.setStyleSheet(
-        #     "QToolTip { border: 2px solid darkkhaki; padding: 5px; border-radius: 3px; background-color: rgba(255,255,0,0); }");
-
-        # run
-
-        if shouldShowListGUIWindow:
-            mainListWindow.show()
-            sideListWindowGeometry = mainListWindow.frameGeometry()
+        if TimelineApplication.shouldShowListGUIWindow:
+            self.mainListWindow.show()
+            self.sideListWindowGeometry = self.mainListWindow.frameGeometry()
 
 
-        if shouldShowMainGUIWindow:
-            mainWindow.show()
-            mainWindowGeometry = mainWindow.frameGeometry()
+        if TimelineApplication.shouldShowMainGUIWindow:
+            self.mainWindow.show()
+            self.mainWindowGeometry = self.mainWindow.frameGeometry()
 
-        if shouldShowExampleWindow:
-            exampleWindow.show()
+        if TimelineApplication.shouldShowExampleWindow:
+            self.exampleWindow.show()
 
         # If should show both main and side list GUI
-        if (shouldShowMainGUIWindow and shouldShowListGUIWindow):
-            sideListWindowGeometry.moveTopRight(mainWindowGeometry.topLeft())
-            mainListWindow.move(sideListWindowGeometry.topLeft())
+        if (TimelineApplication.shouldShowMainGUIWindow and TimelineApplication.shouldShowListGUIWindow):
+            self.sideListWindowGeometry.moveTopRight(self.mainWindowGeometry.topLeft())
+            self.mainListWindow.move(self.ideListWindowGeometry.topLeft())
+
+    def on_application_about_to_quit(self):
+        print("aboutToQuit")
+        self.database_connection.close()
+        print("done.")
 
 
-        sys.exit( app.exec_() )
+
+if __name__ == '__main__':
+
+
+    # create the application and the main window
+    app = TimelineApplication( sys.argv )
+
+    # Style
+    app.setStyleSheet(open("GUI/application.qss", "r").read())
+    # app.setStyleSheet(
+    #     "QToolTip { border: 2px solid darkkhaki; padding: 5px; border-radius: 3px; background-color: rgba(255,255,0,0); }");
+
+    # run
+
+    # Connect aboutToQuit signal;
+    app.aboutToQuit.connect(app.on_application_about_to_quit)
+
+    sys.exit( app.exec_() )

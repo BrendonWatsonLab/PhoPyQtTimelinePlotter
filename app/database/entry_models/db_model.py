@@ -1,5 +1,5 @@
 # coding: utf-8
-from sqlalchemy import Column, ForeignKey, Integer, Table, Text, text
+from sqlalchemy import Column, ForeignKey, Integer, Table, Text, text, DateTime
 from sqlalchemy.sql.sqltypes import NullType
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
@@ -67,12 +67,46 @@ class BehavioralBox(Base):
         ]
 
 
+
+class Subcontext(Base):
+    __tablename__ = 'Subcontext'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(Text, nullable=False)
+    parent_context = Column(Integer, ForeignKey('Contexts.id'), nullable=False, server_default=text("1"))
+    notes = Column(Text)
+
+    parentContext = relationship('Context', back_populates="subcontexts")
+
+    def __init__(self,id,name,parent_context,notes=None):
+        self.id = id
+        self.name = name
+        self.parent_context = parent_context
+        self.notes = notes
+
+    @classmethod
+    def getTableMapping(cls):
+        return [
+            ('ID', cls.id, 'id', {'editable': False}),
+            ('Name', cls.name, 'name', {'editable': True}),
+            ('Parent ID', cls.parent_context, 'parent_context', {'editable': True}),
+            ('Notes', cls.notes, 'notes', {'editable': True}),
+        ]
+
+
 class Context(Base):
     __tablename__ = 'Contexts'
 
     id = Column(Integer, primary_key=True)
     name = Column(Text, nullable=False)
     note = Column(Text)
+
+    subcontexts = relationship('Subcontext', order_by=Subcontext.id, back_populates="parentContext")
+
+    def __init__(self,id,name,notes=None):
+        self.id = id
+        self.name = name
+        self.notes = notes
 
     @classmethod
     def getTableMapping(cls):
@@ -178,24 +212,88 @@ class Cohort(Base):
 
 
 
-class Subcontext(Base):
-    __tablename__ = 'Subcontext'
+
+"""
+"Partitions"
+Datatypes:
+Interval: datetime.timedelta()
+Numeric
+"""
+class CategoricalDurationLabel(Base):
+    __tablename__ = 'CategoricalDurationLabels'
 
     id = Column(Integer, primary_key=True)
-    name = Column(Text, nullable=False)
-    parent_context = Column(Integer, ForeignKey('Contexts.id'), nullable=False, server_default=text("1"))
+    start_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=False)
+
+    label_created_date = Column(DateTime, nullable=False)
+    label_created_user = Column(Text, nullable=False, server_default=text("Anonymous"))
+    last_updated_date = Column(DateTime, nullable=False)
+    last_updated_user = Column(Text, nullable=False, server_default=text("Anonymous"))
+
+    context_id = Column(Integer, ForeignKey('Contexts.id'))
+    subcontext_id = Column(Integer, ForeignKey('Subcontext.id'))
+
+    # type, subtype are the main properties. Either property can be Null/None when the user hasn't yet labeled the partition
+    type_id = Column(Integer)
+    subtype_id = Column(Integer)
+    tertiarytype_id = Column(Integer)
+
+    primary_text = Column(Text)
+    secondary_text = Column(Text)
+    tertiary_text = Column(Text)
+
     notes = Column(Text)
 
-    Context = relationship('Context')
+    Context = relationship('Context', foreign_keys=[context_id])
+    Subcontext = relationship('Subcontext', foreign_keys=[subcontext_id])
+
+    def __init__(self,id,start_date,end_date,label_created_date,label_created_user,last_updated_date,last_updated_user,context_id,subcontext_id,\
+         type_id, subtype_id, tertiarytype_id, primary_text, secondary_text, tertiary_text, notes):
+        self.id = id
+        self.start_date = start_date
+        self.end_date = end_date
+        self.label_created_date = label_created_date
+        self.label_created_user = label_created_user
+        self.last_updated_date = last_updated_date
+        self.last_updated_user = last_updated_user
+
+        self.context_id = context_id
+        self.subcontext_id = subcontext_id
+
+        self.type_id = type_id
+        self.subtype_id = subtype_id
+        self.tertiarytype_id = tertiarytype_id
+
+        self.primary_text = primary_text
+        self.secondary_text = secondary_text
+        self.tertiary_text = tertiary_text
+
+        self.notes = notes
+
 
     @classmethod
     def getTableMapping(cls):
         return [
             ('ID', cls.id, 'id', {'editable': False}),
-            ('Name', cls.name, 'name', {'editable': True}),
-            ('Parent ID', cls.parent_context, 'parent_context', {'editable': True}),
+            ('StartDate', cls.start_date, 'start_date', {'editable': False}),
+            ('EndDate', cls.end_date, 'end_date', {'editable': False}),
+            ('CreatedDate', cls.label_created_date, 'label_created_date', {'editable': False}),
+            ('CreatedUser', cls.label_created_user, 'label_created_user', {'editable': False}),
+            ('LastUpdatedDate', cls.last_updated_date, 'last_updated_date', {'editable': False}),
+            ('LastUpdatingUser', cls.last_updated_user, 'last_updated_user', {'editable': False}),
+            ('Context ID', cls.context, 'context', {'editable': True}),
+            ('Subcontext ID', cls.subcontext, 'subcontext', {'editable': True}),
+            ('Type ID', cls.type, 'type', {'editable': True}),
+            ('Subtype ID', cls.subtype, 'subtype', {'editable': True}),
+            ('TertiaryType ID', cls.tertiarytype_id, 'tertiarytype_id', {'editable': True}),
+            ('PrimaryTxt', cls.primary_text, 'primary_text', {'editable': True}),
+            ('SecondaryTxt', cls.secondary_text, 'secondary_text', {'editable': True}),
+            ('TertiaryTxt', cls.tertiary_text, 'tertiary_text', {'editable': True}),
             ('Notes', cls.notes, 'notes', {'editable': True}),
         ]
+
+
 
 
 
@@ -205,8 +303,12 @@ class TimestampedAnnotation(Base):
     id = Column(Integer, primary_key=True)
     start_date = Column(Integer)
     end_date = Column(Integer)
+
+
     context = Column(Integer, ForeignKey('Contexts.id'), server_default=text("1"))
-    subcontext = Column(Integer, server_default=text("1"))
+    # subcontext = Column(Integer, server_default=text("1"))
+    subcontext = Column(Integer, ForeignKey('Subcontext.id'))
+
     type = Column(Integer, nullable=False, server_default=text("1"))
     subtype = Column(Integer, nullable=False, server_default=text("1"))
     primary_text = Column(Text, nullable=False)
@@ -214,7 +316,8 @@ class TimestampedAnnotation(Base):
     tertiary_text = Column(Text)
     overflow_text = Column(Text)
 
-    Context = relationship('Context')
+    Context = relationship('Context', foreign_keys=[context])
+    Subcontext = relationship('Subcontext', foreign_keys=[subcontext])
 
     """
     TimestampedAnnotation:
