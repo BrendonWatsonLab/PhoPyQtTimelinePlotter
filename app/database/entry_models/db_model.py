@@ -1,5 +1,5 @@
 # coding: utf-8
-from sqlalchemy import Column, ForeignKey, Integer, Table, Text, text, DateTime
+from sqlalchemy import Column, ForeignKey, Integer, Table, Text, text, DateTime, UniqueConstraint
 from sqlalchemy.sql.sqltypes import NullType
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
@@ -93,6 +93,8 @@ class Subcontext(Base):
             ('Notes', cls.notes, 'notes', {'editable': True}),
         ]
 
+    __table_args__ = (UniqueConstraint('name', 'parent_context', name='_name_parent_uc'),
+                     )
 
 class Context(Base):
     __tablename__ = 'Contexts'
@@ -271,6 +273,8 @@ class CategoricalDurationLabel(Base):
 
     #     self.notes = notes
 
+    # __table_args__ = (UniqueConstraint('start_date', 'end_date', 'type_id', 'subtype_id', 'tertiarytype_id' name='_customer_location_uc'),
+    #                  )
 
     @classmethod
     def getTableMapping(cls):
