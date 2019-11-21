@@ -98,7 +98,7 @@ class Context(Base):
     __tablename__ = 'Contexts'
 
     id = Column(Integer, primary_key=True)
-    name = Column(Text, nullable=False)
+    name = Column(Text, nullable=False, unique=True)
     note = Column(Text)
 
     subcontexts = relationship('Subcontext', order_by=Subcontext.id, back_populates="parentContext")
@@ -248,28 +248,28 @@ class CategoricalDurationLabel(Base):
     Context = relationship('Context', foreign_keys=[context_id])
     Subcontext = relationship('Subcontext', foreign_keys=[subcontext_id])
 
-    def __init__(self,id,start_date,end_date,label_created_date,label_created_user,last_updated_date,last_updated_user,context_id,subcontext_id,\
-         type_id, subtype_id, tertiarytype_id, primary_text, secondary_text, tertiary_text, notes):
-        self.id = id
-        self.start_date = start_date
-        self.end_date = end_date
-        self.label_created_date = label_created_date
-        self.label_created_user = label_created_user
-        self.last_updated_date = last_updated_date
-        self.last_updated_user = last_updated_user
+    # def __init__(self,id,start_date,end_date,label_created_date,label_created_user,last_updated_date,last_updated_user,context_id,subcontext_id,\
+    #      type_id, subtype_id, tertiarytype_id, primary_text, secondary_text, tertiary_text, notes):
+    #     self.id = id
+    #     self.start_date = start_date
+    #     self.end_date = end_date
+    #     self.label_created_date = label_created_date
+    #     self.label_created_user = label_created_user
+    #     self.last_updated_date = last_updated_date
+    #     self.last_updated_user = last_updated_user
 
-        self.context_id = context_id
-        self.subcontext_id = subcontext_id
+    #     self.context_id = context_id
+    #     self.subcontext_id = subcontext_id
 
-        self.type_id = type_id
-        self.subtype_id = subtype_id
-        self.tertiarytype_id = tertiarytype_id
+    #     self.type_id = type_id
+    #     self.subtype_id = subtype_id
+    #     self.tertiarytype_id = tertiarytype_id
 
-        self.primary_text = primary_text
-        self.secondary_text = secondary_text
-        self.tertiary_text = tertiary_text
+    #     self.primary_text = primary_text
+    #     self.secondary_text = secondary_text
+    #     self.tertiary_text = tertiary_text
 
-        self.notes = notes
+    #     self.notes = notes
 
 
     @classmethod

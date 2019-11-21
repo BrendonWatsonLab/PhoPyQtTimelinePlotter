@@ -30,7 +30,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         super(TimelineTrackDrawingWidget_Partition, self).__init__(trackID, totalStartTime, totalEndTime, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
         self.reloadModelFromDatabase()
 
-        self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, 'partitioner', partitionObjects)
+        self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, database_connection, partitionObjects)
         self.reinitialize_from_partition_manager()
         ## TODO: can reconstruct partitions from cutObjects, but can't recover the specific partition's info.
         self.cutObjects = cutObjects
@@ -53,10 +53,10 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         # Load the latest behaviors and colors data from the database
         self.behaviorGroups = self.database_connection.load_behavior_groups_from_database()
         self.behaviors = self.database_connection.load_behaviors_from_database()
-        self.contexts = self.database_connection.load_contexts_from_database()
+        self.contextsDict = self.database_connection.load_contexts_from_database()
         self.subcontexts = self.database_connection.load_subcontexts_from_database()
 
-        
+
 
     def reinitialize_from_partition_manager(self):
         self.partitionObjects = self.partitionManager.partitions
@@ -309,12 +309,16 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         if (not (self.activeEditingPartitionIndex is None)):
             # Get new color associated with the modified subtype_id
             newColor = self.behaviors[subtype_id-1].primaryColor.get_QColor()
+            newContext = self.contextsDict['Behavior']
+            newSubcontext = newContext.subcontexts[0]
+
             self.partitionManager.modify_partition(self.activeEditingPartitionIndex, start_date, end_date, title, subtitle, body, type_id, subtype_id, newColor)
             print('Modified partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(self.activeEditingPartitionIndex, type_id, subtype_id))
             self.reinitialize_from_partition_manager()
             self.update()
             # Save to database
-            self.partitionManager.save_partitions_to_database()
+            # TODO: currently all saved partitions must be of the same context and subcontext.
+            self.partitionManager.save_partitions_to_database(newContext, newSubcontext)
         else:
             print("Error: unsure what partition to update!")
             return

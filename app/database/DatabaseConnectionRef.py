@@ -184,10 +184,13 @@ class DatabaseConnectionRef(QObject):
         return annotations
 
     def load_contexts_from_database(self):
+        outputRecordsDict = dict()
         print("Loading contexts from database:")
         session = self.get_session()
-        contexts = session.query(Context).options(selectinload(Context.subcontexts)).all()
-        return contexts
+        records_list = session.query(Context).options(selectinload(Context.subcontexts)).all()
+        for aRecord in records_list:
+            outputRecordsDict[aRecord.name] = aRecord
+        return outputRecordsDict
 
     def load_subcontexts_from_database(self):
         print("Loading subcontexts from database:")
@@ -200,9 +203,6 @@ class DatabaseConnectionRef(QObject):
         outputColorsDict = dict()
         print("Loading colors from database:")
         session = self.get_session()
-        # context = session.query(Context).first()
-        # contexts = session.query(Context).all()
-        # print(contexts)
         colors_list = session.query(CategoryColors).all()
         for aColor in colors_list:
             outputColorsDict[aColor.hex_color] = aColor
@@ -247,6 +247,29 @@ class DatabaseConnectionRef(QObject):
     
 
     ## SAVING:
+    def save_to_database(self, recordsList, recordTypeName):
+        print("Saving {0} records of type <{1}> to database: {2}".format(len(recordsList), recordTypeName, self.get_path()))
+        session = self.get_session()
+        num_found_records = len(recordsList)
+        num_added_records = 0
+        num_skipped_records = 0
+        for anOutRecord in recordsList:
+            try:
+                session.add(anOutRecord)
+                num_added_records = num_added_records + 1
+
+            except Exception as e:
+                print("Other exception ({0}) while trying to save {1} records to database! Trying to continue".format(str(e), recordTypeName))
+                num_skipped_records = num_skipped_records + 1
+                continue
+
+        print('Added ', num_added_records, 'of', num_found_records, recordTypeName, 'records to database.')
+
+        # Save (commit) the changes
+        self.commit()
+        print("done.")
+        return
+
     def save_contexts_to_database(self, contexts):
         print("Saving contexts to database: {0}".format(self.get_path()))
         session = self.get_session()
@@ -270,9 +293,6 @@ class DatabaseConnectionRef(QObject):
 
         # Save (commit) the changes
         self.commit()
-        # We can also close the connection if we are done with it.
-        # Just be sure any changes have been committed or they will be lost.
-        # session.close()
         print("done.")
         return
 
@@ -464,3 +484,59 @@ class DatabaseConnectionRef(QObject):
             Animal, #sql alchemy mapped object
             Animal.getTableMapping())
         return model
+
+
+    ## Defaults/Static Database Setup:
+    def initSampleDatabase(self):
+        # Need to load all first
+
+        self.colorsDict = self.load_colors_from_database()
+        self.behaviorGroups = self.load_behavior_groups_from_database()
+        self.behaviors = self.load_behaviors_from_database()
+        self.fileExtensionDict = self.load_static_file_extensions_from_database()
+
+        self.contextsDict = self.load_contexts_from_database()
+        self.subcontexts = self.load_subcontexts_from_database()
+
+        self.annotationDataObjects = self.load_annotation_events_from_database()
+
+        # Sample Contexts
+        # if (not ('Behavior' in self.contextsDict.keys())):
+        #     Context(None, "Behavior")
+
+        sampleContexts = [
+            Context(None, "Unknown"),
+            Context(None, "Behavior"),
+        ]
+        self.save_to_database(sampleContexts, 'Context')
+
+        sampleSubcontexts = [
+            Subcontext(None, "Default",1),
+            Subcontext(None, "Default",2),
+        ]
+        self.save_to_database(sampleSubcontexts, 'Subcontext')
+
+
+        sampleSubcontexts = [
+            Subcontext(None, "Default",1),
+            Subcontext(None, "Default",2),
+        ]
+        self.save_to_database(sampleSubcontexts, 'Subcontext')
+
+        # Sample Subcontexts
+
+
+        # Static File Extensions:
+        # Get the appropriate file extension parent
+        currFileExtension = aFoundVideoFile.file_extension[1:].lower()
+        parent_file_extension_obj = None
+        if currFileExtension in self.fileExtensionDict.keys():
+            parent_file_extension_obj = self.fileExtensionDict[currFileExtension]
+        else:
+            # Key doesn't exist!
+            print("extension {0} doesn't exist!".format(currFileExtension))
+            parent_file_extension_obj = StaticFileExtension(currFileExtension)
+            # Add it to the database
+            self.database_connection.save_static_file_extensions_to_database([parent_file_extension_obj])
+
+

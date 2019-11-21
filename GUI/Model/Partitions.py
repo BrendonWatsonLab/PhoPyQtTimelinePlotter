@@ -150,9 +150,11 @@ class Partitioner(AbstractDatabaseAccessingQObject):
         self.partitions[modify_partition_index] = partition_to_modify
 
 
-    def save_partitions_to_database(self):
-        newBehaviorContext = Context(None, "Behavior")
-        newBehaviorSubcontext = Subcontext(None, "Manual", newBehaviorContext)
+    def save_partitions_to_database(self, contextObj, subcontextObj):
+        print("partitions manager: save_partitions_to_database({0}, {1})".format(str(contextObj), str(subcontextObj)))
+        # newBehaviorContext = Context(None, "Behavior")
+        # newBehaviorSubcontext = Subcontext(None, "Manual", newBehaviorContext)
+        print("trying to save {0} partition objects".format(len(self.partitions)))
 
         # Tries to save the active partitions out to the database
         for (index, aPartitionObj) in enumerate(self.partitions):
@@ -166,9 +168,8 @@ class Partitioner(AbstractDatabaseAccessingQObject):
             newPartRecord.last_updated_user = newPartRecord.label_created_user
             newPartRecord.last_updated_date = newPartRecord.label_created_date
 
-            newPartRecord.Context = newBehaviorContext
-            newPartRecord.Subcontext = newBehaviorSubcontext
-
+            newPartRecord.Context = contextObj
+            newPartRecord.Subcontext = subcontextObj
 
             newPartRecord.type_id = aPartitionObj.type_id
             newPartRecord.subtype_id = aPartitionObj.subtype_id
@@ -179,5 +180,9 @@ class Partitioner(AbstractDatabaseAccessingQObject):
             newPartRecord.tertiary_text = aPartitionObj.body
 
             newPartRecord.notes = 'auto'
+
+            self.database_connection.save_to_database([newPartRecord], 'CategoricalDurationLabel')
+
+        print("done.")
             
 
