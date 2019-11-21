@@ -26,9 +26,9 @@ if __name__ == '__main__':
         # create the application and the main window
         app = QtWidgets.QApplication( sys.argv )
 
-        # database_file_path = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
+        database_file_path = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
         # database_file_path = 'G:\Google Drive\Modern Behavior Box\Results - Data\BehavioralBoxDatabase.db'
-        database_file_path = "C:/Users/halechr/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db"
+        # database_file_path = "C:/Users/halechr/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db"
         database_connection = DatabaseConnectionRef(database_file_path)
 
         # video_file_search_paths = ["O:/Transcoded Videos/BB01"]
