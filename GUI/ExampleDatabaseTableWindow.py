@@ -1,9 +1,9 @@
 # coding: utf-8
 from PyQt5 import QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea
-from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QAbstractItemView, QTableView, QWidget, QAction, qApp, QApplication, QTreeWidgetItem, QFileDialog, QInputDialog
+from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QAbstractItemView, QTableView, QWidget, QAction, qApp, QApplication, QTreeWidgetItem, QFileDialog, QInputDialog, QMenu
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool, QItemSelectionModel
+from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool, QItemSelectionModel, QPersistentModelIndex
 
 from sqlalchemy import Column, ForeignKey, Integer, Table, Text, text
 from sqlalchemy.sql.sqltypes import NullType
@@ -123,7 +123,7 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
     def display_context_menu(self, pos):
         index = self.table.indexAt(pos)
 
-        self.menu = QtGui.QMenu()
+        self.menu = QMenu()
 
         # self.edit_action = self.menu.addAction("Edit")
         # self.edit_action.triggered.connect(self.edit_trial)
@@ -139,25 +139,33 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
 
 
     def delete_record(self):
-        reply = QtGui.QMessageBox.question(
-            self, "Confirm", "Really delete the selected trial?", QtGui.QMessageBox.Yes, QtGui.QMessageBox.No
+        selected_row_index = self.table_selection_model.currentIndex().data(Qt.EditRole)
+        index_list = []                                                          
+        for model_index in self.table.selectionModel().selectedRows():       
+            index = QPersistentModelIndex(model_index)         
+            index_list.append(index)                                             
+
+        num_items_to_remove = len(index_list)
+
+
+        reply = QMessageBox.question(
+            self, "Confirm", "Really delete the selected {0} records?".format(num_items_to_remove), QMessageBox.Yes, QMessageBox.No
         )
-        if reply == QtGui.QMessageBox.Yes:
-            self.database_connection.session.delete(self.current_record)
-            self.database_connection.session.commit()
-            self.update_trial_table()
+        if reply == QMessageBox.Yes:
+            for index in index_list:
+                self.current_record = self.model.record(index.row())
+                self.database_connection.session.delete(self.current_record)
+                self.model.removeRow(index.row())  
+
+            # self.database_connection.session.commit()
+            self.model.refresh()
 
     def duplicate_record(self):
+        self.database_connection.session
         new = self.current_record.duplicate()
         self.database_connection.session.add(new)
         self.database_connection.session.commit()
-        self.update_trial_table()
-
-
-    # def new_trial(self):
-    #     dialog = NewTrialDialog(self.database_connection.session, experiment=self.current_experiment, parent=self)
-    #     dialog.accepted.connect(self.trial_table_model.refresh)
-    #     dialog.exec()
+        self.model.refresh()
 
     def create_new_record(self):
         dialog = QInputDialog(self)
