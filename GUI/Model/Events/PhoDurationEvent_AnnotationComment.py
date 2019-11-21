@@ -11,19 +11,19 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPainterPath, QPolygon, QFontMetrics, QRegion
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
-from GUI.Model.PhoEvent import *
-from GUI.Model.PhoDurationEvent import *
+from GUI.Model.Events.PhoEvent import *
+from GUI.Model.Events.PhoDurationEvent import *
 
 from GUI.UI.TrianglePainter import *
 
 class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     InstantaneousEventDuration = timedelta(minutes=30)
     RectCornerRounding = 2
-    ColorBase = QColor(51, 255, 102)  # Teal
-    ColorEmph = QColor(31, 200, 62)  # Green
-    ColorActive = QColor(255, 102, 51)  # Orange
+    ColorBase = QColor(51, 255, 102, PhoEvent.DefaultOpacity)  # Teal
+    ColorEmph = QColor(31, 200, 62, PhoEvent.DefaultOpacity)  # Green
+    ColorActive = QColor(255, 102, 51, PhoEvent.DefaultOpacity)  # Orange
 
-    ColorNibHandleActive = QColor(255, 102, 51)  # Orange
+    ColorNibHandleActive = QColor(255, 102, 51, PhoEvent.DefaultOpacity)  # Orange
 
     ColorBorderBase = QColor('#e0e0e0')  # Whiteish
     ColorBorderActive = QColor(255, 222, 122)  # Yellowish
@@ -44,7 +44,7 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     on_edit_by_dragging_handle_start = pyqtSignal(str, int)
     on_edit_by_dragging_handle_end = pyqtSignal(str, int)
 
-    def __init__(self, startTime=datetime.now(), endTime=None, name='', title='', subtitle='', color=QColor(31, 200, 62), extended_data=dict(), parent=None):
+    def __init__(self, startTime=datetime.now(), endTime=None, name='', title='', subtitle='', color=QColor(31, 200, 62, PhoEvent.DefaultOpacity), extended_data=dict(), parent=None):
         super(PhoDurationEvent_AnnotationComment, self).__init__(startTime, endTime, name, color, extended_data, parent=parent)
         self.title = title
         self.subtitle = subtitle
@@ -219,7 +219,7 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         
         self.body_region = QRegion(x, body_y, width, body_height)
 
-        if self.endTime is None:
+        if self.is_instantaneous_event():
             # Instantaneous type event
             # painter.setPen(Qt.NoPen)
             if self.is_emphasized:

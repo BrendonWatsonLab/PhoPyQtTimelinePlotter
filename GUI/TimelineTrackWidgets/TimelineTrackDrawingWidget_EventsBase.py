@@ -12,20 +12,21 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import TimelineTrackDrawingWidgetBase, ItemSelectionOptions
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_SelectionBase import TimelineTrackDrawingWidget_SelectionBase
 
-class TimelineTrackDrawingWidget_Events(TimelineTrackDrawingWidget_SelectionBase):
+# durationObjects are PhoDurationEvents
+class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_SelectionBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
     default_shouldDismissSelectionUponMouseButtonRelease = True
     default_itemSelectionMode = ItemSelectionOptions.MultiSelection
 
     def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
-        super(TimelineTrackDrawingWidget_Events, self).__init__(trackID, totalStartTime, totalEndTime, durationObjects, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
+        super(TimelineTrackDrawingWidget_EventsBase, self).__init__(trackID, totalStartTime, totalEndTime, durationObjects, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
         # self.durationObjects = durationObjects
         self.instantaneousObjects = instantaneousObjects
         # self.eventRect = np.repeat(QRect(0,0,0,0), len(durationObjects))
         self.instantaneousEventRect = np.repeat(QRect(0,0,0,0), len(instantaneousObjects))
         # Selected Object
-        self.shouldDismissSelectionUponMouseButtonRelease = TimelineTrackDrawingWidget_Events.default_shouldDismissSelectionUponMouseButtonRelease
-        self.itemSelectionMode = TimelineTrackDrawingWidget_Events.default_itemSelectionMode
+        self.shouldDismissSelectionUponMouseButtonRelease = TimelineTrackDrawingWidget_EventsBase.default_shouldDismissSelectionUponMouseButtonRelease
+        self.itemSelectionMode = TimelineTrackDrawingWidget_EventsBase.default_itemSelectionMode
 
         # Set up signals
         for aDurationObject in self.durationObjects:

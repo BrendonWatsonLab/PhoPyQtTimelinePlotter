@@ -21,15 +21,17 @@ from GUI.HelpWindow.HelpWindowFinal import *
 from GUI.UI.qtimeline import *
 
 from GUI.UI.ExtendedTracksContainerWidget import ExtendedTracksContainerWidget
-from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Events import *
+from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Videos import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Partition import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_AnnotationComments import *
 
 # from app.database.SqliteEventsDatabase import load_video_events_from_database
 from app.database.SqlAlchemyDatabase import load_annotation_events_from_database, save_annotation_events_to_database, create_TimestampedAnnotation
 
-from GUI.UI.VideoPlayer.main_video_player_window import *
+from GUI.UI.VideoPlayer.MainVideoPlayerWindow import *
 from GUI.SetupWindow.SetupWindow import *
+
+from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
 
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.
@@ -162,11 +164,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         # self.allVideoEventDisplayObjects.filter()
         currTrackIndex = 0
-        self.mainVideoTrack = TimelineTrackDrawingWidget_Events(currTrackIndex, self.trackVideoEventDisplayObjects[0], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+        self.mainVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[0], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
         self.videoFileTrackWidgets.append(self.mainVideoTrack)
 
         currTrackIndex = currTrackIndex + 1
-        self.labeledVideoTrack = TimelineTrackDrawingWidget_Events(currTrackIndex, self.trackVideoEventDisplayObjects[1], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+        self.labeledVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[1], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
         self.videoFileTrackWidgets.append(self.labeledVideoTrack)
 
 
@@ -193,7 +195,14 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.extendedTracksContainer.setAutoFillBackground(True)
         self.extendedTracksContainer.setMouseTracking(True)
         self.extendedTracksContainer.hoverChanged.connect(self.handle_timeline_hovered_position_update_event)
-        self.timelineMasterTrackWidget.hoverChanged.connect(self.extendedTracksContainer.on_update_hover)
+
+        # bind to self to detect changes in either child
+        self.timelineMasterTrackWidget.hoverChanged.connect(self.on_playhead_hover_position_updated)
+        self.extendedTracksContainer.hoverChanged.connect(self.on_playhead_hover_position_updated)
+
+        # self.timelineMasterTrackWidget.hoverChanged.connect(self.extendedTracksContainer.on_update_hover)
+        
+
 
         # Debug Pallete
         # p = self.labjackEventsContainer.palette()
@@ -303,7 +312,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             videoEndDates.append(videoInfoItem.endTime)
             currExtraInfoDict = videoInfoItem.get_output_dict()
             # Event Generation
-            currEvent = PhoDurationEvent(videoInfoItem.startTime, videoInfoItem.endTime, videoInfoItem.fullName, QColor(51,204,255), currExtraInfoDict)
+            currEvent = PhoDurationEvent_Video(videoInfoItem.startTime, videoInfoItem.endTime, videoInfoItem.fullName, QColor(51,204,255), currExtraInfoDict)
             self.allVideoEventDisplayObjects.append(currEvent)
             if videoInfoItem.is_original_video:
                 self.trackVideoEventDisplayObjects[0].append(currEvent)
@@ -439,6 +448,25 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         currPercent = self.get_active_percent_viewport_total()
         return (currPercent * self.totalDuration)
 
+    # Given the percent offset of the total duration, gets the x-offset for the timeline tracks (not the viewport, its contents)
+    def percent_offset_to_track_offset(self, track_percent):
+        return float(self.get_minimum_track_width()) * float(track_percent)
+
+    ## Datetime functions copied from the versions created for the PhoDurationEvent class
+    # returns true if the absolute_datetime falls within the current entire timeline. Not the viewport
+    def contains_date(self, absolute_datetime):
+        return ((self.totalStartTime <= absolute_datetime) and (self.totalEndTime >= absolute_datetime))
+
+    # Returns the duration of the time relative to this timeline.
+    def compute_relative_offset_duration(self, time):
+        relative_offset_duration = time - self.totalStartTime
+        return relative_offset_duration
+
+    # Returns the absolute (wall/world) time for a relative_duration into the timeline
+    def compute_absolute_time(self, relative_duration):
+        return (self.totalStartTime + relative_duration)
+
+
 
     def on_zoom_in(self):
         self.activeScaleMultiplier = min(TimelineDrawingWindow.MaxZoomLevel, (self.activeScaleMultiplier + TimelineDrawingWindow.ZoomDelta))
@@ -521,7 +549,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
     # Shows the video player window:
     def handle_showVideoPlayerWindow(self):
-        if self.videoPlayerWindow:
+        if (not (self.videoPlayerWindow is None)):
             self.videoPlayerWindow.show()
         else:
             # Create a new videoPlayerWindow window
@@ -529,10 +557,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.videoPlayerWindow.show()
 
     def try_set_video_player_window_url(self, url):
-        if self.videoPlayerWindow:
+        if (not (self.videoPlayerWindow is None)):
             print("Using existing Video Player Window...")
             self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
             self.videoPlayerWindow.set_video_filename(url)
+
             # self.videoPlayerWindow.show()
         else:
             # Create a new videoPlayerWindow window
@@ -571,7 +600,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # if trackIndex == TimelineDrawingWindow.static_VideoTrackTrackID:
 
         # If it's the video track
-        if trackObjectIndex == TimelineTrackDrawingWidget_Events.static_TimeTrackObjectIndex_NoSelection:
+        if trackObjectIndex == TimelineTrackDrawingWidget_Videos.static_TimeTrackObjectIndex_NoSelection:
             # No selection, just clear the filters
             # for i in range(0, len(self.eventTrackWidgets)):
             #     currWidget = self.eventTrackWidgets[i]
@@ -604,9 +633,19 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                     currVideoTrackWidget.update()
 
             if currSelectedObject:
-                selected_video_path = currSelectedObject.extended_data['path']
+                selected_video_path = currSelectedObject.get_video_url()
                 print(selected_video_path)
-                self.try_set_video_player_window_url(str(selected_video_path))
+                currActiveVideoTrack.set_now_playing(trackObjectIndex)
+
+                if currSelectedObject.is_video_url_accessible():
+                    self.try_set_video_player_window_url(str(selected_video_path))
+                    self.videoPlayerWindow.movieLink = DataMovieLinkInfo(currSelectedObject, self.videoPlayerWindow, self, parent=self)
+                else:
+                    print("video file is inaccessible. Not opening the video player window")
+                    if self.videoPlayerWindow is not None:
+                        self.videoPlayerWindow.try_set_video_player_window_url(None)
+                        # Close any active movieLinks since there can't be a selection here. 
+                        self.videoPlayerWindow.movieLink = None
 
             else:
                 print("invalid object selected!!")
@@ -637,3 +676,50 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             currWidget = self.eventTrackWidgets[i]
             currWidget.update()
 
+
+    # @pyqtSlot(datetime)
+    # def on_video_playback_position_updated(self, datetime):
+    #     print("on_video_playback_position_updated({0})".format(str(datetime)))
+    #     self.timelineMasterTrackWidget
+    #     # self.extendedTracksContainer.on_update_hover()
+
+    @pyqtSlot(float)
+    def on_video_playback_position_updated(self, timeline_percent_offset):
+        print("on_video_playback_position_updated({0})".format(str(timeline_percent_offset)))
+        timeline_x_offset = self.percent_offset_to_track_offset(timeline_percent_offset)
+
+        self.timelineMasterTrackWidget.blockSignals(True)
+        self.extendedTracksContainer.blockSignals(True)
+
+        self.timelineMasterTrackWidget.on_update_video_line(timeline_x_offset)
+        self.extendedTracksContainer.on_update_video_line(timeline_x_offset)
+        
+        self.extendedTracksContainer.blockSignals(False)
+        self.timelineMasterTrackWidget.blockSignals(False)
+
+    # Called when the timeline or background container of the track view is hovered
+    @pyqtSlot(int)
+    def on_playhead_hover_position_updated(self, x):
+        print("on_playhead_hover_position_updated({0})".format(str(x)))
+        self.timelineMasterTrackWidget.blockSignals(True)
+        self.extendedTracksContainer.blockSignals(True)
+
+        self.timelineMasterTrackWidget.on_update_hover(x)
+        self.extendedTracksContainer.on_update_hover(x)
+
+        if(self.videoPlayerWindow):
+            movie_link = self.videoPlayerWindow.get_movie_link
+            if (movie_link is not None):
+                ## TODO NOW: 
+
+                # Check if convertedDatetime is in range.
+                
+                #convertedDatetime: the datetime
+                movie_link.update_timeline_playhead_position(convertedDatetime)
+
+
+        self.extendedTracksContainer.blockSignals(False)
+        self.timelineMasterTrackWidget.blockSignals(False)
+        
+
+        # self.extendedTracksContainer.on_update_hover
