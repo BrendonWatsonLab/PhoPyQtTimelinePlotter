@@ -10,6 +10,7 @@ from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
 from GUI.MainWindow.TimelineDrawingWindow import *
 from GUI.HelpWindow.HelpWindowFinal import *
 from GUI.MainObjectListsWindow.MainObjectListsWindow import *
+from example import ExampleDatabaseTableWindow
 
 from app.database.DatabaseConnectionRef import DatabaseConnectionRef
 
@@ -18,6 +19,7 @@ if __name__ == '__main__':
     shouldShowGUIWindows = True
     shouldShowMainGUIWindow = True
     shouldShowListGUIWindow = False
+    shouldShowExampleWindow = True
 
     # Show last 7 days worth of data
     earliestTime = dt.datetime.now() - dt.timedelta(days=7)
@@ -34,6 +36,9 @@ if __name__ == '__main__':
         # video_file_search_paths = ["O:/Transcoded Videos/BB01"]
         # video_file_search_paths = ["O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06"]
         # video_file_search_paths = ["O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]
+
+        if shouldShowExampleWindow:
+            exampleWindow = ExampleDatabaseTableWindow(database_connection)
 
         
         if shouldShowMainGUIWindow:
@@ -74,6 +79,9 @@ if __name__ == '__main__':
             mainWindow.show()
             mainWindowGeometry = mainWindow.frameGeometry()
 
+        if shouldShowExampleWindow:
+            exampleWindow.show()
+            
         # If should show both main and side list GUI
         if (shouldShowMainGUIWindow and shouldShowListGUIWindow):
             sideListWindowGeometry.moveTopRight(mainWindowGeometry.topLeft())

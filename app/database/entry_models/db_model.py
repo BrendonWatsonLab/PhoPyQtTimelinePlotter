@@ -24,6 +24,29 @@ class Animal(Base):
     notes = Column(Text)
 
 
+    @classmethod
+    def getTableMapping(cls):
+        return [ # list of column 4-tuples(header, sqlalchemy column, column name, extra parameters as dict
+        # if the sqlalchemy column object is Entity.name, then column name should probably be name,
+        # Entity.name is what will be used when setting data, and sorting, 'name' will be used to retrieve the data.
+            ('ID', cls.id, 'id', {'editable': False}),
+            ('Name', cls.name, 'name', {'editable': True}),
+            ('Birth Date', cls.birth_date, 'birth_date', {'editable': True}),
+            ('Receive Date', cls.receive_date, 'receive_date', {'editable': True}),
+            ('Death Date', cls.death_date, 'death_date', {'editable': True}),
+            ('Notes', cls.notes, 'notes', {'editable': True}),
+        ]
+
+
+""" Mapping Helpers:
+
+insp.all_orm_descriptors.keys()
+['fullname', 'nickname', 'name', 'id']
+
+"""
+    
+
+
 class BehavioralBox(Base):
     __tablename__ = 'BehavioralBoxes'
 

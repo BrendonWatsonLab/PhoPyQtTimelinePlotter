@@ -6,6 +6,10 @@ import sqlalchemy as db
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, selectinload, joinedload
 
+# Table Model Generation:
+from GUI.Model.AlchemicalModels.qvariantalchemy import String, Integer, Boolean
+from GUI.Model.AlchemicalModels.alchemical_model import SqlAlchemyTableModel
+
 # from app.database.SqlAlchemyDatabase import create_connection
 
 
@@ -227,7 +231,6 @@ class DatabaseConnectionRef(QObject):
             objs = session.query(FileParentFolder).all()
         return objs
 
-
     def load_video_file_info_from_database(self):
         print("Loading video_file_info from database:")
         session = self.get_session()
@@ -411,7 +414,6 @@ class DatabaseConnectionRef(QObject):
         print("done.")
         return
 
-
     def save_video_file_info_to_database(self, video_file_info):
         print("Saving video_file_info to database: {0}".format(self.get_path()))
         session = self.get_session()
@@ -435,3 +437,13 @@ class DatabaseConnectionRef(QObject):
         self.commit()
         print("done.")
         return
+
+    ## Model Generation:
+    def get_animal_table_model(self):
+        print("get_animal_table_model() from database:")
+        session = self.get_session()
+        model = SqlAlchemyTableModel(
+            session,
+            Animal, #sql alchemy mapped object
+            Animal.getTableMapping())
+        return model
