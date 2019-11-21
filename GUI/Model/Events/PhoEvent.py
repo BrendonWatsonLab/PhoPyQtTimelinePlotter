@@ -13,6 +13,8 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 class PhoEvent(QWidget):
 
+    DefaultOpacity = 200 # Fill opacity, specified as an integer 0-255
+
     def __init__(self, startTime=datetime.now(), name='', color=Qt.black, extended_data=dict(), parent=None):
         super(PhoEvent, self).__init__(parent)
         self.name = name

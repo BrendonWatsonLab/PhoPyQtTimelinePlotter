@@ -16,9 +16,9 @@ from GUI.Model.Events.PhoEvent import *
 class PhoDurationEvent(PhoEvent):
     InstantaneousEventDuration = timedelta(seconds=2)
     RectCornerRounding = 8
-    ColorBase = QColor(51, 204, 255)  # Teal
-    ColorEmph = QColor(51, 255, 102)  # Green
-    ColorActive = QColor(255, 102, 51)  # Orange
+    ColorBase = QColor(51, 204, 255, PhoEvent.DefaultOpacity)  # Teal
+    ColorEmph = QColor(51, 255, 102, PhoEvent.DefaultOpacity)  # Green
+    ColorActive = QColor(255, 102, 51, PhoEvent.DefaultOpacity)  # Orange
 
     ColorBorderBase = QColor('#e0e0e0')  # Whiteish
     ColorBorderActive = QColor(255, 222, 122)  # Yellowish
@@ -33,7 +33,7 @@ class PhoDurationEvent(PhoEvent):
 
     
 
-    def __init__(self, startTime=datetime.now(), endTime=None, name='', color=QColor(51, 204, 255), extended_data=dict(), parent=None):
+    def __init__(self, startTime=datetime.now(), endTime=None, name='', color=QColor(51, 204, 255, PhoEvent.DefaultOpacity), extended_data=dict(), parent=None):
         super(PhoDurationEvent, self).__init__(startTime, name, color, extended_data, parent=parent)
         self.endTime = endTime
 

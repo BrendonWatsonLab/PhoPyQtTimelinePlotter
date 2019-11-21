@@ -18,12 +18,12 @@ from GUI.Model.Events.PhoDurationEvent import *
 
 class PhoDurationEvent_Video(PhoDurationEvent):
     
-    ColorFillIsPlayingIndicator = QColor(90, 90, 220)  # Bluish
+    ColorFillIsPlayingIndicator = QColor(90, 90, 220, PhoEvent.DefaultOpacity)  # Bluish
     ColorBorderIsPlayingIndicator = QColor('#e0e0e0')  # Whiteish
     IsPlayingIndicatorBorderWidth = 2
     IsPlayingIndicatorFractionOfHeight = 0.08
 
-    def __init__(self, startTime, endTime, name='', color=QColor(51, 204, 255), extended_data=dict(), parent=None):
+    def __init__(self, startTime, endTime, name='', color=QColor(51, 204, 255, PhoEvent.DefaultOpacity), extended_data=dict(), parent=None):
         super(PhoDurationEvent_Video, self).__init__(startTime, endTime, name, color, extended_data, parent=parent)
         self.isPlayingVideo = False
 
