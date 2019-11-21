@@ -14,7 +14,7 @@ from GUI.Model.AlchemicalModels.alchemical_model import SqlAlchemyTableModel
 
 
 ## DATABASE MODELS:
-from app.database.entry_models.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent
+from app.database.entry_models.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, CategoricalDurationLabel
 
 from app.database.entry_models.DatabaseBase import Base, metadata
 from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
@@ -177,6 +177,14 @@ class DatabaseConnectionRef(QObject):
 
 
     ## LOADING:=
+    def load_categorical_duration_labels_from_database(self, contextConfigObj):
+        print("Loading categorical_duration_labels from database:")
+        session = self.get_session()
+        currSearchSubcontext = contextConfigObj.get_subcontext()
+        # annotations = session.query(CategoricalDurationLabel).options(selectinload(CategoricalDurationLabel.Context)).all()
+        records = session.query(CategoricalDurationLabel).filter(CategoricalDurationLabel.Subcontext==currSearchSubcontext).all()
+        return records
+
     def load_annotation_events_from_database(self):
         print("Loading annotation events from database:")
         session = self.get_session()

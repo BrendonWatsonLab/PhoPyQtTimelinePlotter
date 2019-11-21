@@ -92,10 +92,6 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         self.subcontexts = self.database_connection.load_subcontexts_from_database()
 
         
-        newContext = self.contextsDict[self.trackContextConfig.get_context_name()]
-        newSubcontext = newContext.subcontexts[self.trackContextConfig.get_subcontext_index()]
-        self.trackContextConfig.update_on_load(newContext, newSubcontext)
-
 
     def reinitialize_from_partition_manager(self):
         self.partitionObjects = self.partitionManager.partitions
@@ -177,6 +173,26 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
             self.instantaneousEventRect[index] = obj.paint(qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
 
         qp.end()
+
+    def mouseDoubleClickEvent(self, event):
+        print("Mouse double clicked! ({0},{1})".format(event.x(), event.y()))
+
+        newlySelectedObjectIndex = self.find_child_object(event.x(), event.y())
+
+        if newlySelectedObjectIndex is not None:
+            # Select the object
+            didSelectionChange = self.select(newlySelectedObjectIndex)
+            if (didSelectionChange):
+                # Doesn't already contain the object
+                self.durationObjects[newlySelectedObjectIndex].on_button_clicked(event)
+                self.update()
+                self.selection_changed.emit(self.trackID, newlySelectedObjectIndex)
+
+            # Called once the selected annotation object has been set 
+            self.on_partition_modify_event()
+        
+        pass
+
 
     # Returns the index of the child object that the (x, y) point falls within, or None if it doesn't fall within an event.
     def find_child_object(self, event_x, event_y):

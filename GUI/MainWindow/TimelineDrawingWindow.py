@@ -70,6 +70,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.update_global_start_end_times(totalStartTime, totalEndTime)
 
         self.partitionTrackContextsArray = [TrackContextConfig('Behavior'), TrackContextConfig('Unknown')]
+        self.loadedPartitionTrackPartitionsArray = [[], []]
 
         # self.videoInfoObjects = load_video_events_from_database(self.database_connection.get_path(), as_videoInfo_objects=True)
         self.videoInfoObjects = []
@@ -185,11 +186,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # Partition tracks:
         currTrackIndex = currTrackIndex + 1
         
-        self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[0])
+        self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, self.loadedPartitionTrackPartitionsArray[0], [], self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[0])
         self.eventTrackWidgets.append(self.partitionsTrackWidget)
 
         currTrackIndex = currTrackIndex + 1
-        self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[1])
+        self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, self.loadedPartitionTrackPartitionsArray[1], [], self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[1])
         self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
 
         # Build the bottomPanelWidget
@@ -284,10 +285,15 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.contextsDict = self.database_connection.load_contexts_from_database()
         self.subcontexts = self.database_connection.load_subcontexts_from_database()
 
-        for aPartitionTrackContextInfoObj in self.partitionTrackContextsArray:
+        for (index, aPartitionTrackContextInfoObj) in enumerate(self.partitionTrackContextsArray):
             newContext = self.contextsDict[aPartitionTrackContextInfoObj.get_context_name()]
             newSubcontext = newContext.subcontexts[aPartitionTrackContextInfoObj.get_subcontext_index()]
             aPartitionTrackContextInfoObj.update_on_load(newContext, newSubcontext)
+            if aPartitionTrackContextInfoObj.get_is_valid():
+                newPartitionObjsList = self.database_connection.load_categorical_duration_labels_from_database(aPartitionTrackContextInfoObj)
+                self.loadedPartitionTrackPartitionsArray[index] = newPartitionObjsList
+            else:
+                self.loadedPartitionTrackPartitionsArray[index] = []
 
         # Video file objects for video tracks
         self.videoFileRecords = self.database_connection.load_video_file_info_from_database()
