@@ -500,6 +500,8 @@ class DatabaseConnectionRef(QObject):
 
         self.annotationDataObjects = self.load_annotation_events_from_database()
 
+        self.videoFileRecords = self.database_connection.load_video_file_info_from_database()
+
         # Sample Contexts
         # if (not ('Behavior' in self.contextsDict.keys())):
         #     Context(None, "Behavior")

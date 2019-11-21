@@ -69,6 +69,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
         self.update_global_start_end_times(totalStartTime, totalEndTime)
 
+        self.partitionTrackContextsArray = [TrackContextConfig('Behavior'), TrackContextConfig('Unknown')]
+
         # self.videoInfoObjects = load_video_events_from_database(self.database_connection.get_path(), as_videoInfo_objects=True)
         self.videoInfoObjects = []
         self.reloadModelFromDatabase()
@@ -183,11 +185,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # Partition tracks:
         currTrackIndex = currTrackIndex + 1
         
-        self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection, TrackContextConfig('Behavior'))
+        self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[0])
         self.eventTrackWidgets.append(self.partitionsTrackWidget)
 
         currTrackIndex = currTrackIndex + 1
-        self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection, TrackContextConfig('Unknown'))
+        self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[1])
         self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
 
         # Build the bottomPanelWidget
@@ -203,13 +205,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         # self.timelineMasterTrackWidget.hoverChanged.connect(self.extendedTracksContainer.on_update_hover)
         
-
-
-        # Debug Pallete
-        # p = self.labjackEventsContainer.palette()
-        # p.setColor(self.labjackEventsContainer.backgroundRole(), Qt.red)
-        # self.labjackEventsContainer.setPalette(p)
-
         #Layout of Extended Tracks Container Widget
         self.extendedTracksContainerVboxLayout = QVBoxLayout(self)
         self.extendedTracksContainerVboxLayout.addStretch(1)
@@ -219,11 +214,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.extendedTracksContainerVboxLayout.addWidget(self.timelineMasterTrackWidget)
         self.timelineMasterTrackWidget.setMinimumSize(minimumWidgetWidth, 50)
         self.timelineMasterTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
-
-        # self.extendedTracksContainerVboxLayout.addWidget(self.mainVideoTrack)
-        # self.mainVideoTrack.setMinimumSize(minimumWidgetWidth, 50)
-        # self.mainVideoTrack.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
 
         #Layout of Main Window:
@@ -290,6 +280,16 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
             
     def reloadModelFromDatabase(self):
+        # Context objects for children tracks
+        self.contextsDict = self.database_connection.load_contexts_from_database()
+        self.subcontexts = self.database_connection.load_subcontexts_from_database()
+
+        for aPartitionTrackContextInfoObj in self.partitionTrackContextsArray:
+            newContext = self.contextsDict[aPartitionTrackContextInfoObj.get_context_name()]
+            newSubcontext = newContext.subcontexts[aPartitionTrackContextInfoObj.get_subcontext_index()]
+            aPartitionTrackContextInfoObj.update_on_load(newContext, newSubcontext)
+
+        # Video file objects for video tracks
         self.videoFileRecords = self.database_connection.load_video_file_info_from_database()
         # Iterate through loaded database records to build videoInfoObjects
         for aVideoFileRecord in self.videoFileRecords:
