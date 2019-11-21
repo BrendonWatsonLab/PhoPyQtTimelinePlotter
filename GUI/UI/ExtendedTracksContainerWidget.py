@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QWidget, QFrame, QScrollArea, QVBoxLayout
 # from GUI.UI.ExtendedTracksContainerWidget import ExtendedTracksContainerWidget
 from GUI.UI.TickedTimelineDrawingBaseWidget import TickProperties, TickedTimelineDrawingBaseWidget
 
+
 class ExtendedTracksContainerWidget(TickedTimelineDrawingBaseWidget):
     """
     Custom Qt Widget to show a current time indicator behind the tracks

@@ -196,7 +196,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.extendedTracksContainer.setMouseTracking(True)
         self.extendedTracksContainer.hoverChanged.connect(self.handle_timeline_hovered_position_update_event)
 
-        # bind to self to detect changes
+        # bind to self to detect changes in either child
         self.timelineMasterTrackWidget.hoverChanged.connect(self.on_playhead_hover_position_updated)
         self.extendedTracksContainer.hoverChanged.connect(self.on_playhead_hover_position_updated)
 
