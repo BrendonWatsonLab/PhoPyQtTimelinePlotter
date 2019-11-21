@@ -67,28 +67,7 @@ class QTimeLine(TickedTimelineDrawingBaseWidget):
         qp.setPen(QPen(self.activeColor, 5, Qt.SolidLine))
         qp.drawLine(0, 40, self.width(), 40)
 
-        # # Draw dash lines
-        # point = 0
-        # qp.setPen(QPen(self.textColor))
-        # qp.drawLine(0, 40, self.width(), 40)
-        # while point <= self.width():
-        #     if point % 30 != 0:
-        #         qp.drawLine(3 * point, 40, 3 * point, 30)
-        #     else:
-        #         qp.drawLine(3 * point, 40, 3 * point, 20)
-        #     point += 10
-
-        # # Draw video playback indicator line
-        # if self.video_pos is not None:
-        #     qp.setPen(QTimeLine.videoPlaybackLineProperties.get_pen())
-        #     qp.drawLine(self.video_pos.x(), 0, self.video_pos.x(), self.height())
-
-        # # Draw hover line
-        # if self.pos is not None:
-        #     if (self.is_in or self.is_driven_externally): 
-        #         qp.setPen(QTimeLine.hoverLineProperties.get_pen())
-        #         qp.drawLine(self.pos.x(), 0, self.pos.x(), self.height())
-
+        self.draw_tick_lines(qp)
         self.draw_indicator_lines(qp)
 
         if self.pointerPos is not None:

@@ -68,11 +68,11 @@ class TickedTimelineDrawingBaseWidget(QWidget):
         self.setPalette(pal)
 
 
-    # Draws the tick marks and the indicator lines
-    def draw_indicator_lines(self, painter):
+    def draw_tick_lines(self, painter):
         # Draw dash lines
         point = 0
         painter.setPen(TickedTimelineDrawingBaseWidget.staticTimeDelininationTickLineProperties.get_pen())
+        # draw a horizontal line
         painter.drawLine(0, 40, self.width(), 40)
         while point <= self.width():
             if point % 30 != 0:
@@ -80,6 +80,9 @@ class TickedTimelineDrawingBaseWidget(QWidget):
             else:
                 painter.drawLine(3 * point, 40, 3 * point, 20)
             point += 10
+
+    # Draws the tick marks and the indicator lines
+    def draw_indicator_lines(self, painter):
 
         # Draw video playback indicator line
         if self.video_pos is not None:
@@ -100,6 +103,7 @@ class TickedTimelineDrawingBaseWidget(QWidget):
         qp.begin(self)
         qp.setRenderHint(QPainter.Antialiasing)
 
+        self.draw_tick_lines(qp)
         self.draw_indicator_lines(qp)
 
         # # Clear clip path

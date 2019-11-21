@@ -23,6 +23,10 @@ class ExtendedTracksContainerWidget(TickedTimelineDrawingBaseWidget):
     defaultActiveColor = Qt.darkCyan
     defaultNowColor = Qt.red
 
+    # static lines
+    staticTimeDelininationTickLineProperties = TickProperties(QColor(187, 187, 187, 100), 0.4, Qt.SolidLine)
+
+
     def __init__(self, duration, length, *args, **kwargs):
         super(ExtendedTracksContainerWidget, self).__init__(duration, length, *args, **kwargs)
 
@@ -39,11 +43,28 @@ class ExtendedTracksContainerWidget(TickedTimelineDrawingBaseWidget):
         )
 
         
+
+    def draw_tick_lines(self, painter):
+        ## Overrides parent's implementation for the larger background view
+        # y-positions are offset from the top of the frame
+        point = 0
+        painter.setPen(ExtendedTracksContainerWidget.staticTimeDelininationTickLineProperties.get_pen())
+        # painter.drawLine(0, 40, self.width(), self.height())
+        while point <= self.width():
+            if point % 30 != 0:
+                painter.drawLine(3 * point, 40, 3 * point, self.height())
+            else:
+                painter.drawLine(3 * point, 40, 3 * point, self.height())
+            point += 10
+
+
+
     def paintEvent(self, e):
         qp = QPainter()
         qp.begin(self)
         qp.setRenderHint(QPainter.Antialiasing)
 
+        self.draw_tick_lines(qp)
         self.draw_indicator_lines(qp)
 
         # Clear clip path
