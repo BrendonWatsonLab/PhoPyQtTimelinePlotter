@@ -1,9 +1,9 @@
 # coding: utf-8
 from PyQt5 import QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea
-from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QTableView, QWidget, QAction, qApp, QApplication, QTreeWidgetItem, QFileDialog 
+from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QAbstractItemView, QTableView, QWidget, QAction, qApp, QApplication, QTreeWidgetItem, QFileDialog, QInputDialog
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool
+from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool, QItemSelectionModel
 
 from sqlalchemy import Column, ForeignKey, Integer, Table, Text, text
 from sqlalchemy.sql.sqltypes import NullType
@@ -72,11 +72,18 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
 
         self.table = QTableView(self)
         self.table.setModel(self.model)
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.table.customContextMenuRequested.connect(self.display_context_menu)
+        # self.table.doubleClicked.connect(self.edit_trial)
+        self.table.setSelectionMode(QAbstractItemView.SingleSelection)
+
+        self.table_selection_model = QItemSelectionModel(self.model)
+        self.table.setModel(self.table_selection_model.model())
+        self.table.setSelectionModel(self.table_selection_model)
+        self.table_selection_model.selectionChanged.connect(self.update_current_record)
+
         mainLayout.addWidget(self.table)
-
-
-
-
 
         self.btnAddNewRecord = QPushButton("New", self)
         self.btnAddNewRecord.released.connect(self.handle_add_new_record_pressed)
@@ -98,15 +105,74 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
         self.model = self.database_connection.get_table_model(BehavioralBox)
         
 
-    def handle_add_new_record_pressed(self, button):
+    def handle_add_new_record_pressed(self):
         print("handle_add_new_record_pressed(...)")
-        newRecord = BehavioralBox()
-        wasInsertSuccess = self.model.insertRecord(-1, newRecord)
-        if (wasInsertSuccess):
-            print("insert success!")
-            self.model.submitAll()
-        else:
-            print("insert failed!")
-            self.database_rollback()
+        self.create_new_record()
+        # newRecord = BehavioralBox()
+        # wasInsertSuccess = self.model.insertRecord(-1, newRecord)
+        # if (wasInsertSuccess):
+        #     print("insert success!")
+        #     self.model.submitAll()
+        # else:
+        #     print("insert failed!")
+        #     self.database_rollback()
 
-        print("done.")
+        # print("done.")
+
+
+    def display_context_menu(self, pos):
+        index = self.table.indexAt(pos)
+
+        self.menu = QtGui.QMenu()
+
+        # self.edit_action = self.menu.addAction("Edit")
+        # self.edit_action.triggered.connect(self.edit_trial)
+
+        self.duplicate_action = self.menu.addAction("Duplicate")
+        self.duplicate_action.triggered.connect(self.duplicate_record)
+
+        self.delete_action = self.menu.addAction("Delete")
+        self.delete_action.triggered.connect(self.delete_record)
+
+        table_viewport = self.table.viewport()
+        self.menu.popup(table_viewport.mapToGlobal(pos))
+
+
+    def delete_record(self):
+        reply = QtGui.QMessageBox.question(
+            self, "Confirm", "Really delete the selected trial?", QtGui.QMessageBox.Yes, QtGui.QMessageBox.No
+        )
+        if reply == QtGui.QMessageBox.Yes:
+            self.database_connection.session.delete(self.current_record)
+            self.database_connection.session.commit()
+            self.update_trial_table()
+
+    def duplicate_record(self):
+        new = self.current_record.duplicate()
+        self.database_connection.session.add(new)
+        self.database_connection.session.commit()
+        self.update_trial_table()
+
+
+    # def new_trial(self):
+    #     dialog = NewTrialDialog(self.database_connection.session, experiment=self.current_experiment, parent=self)
+    #     dialog.accepted.connect(self.trial_table_model.refresh)
+    #     dialog.exec()
+
+    def create_new_record(self):
+        dialog = QInputDialog(self)
+        dialog.setLabelText("Please enter the name for the new Record.")
+        dialog.textValueSelected.connect(self.store_new_record)
+        dialog.exec()
+
+    def store_new_record(self, name):
+        rec = BehavioralBox()
+        rec.name = name
+        
+        self.database_connection.session.add(rec)
+        self.database_connection.session.commit()
+        print("storing new record")
+        self.model.refresh()
+
+    def update_current_record(self, x, y):
+        self.current_record = self.table_selection_model.currentIndex().data(Qt.EditRole)
