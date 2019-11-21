@@ -313,6 +313,8 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
             print('Modified partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(self.activeEditingPartitionIndex, type_id, subtype_id))
             self.reinitialize_from_partition_manager()
             self.update()
+            # Save to database
+            self.partitionManager.save_partitions_to_database()
         else:
             print("Error: unsure what partition to update!")
             return
