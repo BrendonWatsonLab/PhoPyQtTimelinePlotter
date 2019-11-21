@@ -33,8 +33,12 @@ class TickedTimelineDrawingBaseWidget(QWidget):
     defaultActiveColor = Qt.darkCyan
     defaultNowColor = Qt.red
 
-    videoPlaybackLineProperties = TickProperties(Qt.red, 2.0, Qt.SolidLine)
-    hoverLineProperties = TickProperties(Qt.cyan, 1.0, Qt.SolidLine)
+    # static lines
+    staticTimeDelininationTickLineProperties = TickProperties(QColor(187, 187, 187), 0.6, Qt.SolidLine)
+
+    # dynamic (moving) lines
+    videoPlaybackLineProperties = TickProperties(Qt.red, 1.0, Qt.SolidLine)
+    hoverLineProperties = TickProperties(Qt.cyan, 0.8, Qt.DashLine)
 
 
     def __init__(self, duration, length, parent=None):
@@ -68,7 +72,7 @@ class TickedTimelineDrawingBaseWidget(QWidget):
     def draw_indicator_lines(self, painter):
         # Draw dash lines
         point = 0
-        painter.setPen(QPen(self.textColor))
+        painter.setPen(TickedTimelineDrawingBaseWidget.staticTimeDelininationTickLineProperties.get_pen())
         painter.drawLine(0, 40, self.width(), 40)
         while point <= self.width():
             if point % 30 != 0:
@@ -94,8 +98,6 @@ class TickedTimelineDrawingBaseWidget(QWidget):
     def paintEvent(self, event):
         qp = QPainter()
         qp.begin(self)
-        qp.setPen(self.textColor)
-        qp.setFont(self.font)
         qp.setRenderHint(QPainter.Antialiasing)
 
         self.draw_indicator_lines(qp)
