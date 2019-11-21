@@ -636,9 +636,16 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                 selected_video_path = currSelectedObject.get_video_url()
                 print(selected_video_path)
                 currActiveVideoTrack.set_now_playing(trackObjectIndex)
-                
-                self.try_set_video_player_window_url(str(selected_video_path))
-                self.videoPlayerWindow.movieLink = DataMovieLinkInfo(currSelectedObject, self.videoPlayerWindow, self, parent=self)
+
+                if currSelectedObject.is_video_url_accessible():
+                    self.try_set_video_player_window_url(str(selected_video_path))
+                    self.videoPlayerWindow.movieLink = DataMovieLinkInfo(currSelectedObject, self.videoPlayerWindow, self, parent=self)
+                else:
+                    print("video file is inaccessible. Not opening the video player window")
+                    if self.videoPlayerWindow is not None:
+                        self.videoPlayerWindow.try_set_video_player_window_url(None)
+                        # Close any active movieLinks since there can't be a selection here. 
+                        self.videoPlayerWindow.movieLink = None
 
             else:
                 print("invalid object selected!!")

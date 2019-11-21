@@ -5,7 +5,7 @@
 
 import sys
 from datetime import datetime, timezone, timedelta
-import numpy as np
+from pathlib import Path
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QMenu
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QFontMetrics
@@ -33,6 +33,26 @@ class PhoDurationEvent_Video(PhoDurationEvent):
 
     def get_video_url(self):
         return self.extended_data['path']
+
+    def is_video_url_accessible(self):
+        currUrl = self.get_video_url()
+        videoFilePath = Path(currUrl)
+
+        # if videoFilePath.is_file():
+        #     # file exists
+        #     return True
+        # else:
+        #     return False
+
+        try:
+            my_abs_path = videoFilePath.resolve(strict=True)
+        except FileNotFoundError:
+            # doesn't exist
+            return False
+        else:
+            # exists
+            return True
+
 
     # Sets the painter's config based on the current object's state (active, emphasized, deemph, etc)
     def set_painter_config(self, aPainter):
