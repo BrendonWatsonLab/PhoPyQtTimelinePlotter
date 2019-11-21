@@ -58,14 +58,15 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
     default_shouldDismissSelectionUponMouseButtonRelease = False
     default_itemSelectionMode = ItemSelectionOptions.SingleSelection
 
-    def __init__(self, trackID, partitionObjects, cutObjects, totalStartTime, totalEndTime, database_connection, trackContextConfig, partitionDataObjects, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
+    def __init__(self, trackID, partitionObjects, cutObjects, totalStartTime, totalEndTime, database_connection, trackContextConfig, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
         super(TimelineTrackDrawingWidget_Partition, self).__init__(trackID, totalStartTime, totalEndTime, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
         
         self.trackContextConfig = trackContextConfig
-        
+
+        self.partitionDataObjects = []
         self.reloadModelFromDatabase()
 
-        self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, database_connection, partitionObjects, partitionDataObjects=partitionDataObjects)
+        self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, database_connection, partitionObjects, partitionDataObjects=self.partitionDataObjects)
         self.reinitialize_from_partition_manager()
         ## TODO: can reconstruct partitions from cutObjects, but can't recover the specific partition's info.
         self.cutObjects = cutObjects
@@ -80,7 +81,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         self.itemSelectionMode = TimelineTrackDrawingWidget_Partition.default_itemSelectionMode
 
         self.activePartitionEditDialog = None
-        # self.partitionDataObjects = []
+
 
     ## Data Model Functions:
     # Updates the member variables from the database
@@ -92,6 +93,14 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         self.contextsDict = self.database_connection.load_contexts_from_database()
         self.subcontexts = self.database_connection.load_subcontexts_from_database()
 
+        # newContext = self.contextsDict[self.trackContextConfig.get_context_name()]
+        # newSubcontext = newContext.subcontexts[self.trackContextConfig.get_subcontext_index()]
+        # self.trackContextConfig.update_on_load(newContext, newSubcontext)
+        if self.trackContextConfig.get_is_valid():
+            newPartitionObjsList = self.database_connection.load_categorical_duration_labels_from_database(self.trackContextConfig)
+            self.partitionDataObjects = newPartitionObjsList
+        else:
+            self.partitionDataObjects = []
         
 
     def reinitialize_from_partition_manager(self):
