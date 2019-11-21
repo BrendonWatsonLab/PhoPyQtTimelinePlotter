@@ -140,11 +140,20 @@ class StaticFileExtension(Base):
         self.notes = notes
         self.version = version
 
-
     @staticmethod
     def from_path_string(path_string):
         path = Path(path_string)
         return StaticFileExtension(path.suffix, None, None, None)
+
+    @classmethod
+    def getTableMapping(cls):
+        return [
+            ('Extension', cls.extension, 'extension', {'editable': True}),
+            ('Description', cls.description, 'description', {'editable': True}),
+            ('Notes', cls.notes, 'notes', {'editable': True}),
+            ('Version', cls.version, 'version', {'editable': True}),
+        ]
+
 
 
 class Cohort(Base):
@@ -180,6 +189,16 @@ class Subcontext(Base):
 
     Context = relationship('Context')
 
+    @classmethod
+    def getTableMapping(cls):
+        return [
+            ('ID', cls.id, 'id', {'editable': False}),
+            ('Name', cls.name, 'name', {'editable': True}),
+            ('Parent ID', cls.parent_context, 'parent_context', {'editable': True}),
+            ('Notes', cls.notes, 'notes', {'editable': True}),
+        ]
+
+
 
 class TimestampedAnnotation(Base):
     __tablename__ = 'TimestampedAnnotations'
@@ -198,11 +217,28 @@ class TimestampedAnnotation(Base):
 
     Context = relationship('Context')
 
-"""
-TimestampedAnnotation:
-    .context = Column(Integer, ForeignKey('Contexts.id'), server_default=text("1"))
-    Context = relationship('Context')
-"""
+    """
+    TimestampedAnnotation:
+        .context = Column(Integer, ForeignKey('Contexts.id'), server_default=text("1"))
+        Context = relationship('Context')
+    """
+
+    @classmethod
+    def getTableMapping(cls):
+        return [
+            ('ID', cls.id, 'id', {'editable': False}),
+            ('StartDate', cls.start_date, 'start_date', {'editable': False}),
+            ('EndDate', cls.end_date, 'end_date', {'editable': False}),
+            ('Context ID', cls.context, 'context', {'editable': True}),
+            ('Subcontext ID', cls.subcontext, 'subcontext', {'editable': True}),
+            ('Type ID', cls.type, 'type', {'editable': True}),
+            ('Subtype ID', cls.subtype, 'subtype', {'editable': True}),
+            ('PrimaryTxt', cls.primary_text, 'primary_text', {'editable': True}),
+            ('SecondaryTxt', cls.secondary_text, 'secondary_text', {'editable': True}),
+            ('TertiaryTxt', cls.tertiary_text, 'tertiary_text', {'editable': True}),
+            ('OverflowTxt', cls.overflow_text, 'overflow_text', {'editable': True}),
+        ]
+
 
 
 class ExperimentalConfigurationEvent(Base):

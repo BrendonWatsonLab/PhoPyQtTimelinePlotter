@@ -78,7 +78,9 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
     # Updates the member variables from the database
     # Note: if there are any pending changes, they will be persisted on this action
     def reloadModelFromDatabase(self):
-        from app.database.entry_models.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent
+        from app.database.entry_models.db_model import Animal, VideoFile, BehavioralBox, Context, FileParentFolder, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, VideoFile
 
         # self.model = self.database_connection.get_animal_table_model()
-        self.model = self.database_connection.get_table_model(BehavioralBox)
+        # self.model = self.database_connection.get_table_model(FileParentFolder)
+        self.model = self.database_connection.get_table_model(VideoFile)
+        
