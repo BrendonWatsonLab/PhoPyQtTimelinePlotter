@@ -35,8 +35,9 @@ class AnimalEditDialog(AbstractDatabaseAccessingDialog):
         self.show() # Show the GUI
 
     def initUI(self):
-        self.ui.buttonBox.accepted.connect(self.accept)
-        self.ui.buttonBox.rejected.connect(self.reject)
+        # self.ui.buttonBox.accepted.connect(self.accept)
+        # self.ui.buttonBox.rejected.connect(self.reject)
+        pass
 
 
 ## Data Model Functions:
