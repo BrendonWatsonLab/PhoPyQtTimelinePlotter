@@ -325,29 +325,6 @@ class VideoFile(Base):
         self.is_original_video = is_original_video
         self.notes = notes
 
-    # def __init__(self,id,file_fullname,file_basename,file_extension,file_video_folder,start_date,end_date,duration,behavioral_box_id,experiment_id,cohort_id,animal_id,is_original_video,notes=None):
-    #     self.id = id
-    #     self.file_fullname = file_fullname
-    #     self.file_basename = file_basename
-    #     self.file_extension = file_extension
-    #     self.file_video_folder = file_video_folder
-    #     self.start_date = int(start_date.timestamp() * 1000.0)
-    #     self.end_date = int(end_date.timestamp() * 1000.0)
-    #     self.duration = int(duration.total_seconds() * 1000.0)
-    #     self.behavioral_box_id = behavioral_box_id
-    #     self.experiment_id = experiment_id
-    #     self.cohort_id = cohort_id
-    #     self.animal_id = animal_id
-    #     if (not aPhoDurationVideoEvent.extended_data['is_deeplabcut_labeled_video'] is None):
-    #         is_deeplabcut_labeled_video = aPhoDurationVideoEvent.extended_data['is_deeplabcut_labeled_video']
-    #         is_original_video = (not is_deeplabcut_labeled_video)
-    #     else:
-    #         is_deeplabcut_labeled_video = None
-    #         is_original_video = None  # We know nothing about whether it is an original video
-
-    #     self.is_original_video = is_original_video
-    #     self.notes = notes
-
     def get_start_date(self):
         return datetime.fromtimestamp(float(self.start_date) / 1000.0)
 
@@ -369,7 +346,6 @@ class VideoFile(Base):
         aFullParentPath = parentFolder.fullpath
         return aFullParentPath
 
-
     def get_is_original_video(self):
         # Allow being undecided as to whether a video is an original or not
         if (self.is_original_video is None):
@@ -377,14 +353,12 @@ class VideoFile(Base):
         else:
             return self.is_original_video
 
-
     def get_is_deeplabcut_labeled_video(self):
         # Allow being undecided as to whether a video is an original or not
         if (self.is_original_video is None):
             return None
         else:
             return (not self.is_original_video)
-
 
     def get_behavioral_box_id(self):
         if (self.behavioral_box_id is None):
