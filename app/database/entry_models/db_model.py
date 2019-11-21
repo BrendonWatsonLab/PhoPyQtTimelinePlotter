@@ -13,6 +13,23 @@ from GUI.Model.Videos import VideoInfo, ExperimentContextInfo
 from app.filesystem.VideoUtils import VideoParsedResults, FoundVideoFileResult
 # (Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, VideoFile)
 
+"""
+The "@classmethod
+    def getTableMapping(cls):"
+    definintions are used by alchemical_model.py (called from the database connection object) to return a read/write table model from the database table.
+    not required for default operation with SQLAlchemy
+    The format is:
+        # list of column 4-tuples(header, sqlalchemy column, column name, extra parameters as dict
+        # if the sqlalchemy column object is Entity.name, then column name should probably be name,
+        # Entity.name is what will be used when setting data, and sorting, 'name' will be used to retrieve the data.
+
+Mapping Helpers (unused, currently creating table mappings manually):
+
+    insp.all_orm_descriptors.keys()
+    ['fullname', 'nickname', 'name', 'id']
+
+"""
+
 class Animal(Base):
     __tablename__ = 'Animals'
 
@@ -23,12 +40,9 @@ class Animal(Base):
     death_date = Column(Integer)
     notes = Column(Text)
 
-
     @classmethod
     def getTableMapping(cls):
-        return [ # list of column 4-tuples(header, sqlalchemy column, column name, extra parameters as dict
-        # if the sqlalchemy column object is Entity.name, then column name should probably be name,
-        # Entity.name is what will be used when setting data, and sorting, 'name' will be used to retrieve the data.
+        return [
             ('ID', cls.id, 'id', {'editable': False}),
             ('Name', cls.name, 'name', {'editable': True}),
             ('Birth Date', cls.birth_date, 'birth_date', {'editable': True}),
@@ -36,14 +50,6 @@ class Animal(Base):
             ('Death Date', cls.death_date, 'death_date', {'editable': True}),
             ('Notes', cls.notes, 'notes', {'editable': True}),
         ]
-
-
-""" Mapping Helpers:
-
-insp.all_orm_descriptors.keys()
-['fullname', 'nickname', 'name', 'id']
-
-"""
     
 
 
@@ -53,6 +59,13 @@ class BehavioralBox(Base):
     numerical_id = Column(Integer, primary_key=True)
     name = Column(Text, server_default=text("'B00'"))
 
+    @classmethod
+    def getTableMapping(cls):
+        return [
+            ('ID', cls.numerical_id, 'numerical_id', {'editable': False}),
+            ('Name', cls.name, 'name', {'editable': True}),
+        ]
+
 
 class Context(Base):
     __tablename__ = 'Contexts'
@@ -60,6 +73,14 @@ class Context(Base):
     id = Column(Integer, primary_key=True)
     name = Column(Text, nullable=False)
     note = Column(Text)
+
+    @classmethod
+    def getTableMapping(cls):
+        return [
+            ('ID', cls.id, 'id', {'editable': False}),
+            ('Name', cls.name, 'name', {'editable': True}),
+            ('Notes', cls.note, 'note', {'editable': True}),
+        ]
 
 
 class Experiment(Base):
@@ -71,6 +92,16 @@ class Experiment(Base):
     end_date = Column(Integer)
     notes = Column(Text)
 
+    @classmethod
+    def getTableMapping(cls):
+        return [
+            ('ID', cls.id, 'id', {'editable': False}),
+            ('Name', cls.name, 'name', {'editable': True}),
+            ('StartDate', cls.start_date, 'start_date', {'editable': True}),
+            ('EndDate', cls.end_date, 'end_date', {'editable': True}),
+            ('Notes', cls.notes, 'notes', {'editable': True}),
+        ]
+
 
 class Labjack(Base):
     __tablename__ = 'Labjacks'
@@ -78,6 +109,14 @@ class Labjack(Base):
     serial_number = Column(Integer, primary_key=True)
     name = Column(Text, server_default=text("'LJ-'"))
     model = Column(Text, server_default=text("'T7'"))
+
+    @classmethod
+    def getTableMapping(cls):
+        return [
+            ('SerialNumber', cls.serial_number, 'serial_number', {'editable': True}),
+            ('Name', cls.name, 'name', {'editable': True}),
+            ('Model', cls.model, 'model', {'editable': True}),
+        ]
 
 
 # t_sqlite_sequence = Table(
@@ -118,6 +157,17 @@ class Cohort(Base):
     experiment = Column(Integer, ForeignKey('Experiments.id', ondelete='SET NULL'))
 
     Experiment = relationship('Experiment')
+
+    @classmethod
+    def getTableMapping(cls):
+        return [
+            ('ID', cls.id, 'id', {'editable': False}),
+            ('Name', cls.name, 'name', {'editable': True}),
+            ('StartDate', cls.start_date, 'start_date', {'editable': True}),
+            ('EndDate', cls.end_date, 'end_date', {'editable': True}),
+            ('ExperimentID', cls.experiment, 'experiment', {'editable': True}), # TODO: should we disable this column?
+        ]
+
 
 
 class Subcontext(Base):
@@ -202,6 +252,26 @@ class VideoFile(Base):
     experiment = relationship('Experiment')
     staticFileExtension = relationship('StaticFileExtension')
     fileParentFolder = relationship('FileParentFolder', back_populates="videoFiles")
+
+    @classmethod
+    def getTableMapping(cls):
+        return [
+            ('ID', cls.id, 'id', {'editable': False}),
+            ('FullName', cls.file_fullname, 'file_fullname', {'editable': True}),
+            # ('BaseName', cls.file_basename, 'file_basename', {'editable': True}),
+            # ('FileExtension ID', cls.file_extension, 'file_extension', {'editable': True}),
+            ('Parent Folder ID', cls.file_video_folder, 'file_video_folder', {'editable': True}),
+            ('StartDate', cls.start_date, 'start_date', {'editable': False}),
+            ('EndDate', cls.end_date, 'end_date', {'editable': False}),
+            ('Duration', cls.duration, 'duration', {'editable': False}),
+            ('BB ID', cls.behavioral_box_id, 'behavioral_box_id', {'editable': True}),
+            ('ExperimentID', cls.experiment_id, 'experiment_id', {'editable': True}),
+            ('CohortID', cls.cohort_id, 'cohort_id', {'editable': True}),
+            ('AnimalID', cls.animal_id, 'animal_id', {'editable': True}),
+            ('Is Original?', cls.is_original_video, 'is_original_video', {'editable': False}),
+            ('Notes', cls.notes, 'notes', {'editable': True}),
+        ]
+
 
     def __init__(self,id,file_fullname,file_basename,file_extension,file_video_folder,start_date,end_date,duration,behavioral_box_id,experiment_id,cohort_id,animal_id,is_original_video,notes=None):
         self.id = id
@@ -336,10 +406,6 @@ class VideoFile(Base):
 
         return VideoFile(None, aFullName, aBaseName, anExtension, aFullParentPath, startTime, endTime, duration, aBBID, anExperimentID, aCohortID, anAnimalID, is_original_video, notes)
 
-
-
-
-
 class FileParentFolder(Base):
     __tablename__ = 'fileParentFolders'
 
@@ -363,3 +429,12 @@ class FileParentFolder(Base):
         path = Path(path_string)
         path.anchor
 
+    @classmethod
+    def getTableMapping(cls):
+        return [
+            ('ID', cls.id, 'id', {'editable': False}),
+            ('Full Path', cls.fullpath, 'fullpath', {'editable': True}),
+            ('Root', cls.root, 'root', {'editable': True}),
+            ('Leaf Path', cls.path, 'path', {'editable': True}),
+            ('Notes', cls.notes, 'notes', {'editable': True}),
+        ]

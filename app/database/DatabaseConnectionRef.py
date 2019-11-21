@@ -439,6 +439,16 @@ class DatabaseConnectionRef(QObject):
         return
 
     ## Model Generation:
+    # get_table_model(cls): should work for any record class with a ".getTableMapping()" function defined
+    def get_table_model(self, cls):
+        print("get_table_model({0}) from database:".format(str(cls)))
+        session = self.get_session()
+        model = SqlAlchemyTableModel(
+            session,
+            cls, #sql alchemy mapped object
+            cls.getTableMapping())
+        return model
+
     def get_animal_table_model(self):
         print("get_animal_table_model() from database:")
         session = self.get_session()
