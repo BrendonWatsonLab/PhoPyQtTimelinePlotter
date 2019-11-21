@@ -27,6 +27,8 @@ from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWin
 #create QTable Model/View
 from GUI.Model.AlchemicalModels.alchemical_model import SqlAlchemyTableModel
 
+from app.database.entry_models.db_model import Animal, VideoFile, BehavioralBox, Context, FileParentFolder, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, VideoFile
+
 
 class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
     def __init__(self, database_connection):
@@ -71,16 +73,40 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
         self.table = QTableView(self)
         self.table.setModel(self.model)
         mainLayout.addWidget(self.table)
+
+
+
+
+
+        self.btnAddNewRecord = QPushButton("New", self)
+        self.btnAddNewRecord.released.connect(self.handle_add_new_record_pressed)
+        mainLayout.addWidget(self.btnAddNewRecord)
+
         mainQWidget.setLayout(mainLayout)        
         self.setCentralWidget(mainQWidget) 
+
+        self.table.resizeColumnsToContents()
 
 
     # Updates the member variables from the database
     # Note: if there are any pending changes, they will be persisted on this action
     def reloadModelFromDatabase(self):
-        from app.database.entry_models.db_model import Animal, VideoFile, BehavioralBox, Context, FileParentFolder, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, VideoFile
-
+        
         # self.model = self.database_connection.get_animal_table_model()
         # self.model = self.database_connection.get_table_model(FileParentFolder)
-        self.model = self.database_connection.get_table_model(VideoFile)
+        # self.model = self.database_connection.get_table_model(VideoFile)
+        self.model = self.database_connection.get_table_model(BehavioralBox)
         
+
+    def handle_add_new_record_pressed(self, button):
+        print("handle_add_new_record_pressed(...)")
+        newRecord = BehavioralBox()
+        wasInsertSuccess = self.model.insertRecord(-1, newRecord)
+        if (wasInsertSuccess):
+            print("insert success!")
+            self.model.submitAll()
+        else:
+            print("insert failed!")
+            self.database_rollback()
+
+        print("done.")

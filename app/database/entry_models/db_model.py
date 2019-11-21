@@ -155,7 +155,6 @@ class StaticFileExtension(Base):
         ]
 
 
-
 class Cohort(Base):
     __tablename__ = 'Cohorts'
 
