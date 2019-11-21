@@ -22,7 +22,7 @@ from GUI.UI.qtimeline import *
 
 from GUI.UI.ExtendedTracksContainerWidget import ExtendedTracksContainerWidget
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Videos import *
-from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Partition import *
+from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Partition import TrackContextConfig, TimelineTrackDrawingWidget_Partition
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_AnnotationComments import *
 
 # from app.database.SqliteEventsDatabase import load_video_events_from_database
@@ -182,11 +182,12 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         # Partition tracks:
         currTrackIndex = currTrackIndex + 1
-        self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection)
+        
+        self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection, TrackContextConfig('Behavior'))
         self.eventTrackWidgets.append(self.partitionsTrackWidget)
 
         currTrackIndex = currTrackIndex + 1
-        self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection)
+        self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection, TrackContextConfig('Unknown'))
         self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
 
         # Build the bottomPanelWidget

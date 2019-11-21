@@ -20,14 +20,49 @@ TODO: Add "undo" functionality to creating cuts. Can use the "cutObjects" to fin
 
 """
 
+# Each track has a (Context, Subcontext) pair that define what types of CategoricalDurationLabels it creates
+# TODO: the track context config should affect what type/subtype options are loaded into the partition edit dialog.
+class TrackContextConfig(QObject):
+    def __init__(self, contextName, subcontextIndex=0, parent=None):
+        super().__init__(parent=parent)
+        self.is_valid = False
+        self.contextName = contextName
+        self.subcontextIndex = subcontextIndex
+        self.context = None
+        self.subcontext = None
+
+    def get_context(self):
+        return self.context
+
+    def get_subcontext(self):
+        return self.subcontext
+
+    def get_context_name(self):
+        return self.contextName
+
+    def get_subcontext_index(self):
+        return self.subcontextIndex
+
+    def get_is_valid(self):
+        return self.is_valid
+
+    # update_on_load(...): called from owner's reloadModelFromDatabase(...) with the valid context and subcontext objects
+    def update_on_load(self, contextObj, subcontextObj):
+        self.context = contextObj
+        self.subcontext = subcontextObj
+        self.is_valid = ((self.context is not None) and (self.subcontext is not None))
+
 # Consts of N "Cuts" that separate a block into N+1 "Partitions"
 #  
 class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
     default_shouldDismissSelectionUponMouseButtonRelease = False
     default_itemSelectionMode = ItemSelectionOptions.SingleSelection
 
-    def __init__(self, trackID, partitionObjects, cutObjects, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
+    def __init__(self, trackID, partitionObjects, cutObjects, totalStartTime, totalEndTime, database_connection, trackContextConfig, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
         super(TimelineTrackDrawingWidget_Partition, self).__init__(trackID, totalStartTime, totalEndTime, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
+        
+        self.trackContextConfig = trackContextConfig
+        
         self.reloadModelFromDatabase()
 
         self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, database_connection, partitionObjects)
@@ -56,6 +91,10 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         self.contextsDict = self.database_connection.load_contexts_from_database()
         self.subcontexts = self.database_connection.load_subcontexts_from_database()
 
+        
+        newContext = self.contextsDict[self.trackContextConfig.get_context_name()]
+        newSubcontext = newContext.subcontexts[self.trackContextConfig.get_subcontext_index()]
+        self.trackContextConfig.update_on_load(newContext, newSubcontext)
 
 
     def reinitialize_from_partition_manager(self):
@@ -305,13 +344,16 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
     def try_update_partition(self, start_date, end_date, title, subtitle, body, type_id, subtype_id):
         # Tries to create a new comment
         print('try_update_partition')
-        
+        if (not (self.trackContextConfig.get_is_valid())):
+            print('context is invalid! aborting try_update_partition!')
+            return
+        else:
+            newContext, newSubcontext = self.trackContextConfig.get_context(), self.trackContextConfig.get_subcontext()
+
         if (not (self.activeEditingPartitionIndex is None)):
             # Get new color associated with the modified subtype_id
             newColor = self.behaviors[subtype_id-1].primaryColor.get_QColor()
-            newContext = self.contextsDict['Behavior']
-            newSubcontext = newContext.subcontexts[0]
-
+            
             self.partitionManager.modify_partition(self.activeEditingPartitionIndex, start_date, end_date, title, subtitle, body, type_id, subtype_id, newColor)
             print('Modified partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(self.activeEditingPartitionIndex, type_id, subtype_id))
             self.reinitialize_from_partition_manager()
