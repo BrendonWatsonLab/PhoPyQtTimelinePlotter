@@ -186,8 +186,15 @@ class DatabaseConnectionRef(QObject):
     def load_contexts_from_database(self):
         print("Loading contexts from database:")
         session = self.get_session()
-        contexts = session.query(Context).all()
+        contexts = session.query(Context).options(selectinload(Context.subcontexts)).all()
         return contexts
+
+    def load_subcontexts_from_database(self):
+        print("Loading subcontexts from database:")
+        session = self.get_session()
+        subcontexts = session.query(Subcontext).all()
+        return subcontexts
+
 
     def load_colors_from_database(self):
         outputColorsDict = dict()

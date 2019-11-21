@@ -53,6 +53,10 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         # Load the latest behaviors and colors data from the database
         self.behaviorGroups = self.database_connection.load_behavior_groups_from_database()
         self.behaviors = self.database_connection.load_behaviors_from_database()
+        self.contexts = self.database_connection.load_contexts_from_database()
+        self.subcontexts = self.database_connection.load_subcontexts_from_database()
+
+        
 
     def reinitialize_from_partition_manager(self):
         self.partitionObjects = self.partitionManager.partitions
@@ -297,6 +301,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
     #         # self.widget.move(self.width() - self.widget.width() - 2, 2)
     #         super(TimelineTrackDrawingWidget_Partition, self).resizeEvent(event)
 
+    # Called when the partition edit dialog accept event is called.
     def try_update_partition(self, start_date, end_date, title, subtitle, body, type_id, subtype_id):
         # Tries to create a new comment
         print('try_update_partition')

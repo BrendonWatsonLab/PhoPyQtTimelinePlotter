@@ -154,8 +154,6 @@ class Partitioner(AbstractDatabaseAccessingQObject):
         newBehaviorContext = Context(None, "Behavior")
         newBehaviorSubcontext = Subcontext(None, "Manual", newBehaviorContext)
 
-        
-
         # Tries to save the active partitions out to the database
         for (index, aPartitionObj) in enumerate(self.partitions):
             newPartRecord = CategoricalDurationLabel()
@@ -170,7 +168,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
 
             newPartRecord.Context = newBehaviorContext
             newPartRecord.Subcontext = newBehaviorSubcontext
-            
+
 
             newPartRecord.type_id = aPartitionObj.type_id
             newPartRecord.subtype_id = aPartitionObj.subtype_id
