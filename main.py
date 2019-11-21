@@ -10,7 +10,7 @@ from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
 from GUI.MainWindow.TimelineDrawingWindow import *
 from GUI.HelpWindow.HelpWindowFinal import *
 from GUI.MainObjectListsWindow.MainObjectListsWindow import *
-from example import ExampleDatabaseTableWindow
+from GUI.ExampleDatabaseTableWindow import ExampleDatabaseTableWindow
 
 from app.database.DatabaseConnectionRef import DatabaseConnectionRef
 
@@ -81,7 +81,7 @@ if __name__ == '__main__':
 
         if shouldShowExampleWindow:
             exampleWindow.show()
-            
+
         # If should show both main and side list GUI
         if (shouldShowMainGUIWindow and shouldShowListGUIWindow):
             sideListWindowGeometry.moveTopRight(mainWindowGeometry.topLeft())
