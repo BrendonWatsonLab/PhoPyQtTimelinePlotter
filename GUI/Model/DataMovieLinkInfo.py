@@ -37,6 +37,10 @@ class DataMovieLinkInfo(QObject):
         self.videoDurationEventObj = videoEventObj
         self.videoPlayerWindow = videoPlayerWindowRef
         self.mainTimelineWindowRef = mainTimelineWindowRef
+
+        # TODO: Currently the self.sync_option does nothing. Only video window -> timeline window is currently fully implemented
+        self.sync_option = sync_option
+
         # Connect to update self when video window playback position changes
         self.videoPlayerWindow.video_playback_position_updated.connect(self.update_video_playback_position)
 
@@ -45,8 +49,10 @@ class DataMovieLinkInfo(QObject):
 
         self.video_playback_position_changed.connect(self.mainTimelineWindowRef.on_video_playback_position_updated)
 
+        ## TODO NOW: Comment this out if we don't want it.
+        # Bound to trigger the video player to update on timeline adjust
+        self.timeline_datetime_position_changed.connect(self.videoPlayerWindow.on_timeline_position_updated)
 
-        self.sync_option = sync_option
 
     # video window
     def get_video_url(self):

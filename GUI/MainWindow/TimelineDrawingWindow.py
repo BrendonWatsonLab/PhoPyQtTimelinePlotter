@@ -700,6 +700,17 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.timelineMasterTrackWidget.on_update_hover(x)
         self.extendedTracksContainer.on_update_hover(x)
 
+        if(self.videoPlayerWindow):
+            movie_link = self.videoPlayerWindow.get_movie_link
+            if (movie_link is not None):
+                ## TODO NOW: 
+
+                # Check if convertedDatetime is in range.
+                
+                #convertedDatetime: the datetime
+                movie_link.update_timeline_playhead_position(convertedDatetime)
+
+
         self.extendedTracksContainer.blockSignals(False)
         self.timelineMasterTrackWidget.blockSignals(False)
         
