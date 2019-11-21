@@ -27,7 +27,9 @@ class Mode(Enum):
     RESIZEBL = 8,
     RESIZEL = 9
 
-
+"""
+TContainer: a freely resizable container widget that embeds its main contents in a frame that allows the user to resize (by producing handles at the edges of the widget), drag, etc
+"""
 class TContainer(QWidget):
     """ allow to move and resize by user"""
     menu = None
