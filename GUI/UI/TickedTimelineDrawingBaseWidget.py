@@ -124,7 +124,6 @@ class TickedTimelineDrawingBaseWidget(QWidget):
         if self.clicking:
             self.pointerPos = x
             self.positionChanged.emit(x)
-            self.checkSelection(x)
             self.pointerTimePos = self.pointerPos*self.getScale()
 
         self.update()
@@ -136,8 +135,6 @@ class TickedTimelineDrawingBaseWidget(QWidget):
             self.pointerPos = x
             self.positionChanged.emit(x)
             self.pointerTimePos = self.pointerPos * self.getScale()
-
-            self.checkSelection(x)
 
             self.update()
             self.clicking = True  # Set clicking check to true
