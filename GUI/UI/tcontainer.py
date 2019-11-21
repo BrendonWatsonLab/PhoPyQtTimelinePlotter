@@ -15,6 +15,10 @@ from PyQt5.QtGui import QColor, QCursor, QPainterPath, QBrush
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QMenu, QLabel, QMainWindow
 
 
+"""
+"T"/"B": Top/Bottom
+"L"/"R": Left/Right
+"""
 class Mode(Enum):
     NONE = 0,
     MOVE = 1,
@@ -29,6 +33,8 @@ class Mode(Enum):
 
 """
 TContainer: a freely resizable container widget that embeds its main contents in a frame that allows the user to resize (by producing handles at the edges of the widget), drag, etc
+- TODO: need to add a "ModeMask" like variable that disables certain resizing actions (like resizing from any of the corners, in a certain dimension, etc).
+    - If it detects a mode that isn't permitted in the mask, it returns self.mode = None
 """
 class TContainer(QWidget):
     """ allow to move and resize by user"""
@@ -145,7 +151,7 @@ class TContainer(QWidget):
                 self.resize(self.width() + 1, self.height())
         self.newGeometry.emit(self.geometry())
 
-
+    # It seems most of the magic is being done here. This function sets the cursor shape (whether it's a "resizing" handle or a mouse) and sets the "mode" variable to indicate which mode it's currently in.,
     def setCursorShape(self, e_pos: QPoint):
         diff = 3
         # Left - Bottom
@@ -274,7 +280,9 @@ class MainWindow(QMainWindow):
         lab1 = QLabel("Label1")
         lab2 = QLabel("Label2")
         con1 = TContainer(self, QPoint(10,10), lab1)
+        con1.mode = Mode.RESIZER
         con2 = TContainer(self, QPoint(20,50), lab2)
+        con2.mode = Mode.NONE
 
 
 if __name__ == '__main__':
