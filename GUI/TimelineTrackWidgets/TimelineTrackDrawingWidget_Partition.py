@@ -58,14 +58,14 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
     default_shouldDismissSelectionUponMouseButtonRelease = False
     default_itemSelectionMode = ItemSelectionOptions.SingleSelection
 
-    def __init__(self, trackID, partitionObjects, cutObjects, totalStartTime, totalEndTime, database_connection, trackContextConfig, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
+    def __init__(self, trackID, partitionObjects, cutObjects, totalStartTime, totalEndTime, database_connection, trackContextConfig, partitionDataObjects, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
         super(TimelineTrackDrawingWidget_Partition, self).__init__(trackID, totalStartTime, totalEndTime, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
         
         self.trackContextConfig = trackContextConfig
         
         self.reloadModelFromDatabase()
 
-        self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, database_connection, partitionObjects)
+        self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, database_connection, partitionObjects, partitionDataObjects=partitionDataObjects)
         self.reinitialize_from_partition_manager()
         ## TODO: can reconstruct partitions from cutObjects, but can't recover the specific partition's info.
         self.cutObjects = cutObjects
@@ -80,6 +80,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         self.itemSelectionMode = TimelineTrackDrawingWidget_Partition.default_itemSelectionMode
 
         self.activePartitionEditDialog = None
+        # self.partitionDataObjects = []
 
     ## Data Model Functions:
     # Updates the member variables from the database
@@ -96,6 +97,28 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
     def reinitialize_from_partition_manager(self):
         self.partitionObjects = self.partitionManager.partitions
         self.eventRect = np.repeat(QRect(0,0,0,0), len(self.partitionObjects))
+
+    # # Rebuilds the GUI event objects (self.durationObjects) from the self.annotationDataObjects
+    # def rebuildDrawnObjects(self):
+    #     self.durationObjects = []
+    #     for (anIndex, aDataObj) in enumerate(self.annotationDataObjects):
+    #         # Create the graphical annotation object
+    #         newGuiObject = Partitioner.get_gui_partition(aDataObj)
+    #         # Get new color associated with the modified subtype_id
+    #     # TODO: maybe more dynamic getting of color from parent track?
+    #     # theColor = self.owning_parent_track.behaviors[from_database_partition_record.subtype_id-1].primaryColor.get_QColor()
+
+    #         newAnnotation.on_edit.connect(self.on_annotation_modify_event)
+    #         newAnnotation.on_edit_by_dragging_handle_start.connect(self.handleStartSliderValueChange)
+    #         newAnnotation.on_edit_by_dragging_handle_end.connect(self.handleEndSliderValueChange)
+    #         # newAnnotation.on_edit_by_dragging_handle.connect(self.try_resize_comment_with_handles)
+    #         # newAnnotation = PhoDurationEvent_AnnotationComment(start_date, end_date, body, title, subtitle)
+    #         newAnnotationIndex = len(self.durationObjects)
+    #         newAnnotation.setAccessibleName(str(newAnnotationIndex))
+
+    #         self.durationObjects.append(newAnnotation)
+
+
 
     # Called by a specific child partition's menu to indicate that it should be edited in a new Partition Editor Dialog
     @pyqtSlot()    

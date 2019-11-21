@@ -186,11 +186,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # Partition tracks:
         currTrackIndex = currTrackIndex + 1
         
-        self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, self.loadedPartitionTrackPartitionsArray[0], [], self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[0])
+        self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[0], self.loadedPartitionTrackPartitionsArray[0])
         self.eventTrackWidgets.append(self.partitionsTrackWidget)
 
         currTrackIndex = currTrackIndex + 1
-        self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, self.loadedPartitionTrackPartitionsArray[1], [], self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[1])
+        self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[1], self.loadedPartitionTrackPartitionsArray[1])
         self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
 
         # Build the bottomPanelWidget

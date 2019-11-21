@@ -41,7 +41,7 @@ A 0.0 to 1.0 timeline
 """
 class Partitioner(AbstractDatabaseAccessingQObject):
     # TODO: Could just use its owning_parent_track's database_connection?
-    def __init__(self, totalStartTime, totalEndTime, owning_parent_track, database_connection, name='', partitions=None, extended_data=dict()):
+    def __init__(self, totalStartTime, totalEndTime, owning_parent_track, database_connection, name='', partitions=None, partitionDataObjects=None, extended_data=dict()):
         super(Partitioner, self).__init__(database_connection)
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
@@ -57,7 +57,12 @@ class Partitioner(AbstractDatabaseAccessingQObject):
             else:
                 needs_initialize_partitions = True
         else:
-            needs_initialize_partitions = True
+            if (partitionDataObjects is not None):
+                self.rebuild_gui_partitions(partitionDataObjects)
+                needs_initialize_partitions = (len(self.partitions) <= 0)
+            else:
+                needs_initialize_partitions = True
+
 
         if needs_initialize_partitions:
             new_partition_obj = PhoDurationEvent_Partition(self.totalStartTime, self.totalEndTime, '0', parent=self.owning_parent_track)
@@ -148,6 +153,35 @@ class Partitioner(AbstractDatabaseAccessingQObject):
 
         # Update in the array
         self.partitions[modify_partition_index] = partition_to_modify
+
+    @staticmethod
+    def get_gui_partition(from_database_partition_record, parent):
+        # Get new color associated with the modified subtype_id
+        # TODO: maybe more dynamic getting of color from parent track?
+        theColor = parent.behaviors[from_database_partition_record.subtype_id-1].primaryColor.get_QColor()
+        # theColor = Qt.black
+        outPartitionGuiObj = PhoDurationEvent_Partition(from_database_partition_record.start_date, from_database_partition_record.end_date, \
+            from_database_partition_record.primary_text, from_database_partition_record.secondary_text, from_database_partition_record.tertiary_text, \
+                theColor, from_database_partition_record.type_id, from_database_partition_record.subtype_id, {'notes':from_database_partition_record.notes}, parent=parent)
+        outPartitionGuiObj.on_edit.connect(parent.on_partition_modify_event)
+        return outPartitionGuiObj
+
+    def rebuild_gui_partitions(self, from_data_partitions):
+        self.partitions = []
+        for (anIndex, aDataObj) in enumerate(from_data_partitions):
+            # Create the graphical annotation object
+            newGuiObject = Partitioner.get_gui_partition(aDataObj, self.owning_parent_track)
+            # newGuiObject.on_edit.connect(self.owning_parent_track.on_partition_modify_event)
+
+            # Get new color associated with the modified subtype_id
+            # TODO: maybe more dynamic getting of color from parent track?
+            # theColor = self.owning_parent_track.behaviors[from_database_partition_record.subtype_id-1].primaryColor.get_QColor()
+
+            newPartitionIndex = len(self.partitions)
+            newGuiObject.setAccessibleName(str(newPartitionIndex))
+
+            self.partitions.append(newGuiObject)
+
 
 
     def save_partitions_to_database(self, contextObj, subcontextObj):
