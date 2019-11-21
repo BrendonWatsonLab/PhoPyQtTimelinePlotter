@@ -126,47 +126,6 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
 
         self.tabs.resize(300,200)
 
-        # for i in range(5):
-        #     exec( 'myGroupBox'+str(i)+'= QGroupBox() ' )
-        #     exec( 'myLayout'+str(i)+' = QHBoxLayout()' )       
-
-        #     exec( 'label'+str(i)+'=QLabel("Name '+str(i)+': ")' )
-        #     exec( 'self.myLineEdit'+str(i)+'=QLineEdit()' )
-
-        #     exec( 'myLayout'+str(i)+'.addWidget(label'+str(i)+')' )
-        #     exec( 'myLayout'+str(i)+'.addWidget(self.myLineEdit'+str(i)+', QtCore.Qt.AlignRight)' )
-
-        #     exec( 'myGroupBox'+str(i)+'.setLayout(myLayout'+str(i)+')' )
-        #     exec( 'mainLayout.addWidget(myGroupBox'+str(i)+')' )
-
-
-        # self.table = QTableView(self)
-        # self.table.setModel(self.model)
-        # self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        # self.table.setContextMenuPolicy(Qt.CustomContextMenu)
-        # self.table.customContextMenuRequested.connect(self.display_context_menu)
-        # self.table.setSelectionMode(QAbstractItemView.SingleSelection)
-
-        # self.table_selection_model = QItemSelectionModel(self.model)
-        # self.table.setModel(self.table_selection_model.model())
-        # self.table.setSelectionModel(self.table_selection_model)
-        # self.table_selection_model.selectionChanged.connect(self.update_current_record)
-
-
-        # mainLayout.addWidget(self.table)
-
-
-         # Add tabs to widget
-        # self.layout.addWidget(self.tabs)
-        # self.setLayout(self.layout)
-
-
-        # mainLayout.addWidget(self.table)
-
-        # self.btnAddNewRecord = QPushButton("New", self)
-        # self.btnAddNewRecord.released.connect(self.handle_add_new_record_pressed)
-        # mainLayout.addWidget(self.btnAddNewRecord)
-
         mainLayout.addWidget(self.tabs)
 
         mainQWidget.setLayout(mainLayout)        
@@ -175,7 +134,6 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
         for (aTableIndex, aTable) in enumerate(self.tables):
             aTable.resizeColumnsToContents()
 
-        # self.table.resizeColumnsToContents()
 
 
     # Updates the member variables from the database
@@ -208,8 +166,9 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
 
 
     def display_context_menu(self, pos):
-        index = self.table.indexAt(pos)
-
+        curr_active_tab_index = self.get_active_tab_index()
+        index = self.tables[curr_active_tab_index].indexAt(pos)
+        
         self.menu = QMenu()
 
         # self.edit_action = self.menu.addAction("Edit")
@@ -223,16 +182,17 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
         self.delete_action.triggered.connect(self.delete_record)
         self.delete_action.setEnabled(False)
 
-        table_viewport = self.table.viewport()
+        table_viewport = self.tables[curr_active_tab_index].viewport()
         self.menu.popup(table_viewport.mapToGlobal(pos))
 
 
     def delete_record(self):
         ## TODO: unimplemented
         print("UNIMPLEMENTED!!!")
+        curr_active_tab_index = self.get_active_tab_index()
         # selected_row_index = self.table_selection_model.currentIndex().data(Qt.EditRole)
         index_list = []                                                          
-        for model_index in self.table.selectionModel().selectedRows():       
+        for model_index in self.tables[curr_active_tab_index].selectionModel().selectedRows():       
             index = QPersistentModelIndex(model_index)         
             index_list.append(index)                                             
 
@@ -242,7 +202,7 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
         )
         if reply == QMessageBox.Yes:
             for index in index_list:
-                self.current_record = self.model.record(index.row())
+                self.current_record = self.models[curr_active_tab_index].record(index.row())
                 self.database_connection.session.delete(self.current_record)
                 # self.model.removeRow(index.row())
 
@@ -252,8 +212,9 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
     def duplicate_record(self):
         ## TODO: unimplemented
         print("UNIMPLEMENTED!!!")
+        curr_active_tab_index = self.get_active_tab_index()
         index_list = []                                                          
-        for model_index in self.table.selectionModel().selectedRows():       
+        for model_index in self.tables[curr_active_tab_index].selectionModel().selectedRows():       
             index = QPersistentModelIndex(model_index)         
             index_list.append(index)                                             
 
@@ -263,11 +224,11 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
         if (num_items_to_remove > 0):
             print("duplicating!")
             selected_row_index = index_list[0]
-            self.current_record = self.model.record(index.row())
+            self.current_record = self.models[curr_active_tab_index].record(index.row())
             new = self.current_record.duplicate()
             self.database_connection.session.add(new)
             self.database_connection.session.commit()
-            self.model.refresh()
+            self.models[curr_active_tab_index].refresh()
 
         else:
             print("selection empty!")
@@ -276,8 +237,7 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
         print("done.")
 
     def get_active_tab_index(self):
-        ## TODO
-        return None
+        return self.tabs.currentIndex()
         
 
     def create_new_record(self):
@@ -297,7 +257,7 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
         self.database_connection.session.add(rec)
         self.database_connection.session.commit()
         print("storing new record")
-        self.model[self.activeActionTabIndex].refresh()
+        self.models[self.activeActionTabIndex].refresh()
 
     def update_current_record(self, x, y):
-        self.current_record = self.table_selection_models[i].currentIndex().data(Qt.EditRole)
+        self.current_record = self.table_selection_models[self.get_active_tab_index()].currentIndex().data(Qt.EditRole)
