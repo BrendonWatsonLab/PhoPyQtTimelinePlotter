@@ -130,24 +130,26 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
 
         self.duplicate_action = self.menu.addAction("Duplicate")
         self.duplicate_action.triggered.connect(self.duplicate_record)
+        self.duplicate_action.setEnabled(False)
 
         self.delete_action = self.menu.addAction("Delete")
         self.delete_action.triggered.connect(self.delete_record)
+        self.delete_action.setEnabled(False)
 
         table_viewport = self.table.viewport()
         self.menu.popup(table_viewport.mapToGlobal(pos))
 
 
     def delete_record(self):
-        selected_row_index = self.table_selection_model.currentIndex().data(Qt.EditRole)
+        ## TODO: unimplemented
+        print("UNIMPLEMENTED!!!")
+        # selected_row_index = self.table_selection_model.currentIndex().data(Qt.EditRole)
         index_list = []                                                          
         for model_index in self.table.selectionModel().selectedRows():       
             index = QPersistentModelIndex(model_index)         
             index_list.append(index)                                             
 
         num_items_to_remove = len(index_list)
-
-
         reply = QMessageBox.question(
             self, "Confirm", "Really delete the selected {0} records?".format(num_items_to_remove), QMessageBox.Yes, QMessageBox.No
         )
@@ -155,17 +157,37 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
             for index in index_list:
                 self.current_record = self.model.record(index.row())
                 self.database_connection.session.delete(self.current_record)
-                self.model.removeRow(index.row())  
+                # self.model.removeRow(index.row())
 
             # self.database_connection.session.commit()
-            self.model.refresh()
+            # self.model.refresh()
 
     def duplicate_record(self):
-        self.database_connection.session
-        new = self.current_record.duplicate()
-        self.database_connection.session.add(new)
-        self.database_connection.session.commit()
-        self.model.refresh()
+        ## TODO: unimplemented
+        print("UNIMPLEMENTED!!!")
+        index_list = []                                                          
+        for model_index in self.table.selectionModel().selectedRows():       
+            index = QPersistentModelIndex(model_index)         
+            index_list.append(index)                                             
+
+        num_items_to_remove = len(index_list)
+        selected_row_index = None
+        # Get only first item
+        if (num_items_to_remove > 0):
+            print("duplicating!")
+            selected_row_index = index_list[0]
+            self.current_record = self.model.record(index.row())
+            new = self.current_record.duplicate()
+            self.database_connection.session.add(new)
+            self.database_connection.session.commit()
+            self.model.refresh()
+
+        else:
+            print("selection empty!")
+            return
+        
+        print("done.")
+        
 
     def create_new_record(self):
         dialog = QInputDialog(self)
