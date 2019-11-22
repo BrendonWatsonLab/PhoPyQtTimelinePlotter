@@ -191,11 +191,10 @@ class Partitioner(AbstractDatabaseAccessingQObject):
 
     def save_partitions_to_database(self, contextObj, subcontextObj):
         print("partitions manager: save_partitions_to_database({0}, {1})".format(str(contextObj), str(subcontextObj)))
-        # newBehaviorContext = Context(None, "Behavior")
-        # newBehaviorSubcontext = Subcontext(None, "Manual", newBehaviorContext)
         print("trying to save {0} partition objects".format(len(self.partitions)))
 
         # Tries to save the active partitions out to the database
+        outDataPartitions = []
         for (index, aPartitionObj) in enumerate(self.partitions):
             newPartRecord = CategoricalDurationLabel()
             newPartRecord.start_date = aPartitionObj.startTime
@@ -219,8 +218,9 @@ class Partitioner(AbstractDatabaseAccessingQObject):
             newPartRecord.tertiary_text = aPartitionObj.body
 
             newPartRecord.notes = 'auto'
+            outDataPartitions.append(newPartRecord)
 
-            self.database_connection.save_to_database([newPartRecord], 'CategoricalDurationLabel')
+        self.database_connection.save_to_database(outDataPartitions, 'CategoricalDurationLabel')
 
         print("done.")
             

@@ -35,7 +35,6 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
      # This defines a signal called 'closed' that takes no arguments.
     on_commit = pyqtSignal(datetime, datetime, str, str, str, int, int)
 
-
     def __init__(self, database_connection, parent=None):
         super(PartitionEditDialog, self).__init__(database_connection, parent) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/UI/PartitionEditDialog/PartitionEditDialog.ui", self) # Load the .ui file
@@ -50,10 +49,6 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
         # self.ui.buttonBox.rejected.connect(self.reject)
         self.ui.comboBox_Type.activated[str].connect(self.on_type_combobox_changed)
         self.ui.comboBox_Subtype.activated[str].connect(self.on_subtype_combobox_changed)
-
-
-
-
 
 ## Data Model Functions:
     # Updates the member variables from the database
@@ -151,7 +146,6 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
         else:
             return (combo_index)
 
-    
 
     # If we want the subtype to always be compatible with the type, we can change the subtype upon setting the type to an incompatible type
     def on_type_combobox_changed(self, text):
@@ -182,8 +176,6 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
                     print("Changing child")
                     self.set_subtype(new_selected_behavior_group.behaviors[0].id)
 
-
-
     def on_subtype_combobox_changed(self, text):
         print('subtype changed: {0}'.format(text))
         i1 = self.combo_index_to_array_index(self.ui.comboBox_Subtype.currentIndex())
@@ -206,15 +198,13 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
                     print("Changing parent")
                     self.set_type(new_selected_proper_parent_group.id) #CHECK
 
-
-        
-
-
     def accept(self):
         print('accept:')
         # Emit the signal.
+        final_type, final_subtype = int(self.get_type() or -1), int(self.get_subtype() or -1)
+        
         self.on_commit.emit(self.get_start_date(), self.get_end_date(), self.get_title(), self.get_subtitle(), self.get_body(),
-            self.get_type(), self.get_subtype())
+            final_type, final_subtype)
         super(PartitionEditDialog, self).accept()
 
     def reject(self):
@@ -223,8 +213,6 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
         super(PartitionEditDialog, self).reject()
 
 
-    
-    
     #GOOD
     def set_type(self, type_id):
         if type_id is None:

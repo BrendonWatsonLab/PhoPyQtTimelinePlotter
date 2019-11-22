@@ -137,7 +137,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         selectedPartitionObject = self.get_selected_partition()
         if (selectedPartitionObject):
             self.activeEditingPartitionIndex = selectedPartitionIndex
-            self.activePartitionEditDialog = PartitionEditDialog(self.database_connection, self)
+            self.activePartitionEditDialog = PartitionEditDialog(self.database_connection, parent=self)
             self.activePartitionEditDialog.set_start_date(selectedPartitionObject.startTime)
             self.activePartitionEditDialog.set_end_date(selectedPartitionObject.endTime)
             self.activePartitionEditDialog.set_type(selectedPartitionObject.type_id)
@@ -399,6 +399,16 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
             newContext, newSubcontext = self.trackContextConfig.get_context(), self.trackContextConfig.get_subcontext()
 
         if (not (self.activeEditingPartitionIndex is None)):
+            # Convert -1 values for type_id and subtype_id back into "None" objects. They had to be an Int to be passed through the pyQtSlot()
+            # Note the values are record IDs (not indicies, so they're 1-indexed). This means that both -1 and 0 are invalid.
+            if (type_id < 1):
+                type_id = None
+            
+            if (subtype_id < 1):
+                subtype_id = None
+                
+            print('Modifying partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(self.activeEditingPartitionIndex, type_id, subtype_id))
+            
             # Get new color associated with the modified subtype_id
             if ((type_id is None) or (subtype_id is None)):
                 newColor = PhoDurationEvent_Partition.ColorBase
