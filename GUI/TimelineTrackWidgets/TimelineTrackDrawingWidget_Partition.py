@@ -400,7 +400,10 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
 
         if (not (self.activeEditingPartitionIndex is None)):
             # Get new color associated with the modified subtype_id
-            newColor = self.behaviors[subtype_id-1].primaryColor.get_QColor()
+            if ((type_id is None) or (subtype_id is None)):
+                newColor = PhoDurationEvent_Partition.ColorBase
+            else:
+                newColor = self.behaviors[subtype_id-1].primaryColor.get_QColor()
             
             self.partitionManager.modify_partition(self.activeEditingPartitionIndex, start_date, end_date, title, subtitle, body, type_id, subtype_id, newColor)
             print('Modified partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(self.activeEditingPartitionIndex, type_id, subtype_id))

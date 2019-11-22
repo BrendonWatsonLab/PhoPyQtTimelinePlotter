@@ -29,8 +29,7 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
     def __init__(self, database_connection, parent=None):
         super(PartitionEditDialog, self).__init__(database_connection, parent) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/UI/PartitionEditDialog/PartitionEditDialog.ui", self) # Load the .ui file
-        # self.behaviorsManager = BehaviorsManager()
-        # self.init_from_behaviors_manager()
+        self.enable_none_selection = True # if true, an "empty" item is added to the combobox dropdown lists which is selected by default
         self.reloadModelFromDatabase()
         self.initUI()
         self.rebuild_combo_boxes_from_behaviors()
@@ -51,6 +50,9 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
         self.behaviorGroups = self.database_connection.load_behavior_groups_from_database()
         self.behaviors = self.database_connection.load_behaviors_from_database()
 
+        if self.enable_none_selection:
+            self.behaviorGroups.insert(0, None)
+            self.behaviors.insert(0, None)
 
     # def init_from_behaviors_manager(self):
     #     uniqueBehaviorsList = self.behaviorsManager.get_unique_behaviors()
@@ -71,22 +73,42 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
 
     # rebuild_combo_boxes_from_behaviors(): rebuilds the two combo boxes from the behaviors
     def rebuild_combo_boxes_from_behaviors(self):
+        enable_none_selection = True
+
         types_model = self.ui.comboBox_Type.model()
+        # if enable_none_selection:
+        #     # first_index = types_model.index(0, self.ui.comboBox_Type.modelColumn(), self.ui.comboBox_Type.rootModelIndex())
+        #     first_item = QtGui.QStandardItem("")
+        #     first_item.setSelectable(False)
+        #     types_model.appendRow(first_item)
+
+            
+
         for (anIndex, aBehaviorGroup) in enumerate(self.behaviorGroups):
-            # self.ui.comboBox_Type.addItem(aBehaviorGroup.name)
-            item = QtGui.QStandardItem(str(aBehaviorGroup.name))
-            item.setForeground(aBehaviorGroup.primaryColor.get_QColor())
+            if aBehaviorGroup is None:
+                item = QtGui.QStandardItem("")
+                # Empty item
+            else:
+                item = QtGui.QStandardItem(str(aBehaviorGroup.name))
+                item.setForeground(aBehaviorGroup.primaryColor.get_QColor())
+            
             types_model.appendRow(item)
-            # self.ui.comboBox_Type.addItem(item)
-            # self.ui.comboBox_Type.setItemData()
 
         subtypes_model = self.ui.comboBox_Subtype.model()
-        for (anIndex, aBehavior) in enumerate(self.behaviors):
-            item = QtGui.QStandardItem(str(aBehavior.name))
-            item.setForeground(aBehavior.primaryColor.get_QColor())
-            subtypes_model.appendRow(item)
+        # if enable_none_selection:
+        #     first_item = QtGui.QStandardItem("")
+        #     first_item.setSelectable(True)
+        #     subtypes_model.appendRow(first_item)
 
-            # self.ui.comboBox_Subtype.addItem(aBehavior.name)
+        for (anIndex, aBehavior) in enumerate(self.behaviors):
+            if aBehavior is None:
+                item = QtGui.QStandardItem("")
+                # Empty item
+            else:
+                item = QtGui.QStandardItem(str(aBehavior.name))
+                item.setForeground(aBehavior.primaryColor.get_QColor())
+
+            subtypes_model.appendRow(item)
 
         
 
@@ -99,29 +121,36 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
         new_selected_behavior_group = self.behaviorGroups[self.ui.comboBox_Type.currentIndex()]
         selected_behavior = self.behaviors[self.ui.comboBox_Subtype.currentIndex()]
         # If we want the subtype to always be compatible with the type, we can change the subtype upon setting the type to an incompatible type
-
-        proper_parent_group = selected_behavior.parentGroup
-        if (proper_parent_group.id == new_selected_behavior_group.id):
-            # The parent is currently already set as the type
-            pass
-        else:
+        if ((new_selected_behavior_group is None) or (selected_behavior is None)):
             # Need to select the child to the first compatible behavior for the parent
             print("Changing child")
-            self.set_subtype(new_selected_behavior_group.behaviors[0].id)
+            self.set_subtype(0) #TODO: should be -1?
+        else:
+            proper_parent_group = selected_behavior.parentGroup
+            if (proper_parent_group.id == new_selected_behavior_group.id):
+                # The parent is currently already set as the type
+                pass
+            else:
+                # Need to select the child to the first compatible behavior for the parent
+                print("Changing child")
+                self.set_subtype(new_selected_behavior_group.behaviors[0].id)
 
 
     def on_subtype_combobox_changed(self, text):
         print('subtype changed: {0}'.format(text))
         new_selected_behavior = self.behaviors[self.ui.comboBox_Subtype.currentIndex()]
-        new_selected_proper_parent_group = new_selected_behavior.parentGroup
-        selected_behavior_group = self.behaviorGroups[self.ui.comboBox_Type.currentIndex()]
-        if (selected_behavior_group.id == new_selected_proper_parent_group.id):
-            # The parent is currently already set as the type
-            pass
+        if (new_selected_behavior is None):
+            self.set_type(0) #TODO: should be -1?
         else:
-            # Need to select the parent
-            print("Changing parent")
-            self.set_type(new_selected_proper_parent_group.id)
+            new_selected_proper_parent_group = new_selected_behavior.parentGroup
+            selected_behavior_group = self.behaviorGroups[self.ui.comboBox_Type.currentIndex()]
+            if (selected_behavior_group.id == new_selected_proper_parent_group.id):
+                # The parent is currently already set as the type
+                pass
+            else:
+                # Need to select the parent
+                print("Changing parent")
+                self.set_type(new_selected_proper_parent_group.id)
 
 
         
@@ -140,20 +169,37 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
         super(PartitionEditDialog, self).reject()
 
     def set_type(self, type_id):
-        transform_to_index = type_id - 1 # To transform from sqlite3 1-based row indexing. The proper way would be searching for the row with a matching ID
-        self.ui.comboBox_Type.setCurrentIndex(transform_to_index)
+        if type_id is None:
+            self.ui.comboBox_Type.setCurrentIndex(0)
+        else:
+            transform_to_index = type_id - 1 # To transform from sqlite3 1-based row indexing. The proper way would be searching for the row with a matching ID
+            if self.enable_none_selection:
+                transform_to_index = transform_to_index + 1 # add one to move beyond the "None" entry, which is the first in the combobox
+            self.ui.comboBox_Type.setCurrentIndex(transform_to_index)
     
     def get_type(self):
         # return self.ui.comboBox_Type.currentIndex()
-        return self.behaviorGroups[self.ui.comboBox_Type.currentIndex()].id
+        val = self.behaviorGroups[self.ui.comboBox_Type.currentIndex()]
+        if (val is None):
+            return None
+        else:
+            return val.id
 
     def set_subtype(self, subtype_id):
-        transform_to_index = subtype_id - 1 # To transform from sqlite3 1-based row indexing. The proper way would be searching for the row with a matching ID
-        self.ui.comboBox_Subtype.setCurrentIndex(transform_to_index)
+        if subtype_id is None:
+            self.ui.comboBox_Subtype.setCurrentIndex(0)
+        else:
+            transform_to_index = subtype_id - 1 # To transform from sqlite3 1-based row indexing. The proper way would be searching for the row with a matching ID
+            if self.enable_none_selection:
+                transform_to_index = transform_to_index + 1 # add one to move beyond the "None" entry, which is the first in the combobox
+            self.ui.comboBox_Subtype.setCurrentIndex(transform_to_index)
     
     def get_subtype(self):
-        # return self.ui.comboBox_Subtype.currentIndex()
-        return self.behaviors[self.ui.comboBox_Subtype.currentIndex()].id
+        val = self.behaviors[self.ui.comboBox_Subtype.currentIndex()]
+        if (val is None):
+            return None
+        else:
+            return val.id
 
     def set_start_date(self, startDate):
         self.ui.dateTimeEdit_Start.setDateTime(startDate)

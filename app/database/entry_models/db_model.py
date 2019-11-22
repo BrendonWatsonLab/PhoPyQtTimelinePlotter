@@ -297,6 +297,8 @@ class CategoricalDurationLabel(Base):
             ('Notes', cls.notes, 'notes', {'editable': True}),
         ]
 
+    __table_args__ = (UniqueConstraint('context_id', 'subcontext_id', name='_name_parent_uc'),
+                     )
 
 
 
