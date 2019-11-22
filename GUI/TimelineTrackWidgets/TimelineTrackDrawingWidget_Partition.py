@@ -70,7 +70,6 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         # self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, database_connection, name="name", partitionViews=partitionObjects, partitionDataObjects=self.partitionDataObjects)
         self.reloadModelFromDatabase()
 
-
         self.reinitialize_from_partition_manager()
         ## TODO: can reconstruct partitions from cutObjects, but can't recover the specific partition's info.
         self.cutObjects = cutObjects
@@ -85,6 +84,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         self.itemSelectionMode = TimelineTrackDrawingWidget_Partition.default_itemSelectionMode
 
         self.activePartitionEditDialog = None
+        self.update()
 
 
     ## Data Model Functions:
@@ -113,25 +113,25 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
 
 
     def reinitialize_from_partition_manager(self):
-        self.partitionObjects = self.partitionManager.get_partition_views()
-        self.eventRect = np.repeat(QRect(0,0,0,0), len(self.partitionObjects))
+        self.partitions = self.partitionManager.get_partitions()
+        self.eventRect = np.repeat(QRect(0,0,0,0), len(self.partitions))
 
     # Called by a specific child partition's menu to indicate that it should be edited in a new Partition Editor Dialog
     @pyqtSlot()    
     def on_partition_modify_event(self):
         print("on_partition_modify_event(...)")
         selectedPartitionIndex = self.get_selected_partition_index()
-        selectedPartitionObject = self.get_selected_partition()
-        if (selectedPartitionObject):
+        selectedPartitionViewObject = self.get_selected_partition().get_view()
+        if (selectedPartitionViewObject):
             self.activeEditingPartitionIndex = selectedPartitionIndex
             self.activePartitionEditDialog = PartitionEditDialog(self.database_connection, parent=self)
-            self.activePartitionEditDialog.set_start_date(selectedPartitionObject.startTime)
-            self.activePartitionEditDialog.set_end_date(selectedPartitionObject.endTime)
-            self.activePartitionEditDialog.set_type(selectedPartitionObject.type_id)
-            self.activePartitionEditDialog.set_subtype(selectedPartitionObject.subtype_id)
-            self.activePartitionEditDialog.set_title(selectedPartitionObject.name)
-            self.activePartitionEditDialog.set_subtitle(selectedPartitionObject.subtitle)
-            self.activePartitionEditDialog.set_body(selectedPartitionObject.body)
+            self.activePartitionEditDialog.set_start_date(selectedPartitionViewObject.startTime)
+            self.activePartitionEditDialog.set_end_date(selectedPartitionViewObject.endTime)
+            self.activePartitionEditDialog.set_type(selectedPartitionViewObject.type_id)
+            self.activePartitionEditDialog.set_subtype(selectedPartitionViewObject.subtype_id)
+            self.activePartitionEditDialog.set_title(selectedPartitionViewObject.name)
+            self.activePartitionEditDialog.set_subtitle(selectedPartitionViewObject.subtitle)
+            self.activePartitionEditDialog.set_body(selectedPartitionViewObject.body)
             self.activePartitionEditDialog.on_commit.connect(self.try_update_partition)
             self.activePartitionEditDialog.on_cancel.connect(self.partition_dialog_canceled)
         else:
@@ -151,10 +151,11 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
             return None
 
     # Returns the currently selected partition object or None if none are selected
+    ## TODO: see where this is used, and return a view if that's what it's expecting
     def get_selected_partition(self):
         prevSelectedItemIndex = self.get_selected_partition_index()
         if (not (prevSelectedItemIndex is None)):
-            prevSelectedPartitionObj = self.partitionObjects[prevSelectedItemIndex]
+            prevSelectedPartitionObj = self.partitions[prevSelectedItemIndex]
             if (prevSelectedPartitionObj):
                 return prevSelectedPartitionObj
             else:
@@ -168,7 +169,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         qp = QtGui.QPainter()
         qp.begin( self )
         # TODO: minor speedup by re-using the array of QRect objects if the size doesn't change
-        self.eventRect = np.repeat(QRect(0,0,0,0), len(self.partitionObjects))
+        self.eventRect = np.repeat(QRect(0,0,0,0), len(self.partitions))
         self.instantaneousEventRect = np.repeat(QRect(0, 0, 0, 0), len(self.cutObjects))
 
         # Draw the trace cursor
@@ -184,9 +185,9 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         drawRect = self.rect()
 
         # Draw the duration objects
-        for (index, obj) in enumerate(self.partitionObjects):
-            obj.update()
-            self.eventRect[index] = obj.paint(qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
+        for (index, obj) in enumerate(self.partitions):
+            obj.get_view().update()
+            self.eventRect[index] = obj.get_view().paint(qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
         # Draw the instantaneous event objects
         for (index, obj) in enumerate(self.cutObjects):
             self.instantaneousEventRect[index] = obj.paint(qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
@@ -207,7 +208,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
                 self.update()
                 self.selection_changed.emit(self.trackID, newlySelectedObjectIndex)
 
-            # Called once the selected partition object has been set 
+            # Called once the selected partition object has been set the Partitioner should call "self.owning_parent_track.reloadModelFromDatabase()"
             self.on_partition_modify_event()
         
         pass
@@ -230,17 +231,19 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         if self.partitionManager.cut_partition(partition_index, cut_datetime):
                 # Cut successful!
                 print("Cut successful! Cut at ", partition_index)
-                self.cutObjects.append(PhoDurationEvent(cut_datetime))
+                # self.cutObjects.append(PhoDurationEvent(cut_datetime))
                 # Update partitions:
-                self.partitionObjects = self.partitionManager.get_partition_views()
+                self.reinitialize_from_partition_manager()
+                ## TODO: This may not be needed, as if a cut was made partition manager should call self.reloadModelFromDatabase()... but this doesn't reinitialize
+                self.update()
                 return True
         else:
             return False
         
     def set_active_filter(self, start_datetime, end_datetime):
         # Draw the duration objects
-        for (index, obj) in enumerate(self.partitionObjects):
-            obj.is_deemphasized = not obj.overlaps_range(start_datetime, end_datetime)
+        for (index, obj) in enumerate(self.partitions):
+            obj.get_view().is_deemphasized = not obj.overlaps_range(start_datetime, end_datetime)
         # Draw the instantaneous event objects
         for (index, obj) in enumerate(self.cutObjects):
             obj.is_deemphasized = not obj.overlaps_range(start_datetime, end_datetime)
@@ -264,13 +267,13 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
                         # Deselect previously selected item
                         prevSelectedItemIndex = self.selected_partition_object_indicies[0]
                         self.selected_partition_object_indicies.remove(prevSelectedItemIndex)
-                        self.partitionObjects[prevSelectedItemIndex].on_button_released(event)
+                        self.partitions[prevSelectedItemIndex].get_view().on_button_released(event)
                         # self.selection_changed.emit(self.trackID, newlySelectedObjectIndex) # TODO: need to update the selection to deselect the old event?
                         
 
                 # Doesn't already contain the object
                 self.selected_partition_object_indicies.append(newlySelectedObjectIndex)
-                self.partitionObjects[newlySelectedObjectIndex].on_button_clicked(event)
+                self.partitions[newlySelectedObjectIndex].get_view().on_button_clicked(event)
                 self.update()
                 self.selection_changed.emit(self.trackID, newlySelectedObjectIndex)
 
@@ -290,7 +293,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
                 if (self.selected_partition_object_indicies.__contains__(newlySelectedObjectIndex)):
                     # Already contains the object.
                     self.selected_partition_object_indicies.remove(newlySelectedObjectIndex)
-                    self.partitionObjects[newlySelectedObjectIndex].on_button_released(event)
+                    self.partitions[newlySelectedObjectIndex].get_view().on_button_released(event)
                     self.selection_changed.emit(self.trackID, newlySelectedObjectIndex)
                     needs_update = True
                 else:
@@ -307,9 +310,9 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
                 else:
                     print('partitionTrack: No valid hoverred object')
 
-                prevSelectedPartitionObj = self.get_selected_partition()
-                if (prevSelectedPartitionObj):
-                    prevSelectedPartitionObj.on_button_released(event)
+                prevSelectedPartitionViewObj = self.get_selected_partition().get_view()
+                if (prevSelectedPartitionViewObj):
+                    prevSelectedPartitionViewObj.on_button_released(event)
                 else:
                     print('partitionTrack: No valid selection object')
 
@@ -338,7 +341,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
             else:
                 print('partitionTrack: No valid hoverred object')
 
-            prevSelectedPartitionObj = self.get_selected_partition()
+            prevSelectedPartitionObj = self.get_selected_partition().get_view()
             if (prevSelectedPartitionObj):
                 prevSelectedPartitionObj.on_key_pressed(event)
             else:
@@ -365,7 +368,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
             self.hovered_object_rect = None
             self.hover_changed.emit(self.trackID, -1)
         else:
-            self.hovered_object = self.partitionObjects[self.hovered_object_index]
+            self.hovered_object = self.partitions[self.hovered_object_index].get_view()
             self.hovered_object_rect = self.eventRect[self.hovered_object_index]
             text = "event: {0}\nstart_time: {1}\nend_time: {2}\nduration: {3}".format(self.hovered_object.name, self.hovered_object.startTime, self.hovered_object.endTime, self.hovered_object.computeDuration())
             QToolTip.showText(event.globalPos(), text, self, self.hovered_object_rect)
