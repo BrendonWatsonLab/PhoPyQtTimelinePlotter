@@ -57,7 +57,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
             else:
                 needs_initialize_partitions = True
         else:
-            if (partitionDataObjects is not None):
+            if (partitionDataObjects is not None): # Initialize from loaded partitionDataObjects
                 self.rebuild_gui_partitions(partitionDataObjects)
                 needs_initialize_partitions = (len(self.partitions) <= 0)
             else:
@@ -70,6 +70,18 @@ class Partitioner(AbstractDatabaseAccessingQObject):
             self.partitions = [new_partition_obj] # Create default partition
     
         self.extended_data = extended_data
+
+    def initialize_partitions(self):
+
+        new_partition_obj = PhoDurationEvent_Partition(self.totalStartTime, self.totalEndTime, '0', parent=self.owning_parent_track)
+        new_partition_obj.on_edit.connect(self.owning_parent_track.on_partition_modify_event)
+        self.partitions = [new_partition_obj] # Create default partition
+
+
+        self.partitionDataObjects = []
+
+        
+
 
     def __eq__(self, otherEvent):
         return self.name == otherEvent.name and self.totalDuration == otherEvent.totalDuration
@@ -153,6 +165,32 @@ class Partitioner(AbstractDatabaseAccessingQObject):
 
         # Update in the array
         self.partitions[modify_partition_index] = partition_to_modify
+
+    @staticmethod
+    def create_data_partition(from_gui_partition, contextObj, subcontextObj):
+        newPartRecord = CategoricalDurationLabel()
+        newPartRecord.start_date = from_gui_partition.startTime
+        newPartRecord.end_date = from_gui_partition.endTime
+        
+        newPartRecord.label_created_date = datetime.now()
+        newPartRecord.label_created_user = "Unknown User"
+        # Set the last updated properties to the creation properties (since we just created it)
+        newPartRecord.last_updated_user = newPartRecord.label_created_user
+        newPartRecord.last_updated_date = newPartRecord.label_created_date
+
+        newPartRecord.Context = contextObj
+        newPartRecord.Subcontext = subcontextObj
+
+        newPartRecord.type_id = from_gui_partition.type_id
+        newPartRecord.subtype_id = from_gui_partition.subtype_id
+        newPartRecord.tertiarytype_id = None
+
+        newPartRecord.primary_text = from_gui_partition.name
+        newPartRecord.secondary_text = from_gui_partition.subtitle
+        newPartRecord.tertiary_text = from_gui_partition.body
+        newPartRecord.notes = 'auto'
+
+        return newPartRecord
 
     @staticmethod
     def get_gui_partition(from_database_partition_record, parent):
