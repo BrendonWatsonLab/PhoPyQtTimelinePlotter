@@ -182,7 +182,7 @@ class DatabaseConnectionRef(QObject):
         session = self.get_session()
         currSearchSubcontext = contextConfigObj.get_subcontext()
         # annotations = session.query(CategoricalDurationLabel).options(selectinload(CategoricalDurationLabel.Context)).all()
-        records = session.query(CategoricalDurationLabel).filter(CategoricalDurationLabel.Subcontext==currSearchSubcontext).all()
+        records = session.query(CategoricalDurationLabel).filter(CategoricalDurationLabel.Subcontext==currSearchSubcontext).order_by(CategoricalDurationLabel.start_date).all()
         return records
 
     def load_annotation_events_from_database(self):
