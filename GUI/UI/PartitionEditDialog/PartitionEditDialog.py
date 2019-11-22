@@ -50,22 +50,6 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
         self.behaviors = self.database_connection.load_behaviors_from_database()
 
 
-    # def init_from_behaviors_manager(self):
-    #     uniqueBehaviorsList = self.behaviorsManager.get_unique_behaviors()
-    #     uniqueColorsDict = self.behaviorsManager.color_dictionary
-    #     uniqueBehaviorGroupsList = self.behaviorsManager.get_unique_behavior_groups()
-    #     uniqueColorGroupsDict = self.behaviorsManager.groups_color_dictionary
-
-    #     self.behaviorInfoOptions = []
-    #     self.behaviorInfoGroupsOptions = []
-    #     # Behaviors:
-    #     for (anIndex, aBehavior) in enumerate(uniqueBehaviorsList):
-    #         newObj = BehaviorInfoOptions(aBehavior, aBehavior, anIndex, 0, uniqueColorsDict[aBehavior])
-    #         self.behaviorInfoOptions.append(newObj)
-    #     # Behavior Groups:
-    #     for (anIndex, aBehaviorGroup) in enumerate(uniqueBehaviorGroupsList):
-    #         newGroupObj = BehaviorInfoOptions(aBehaviorGroup, aBehaviorGroup, anIndex, 0, uniqueColorGroupsDict[aBehaviorGroup])
-    #         self.behaviorInfoGroupsOptions.append(newGroupObj)
 
     # rebuild_combo_boxes_from_behaviors(): rebuilds the two combo boxes from the behaviors
     def rebuild_combo_boxes_from_behaviors(self):

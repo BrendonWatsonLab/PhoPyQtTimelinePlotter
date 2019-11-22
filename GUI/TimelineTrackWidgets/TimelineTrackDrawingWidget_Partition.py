@@ -220,7 +220,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
                 self.update()
                 self.selection_changed.emit(self.trackID, newlySelectedObjectIndex)
 
-            # Called once the selected annotation object has been set 
+            # Called once the selected partition object has been set 
             self.on_partition_modify_event()
         
         pass
