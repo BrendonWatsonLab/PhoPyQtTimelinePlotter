@@ -225,8 +225,6 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
     
     #GOOD
     def get_type(self):
-        # return self.ui.comboBox_Type.currentIndex()
-
         arrayIndex = self.combo_index_to_array_index(self.ui.comboBox_Type.currentIndex())
         if (arrayIndex is None):
             return None
