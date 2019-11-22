@@ -284,3 +284,17 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
     def set_body(self, updatedStr):
         return self.ui.textBrowser_Body.setPlainText(updatedStr)
     
+    # static method to create the dialog and return (date, time, accepted)
+    @staticmethod
+    def getPartitionChanges(database_connection, selectedPartitionObject, parent = None):
+        dialog = PartitionEditDialog(database_connection, parent)
+        dialog.set_start_date(selectedPartitionObject.startTime)
+        dialog.set_end_date(selectedPartitionObject.endTime)
+        dialog.set_type(selectedPartitionObject.type_id)
+        dialog.set_subtype(selectedPartitionObject.subtype_id)
+        dialog.set_title(selectedPartitionObject.name)
+        dialog.set_subtitle(selectedPartitionObject.subtitle)
+        dialog.set_body(selectedPartitionObject.body)
+        result = dialog.exec_()
+        # Get result after processing
+        return (dialog.get_start_date(), dialog.get_end_date(), dialog.get_title(), dialog.get_subtitle(), dialog.get_body(), dialog.get_type(), dialog.get_subtype(), result == QDialog.Accepted)
