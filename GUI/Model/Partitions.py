@@ -171,8 +171,8 @@ class Partitioner(AbstractDatabaseAccessingQObject):
         new_partition_obj = Partition(new_partition_record, new_partition_view, self.owning_parent_track)
         return new_partition_obj
 
-
     # Builds "Partition" objects containing a reference to both a record and a view
+    # Note that setAccessibleName(...) isn't called on objects created by a cut event
     def construct_spanning_unlabeled_partition_records(self, loadedDataPartitions):
         ##TODO: from the loaded partitions records (which only contain the user labeled regions) build the intermediate non-user-labeled partitions (with type and subtype None)
         print("Partitioner.construct_spanning_unlabeled_partition_records(...)")
@@ -289,7 +289,8 @@ class Partitioner(AbstractDatabaseAccessingQObject):
     def get_partition_records(self):
         return [(aPartition.get_record()) for aPartition in self.partitions]
 
-
+    def get_partitions(self):
+        return self.partitions
 
     ## DONE 11-22-2019 11am: modified to use new dual view/record scheme
     def cut_partition(self, cut_partition_index, cut_datetime):
@@ -440,24 +441,24 @@ class Partitioner(AbstractDatabaseAccessingQObject):
         outPartitionGuiObj.on_edit.connect(parent.on_partition_modify_event)
         return outPartitionGuiObj
 
-    # rebuilds the GUI partitions from the set of data partitions. Could be more efficient by reusing existing partitions
-    def rebuild_gui_partitions(self, from_data_partitions):
-        newPartitionViews = []
-        for (anIndex, aDataObj) in enumerate(from_data_partitions):
-            # Create the graphical annotation object
-            newGuiObject = Partitioner.get_gui_partition(aDataObj, self.owning_parent_track)
-            # newGuiObject.on_edit.connect(self.owning_parent_track.on_partition_modify_event)
+    # # rebuilds the GUI partitions from the set of data partitions. Could be more efficient by reusing existing partitions
+    # def rebuild_gui_partitions(self, from_data_partitions):
+    #     newPartitionViews = []
+    #     for (anIndex, aDataObj) in enumerate(from_data_partitions):
+    #         # Create the graphical annotation object
+    #         newGuiObject = Partitioner.get_gui_partition(aDataObj, self.owning_parent_track)
+    #         # newGuiObject.on_edit.connect(self.owning_parent_track.on_partition_modify_event)
 
-            # Get new color associated with the modified subtype_id
-            # TODO: maybe more dynamic getting of color from parent track?
-            # theColor = self.owning_parent_track.behaviors[from_database_partition_record.subtype_id-1].primaryColor.get_QColor()
+    #         # Get new color associated with the modified subtype_id
+    #         # TODO: maybe more dynamic getting of color from parent track?
+    #         # theColor = self.owning_parent_track.behaviors[from_database_partition_record.subtype_id-1].primaryColor.get_QColor()
 
-            newPartitionIndex = len(self.partitions)
-            newGuiObject.setAccessibleName(str(newPartitionIndex))
+    #         newPartitionIndex = len(self.partitions)
+    #         newGuiObject.setAccessibleName(str(newPartitionIndex))
 
-            newPartitionViews.append(newGuiObject)
+    #         newPartitionViews.append(newGuiObject)
 
-        return newPartitionViews
+    #     return newPartitionViews
 
 
     # Only saves user-labled partitions
@@ -487,6 +488,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
 
         # After saving to the database, we should reload from the database. The parent does this.
         self.owning_parent_track.reloadModelFromDatabase()
+        ## TODO: this doesn't update the owner's objects (doesn't call owner.reinitialize_from_partition_manager() or owner.update())
         print("done.")
             
 
