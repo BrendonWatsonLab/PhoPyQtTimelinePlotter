@@ -96,15 +96,17 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         # newContext = self.contextsDict[self.trackContextConfig.get_context_name()]
         # newSubcontext = newContext.subcontexts[self.trackContextConfig.get_subcontext_index()]
         # self.trackContextConfig.update_on_load(newContext, newSubcontext)
-        if self.trackContextConfig.get_is_valid():
-            newPartitionObjsList = self.database_connection.load_categorical_duration_labels_from_database(self.trackContextConfig)
-            self.partitionDataObjects = newPartitionObjsList
-        else:
-            self.partitionDataObjects = []
         
+        loadedPartitionRecordsList = []
+        if self.trackContextConfig.get_is_valid():
+            loadedPartitionRecordsList = self.database_connection.load_categorical_duration_labels_from_database(self.trackContextConfig)
+            
+        # Builds the partition objects, meaning both the record and view components
+        self.partitionManager.on_reload_partition_records(loadedPartitionRecordsList)
+
 
     def reinitialize_from_partition_manager(self):
-        self.partitionObjects = self.partitionManager.partitions
+        self.partitionObjects = self.partitionManager.get_partition_views()
         self.eventRect = np.repeat(QRect(0,0,0,0), len(self.partitionObjects))
 
     # # Rebuilds the GUI event objects (self.durationObjects) from the self.annotationDataObjects
@@ -245,7 +247,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
                 print("Cut successful! Cut at ", partition_index)
                 self.cutObjects.append(PhoDurationEvent(cut_datetime))
                 # Update partitions:
-                self.partitionObjects = self.partitionManager.partitions
+                self.partitionObjects = self.partitionManager.get_partition_views()
                 return True
         else:
             return False
