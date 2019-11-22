@@ -463,6 +463,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
 
     # Only saves user-labled partitions
     def save_partitions_to_database(self):
+        shouldDisableNoneTypeSaves = False
         contextObj, subcontextObj = self.get_parent_contexts()
         print("partitions manager: save_partitions_to_database({0}, {1})".format(str(contextObj), str(subcontextObj)))
         print("trying to save {0} partition objects".format(len(self.partitions)))
@@ -473,8 +474,9 @@ class Partitioner(AbstractDatabaseAccessingQObject):
             aDataPartition = aPartitionObj.get_record()
             if aDataPartition.id is None:
                 # Never been saved to the database before
-                if ((aDataPartition.type_id is None) or (aDataPartition.subtype_id is None)):
+                if (shouldDisableNoneTypeSaves and ((aDataPartition.type_id is None) or (aDataPartition.subtype_id is None))):
                     # It's not user labled. It shouldn't be added to the database
+                    print("skipping item because it's None-type")
                     continue
                 else:
                     # It is user labeled and hasn't ever been saved to the database. Add it to the database now
@@ -482,6 +484,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
                 
             else:
                 # Otherwise it's already been saved to the database before (because it was loaded from the database). A .commit() is sufficient to update the changes.
+                print("skipping save because data partition has already been saved to the database!")
                 pass
         
         self.database_connection.save_to_database(outDataPartitions, 'CategoricalDurationLabel')
