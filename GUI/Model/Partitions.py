@@ -231,6 +231,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
             newPartition = Partition(a_data_partition, a_view_partition, self.owning_parent_track)
             self.partitions.append(newPartition)
 
+    # Tries to get the context from the owning parent
     def get_parent_contexts(self):
         if (self.owning_parent_track is None):
             print("ERROR: owning_parent_track isn't valid!")
@@ -240,7 +241,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
             print('owning_parent_track context is invalid!')
             return None
         else:
-            newContext, newSubcontext = self.trackContextConfig.get_context(), self.trackContextConfig.get_subcontext()
+            newContext, newSubcontext = self.owning_parent_track.trackContextConfig.get_context(), self.owning_parent_track.trackContextConfig.get_subcontext()
             return (newContext, newSubcontext)
 
     def __eq__(self, otherEvent):
@@ -281,11 +282,12 @@ class Partitioner(AbstractDatabaseAccessingQObject):
             new_partition_index = cut_partition_index+1
             # Create the new partition object
             new_partition_obj = self.create_new_partition(cut_datetime, partition_to_cut.endTime, str(new_partition_index), parentContextPair)
-
             self.partitions.insert(new_partition_index, new_partition_obj)
 
             self.partitions[cut_partition_index].get_record().end_date = cut_datetime # Truncate the partition to cut to the cut_datetime
             self.partitions[cut_partition_index].get_view().endTime = cut_datetime # Truncate the partition to cut to the cut_datetime
+
+            self.save_partitions_to_database()
 
             return True
         else:
@@ -434,6 +436,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
 
     # Only saves user-labled partitions
     def save_partitions_to_database(self, contextObj, subcontextObj):
+        contextObj, subcontextObj = self.get_parent_contexts()
         print("partitions manager: save_partitions_to_database({0}, {1})".format(str(contextObj), str(subcontextObj)))
         print("trying to save {0} partition objects".format(len(self.partitions)))
 

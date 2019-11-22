@@ -64,9 +64,13 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         self.trackContextConfig = trackContextConfig
 
         self.partitionDataObjects = []
+        
+        self.partitionManager = None
+        # self.partitionManager is initialized in self.reloadModelFromDatabase() if it's None
+        # self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, database_connection, name="name", partitionViews=partitionObjects, partitionDataObjects=self.partitionDataObjects)
         self.reloadModelFromDatabase()
 
-        self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, database_connection, partitionObjects, partitionDataObjects=self.partitionDataObjects)
+
         self.reinitialize_from_partition_manager()
         ## TODO: can reconstruct partitions from cutObjects, but can't recover the specific partition's info.
         self.cutObjects = cutObjects
@@ -101,35 +105,16 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         if self.trackContextConfig.get_is_valid():
             loadedPartitionRecordsList = self.database_connection.load_categorical_duration_labels_from_database(self.trackContextConfig)
             
-        # Builds the partition objects, meaning both the record and view components
-        self.partitionManager.on_reload_partition_records(loadedPartitionRecordsList)
+        if self.partitionManager is None:
+            self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, self.database_connection, name="name", partitionViews=None, partitionDataObjects=loadedPartitionRecordsList)
+        else:
+            # Builds the partition objects, meaning both the record and view components
+            self.partitionManager.on_reload_partition_records(loadedPartitionRecordsList)
 
 
     def reinitialize_from_partition_manager(self):
         self.partitionObjects = self.partitionManager.get_partition_views()
         self.eventRect = np.repeat(QRect(0,0,0,0), len(self.partitionObjects))
-
-    # # Rebuilds the GUI event objects (self.durationObjects) from the self.annotationDataObjects
-    # def rebuildDrawnObjects(self):
-    #     self.durationObjects = []
-    #     for (anIndex, aDataObj) in enumerate(self.annotationDataObjects):
-    #         # Create the graphical annotation object
-    #         newGuiObject = Partitioner.get_gui_partition(aDataObj)
-    #         # Get new color associated with the modified subtype_id
-    #     # TODO: maybe more dynamic getting of color from parent track?
-    #     # theColor = self.owning_parent_track.behaviors[from_database_partition_record.subtype_id-1].primaryColor.get_QColor()
-
-    #         newAnnotation.on_edit.connect(self.on_annotation_modify_event)
-    #         newAnnotation.on_edit_by_dragging_handle_start.connect(self.handleStartSliderValueChange)
-    #         newAnnotation.on_edit_by_dragging_handle_end.connect(self.handleEndSliderValueChange)
-    #         # newAnnotation.on_edit_by_dragging_handle.connect(self.try_resize_comment_with_handles)
-    #         # newAnnotation = PhoDurationEvent_AnnotationComment(start_date, end_date, body, title, subtitle)
-    #         newAnnotationIndex = len(self.durationObjects)
-    #         newAnnotation.setAccessibleName(str(newAnnotationIndex))
-
-    #         self.durationObjects.append(newAnnotation)
-
-
 
     # Called by a specific child partition's menu to indicate that it should be edited in a new Partition Editor Dialog
     @pyqtSlot()    
@@ -397,9 +382,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         if (not (self.trackContextConfig.get_is_valid())):
             print('context is invalid! aborting try_update_partition!')
             return
-        else:
-            newContext, newSubcontext = self.trackContextConfig.get_context(), self.trackContextConfig.get_subcontext()
-
+        
         if (not (self.activeEditingPartitionIndex is None)):
             # Convert -1 values for type_id and subtype_id back into "None" objects. They had to be an Int to be passed through the pyQtSlot()
             # Note the values are record IDs (not indicies, so they're 1-indexed). This means that both -1 and 0 are invalid.
@@ -423,7 +406,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
             self.update()
             # Save to database
             # TODO: currently all saved partitions must be of the same context and subcontext.
-            self.partitionManager.save_partitions_to_database(newContext, newSubcontext)
+            self.partitionManager.save_partitions_to_database()
         else:
             print("Error: unsure what partition to update!")
             return
