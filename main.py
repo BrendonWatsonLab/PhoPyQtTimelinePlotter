@@ -24,9 +24,9 @@ class TimelineApplication(QApplication):
 
     def __init__(self, args):
         super(TimelineApplication, self).__init__(args)
-         # self.database_file_path = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
+        self.database_file_path = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
         # self.database_file_path = 'G:\Google Drive\Modern Behavior Box\Results - Data\BehavioralBoxDatabase.db'
-        self.database_file_path = "C:/Users/halechr/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db"
+        # self.database_file_path = "C:/Users/halechr/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db"
         self.database_connection = DatabaseConnectionRef(self.database_file_path)
 
         # Show last 7 days worth of data
