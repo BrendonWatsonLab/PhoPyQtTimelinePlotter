@@ -171,12 +171,11 @@ class Partitioner(AbstractDatabaseAccessingQObject):
         new_partition_obj = Partition(new_partition_record, new_partition_view, self.owning_parent_track)
         return new_partition_obj
 
-    # Builds "Partition" objects containing a reference to both a record and a view
 
-    # returns partition records only
+    # Builds "Partition" objects containing a reference to both a record and a view
     def construct_spanning_unlabeled_partition_records(self, loadedDataPartitions):
         ##TODO: from the loaded partitions records (which only contain the user labeled regions) build the intermediate non-user-labeled partitions (with type and subtype None)
-        print("FATAL: need to implement!")
+        print("Partitioner.construct_spanning_unlabeled_partition_records(...)")
         spanning_partition_records = []
         # Construct a partition to span to the start of the first data partition
         
@@ -188,13 +187,17 @@ class Partitioner(AbstractDatabaseAccessingQObject):
                     #It's only None for the first partition in the list
                     if (aDataPartition.start_date > self.totalStartTime):
                         # if the first data partition starts later than the first partition, create a partition to fill the gap
-                        new_partition_obj = self.create_new_partition(self.totalStartTime, aDataPartition.start_date, "0")
+                        newPartitionIndex = len(spanning_partition_records)
+                        new_partition_obj = self.create_new_partition(self.totalStartTime, aDataPartition.start_date, str(newPartitionIndex))
+                        new_partition_obj.get_view().setAccessibleName(str(newPartitionIndex))
                         spanning_partition_records.append(new_partition_obj)
                 else:
                     # Otherwise we have a valid previous partition
                     if (aDataPartition.start_date > prevPartitionObj.end_date):
                         # the current partition starts later than the end of the previous partition, this is unacceptable, and we need to create a partition to fill the gap
-                        new_partition_obj = self.create_new_partition(prevPartitionObj.end_date, aDataPartition.start_date, "")
+                        newPartitionIndex = len(spanning_partition_records)
+                        new_partition_obj = self.create_new_partition(prevPartitionObj.end_date, aDataPartition.start_date, str(newPartitionIndex))
+                        new_partition_obj.get_view().setAccessibleName(str(newPartitionIndex))
                         spanning_partition_records.append(new_partition_obj)
                     elif (aDataPartition.start_date == prevPartitionObj.end_date):
                         # This is the expected case
@@ -203,33 +206,56 @@ class Partitioner(AbstractDatabaseAccessingQObject):
                         print("FATAL: the loadedDataPartitions aren't monotonically sorted")
                         return
 
+                # Add the current record
+                # Get the partition object from the record partition object
+                newPartitionIndex = len(spanning_partition_records)
+                newGuiObject = Partitioner.get_gui_partition(aDataPartition, self.owning_parent_track)
+                # newGuiObject.on_edit.connect(self.owning_parent_track.on_partition_modify_event)
+                # Get new color associated with the modified subtype_id
+                # TODO: maybe more dynamic getting of color from parent track?
+                # theColor = self.owning_parent_track.behaviors[from_database_partition_record.subtype_id-1].primaryColor.get_QColor()
+                newGuiObject.setAccessibleName(str(newPartitionIndex))
+                # build the combined partition object
+                new_partition_obj = Partition(aDataPartition, newGuiObject, parent=self.owning_parent_track)
+                # Add it to the output array
+                spanning_partition_records.append(new_partition_obj)
+                # Set the prevPartitionObj reference to the data partition
                 prevPartitionObj = aDataPartition
 
             # Span to the end if needed (we know this list is non-empty)
             lastDataPartition = loadedDataPartitions[len(loadedDataPartitions)-1]
             if (self.totalEndTime > lastDataPartition.end_date):
                 # if the last data partition ends sooner than the end of the timeline, create a partition to fill the gap
-                new_partition_obj = self.create_new_partition(lastDataPartition.end_date, self.totalEndTime, "")
+                newPartitionIndex = len(spanning_partition_records)
+                new_partition_obj = self.create_new_partition(lastDataPartition.end_date, self.totalEndTime, str(newPartitionIndex))
+                new_partition_obj.get_view().setAccessibleName(str(newPartitionIndex))
                 spanning_partition_records.append(new_partition_obj)
 
         else:
             # create a partition to fill the empty timeline
-            new_partition_obj = self.create_new_partition(self.totalStartTime, self.totalEndTime, "0")
+            newPartitionIndex = len(spanning_partition_records)
+            new_partition_obj = self.create_new_partition(self.totalStartTime, self.totalEndTime, str(newPartitionIndex))
+            new_partition_obj.get_view().setAccessibleName(str(newPartitionIndex))
             spanning_partition_records = [new_partition_obj]
 
+        numRecordsAddedToSpan = len(spanning_partition_records) - len(loadedDataPartitions)
+        print("Partitioner.construct_spanning_unlabeled_partition_records(...): {0} records added to span for a total of {1} records".format(numRecordsAddedToSpan, len(spanning_partition_records)))
         return spanning_partition_records
 
     # Called by the parent when the partition record objects have be loaded from the database. updates self.partitions
     def on_reload_partition_records(self, loadedDataPartitions):
         print("on_reload_partition_records(...)")
-        self.partitions = []
-        spanning_data_partitions = self.construct_spanning_unlabeled_partition_records(loadedDataPartitions)
-        spanning_view_partitions = self.rebuild_gui_partitions(spanning_data_partitions)
-        # build a list
-        for (index, a_data_partition) in spanning_data_partitions:
-            a_view_partition = spanning_view_partitions[index]
-            newPartition = Partition(a_data_partition, a_view_partition, self.owning_parent_track)
-            self.partitions.append(newPartition)
+        # self.partitions = []
+        # spanning_data_partitions = self.construct_spanning_unlabeled_partition_records(loadedDataPartitions)
+        # spanning_view_partitions = self.rebuild_gui_partitions(spanning_data_partitions)
+        # # build a list
+        # for (index, a_data_partition) in spanning_data_partitions:
+        #     a_view_partition = spanning_view_partitions[index]
+        #     newPartition = Partition(a_data_partition, a_view_partition, self.owning_parent_track)
+        #     self.partitions.append(newPartition)
+
+        self.partitions = self.construct_spanning_unlabeled_partition_records(loadedDataPartitions)
+        print("on_reload_partition_records(...): {0} new partitions".format(len(self.partitions)))
 
     # Tries to get the context from the owning parent
     def get_parent_contexts(self):
@@ -281,7 +307,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
             # Create a new partition and insert it after the partition to cut. It should span from [cut_datetime, to the end of the cut partition]
             new_partition_index = cut_partition_index+1
             # Create the new partition object
-            new_partition_obj = self.create_new_partition(cut_datetime, partition_to_cut.endTime, str(new_partition_index), parentContextPair)
+            new_partition_obj = self.create_new_partition(cut_datetime, partition_to_cut.get_view().endTime, str(new_partition_index), parentContextPair)
             self.partitions.insert(new_partition_index, new_partition_obj)
 
             self.partitions[cut_partition_index].get_record().end_date = cut_datetime # Truncate the partition to cut to the cut_datetime
@@ -435,7 +461,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
 
 
     # Only saves user-labled partitions
-    def save_partitions_to_database(self, contextObj, subcontextObj):
+    def save_partitions_to_database(self):
         contextObj, subcontextObj = self.get_parent_contexts()
         print("partitions manager: save_partitions_to_database({0}, {1})".format(str(contextObj), str(subcontextObj)))
         print("trying to save {0} partition objects".format(len(self.partitions)))
@@ -443,7 +469,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
         # Tries to save the active partitions out to the database
         outDataPartitions = []
         for (index, aPartitionObj) in enumerate(self.partitions):
-            aDataPartition = aPartitionObj.get_data()
+            aDataPartition = aPartitionObj.get_record()
             if aDataPartition.id is None:
                 # Never been saved to the database before
                 if ((aDataPartition.type_id is None) or (aDataPartition.subtype_id is None)):
