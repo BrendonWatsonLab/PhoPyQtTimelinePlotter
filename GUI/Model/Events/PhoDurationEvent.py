@@ -17,11 +17,12 @@ class PhoDurationEvent(PhoEvent):
     InstantaneousEventDuration = timedelta(seconds=2)
     RectCornerRounding = 8
     ColorBase = QColor(51, 204, 255, PhoEvent.DefaultOpacity)  # Teal
-    ColorEmph = QColor(51, 255, 102, PhoEvent.DefaultOpacity)  # Green
-    ColorActive = QColor(255, 102, 51, PhoEvent.DefaultOpacity)  # Orange
+    ColorEmph = QColor(51, 255, 102, PhoEvent.ActiveOpacity)  # Green
+    ColorActive = QColor(255, 102, 51, PhoEvent.ActiveOpacity)  # Orange
 
     ColorBorderBase = QColor('#e0e0e0')  # Whiteish
     ColorBorderActive = QColor(255, 222, 122)  # Yellowish
+
 
     MainTextFont = QFont('SansSerif', 10)
 
@@ -187,6 +188,7 @@ class PhoDurationEvent(PhoEvent):
 
         if self.is_deemphasized:
             currFillColor = Qt.lightGray
+            currFillColor.setAlpha(PhoEvent.DeEmphOpacity)
         else:
             # de-emphasized overrides emphasized status
             if self.is_emphasized:
@@ -194,15 +196,20 @@ class PhoDurationEvent(PhoEvent):
             else:
                 currFillColor = self.color
 
+            currFillColor.setAlpha(PhoEvent.DefaultOpacity)
+            
+
         # Override if active (selected)
         if self.is_active:
             currPenWidth = 4.0
             currPenColor = PhoDurationEvent.ColorBorderActive # For active events, override the pen color too
             currFillColor = PhoDurationEvent.ColorActive # For active events, override the color with the current active color
+            currFillColor.setAlpha(PhoEvent.ActiveOpacity)
 
         else:
             currPenWidth = 1.5
             currPenColor = PhoDurationEvent.ColorBorderBase
+            
             
         # Instantaneous type event: for instantaneous events, we must render them in their characteristic color (which is the fill color) with a fixed width so they can be visible and recognized
         if self.is_instantaneous_event():

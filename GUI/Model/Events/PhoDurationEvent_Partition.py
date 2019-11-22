@@ -105,6 +105,60 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
         #     self.func = (self.drawNumber, {"notePoint": QPoint(100, 100)})
         #     self.mModified = True
 
+     # Sets the painter's config based on the current object's state (active, emphasized, deemph, etc)
+    def set_painter_config(self, aPainter):
+        currFillColor = self.color
+
+        currPenColor = PhoDurationEvent.ColorBorderBase
+        currPenWidth = 1.0
+        
+        currActiveBrush = None
+        currActivePen = None
+
+        if self.is_deemphasized:
+            currFillColor = self.color.darker(300) # setting to 300 returns a color that has one-third the brightness
+        else:
+            # de-emphasized overrides emphasized status
+            if self.is_emphasized:
+                currFillColor = self.color.lighter(110) # returns a color that's 20% brighter
+            else:
+                currFillColor = self.color
+
+            currFillColor.setAlpha(PhoEvent.DefaultOpacity)
+        
+        # Override if active (selected)
+        if self.is_active:
+            currPenWidth = 4.0
+            currPenColor = PhoDurationEvent.ColorBorderActive # For active events, override the pen color too
+            currFillColor = self.color.lighter(130) # returns a color that's 20% brighter
+            currFillColor.setAlpha(PhoEvent.ActiveOpacity)
+
+        else:
+            currPenWidth = 1.5
+            currPenColor = PhoDurationEvent.ColorBorderBase
+
+            
+        # Instantaneous type event: for instantaneous events, we must render them in their characteristic color (which is the fill color) with a fixed width so they can be visible and recognized
+        if self.is_instantaneous_event():
+            
+            # painter.setPen(Qt.NoPen)
+            if self.is_emphasized:
+                currPenWidth = 1.0
+            else:
+                currPenWidth = 0.2
+
+            ## NOTE: Apparently for events as small as the instantaneous events (with a width of 2) the "Brush" or "fill" doesn't matter, only the stroke does.
+            # we must render them in their characteristic color (which is the fill color)
+            currPenColor = currFillColor
+
+        currActivePen = QtGui.QPen(currPenColor, currPenWidth, join=Qt.MiterJoin)
+        currActiveBrush = QBrush(currFillColor, Qt.SolidPattern)
+
+        aPainter.setPen(currActivePen)
+        aPainter.setBrush(currActiveBrush)
+        return
+
+
     def paint(self, painter, totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect):
         parent_modified_event_rect = super(PhoDurationEvent_Partition, self).paint(painter, totalStartTime, totalEndTime, totalDuration, totalParentCanvasRect)
         # "total*" refers to the parent frame in which this event is to be drawn
