@@ -29,8 +29,6 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
     def __init__(self, database_connection, parent=None):
         super(PartitionEditDialog, self).__init__(database_connection, parent) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/UI/PartitionEditDialog/PartitionEditDialog.ui", self) # Load the .ui file
-        # self.behaviorsManager = BehaviorsManager()
-        # self.init_from_behaviors_manager()
         self.reloadModelFromDatabase()
         self.initUI()
         self.rebuild_combo_boxes_from_behaviors()
@@ -73,12 +71,9 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
     def rebuild_combo_boxes_from_behaviors(self):
         types_model = self.ui.comboBox_Type.model()
         for (anIndex, aBehaviorGroup) in enumerate(self.behaviorGroups):
-            # self.ui.comboBox_Type.addItem(aBehaviorGroup.name)
             item = QtGui.QStandardItem(str(aBehaviorGroup.name))
             item.setForeground(aBehaviorGroup.primaryColor.get_QColor())
             types_model.appendRow(item)
-            # self.ui.comboBox_Type.addItem(item)
-            # self.ui.comboBox_Type.setItemData()
 
         subtypes_model = self.ui.comboBox_Subtype.model()
         for (anIndex, aBehavior) in enumerate(self.behaviors):
@@ -86,7 +81,6 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
             item.setForeground(aBehavior.primaryColor.get_QColor())
             subtypes_model.appendRow(item)
 
-            # self.ui.comboBox_Subtype.addItem(aBehavior.name)
 
         
 
