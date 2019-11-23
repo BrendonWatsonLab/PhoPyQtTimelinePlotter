@@ -41,15 +41,6 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
         self.type_id = type_id
         self.subtype_id = subtype_id
 
-        # TODO: init gui
-
-        # Debug pallete
-        # p = self.palette()
-        # p.setColor(QPalette.Background, Qt.blue)
-        # self.setAutoFillBackground(True)
-        # self.setPalette(p)
-
-        # self.initUI()
 
     def showMenu(self, pos):
         menu = QMenu()

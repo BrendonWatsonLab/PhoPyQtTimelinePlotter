@@ -709,14 +709,15 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.extendedTracksContainer.on_update_hover(x)
 
         if(self.videoPlayerWindow):
-            movie_link = self.videoPlayerWindow.get_movie_link
+            movie_link = self.videoPlayerWindow.get_movie_link()
             if (movie_link is not None):
                 ## TODO NOW: 
+                print("NOT YET IMPLEMENTED: Timeline to Video playback sync")
 
                 # Check if convertedDatetime is in range.
                 
                 #convertedDatetime: the datetime
-                movie_link.update_timeline_playhead_position(convertedDatetime)
+                # movie_link.update_timeline_playhead_position(convertedDatetime)
 
 
         self.extendedTracksContainer.blockSignals(False)
