@@ -14,6 +14,8 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 class PhoEvent(QWidget):
 
     DefaultOpacity = 200 # Fill opacity, specified as an integer 0-255
+    ActiveOpacity = 220
+    DeEmphOpacity = 160
 
     def __init__(self, startTime=datetime.now(), name='', color=Qt.black, extended_data=dict(), parent=None):
         super(PhoEvent, self).__init__(parent)
@@ -63,6 +65,9 @@ class PhoEvent(QWidget):
     def on_key_pressed(self, event):
         pass
 
+    def get_fill_color(self):
+        pass
+    
     # "pass": specifies that we're leaving this method "virtual" or intensionally empty to be overriden by a subclass.
     def paint(self, painter, totalDuration, totalParentCanvasRect):
         pass
