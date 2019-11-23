@@ -686,7 +686,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
     @pyqtSlot(float)
     def on_video_playback_position_updated(self, timeline_percent_offset):
-        print("on_video_playback_position_updated({0})".format(str(timeline_percent_offset)))
+        # print("on_video_playback_position_updated({0})".format(str(timeline_percent_offset)))
         timeline_x_offset = self.percent_offset_to_track_offset(timeline_percent_offset)
 
         self.timelineMasterTrackWidget.blockSignals(True)
@@ -701,23 +701,23 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     # Called when the timeline or background container of the track view is hovered
     @pyqtSlot(int)
     def on_playhead_hover_position_updated(self, x):
-        print("on_playhead_hover_position_updated({0})".format(str(x)))
+        # print("on_playhead_hover_position_updated({0})".format(str(x)))
         self.timelineMasterTrackWidget.blockSignals(True)
         self.extendedTracksContainer.blockSignals(True)
 
         self.timelineMasterTrackWidget.on_update_hover(x)
         self.extendedTracksContainer.on_update_hover(x)
 
-        if(self.videoPlayerWindow):
-            movie_link = self.videoPlayerWindow.get_movie_link()
-            if (movie_link is not None):
-                ## TODO NOW: 
-                print("NOT YET IMPLEMENTED: Timeline to Video playback sync")
+        # if(self.videoPlayerWindow):
+        #     movie_link = self.videoPlayerWindow.get_movie_link()
+        #     if (movie_link is not None):
+        #         ## TODO NOW: 
+        #         print("NOT YET IMPLEMENTED: Timeline to Video playback sync")
 
-                # Check if convertedDatetime is in range.
+        #         # Check if convertedDatetime is in range.
                 
-                #convertedDatetime: the datetime
-                # movie_link.update_timeline_playhead_position(convertedDatetime)
+        #         #convertedDatetime: the datetime
+        #         # movie_link.update_timeline_playhead_position(convertedDatetime)
 
 
         self.extendedTracksContainer.blockSignals(False)

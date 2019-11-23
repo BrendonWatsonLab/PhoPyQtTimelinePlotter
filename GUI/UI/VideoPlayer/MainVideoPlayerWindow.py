@@ -79,6 +79,8 @@ class MainVideoPlayerWindow(QMainWindow):
     The main window class
     """
 
+    SpeedBurstPlaybackRate = 16.0
+
     video_playback_position_updated = pyqtSignal(float) # video_playback_position_updated:  called when the playback position of the video changes. Either due to playing, or after a user event
     video_playback_state_changed = pyqtSignal() # video_playback_state_changed: called when play/pause state changes
 
@@ -110,6 +112,9 @@ class MainVideoPlayerWindow(QMainWindow):
         self.vlc_instance = vlc.Instance()
         self.media_player = self.vlc_instance.media_player_new()
         self.is_display_initial_frame_playback = False
+
+        self.is_speed_burst_mode_active = False
+        self.speedBurstPlaybackRate = MainVideoPlayerWindow.SpeedBurstPlaybackRate
         # if sys.platform == "darwin":  # for MacOS
         #     self.ui.frame_video = QMacCocoaViewContainer(0)
 
@@ -371,12 +376,16 @@ class MainVideoPlayerWindow(QMainWindow):
 
     # Input Handelers:
     def key_handler(self, event):
+        print("MainVideoPlayerWindow key handler: {0}".format(str(event.key())))
         if event.key() == Qt.Key_Escape and self.is_full_screen:
             self.toggle_full_screen()
         if event.key() == Qt.Key_F:
             self.toggle_full_screen()
         if event.key() == Qt.Key_Space:
             self.play_pause()
+        if event.key() == Qt.Key_P:
+            self.toggle_speed_burst()
+
 
     def wheel_handler(self, event):
         # self.modify_volume(1 if event.angleDelta().y() > 0 else -1)
@@ -400,29 +409,9 @@ class MainVideoPlayerWindow(QMainWindow):
         ## TODO:
         print(newProposedFrame)
 
-    # Playback Speed/Rate:
-    def speed_changed_handler(self, val):
-        print(val)
-        self.media_player.set_rate(val)
-        # self.media_player.set_rate(self.ui.doubleSpinBoxPlaybackSpeed.value())
-        # TODO: Fix playback speed. Print current playback rate (to a label or something, so the user can see).
-
-    def speed_up_handler(self):
-        self.modify_rate(0.1)
-
-    def slow_down_handler(self):
-        self.modify_rate(-0.1)
-
-    def modify_rate(self, delta):
-        new_rate = self.media_player.get_rate() + delta
-        if new_rate < 0.2 or new_rate > 6.0:
-            return
-        self.media_player.set_rate(new_rate)
-        
-
     # media_time_change_handler(...) is called on VLC's MediaPlayerTimeChanged event
     def media_time_change_handler(self, _):
-        print('Time changed!')
+        # print('Time changed!')
 
         if (not (self.media_player is None)):
             currPos = self.media_player.get_position()
@@ -913,3 +902,57 @@ class MainVideoPlayerWindow(QMainWindow):
     def _show_error(self, message, title="Error"):
         QMessageBox.warning(self, title, message)
 
+
+
+
+
+    # Playback Speed/Rate:
+    def speed_changed_handler(self, val):
+        # print(val)
+        self.media_player.set_rate(val)
+        # self.media_player.set_rate(self.ui.doubleSpinBoxPlaybackSpeed.value())
+        # TODO: Fix playback speed. Print current playback rate (to a label or something, so the user can see).
+
+    def speed_up_handler(self):
+        self.modify_rate(0.1)
+
+    def slow_down_handler(self):
+        self.modify_rate(-0.1)
+
+    def modify_rate(self, delta):
+        new_rate = self.media_player.get_rate() + delta
+        if new_rate < 0.2 or new_rate > 6.0:
+            return
+        self.media_player.set_rate(new_rate)
+
+
+    def toggle_speed_burst(self):
+        curr_is_speed_burst_enabled = self.is_speed_burst_mode_active
+        updated_speed_burst_enabled = (not curr_is_speed_burst_enabled)
+        if (updated_speed_burst_enabled):
+            self.engage_speed_burst()
+        else:
+            self.disengage_speed_burst()
+
+    # Engages a temporary speed burst 
+    def engage_speed_burst(self):
+        print("Speed burst enabled!")
+        self.is_speed_burst_mode_active = True
+        # Set the playback speed temporarily to the burst speed
+        self.media_player.set_rate(self.speedBurstPlaybackRate)
+
+        self.ui.toolButton_SpeedBurstEnabled.setEnabled(True)
+        self.ui.doubleSpinBoxPlaybackSpeed.setEnabled(False)
+        self.ui.button_slow_down.setEnabled(False)
+        self.ui.button_speed_up.setEnabled(False)
+        
+    def disengage_speed_burst(self):
+        print("Speed burst disabled!")
+        self.is_speed_burst_mode_active = False
+        # restore the user specified playback speed
+        self.media_player.set_rate(self.ui.doubleSpinBoxPlaybackSpeed.value)
+
+        self.ui.toolButton_SpeedBurstEnabled.setEnabled(False)
+        self.ui.doubleSpinBoxPlaybackSpeed.setEnabled(True)
+        self.ui.button_slow_down.setEnabled(True)
+        self.ui.button_speed_up.setEnabled(True)
