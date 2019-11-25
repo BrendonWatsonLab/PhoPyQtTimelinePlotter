@@ -278,7 +278,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.cursorY = 0.0
         #self.cursorTraceRect = QRect(0,0,0,0)
 
-            
     def reloadModelFromDatabase(self):
         # Context objects for children tracks
         self.contextsDict = self.database_connection.load_contexts_from_database()
@@ -468,7 +467,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         return (self.totalStartTime + relative_duration)
 
 
-
+    ## ZOOMING:
     def on_zoom_in(self):
         self.activeScaleMultiplier = min(TimelineDrawingWindow.MaxZoomLevel, (self.activeScaleMultiplier + TimelineDrawingWindow.ZoomDelta))
         self.on_active_zoom_changed()
@@ -480,9 +479,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     def on_zoom_out(self):
         self.activeScaleMultiplier = max(TimelineDrawingWindow.MinZoomLevel, (self.activeScaleMultiplier - TimelineDrawingWindow.ZoomDelta))
         self.on_active_zoom_changed()
-
-    # def on_zoom_custom(self, double_newZoom):
-    #     print("on_zoom_custom({0})".format(double_newZoom))
         
     def on_finish_editing_zoom_custom(self):
         print("on_finish_editing_zoom_custom()")
@@ -699,6 +695,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.timelineMasterTrackWidget.blockSignals(False)
 
     # Called when the timeline or background container of the track view is hovered
+    # updates its children views, but doesn't currently update the movie play position.
     @pyqtSlot(int)
     def on_playhead_hover_position_updated(self, x):
         # print("on_playhead_hover_position_updated({0})".format(str(x)))

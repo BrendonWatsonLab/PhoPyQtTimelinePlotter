@@ -926,6 +926,7 @@ class MainVideoPlayerWindow(QMainWindow):
         self.media_player.set_rate(new_rate)
 
 
+    # Speed Burst Features:
     def toggle_speed_burst(self):
         curr_is_speed_burst_enabled = self.is_speed_burst_mode_active
         updated_speed_burst_enabled = (not curr_is_speed_burst_enabled)
