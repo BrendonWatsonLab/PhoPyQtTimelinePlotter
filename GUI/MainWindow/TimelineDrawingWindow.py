@@ -554,18 +554,10 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         if newViewportDuration is None:
             print("selected video has a None duration!")
             return
+        else:
+            self.set_viewport_to_range(newViewportStartTime, newViewportEndTime)
 
-        # oldViewportDuration = self.get_active_viewport_duration()
-
-        # Otherwise we're all good! Set the viewport to the video's duration!
-        
-        # Compute appropriate zoom.
-        newZoom = self.set_active_viewport_duration(newViewportDuration)
-        print("newZoom: {0}".format(newZoom))
-
-        self.on_active_zoom_changed()
-        self.sync_active_viewport_start_to_datetime(newViewportStartTime)
-        pass
+        return
 
 
     def on_zoom_out(self):
@@ -611,9 +603,17 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         scrollbar_offset = scrollbar_scroll_relative_offset + self.timelineScroll.horizontalScrollBar().minimum()
         self.timelineScroll.horizontalScrollBar().setValue(scrollbar_offset)
 
-
+    # Moves and sizes the current viewport's position such that it's start position is aligned with a specific start_time and its end position is aligned with a specific end_time. This also adjusts the zoom!
     def set_viewport_to_range(self, start_time, end_time):
-        pass
+        newViewportDuration = end_time - start_time
+        if newViewportDuration is None:
+            print("selected range has a None duration!")
+            return False
+        
+        # Compute appropriate zoom.
+        newZoom = self.set_active_viewport_duration(newViewportDuration)
+        self.on_active_zoom_changed()
+        return self.sync_active_viewport_start_to_datetime(start_time)
 
 
     # Moves the current viewport's position such that it's start position is aligned with a specific start_time
@@ -662,20 +662,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             print("next_video_tuple is {0}".format(next_video_tuple[0]))
 
         found_start_date = next_video_tuple[1].startTime
+        self.sync_active_viewport_start_to_datetime(found_start_date)
+        return
 
-        found_duration_offset = self.compute_relative_offset_duration(found_start_date)
-        print("found_duration_offset is {0}".format(found_duration_offset))
-
-        # Get percentage of the total for the found_duration_offset
-        found_percent_offset = found_duration_offset / self.totalDuration
-
-        print("found_percent_offset is {0}".format(found_percent_offset))
-        self.set_viewport_percent_scrolled(found_percent_offset)
-        # timeline_x_offset = self.percent_offset_to_track_offset(found_percent_offset)
-
-        # self.timelineScroll.horizontalScrollBar().setValue(self.timelineScroll.horizontalScrollBar().maximum())
-        # self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
-        self.on_active_zoom_changed()
 
     def on_jump_to_end(self):
         print("on_jump_to_end()")
