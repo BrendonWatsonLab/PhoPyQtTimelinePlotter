@@ -125,6 +125,28 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.ui.actionJump_to_Next.triggered.connect(self.on_jump_next)
             self.ui.actionJump_to_End.triggered.connect(self.on_jump_to_end)
 
+            # Window Footer Toolbar
+            self.ui.toolButton_ZoomIn.setDefaultAction(self.ui.actionZoom_In)            
+            self.ui.toolButton_ZoomOut.setDefaultAction(self.ui.actionZoom_Out)
+
+
+            self.ui.toolButton_ScrollToStart.setDefaultAction(self.ui.actionJump_to_Start)
+            self.ui.toolButton_ScrollToPrevious.setDefaultAction(self.ui.actionJump_to_Previous)
+            self.ui.toolButton_ScrollToNext.setDefaultAction(self.ui.actionJump_to_Next)
+            self.ui.toolButton_ScrollToEnd.setDefaultAction( self.ui.actionJump_to_End)
+
+            # self.ui.toolButton_ZoomOut.triggered.connect(self.on_zoom_out)
+            # self.ui.toolButton_ZoomIn.triggered.connect(self.on_zoom_in)
+
+            # self.ui.toolButton_ScrollToStart.triggered.connect(self.on_jump_to_start)
+            # self.ui.toolButton_ScrollToPrevious.triggered.connect(self.on_jump_previous)
+            # self.ui.toolButton_ScrollToNext.triggered.connect(self.on_jump_next)
+            # self.ui.toolButton_ScrollToEnd.triggered.connect(self.on_jump_to_end)
+
+
+            
+            
+
         desiredWindowWidth = 900
         self.resize( desiredWindowWidth, 800 )
         
@@ -269,7 +291,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         self.setWindowTitle('Pho Timeline Test Drawing Window')
 
-        # Toolbar
         self.ui.lblActiveViewportDuration.setText(str(self.get_active_viewport_duration()))
         self.ui.lblActiveTotalTimelineDuration.setText(str(self.totalDuration))
 
