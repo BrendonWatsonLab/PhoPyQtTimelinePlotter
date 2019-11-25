@@ -173,19 +173,23 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             currTrackIndex = 0
             currTrackBBID = 0
             self.mainVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[currTrackBBID][0], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+            self.mainVideoTrack.set_track_title_label('BBID: {0}, originals'.format(currTrackBBID))
             self.videoFileTrackWidgets.append(self.mainVideoTrack)
 
             currTrackIndex = currTrackIndex + 1
             self.labeledVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[currTrackBBID][1], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+            self.labeledVideoTrack.set_track_title_label('BBID: {0}, labeled'.format(currTrackBBID))
             self.videoFileTrackWidgets.append(self.labeledVideoTrack)
 
             currTrackIndex = currTrackIndex + 1
             currTrackBBID = currTrackBBID + 1
             self.mainVideoTrack1 = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[currTrackBBID][0], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+            self.mainVideoTrack1.set_track_title_label('BBID: {0}, originals'.format(currTrackBBID))
             self.videoFileTrackWidgets.append(self.mainVideoTrack1)
 
             currTrackIndex = currTrackIndex + 1
             self.labeledVideoTrack1 = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[currTrackBBID][1], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+            self.labeledVideoTrack1.set_track_title_label('BBID: {0}, labeled'.format(currTrackBBID))
             self.videoFileTrackWidgets.append(self.labeledVideoTrack1)
 
             # Other Tracks:

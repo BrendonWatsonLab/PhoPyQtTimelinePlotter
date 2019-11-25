@@ -63,6 +63,19 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
         # lgrad.setColorAt(1.0, Qt.yellow)
         qp.fillRect(drawRect, lgrad)
 
+        # Draw the text label if needed
+        if self.trackLabelText is not None:
+            oldPen = qp.pen()
+            oldFont = qp.font()
+
+            qp.setPen(TimelineTrackDrawingWidget_SelectionBase.default_TrackTitlePen)
+            qp.setFont(TimelineTrackDrawingWidget_SelectionBase.default_TrackTitleFont)
+            qp.drawText(drawRect, Qt.AlignLeft, self.trackLabelText)
+
+            qp.setPen(oldPen)
+            qp.setFont(oldFont)
+
+
         # Draw the duration objects
         for (index, obj) in enumerate(self.durationObjects):
             self.eventRect[index] = obj.paint( qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
@@ -97,7 +110,7 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
     #             return (index, obj)
     #     return None # If there is no next event, return None
 
-
+    # TODO: find_overlapping_events(...) doesn't yet work
     def find_overlapping_events(self):
         currOpenEvents = []
         currTime = None
