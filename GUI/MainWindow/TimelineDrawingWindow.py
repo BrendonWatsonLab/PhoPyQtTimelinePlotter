@@ -132,6 +132,10 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.ui.actionJump_to_Next.triggered.connect(self.on_jump_next)
             self.ui.actionJump_to_End.triggered.connect(self.on_jump_to_end)
 
+
+            # Operations Menus:
+            self.ui.actionCut_at_Active_Video_Playhead.triggered.connect(self.on_cut_at_active_timeline_playhead)
+
             # Window Footer Toolbar
             self.ui.toolButton_ZoomIn.setDefaultAction(self.ui.actionZoom_In)            
             self.ui.toolButton_CurrentVideo.setDefaultAction(self.ui.actionZoom_CurrentVideo)
@@ -532,7 +536,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         return (self.totalStartTime + relative_duration)
 
 
-    ## ZOOMING:
+    ## Timeline ZOOMING:
     def on_zoom_in(self):
         self.activeScaleMultiplier = min(TimelineDrawingWindow.MaxZoomLevel, (self.activeScaleMultiplier + TimelineDrawingWindow.ZoomDelta))
         self.on_active_zoom_changed()
@@ -640,7 +644,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         return True
         
         
-
+    ## Timeline Navigation:
     def on_jump_to_start(self):
         print("on_jump_to_start()")
         self.timelineScroll.horizontalScrollBar().setValue(self.timelineScroll.horizontalScrollBar().minimum())
@@ -651,8 +655,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
         self.on_active_zoom_changed()
 
+    # Zoom the timeline to the current video playhead position
     def on_jump_to_video_playhead(self):
-        # Zoom the timeline to the current video playhead position
         try:
             active_movie_link = self.videoPlayerWindow.get_movie_link()
             if active_movie_link is None:
@@ -700,6 +704,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
 
 
+    ## Other windows:
 
     # Shows the help/instructions window:
     def handle_showHelpWindow(self):
@@ -892,4 +897,35 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         # self.extendedTracksContainer.on_update_hover
 
+
+
+
+    ## Track Operations:
+    def on_cut_at_active_timeline_playhead(self):
+        print("on_cut_at_active_timeline_playhead(...)")
+        try:
+            active_movie_link = self.videoPlayerWindow.get_movie_link()
+            if active_movie_link is None:
+                print("No movie link!")
+                return
+
+            playbackPlayheadDatetime = active_movie_link.get_active_absolute_datetime()
+            if playbackPlayheadDatetime is None:
+                print("Movie link has no active playbackPlayheadDatetime!")
+                return
+
+            # self.sync_active_viewport_start_to_datetime(playbackPlayheadDatetime) #jump there.
+            self.on_partition_cut_at(playbackPlayheadDatetime) #then cut
+
+        except AttributeError as e:
+            print("Couldn't get movie link's active playbackPlayheadDatetime! Error:", e)
+            pass
+        
+        return
+        
+    
+    # Creates a cut on the partition track at the specified time
+    def on_partition_cut_at(self, cut_datetime):
+        print("on_partition_cut_at({0})".format(cut_datetime))
+        self.partitionsTrackWidget.try_cut_partition(cut_datetime)
 

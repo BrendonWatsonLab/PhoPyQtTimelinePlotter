@@ -84,10 +84,17 @@
     <addaction name="actionJump_to_Next"/>
     <addaction name="actionJump_to_End"/>
    </widget>
+   <widget class="QMenu" name="menuOperations">
+    <property name="title">
+     <string>Operations</string>
+    </property>
+    <addaction name="actionCut_at_Active_Video_Playhead"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuHelp"/>
    <addaction name="menuView"/>
    <addaction name="menuWindow"/>
+   <addaction name="menuOperations"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="dockWidget_FooterToolbar">
@@ -400,6 +407,11 @@
   <action name="actionJump_to_Active_Video_Playhead">
    <property name="text">
     <string>Jump to Active Video Playhead</string>
+   </property>
+  </action>
+  <action name="actionCut_at_Active_Video_Playhead">
+   <property name="text">
+    <string>Cut at Active Video Playhead</string>
    </property>
   </action>
  </widget>
