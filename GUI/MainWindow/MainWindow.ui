@@ -80,6 +80,7 @@
     <addaction name="separator"/>
     <addaction name="actionJump_to_Start"/>
     <addaction name="actionJump_to_Previous"/>
+    <addaction name="actionJump_to_Active_Video_Playhead"/>
     <addaction name="actionJump_to_Next"/>
     <addaction name="actionJump_to_End"/>
    </widget>
@@ -231,6 +232,13 @@
             </property>
             <property name="text">
              <string>|&lt;</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="toolButton_activeVideoPlayHead">
+            <property name="text">
+             <string>Vid</string>
             </property>
            </widget>
           </item>
@@ -387,6 +395,11 @@
    </property>
    <property name="text">
     <string>Current Video</string>
+   </property>
+  </action>
+  <action name="actionJump_to_Active_Video_Playhead">
+   <property name="text">
+    <string>Jump to Active Video Playhead</string>
    </property>
   </action>
  </widget>

@@ -128,6 +128,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             # on_jump_to_start, on_jump_previous, on_jump_next, on_jump_to_end
             self.ui.actionJump_to_Start.triggered.connect(self.on_jump_to_start)
             self.ui.actionJump_to_Previous.triggered.connect(self.on_jump_previous)
+            self.ui.actionJump_to_Active_Video_Playhead.triggered.connect(self.on_jump_to_video_playhead)
             self.ui.actionJump_to_Next.triggered.connect(self.on_jump_next)
             self.ui.actionJump_to_End.triggered.connect(self.on_jump_to_end)
 
@@ -138,6 +139,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
             self.ui.toolButton_ScrollToStart.setDefaultAction(self.ui.actionJump_to_Start)
             self.ui.toolButton_ScrollToPrevious.setDefaultAction(self.ui.actionJump_to_Previous)
+            self.ui.toolButton_activeVideoPlayHead.setDefaultAction(self.ui.actionJump_to_Active_Video_Playhead)
             self.ui.toolButton_ScrollToNext.setDefaultAction(self.ui.actionJump_to_Next)
             self.ui.toolButton_ScrollToEnd.setDefaultAction( self.ui.actionJump_to_End)
 
@@ -649,6 +651,28 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
         self.on_active_zoom_changed()
 
+    def on_jump_to_video_playhead(self):
+        # Zoom the timeline to the current video playhead position
+        try:
+            active_movie_link = self.videoPlayerWindow.get_movie_link()
+            if active_movie_link is None:
+                print("No movie link!")
+                return
+
+            playbackPlayheadDatetime = active_movie_link.get_active_absolute_datetime()
+            if playbackPlayheadDatetime is None:
+                print("Movie link has no active playbackPlayheadDatetime!")
+                return
+
+            self.sync_active_viewport_start_to_datetime(playbackPlayheadDatetime)
+
+        except AttributeError as e:
+            print("Couldn't get movie link's active playbackPlayheadDatetime! Error:", e)
+            pass
+        
+        return
+
+
     def on_jump_next(self):
         # Jump to the next available video in the video track
         # TODO: could highlight the video that's being jumped to.
@@ -869,9 +893,3 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # self.extendedTracksContainer.on_update_hover
 
 
-    def handle_zoom_to_video_playhead(self):
-        # Zoom the timeline to the current video playhead position
-        # if self.mainVideoTrack:
-
-
-        pass
