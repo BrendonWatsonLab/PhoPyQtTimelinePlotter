@@ -78,6 +78,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         # self.videoInfoObjects = load_video_events_from_database(self.database_connection.get_path(), as_videoInfo_objects=True)
         self.videoInfoObjects = []
+        self.trackVideoEventDisplayObjects = dict()
+
         self.reloadModelFromDatabase()
 
         self.build_video_display_events()
@@ -166,15 +168,25 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             ## TODO: The video tracks must set:
             self.videoFileTrackWidgets = []
 
+            # self.trackVideoEventDisplayObjects[1]
             # self.allVideoEventDisplayObjects.filter()
             currTrackIndex = 0
-            self.mainVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[0], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+            currTrackBBID = 0
+            self.mainVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[currTrackBBID][0], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
             self.videoFileTrackWidgets.append(self.mainVideoTrack)
 
             currTrackIndex = currTrackIndex + 1
-            self.labeledVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[1], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+            self.labeledVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[currTrackBBID][1], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
             self.videoFileTrackWidgets.append(self.labeledVideoTrack)
 
+            currTrackIndex = currTrackIndex + 1
+            currTrackBBID = currTrackBBID + 1
+            self.mainVideoTrack1 = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[currTrackBBID][0], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+            self.videoFileTrackWidgets.append(self.mainVideoTrack1)
+
+            currTrackIndex = currTrackIndex + 1
+            self.labeledVideoTrack1 = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[currTrackBBID][1], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+            self.videoFileTrackWidgets.append(self.labeledVideoTrack1)
 
             # Other Tracks:
             self.eventTrackWidgets = []
@@ -343,7 +355,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         videoEndDates = []
         # self.videoLabels = []
         self.allVideoEventDisplayObjects = []
-        self.trackVideoEventDisplayObjects = [[], []]
+        # self.trackVideoEventDisplayObjects = [[], []]
+
+        self.trackVideoEventDisplayObjects = dict()
+        # self.trackVideoEventDisplayObjects = {1:([], []), 2:([], []), 6:([], []), 7:([], []), 9:([], []), 10:([], [])}
+
         for (index, videoInfoItem) in enumerate(self.videoInfoObjects):
             videoDates.append(videoInfoItem.startTime)
             videoEndDates.append(videoInfoItem.endTime)
@@ -357,16 +373,16 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             currBBID = currRecord.get_behavioral_box_id()
             if currBBID is not None:
                 # If we have a valid behavioral box ID
-                if (currBBID < 2):
-                    # if the currBBID is 0 or 1, add it
-                    if videoInfoItem.is_original_video:
-                        self.trackVideoEventDisplayObjects[0].append(currEvent)
-                    else:
-                        self.trackVideoEventDisplayObjects[1].append(currEvent)
-                else:
-                    # currBBID is not 0 or 1
-                    continue
 
+                # Create the key if we need it
+                if currBBID not in self.trackVideoEventDisplayObjects.keys():
+                    self.trackVideoEventDisplayObjects[currBBID] = ([], [])
+                    print("Adding BBID: {0}".format(currBBID))
+
+                if videoInfoItem.is_original_video:
+                    self.trackVideoEventDisplayObjects[currBBID][0].append(currEvent)
+                else:
+                    self.trackVideoEventDisplayObjects[currBBID][1].append(currEvent)
 
 
         self.videoDates = np.array(videoDates)
