@@ -89,6 +89,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.setupWindow = None
 
         self.setMouseTracking(True)
+
+        # self.minimumVideoTrackHeight = 50
+        self.minimumVideoTrackHeight = 25
+
+
         self.initUI()
         # self.show() # Show the GUI
 
@@ -247,7 +252,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                 currVideoTrackWidget.itemSelectionMode = ItemSelectionOptions.SingleSelection
                 # General Layout:
                 self.extendedTracksContainerVboxLayout.addWidget(currVideoTrackWidget)
-                currVideoTrackWidget.setMinimumSize(minimumWidgetWidth,50)
+                currVideoTrackWidget.setMinimumSize(minimumWidgetWidth,self.minimumVideoTrackHeight)
                 currVideoTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
 
