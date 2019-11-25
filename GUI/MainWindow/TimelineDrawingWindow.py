@@ -39,6 +39,11 @@ class GlobalTimeAdjustmentOptions(Enum):
         ConstantOffsetFromMostRecentVideo = 3  # adjusts the global to a fixed time prior to the end of the most recent video.
 
 
+
+"""
+self.activeScaleMultiplier: this multipler determines how many times longer the contents of the scrollable viewport are than the viewport width itself.
+
+"""
 class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     
     static_VideoTrackTrackID = -1 # The integer ID of the main video track
@@ -116,6 +121,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             ## Setup Zoom:
             self.ui.actionZoom_In.triggered.connect(self.on_zoom_in)
             self.ui.actionZoom_Default.triggered.connect(self.on_zoom_home)
+            self.ui.actionZoom_CurrentVideo.triggered.connect(self.on_zoom_current_video)
             self.ui.actionZoom_Out.triggered.connect(self.on_zoom_out)
 
             ## Navigation Menus:
@@ -124,6 +130,21 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.ui.actionJump_to_Previous.triggered.connect(self.on_jump_previous)
             self.ui.actionJump_to_Next.triggered.connect(self.on_jump_next)
             self.ui.actionJump_to_End.triggered.connect(self.on_jump_to_end)
+
+            # Window Footer Toolbar
+            self.ui.toolButton_ZoomIn.setDefaultAction(self.ui.actionZoom_In)            
+            self.ui.toolButton_CurrentVideo.setDefaultAction(self.ui.actionZoom_CurrentVideo)
+            self.ui.toolButton_ZoomOut.setDefaultAction(self.ui.actionZoom_Out)
+
+            self.ui.toolButton_ScrollToStart.setDefaultAction(self.ui.actionJump_to_Start)
+            self.ui.toolButton_ScrollToPrevious.setDefaultAction(self.ui.actionJump_to_Previous)
+            self.ui.toolButton_ScrollToNext.setDefaultAction(self.ui.actionJump_to_Next)
+            self.ui.toolButton_ScrollToEnd.setDefaultAction( self.ui.actionJump_to_End)
+
+
+
+            
+            
 
         desiredWindowWidth = 900
         self.resize( desiredWindowWidth, 800 )
@@ -269,16 +290,15 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         self.setWindowTitle('Pho Timeline Test Drawing Window')
 
-        # Toolbar
         self.ui.lblActiveViewportDuration.setText(str(self.get_active_viewport_duration()))
         self.ui.lblActiveTotalTimelineDuration.setText(str(self.totalDuration))
+        self.ui.lblActiveViewportOffsetAbsolute.setText(str(0.0))
 
         # Cursor tracking
         self.cursorX = 0.0
         self.cursorY = 0.0
         #self.cursorTraceRect = QRect(0,0,0,0)
 
-            
     def reloadModelFromDatabase(self):
         # Context objects for children tracks
         self.contextsDict = self.database_connection.load_contexts_from_database()
@@ -370,6 +390,23 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         duration_offset = self.offset_to_duration(event_x)
         return (self.totalStartTime + duration_offset)
 
+
+    def percent_to_offset(self, percent_offset):
+        event_x = percent_offset * (self.width() * self.activeScaleMultiplier)
+        return event_x
+
+    def duration_to_offset(self, duration_offset):
+        percent_x = duration_offset / self.totalDuration
+        event_x = self.percent_to_offset(percent_x)
+        return event_x
+
+    def datetime_to_offset(self, newDatetime):
+        duration_offset = newDatetime - self.totalStartTime
+        event_x = self.duration_to_offset(duration_offset)
+        return event_x
+
+
+
     # Returns the index of the child object that the (x, y) point falls within, or None if it doesn't fall within an event.
     def find_hovered_timeline_track(self, event_x, event_y):
         hovered_timeline_track_object = None
@@ -433,28 +470,51 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         self.statusBar().showMessage(text)
 
+    def wheelEvent(self, event):
+        # print("mouse wheel event! {0}".format(str(event)))
+        hsb=self.timelineScroll.horizontalScrollBar()
+        dy=((-event.angleDelta().y()/8)/15)*hsb.singleStep()
+        hsb.setSliderPosition(hsb.sliderPosition()+dy)
+
     ## Zoom in/default/out events
     def get_minimum_track_width(self):
         return  (self.width() * self.activeScaleMultiplier)
+
+    # Sets the self.activeScaleMultipler based on the desiredMinimumWidth
+    # returns the new active scale multiplier
+    def set_minimum_track_width(self, desiredMinimumWidth):
+        newActiveScaleMultiplier = desiredMinimumWidth / self.width()
+        self.activeScaleMultiplier = newActiveScaleMultiplier
+        return newActiveScaleMultiplier
 
     def get_viewport_width(self):
         return self.timelineScroll.width()
 
     # Returns the percent of the total duration that the active viewport is currently displaying
-    def get_active_percent_viewport_total(self):
+    def get_active_viewport_duration_percent_viewport_total(self):
         return (float(self.get_viewport_width()) / float(self.get_minimum_track_width()))
+    
+    def set_active_viewport_duration_percent_viewport_total(self, desiredPercent):
+        desiredMinimumWidth = (float(self.get_viewport_width()) / float(desiredPercent))
+        return self.set_minimum_track_width(desiredMinimumWidth)
 
     # Returns the duration of the currently displayed viewport
     def get_active_viewport_duration(self):
-        currPercent = self.get_active_percent_viewport_total()
+        currPercent = self.get_active_viewport_duration_percent_viewport_total()
         return (currPercent * self.totalDuration)
+
+    def set_active_viewport_duration(self, desiredDuration):
+        desiredPercent = desiredDuration / self.totalDuration
+        return self.set_active_viewport_duration_percent_viewport_total(desiredPercent)
+
+
 
     # Given the percent offset of the total duration, gets the x-offset for the timeline tracks (not the viewport, its contents)
     def percent_offset_to_track_offset(self, track_percent):
         return float(self.get_minimum_track_width()) * float(track_percent)
 
     ## Datetime functions copied from the versions created for the PhoDurationEvent class
-    # returns true if the absolute_datetime falls within the current entire timeline. Not the viewport
+    # returns true if the absolute_datetime falls within the current entire timeline. !Not the viewport!
     def contains_date(self, absolute_datetime):
         return ((self.totalStartTime <= absolute_datetime) and (self.totalEndTime >= absolute_datetime))
 
@@ -468,7 +528,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         return (self.totalStartTime + relative_duration)
 
 
-
+    ## ZOOMING:
     def on_zoom_in(self):
         self.activeScaleMultiplier = min(TimelineDrawingWindow.MaxZoomLevel, (self.activeScaleMultiplier + TimelineDrawingWindow.ZoomDelta))
         self.on_active_zoom_changed()
@@ -477,12 +537,32 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
         self.on_active_zoom_changed()
 
+    def on_zoom_current_video(self):
+        # on_zoom_current_video(): zooms the viewport to fit the current video
+        print("on_zoom_current_video()")
+        # Gets the current video
+
+        selected_video_event_obj = self.mainVideoTrack.get_selected_duration_obj()
+        if selected_video_event_obj is None:
+            print("no video selected!")
+            return
+        
+        newViewportStartTime = selected_video_event_obj.startTime
+        newViewportEndTime = selected_video_event_obj.endTime
+        newViewportDuration = selected_video_event_obj.computeDuration()
+
+        if newViewportDuration is None:
+            print("selected video has a None duration!")
+            return
+        else:
+            self.set_viewport_to_range(newViewportStartTime, newViewportEndTime)
+
+        return
+
+
     def on_zoom_out(self):
         self.activeScaleMultiplier = max(TimelineDrawingWindow.MinZoomLevel, (self.activeScaleMultiplier - TimelineDrawingWindow.ZoomDelta))
         self.on_active_zoom_changed()
-
-    # def on_zoom_custom(self, double_newZoom):
-    #     print("on_zoom_custom({0})".format(double_newZoom))
         
     def on_finish_editing_zoom_custom(self):
         print("on_finish_editing_zoom_custom()")
@@ -497,9 +577,13 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.ui.doubleSpinBox_currentZoom.setValue(self.activeScaleMultiplier)
         self.ui.doubleSpinBox_currentZoom.blockSignals(False)
         self.ui.lblActiveTotalTimelineDuration.setText(str(self.totalDuration))
-        self.ui.lblActiveViewportDuration.setText(str(self.get_active_viewport_duration()))
+        self.on_active_viewport_changed()
         self.resize_children_on_zoom()
         # self.refresh_child_widget_display()
+
+    def on_active_viewport_changed(self):
+        self.ui.lblActiveViewportDuration.setText(str(self.get_active_viewport_duration()))
+        self.ui.lblActiveViewportOffsetAbsolute.setText(str(self.get_viewport_percent_scrolled()))
 
     def resize_children_on_zoom(self):
         newMinWidth = self.get_minimum_track_width()
@@ -508,20 +592,82 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
     ## Navigation:
     
+    # Returns the current perent scrolled the viewport is through the entire timeline.
+    def get_viewport_percent_scrolled(self):
+        return (self.timelineScroll.horizontalScrollBar().value() / (self.timelineScroll.horizontalScrollBar().maximum() - self.timelineScroll.horizontalScrollBar().minimum()))
+
+
+    # Scrolls the viewport to the desired percent_scrolled of entire timeline.
+    def set_viewport_percent_scrolled(self, percent_scrolled):
+        scrollbar_scroll_relative_offset = (percent_scrolled * (self.timelineScroll.horizontalScrollBar().maximum() - self.timelineScroll.horizontalScrollBar().minimum()))
+        scrollbar_offset = scrollbar_scroll_relative_offset + self.timelineScroll.horizontalScrollBar().minimum()
+        self.timelineScroll.horizontalScrollBar().setValue(scrollbar_offset)
+
+    # Moves and sizes the current viewport's position such that it's start position is aligned with a specific start_time and its end position is aligned with a specific end_time. This also adjusts the zoom!
+    def set_viewport_to_range(self, start_time, end_time):
+        newViewportDuration = end_time - start_time
+        if newViewportDuration is None:
+            print("selected range has a None duration!")
+            return False
+        
+        # Compute appropriate zoom.
+        newZoom = self.set_active_viewport_duration(newViewportDuration)
+        self.on_active_zoom_changed()
+        return self.sync_active_viewport_start_to_datetime(start_time)
+
+
+    # Moves the current viewport's position such that it's start position is aligned with a specific start_time
+    def sync_active_viewport_start_to_datetime(self, start_time):
+        # get the viewport's end time
+        end_time = start_time + self.get_active_viewport_duration()
+        return self.sync_active_viewport_end_to_datetime(end_time)
+
+
+    # Moves the current viewport's position such that it's end position is aligned with a specific end_time
+    def sync_active_viewport_end_to_datetime(self, end_time):
+        if end_time > self.totalEndTime:
+            print("Error: end_time > self.totalEndTime!")
+            return False
+
+         # Compute appropriate offset:
+        found_x_offset = self.datetime_to_offset(end_time)
+        self.timelineScroll.ensureVisible(found_x_offset, 0, 0, 0)
+        self.on_active_zoom_changed()
+        return True
+        
+        
+
     def on_jump_to_start(self):
+        print("on_jump_to_start()")
         self.timelineScroll.horizontalScrollBar().setValue(self.timelineScroll.horizontalScrollBar().minimum())
         self.on_active_zoom_changed()
         
-
     def on_jump_previous(self):
+        print("on_jump_previous()")
         # self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
         self.on_active_zoom_changed()
 
     def on_jump_next(self):
-        # self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
-        self.on_active_zoom_changed()
+        # Jump to the next available video in the video track
+        # TODO: could highlight the video that's being jumped to.
+        print("on_jump_next()")
+        offset_x = self.percent_offset_to_track_offset(self.get_viewport_percent_scrolled())
+        offset_datetime = self.offset_to_datetime(offset_x)
+        # next_video_tuple: (index, videoObj) pair
+        next_video_tuple = self.videoFileTrackWidgets[0].find_next_event(offset_datetime)
+        if next_video_tuple is None:
+            print("next_video_tuple is none!")
+            return
+        else:
+            print("next_video_tuple is {0}".format(next_video_tuple[0]))
+
+        found_start_date = next_video_tuple[1].startTime
+        self.sync_active_viewport_start_to_datetime(found_start_date)
+        return
+
 
     def on_jump_to_end(self):
+        print("on_jump_to_end()")
         # verticalScrollBar()->setValue(ui->scrollArea->verticalScrollBar()->maximum());
         self.timelineScroll.horizontalScrollBar().setValue(self.timelineScroll.horizontalScrollBar().maximum())
         self.on_active_zoom_changed()
@@ -677,16 +823,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             currWidget = self.eventTrackWidgets[i]
             currWidget.update()
 
-
-    # @pyqtSlot(datetime)
-    # def on_video_playback_position_updated(self, datetime):
-    #     print("on_video_playback_position_updated({0})".format(str(datetime)))
-    #     self.timelineMasterTrackWidget
-    #     # self.extendedTracksContainer.on_update_hover()
-
     @pyqtSlot(float)
     def on_video_playback_position_updated(self, timeline_percent_offset):
-        print("on_video_playback_position_updated({0})".format(str(timeline_percent_offset)))
+        # print("on_video_playback_position_updated({0})".format(str(timeline_percent_offset)))
         timeline_x_offset = self.percent_offset_to_track_offset(timeline_percent_offset)
 
         self.timelineMasterTrackWidget.blockSignals(True)
@@ -699,25 +838,26 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.timelineMasterTrackWidget.blockSignals(False)
 
     # Called when the timeline or background container of the track view is hovered
+    # updates its children views, but doesn't currently update the movie play position.
     @pyqtSlot(int)
     def on_playhead_hover_position_updated(self, x):
-        print("on_playhead_hover_position_updated({0})".format(str(x)))
+        # print("on_playhead_hover_position_updated({0})".format(str(x)))
         self.timelineMasterTrackWidget.blockSignals(True)
         self.extendedTracksContainer.blockSignals(True)
 
         self.timelineMasterTrackWidget.on_update_hover(x)
         self.extendedTracksContainer.on_update_hover(x)
 
-        if(self.videoPlayerWindow):
-            movie_link = self.videoPlayerWindow.get_movie_link()
-            if (movie_link is not None):
-                ## TODO NOW: 
-                print("NOT YET IMPLEMENTED: Timeline to Video playback sync")
+        # if(self.videoPlayerWindow):
+        #     movie_link = self.videoPlayerWindow.get_movie_link()
+        #     if (movie_link is not None):
+        #         ## TODO NOW: 
+        #         print("NOT YET IMPLEMENTED: Timeline to Video playback sync")
 
-                # Check if convertedDatetime is in range.
+        #         # Check if convertedDatetime is in range.
                 
-                #convertedDatetime: the datetime
-                # movie_link.update_timeline_playhead_position(convertedDatetime)
+        #         #convertedDatetime: the datetime
+        #         # movie_link.update_timeline_playhead_position(convertedDatetime)
 
 
         self.extendedTracksContainer.blockSignals(False)
@@ -725,3 +865,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         
 
         # self.extendedTracksContainer.on_update_hover
+
+
+    def handle_zoom_to_video_playhead(self):
+        # Zoom the timeline to the current video playhead position
+        # if self.mainVideoTrack:
+
+
+        pass
