@@ -81,6 +81,16 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
             obj.is_deemphasized = not obj.overlaps_range(start_datetime, end_datetime)
         self.update()
 
+
+    # Find the next event
+    def find_next_event(self, following_datetime):
+        # Draw the duration objects
+        for (index, obj) in enumerate(self.durationObjects):
+            if (obj.startTime > following_datetime):
+                return (index, obj)
+        return None # If there is no next event, return None    
+
+
     def on_button_clicked(self, event):
         super().on_button_clicked(event)
 

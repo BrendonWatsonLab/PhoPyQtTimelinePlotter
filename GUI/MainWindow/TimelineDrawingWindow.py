@@ -440,12 +440,12 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         return self.timelineScroll.width()
 
     # Returns the percent of the total duration that the active viewport is currently displaying
-    def get_active_percent_viewport_total(self):
+    def get_active_viewport_duration_percent_viewport_total(self):
         return (float(self.get_viewport_width()) / float(self.get_minimum_track_width()))
 
     # Returns the duration of the currently displayed viewport
     def get_active_viewport_duration(self):
-        currPercent = self.get_active_percent_viewport_total()
+        currPercent = self.get_active_viewport_duration_percent_viewport_total()
         return (currPercent * self.totalDuration)
 
     # Given the percent offset of the total duration, gets the x-offset for the timeline tracks (not the viewport, its contents)
@@ -453,7 +453,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         return float(self.get_minimum_track_width()) * float(track_percent)
 
     ## Datetime functions copied from the versions created for the PhoDurationEvent class
-    # returns true if the absolute_datetime falls within the current entire timeline. Not the viewport
+    # returns true if the absolute_datetime falls within the current entire timeline. !Not the viewport!
     def contains_date(self, absolute_datetime):
         return ((self.totalStartTime <= absolute_datetime) and (self.totalEndTime >= absolute_datetime))
 
@@ -504,20 +504,60 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
     ## Navigation:
     
+    # Returns the current perent scrolled the viewport is through the entire timeline.
+    def get_viewport_percent_scrolled(self):
+        return (self.timelineScroll.horizontalScrollBar().value() / (self.timelineScroll.horizontalScrollBar().maximum() - self.timelineScroll.horizontalScrollBar().minimum()))
+
+
+    # Scrolls the viewport to the desired percent_scrolled of entire timeline.
+    def set_viewport_percent_scrolled(self, percent_scrolled):
+        scrollbar_scroll_relative_offset = (percent_scrolled * (self.timelineScroll.horizontalScrollBar().maximum() - self.timelineScroll.horizontalScrollBar().minimum()))
+        scrollbar_offset = scrollbar_scroll_relative_offset + self.timelineScroll.horizontalScrollBar().minimum()
+        self.timelineScroll.horizontalScrollBar().setValue(scrollbar_offset)
+
+
+
     def on_jump_to_start(self):
+        print("on_jump_to_start()")
         self.timelineScroll.horizontalScrollBar().setValue(self.timelineScroll.horizontalScrollBar().minimum())
         self.on_active_zoom_changed()
         
-
     def on_jump_previous(self):
+        print("on_jump_previous()")
         # self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
         self.on_active_zoom_changed()
 
     def on_jump_next(self):
+        print("on_jump_next()")
+        # Jump to the next available video in the video track
+        offset_x = self.percent_offset_to_track_offset(self.get_viewport_percent_scrolled())
+        offset_datetime = self.offset_to_datetime(offset_x)
+        # next_video_tuple: (index, videoObj) pair
+        next_video_tuple = self.videoFileTrackWidgets[0].find_next_event(offset_datetime)
+        if next_video_tuple is None:
+            print("next_video_tuple is none!")
+            return
+        else:
+            print("next_video_tuple is {0}".format(next_video_tuple[0]))
+
+        found_start_date = next_video_tuple[1].startTime
+
+        found_duration_offset = self.compute_relative_offset_duration(found_start_date)
+        print("found_duration_offset is {0}".format(found_duration_offset))
+
+        # Get percentage of the total for the found_duration_offset
+        found_percent_offset = found_duration_offset / self.totalDuration
+
+        print("found_percent_offset is {0}".format(found_percent_offset))
+        self.set_viewport_percent_scrolled(found_percent_offset)
+        # timeline_x_offset = self.percent_offset_to_track_offset(found_percent_offset)
+
+        # self.timelineScroll.horizontalScrollBar().setValue(self.timelineScroll.horizontalScrollBar().maximum())
         # self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
         self.on_active_zoom_changed()
 
     def on_jump_to_end(self):
+        print("on_jump_to_end()")
         # verticalScrollBar()->setValue(ui->scrollArea->verticalScrollBar()->maximum());
         self.timelineScroll.horizontalScrollBar().setValue(self.timelineScroll.horizontalScrollBar().maximum())
         self.on_active_zoom_changed()
@@ -673,13 +713,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             currWidget = self.eventTrackWidgets[i]
             currWidget.update()
 
-
-    # @pyqtSlot(datetime)
-    # def on_video_playback_position_updated(self, datetime):
-    #     print("on_video_playback_position_updated({0})".format(str(datetime)))
-    #     self.timelineMasterTrackWidget
-    #     # self.extendedTracksContainer.on_update_hover()
-
     @pyqtSlot(float)
     def on_video_playback_position_updated(self, timeline_percent_offset):
         # print("on_video_playback_position_updated({0})".format(str(timeline_percent_offset)))
@@ -722,3 +755,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         
 
         # self.extendedTracksContainer.on_update_hover
+
+
+    def handle_zoom_to_video_playhead(self):
+        # Zoom the timeline to the current video playhead position
+        # if self.mainVideoTrack:
+
+
+        pass
