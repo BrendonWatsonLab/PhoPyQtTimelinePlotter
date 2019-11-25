@@ -434,6 +434,24 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     def keyPressEvent(self, event):
         print("TimelineDrawingWindow.keyPressEvent(): {0}".format(str(event.key())))
 
+
+        if event.key() == Qt.Key_Space:
+            try:
+                self.videoPlayerWindow.key_handler(event)
+                return
+            except AttributeError as e:
+                print("Couldn't get videoPlayerWindow! Error:", e)
+                pass
+            
+        if event.key() == Qt.Key_P:
+            try:
+                self.videoPlayerWindow.key_handler(event)
+                return
+            except AttributeError as e:
+                print("Couldn't get videoPlayerWindow! Error:", e)
+                pass
+            
+            
         # TODO: pass to all children
         # self.mainVideoTrack.on_key_pressed(event)
         for (anIndex, aTimelineVideoTrack) in enumerate(self.videoFileTrackWidgets):
@@ -566,7 +584,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.set_viewport_to_range(newViewportStartTime, newViewportEndTime)
 
         return
-
 
     def on_zoom_out(self):
         self.activeScaleMultiplier = max(TimelineDrawingWindow.MinZoomLevel, (self.activeScaleMultiplier - TimelineDrawingWindow.ZoomDelta))
@@ -929,3 +946,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         print("on_partition_cut_at({0})".format(cut_datetime))
         self.partitionsTrackWidget.try_cut_partition(cut_datetime)
 
+
+    # Creates a new annotation comment on the appropriate track at the specified time
+    def on_comment_create_at(self, comment_datetime):
+        print("on_comment_create_at({0})".format(comment_datetime))
+        # self.partitionsTrackWidget.try_cut_partition(comment_datetime)
+        
