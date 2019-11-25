@@ -39,6 +39,11 @@ class GlobalTimeAdjustmentOptions(Enum):
         ConstantOffsetFromMostRecentVideo = 3  # adjusts the global to a fixed time prior to the end of the most recent video.
 
 
+
+"""
+self.activeScaleMultiplier: this multipler determines how many times longer the contents of the scrollable viewport are than the viewport width itself.
+
+"""
 class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     
     static_VideoTrackTrackID = -1 # The integer ID of the main video track
@@ -116,6 +121,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             ## Setup Zoom:
             self.ui.actionZoom_In.triggered.connect(self.on_zoom_in)
             self.ui.actionZoom_Default.triggered.connect(self.on_zoom_home)
+            self.ui.actionZoom_CurrentVideo.triggered.connect(self.on_zoom_current_video)
             self.ui.actionZoom_Out.triggered.connect(self.on_zoom_out)
 
             ## Navigation Menus:
@@ -127,21 +133,14 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
             # Window Footer Toolbar
             self.ui.toolButton_ZoomIn.setDefaultAction(self.ui.actionZoom_In)            
+            self.ui.toolButton_CurrentVideo.setDefaultAction(self.ui.actionZoom_CurrentVideo)
             self.ui.toolButton_ZoomOut.setDefaultAction(self.ui.actionZoom_Out)
-
 
             self.ui.toolButton_ScrollToStart.setDefaultAction(self.ui.actionJump_to_Start)
             self.ui.toolButton_ScrollToPrevious.setDefaultAction(self.ui.actionJump_to_Previous)
             self.ui.toolButton_ScrollToNext.setDefaultAction(self.ui.actionJump_to_Next)
             self.ui.toolButton_ScrollToEnd.setDefaultAction( self.ui.actionJump_to_End)
 
-            # self.ui.toolButton_ZoomOut.triggered.connect(self.on_zoom_out)
-            # self.ui.toolButton_ZoomIn.triggered.connect(self.on_zoom_in)
-
-            # self.ui.toolButton_ScrollToStart.triggered.connect(self.on_jump_to_start)
-            # self.ui.toolButton_ScrollToPrevious.triggered.connect(self.on_jump_previous)
-            # self.ui.toolButton_ScrollToNext.triggered.connect(self.on_jump_next)
-            # self.ui.toolButton_ScrollToEnd.triggered.connect(self.on_jump_to_end)
 
 
             
@@ -293,6 +292,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         self.ui.lblActiveViewportDuration.setText(str(self.get_active_viewport_duration()))
         self.ui.lblActiveTotalTimelineDuration.setText(str(self.totalDuration))
+        self.ui.lblActiveViewportOffsetAbsolute.setText(str(0.0))
 
         # Cursor tracking
         self.cursorX = 0.0
@@ -453,24 +453,22 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         self.statusBar().showMessage(text)
 
-
     def wheelEvent(self, event):
-        print("mouse wheel event! {0}".format(str(event)))
-        # vsb=self.timelineScroll.verticalScrollBar()
+        # print("mouse wheel event! {0}".format(str(event)))
         hsb=self.timelineScroll.horizontalScrollBar()
-        # self.modify_volume(1 if event.angleDelta().y() > 0 else -1)
-        # self.set_media_position(1 if event.angleDelta().y() > 0 else -1)
-
         dy=((-event.angleDelta().y()/8)/15)*hsb.singleStep()
         hsb.setSliderPosition(hsb.sliderPosition()+dy)
-
-        # self.timelineScroll.wheelEvent(event)
-
-        # self.wheel.emit(event)
 
     ## Zoom in/default/out events
     def get_minimum_track_width(self):
         return  (self.width() * self.activeScaleMultiplier)
+
+    # Sets the self.activeScaleMultipler based on the desiredMinimumWidth
+    # returns the new active scale multiplier
+    def set_minimum_track_width(self, desiredMinimumWidth):
+        newActiveScaleMultiplier = desiredMinimumWidth / self.width()
+        self.activeScaleMultiplier = newActiveScaleMultiplier
+        return newActiveScaleMultiplier
 
     def get_viewport_width(self):
         return self.timelineScroll.width()
@@ -478,11 +476,21 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     # Returns the percent of the total duration that the active viewport is currently displaying
     def get_active_viewport_duration_percent_viewport_total(self):
         return (float(self.get_viewport_width()) / float(self.get_minimum_track_width()))
+    
+    def set_active_viewport_duration_percent_viewport_total(self, desiredPercent):
+        desiredMinimumWidth = (float(self.get_viewport_width()) / float(desiredPercent))
+        return self.set_minimum_track_width(desiredMinimumWidth)
 
     # Returns the duration of the currently displayed viewport
     def get_active_viewport_duration(self):
         currPercent = self.get_active_viewport_duration_percent_viewport_total()
         return (currPercent * self.totalDuration)
+
+    def set_active_viewport_duration(self, desiredDuration):
+        desiredPercent = desiredDuration / self.totalDuration
+        return self.set_active_viewport_duration_percent_viewport_total(desiredPercent)
+
+
 
     # Given the percent offset of the total duration, gets the x-offset for the timeline tracks (not the viewport, its contents)
     def percent_offset_to_track_offset(self, track_percent):
@@ -512,6 +520,53 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
         self.on_active_zoom_changed()
 
+    def on_zoom_current_video(self):
+        # on_zoom_current_video(): zooms the viewport to fit the current video
+        print("on_zoom_current_video()")
+        # Gets the current video
+
+        selected_video_event_obj = self.mainVideoTrack.get_selected_duration_obj()
+        if selected_video_event_obj is None:
+            print("no video selected!")
+            return
+        
+        newViewportStartTime = selected_video_event_obj.startTime
+        newViewportEndTime = selected_video_event_obj.endTime
+        newViewportDuration = selected_video_event_obj.computeDuration()
+
+        if newViewportDuration is None:
+            print("selected video has a None duration!")
+            return
+
+        # oldViewportDuration = self.get_active_viewport_duration()
+
+        # Otherwise we're all good! Set the viewport to the video's duration!
+        
+        # Compute appropriate zoom.
+        # newViewportPercentTotal = (newViewportDuration / self.totalDuration)
+
+        # newZoom = ((self.activeScaleMultiplier * newViewportDuration) / (oldViewportDuration))
+
+
+        newZoom = self.set_active_viewport_duration(newViewportDuration)
+        print("newZoom: {0}".format(newZoom))
+
+        self.on_active_zoom_changed()
+    
+        # Compute appropriate offset
+        found_duration_offset = self.compute_relative_offset_duration(newViewportStartTime)
+        print("found_duration_offset is {0}".format(found_duration_offset))
+
+        # Get percentage of the total for the found_duration_offset
+        found_percent_offset = found_duration_offset / self.totalDuration
+
+        print("found_percent_offset is {0}".format(found_percent_offset))
+        self.set_viewport_percent_scrolled(found_percent_offset)
+
+        self.on_active_zoom_changed()
+        pass
+
+
     def on_zoom_out(self):
         self.activeScaleMultiplier = max(TimelineDrawingWindow.MinZoomLevel, (self.activeScaleMultiplier - TimelineDrawingWindow.ZoomDelta))
         self.on_active_zoom_changed()
@@ -529,9 +584,13 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.ui.doubleSpinBox_currentZoom.setValue(self.activeScaleMultiplier)
         self.ui.doubleSpinBox_currentZoom.blockSignals(False)
         self.ui.lblActiveTotalTimelineDuration.setText(str(self.totalDuration))
-        self.ui.lblActiveViewportDuration.setText(str(self.get_active_viewport_duration()))
+        self.on_active_viewport_changed()
         self.resize_children_on_zoom()
         # self.refresh_child_widget_display()
+
+    def on_active_viewport_changed(self):
+        self.ui.lblActiveViewportDuration.setText(str(self.get_active_viewport_duration()))
+        self.ui.lblActiveViewportOffsetAbsolute.setText(str(self.get_viewport_percent_scrolled()))
 
     def resize_children_on_zoom(self):
         newMinWidth = self.get_minimum_track_width()
