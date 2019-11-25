@@ -90,6 +90,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.initUI()
         # self.show() # Show the GUI
 
+        overlappingVideoEvents = self.mainVideoTrack.find_overlapping_events()
+        for aTuple in overlappingVideoEvents:
+            print(aTuple)
+        # print(overlappingVideoEvents)
+
     def initUI(self):
 
         """ View Hierarchy:
@@ -148,9 +153,118 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.ui.toolButton_ScrollToEnd.setDefaultAction( self.ui.actionJump_to_End)
 
 
+        def initUI_timelineTracks(self):
+            # Timeline Numberline track:
+            masterTimelineDurationSeconds = self.totalDuration.total_seconds()
+            self.timelineMasterTrackWidget = QTimeLine(masterTimelineDurationSeconds, minimumWidgetWidth)
+            self.timelineMasterTrackWidget.setMouseTracking(True)
+            self.timelineMasterTrackWidget.hoverChanged.connect(self.handle_timeline_hovered_position_update_event)
+            self.timelineMasterTrackWidget.positionChanged.connect(self.handle_timeline_position_update_event)
+
+        
+            # Video Tracks
+            ## TODO: The video tracks must set:
+            self.videoFileTrackWidgets = []
+
+            # self.allVideoEventDisplayObjects.filter()
+            currTrackIndex = 0
+            self.mainVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[0], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+            self.videoFileTrackWidgets.append(self.mainVideoTrack)
+
+            currTrackIndex = currTrackIndex + 1
+            self.labeledVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[1], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+            self.videoFileTrackWidgets.append(self.labeledVideoTrack)
+
+
+            # Other Tracks:
+            self.eventTrackWidgets = []
+
+            # Annotation Comments track:
+            currTrackIndex = currTrackIndex + 1
+            self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(currTrackIndex, [], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+            self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
+
+            # Partition tracks:
+            currTrackIndex = currTrackIndex + 1
+            
+            self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[0])
+            self.eventTrackWidgets.append(self.partitionsTrackWidget)
+
+            currTrackIndex = currTrackIndex + 1
+            self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[1])
+            self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
+
+            # Build the bottomPanelWidget
+            self.extendedTracksContainer = ExtendedTracksContainerWidget(masterTimelineDurationSeconds, minimumWidgetWidth, self)
+            self.extendedTracksContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+            self.extendedTracksContainer.setAutoFillBackground(True)
+            self.extendedTracksContainer.setMouseTracking(True)
+            self.extendedTracksContainer.hoverChanged.connect(self.handle_timeline_hovered_position_update_event)
+
+            # bind to self to detect changes in either child
+            self.timelineMasterTrackWidget.hoverChanged.connect(self.on_playhead_hover_position_updated)
+            self.extendedTracksContainer.hoverChanged.connect(self.on_playhead_hover_position_updated)
+
+            # self.timelineMasterTrackWidget.hoverChanged.connect(self.extendedTracksContainer.on_update_hover)
+            
+            #Layout of Extended Tracks Container Widget
+            self.extendedTracksContainerVboxLayout = QVBoxLayout(self)
+            self.extendedTracksContainerVboxLayout.addStretch(1)
+            self.extendedTracksContainerVboxLayout.addSpacing(2.0)
+            self.extendedTracksContainerVboxLayout.setContentsMargins(0,0,0,0)
+
+            self.extendedTracksContainerVboxLayout.addWidget(self.timelineMasterTrackWidget)
+            self.timelineMasterTrackWidget.setMinimumSize(minimumWidgetWidth, 50)
+            self.timelineMasterTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
             
             
+        def initUI_layout(self):
+            # Loop through the videoFileTrackWidgets and add them
+            for i in range(0, len(self.videoFileTrackWidgets)):
+                currVideoTrackWidget = self.videoFileTrackWidgets[i]
+                # Video track specific setup
+                currVideoTrackWidget.selection_changed.connect(self.handle_child_selection_event)
+                currVideoTrackWidget.hover_changed.connect(self.handle_child_hover_event)
+                currVideoTrackWidget.setMouseTracking(True)
+                currVideoTrackWidget.shouldDismissSelectionUponMouseButtonRelease = False
+                currVideoTrackWidget.itemSelectionMode = ItemSelectionOptions.SingleSelection
+                # General Layout:
+                self.extendedTracksContainerVboxLayout.addWidget(currVideoTrackWidget)
+                currVideoTrackWidget.setMinimumSize(minimumWidgetWidth,50)
+                currVideoTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+
+            # Loop through the eventTrackWidgets and add them
+            for i in range(0, len(self.eventTrackWidgets)):
+                currWidget = self.eventTrackWidgets[i]
+                self.extendedTracksContainerVboxLayout.addWidget(currWidget)
+                currWidget.setMinimumSize(minimumWidgetWidth,50)
+                currWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+            self.extendedTracksContainer.setLayout(self.extendedTracksContainerVboxLayout)
+
+            self.extendedTracksContainer.setFixedWidth(minimumWidgetWidth)
+            ## Scroll Area: should contain only the extendedTracksContainer (not the video container)
+            self.timelineScroll = QScrollArea()
+            self.timelineScroll.setWidget(self.extendedTracksContainer)
+            self.timelineScroll.setWidgetResizable(True)
+            self.timelineScroll.setMouseTracking(True)
+            # self.timelineScroll.setFixedHeight(400)
+            # self.timelineScroll.setFixedWidth(self.width())
+
+            # Main Vertical Splitter:
+            self.verticalSplitter = QSplitter(Qt.Vertical)
+            self.verticalSplitter.setHandleWidth(8)
+            self.verticalSplitter.setMouseTracking(True)
+            self.verticalSplitter.addWidget(self.videoPlayerContainer)
+            self.verticalSplitter.addWidget(self.timelineScroll)
+            self.verticalSplitter.setMouseTracking(True)
+
+            # Size the widgets
+            self.verticalSplitter.setSizes([100, 600])
+
+
 
         desiredWindowWidth = 900
         self.resize( desiredWindowWidth, 800 )
@@ -178,116 +292,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         ## Define WIDGETS:
 
         ## Timeline Tracks:
-
-        # Timeline Numberline track:
-        masterTimelineDurationSeconds = self.totalDuration.total_seconds()
-        self.timelineMasterTrackWidget = QTimeLine(masterTimelineDurationSeconds, minimumWidgetWidth)
-        self.timelineMasterTrackWidget.setMouseTracking(True)
-        self.timelineMasterTrackWidget.hoverChanged.connect(self.handle_timeline_hovered_position_update_event)
-        self.timelineMasterTrackWidget.positionChanged.connect(self.handle_timeline_position_update_event)
-
-    
-        # Video Tracks
-        ## TODO: The video tracks must set:
-        self.videoFileTrackWidgets = []
-
-        # self.allVideoEventDisplayObjects.filter()
-        currTrackIndex = 0
-        self.mainVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[0], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
-        self.videoFileTrackWidgets.append(self.mainVideoTrack)
-
-        currTrackIndex = currTrackIndex + 1
-        self.labeledVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[1], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
-        self.videoFileTrackWidgets.append(self.labeledVideoTrack)
-
-
-        # Other Tracks:
-        self.eventTrackWidgets = []
-
-        # Annotation Comments track:
-        currTrackIndex = currTrackIndex + 1
-        self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(currTrackIndex, [], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
-        self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
-
-        # Partition tracks:
-        currTrackIndex = currTrackIndex + 1
+        initUI_timelineTracks(self)
         
-        self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[0])
-        self.eventTrackWidgets.append(self.partitionsTrackWidget)
-
-        currTrackIndex = currTrackIndex + 1
-        self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[1])
-        self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
-
-        # Build the bottomPanelWidget
-        self.extendedTracksContainer = ExtendedTracksContainerWidget(masterTimelineDurationSeconds, minimumWidgetWidth, self)
-        self.extendedTracksContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        self.extendedTracksContainer.setAutoFillBackground(True)
-        self.extendedTracksContainer.setMouseTracking(True)
-        self.extendedTracksContainer.hoverChanged.connect(self.handle_timeline_hovered_position_update_event)
-
-        # bind to self to detect changes in either child
-        self.timelineMasterTrackWidget.hoverChanged.connect(self.on_playhead_hover_position_updated)
-        self.extendedTracksContainer.hoverChanged.connect(self.on_playhead_hover_position_updated)
-
-        # self.timelineMasterTrackWidget.hoverChanged.connect(self.extendedTracksContainer.on_update_hover)
-        
-        #Layout of Extended Tracks Container Widget
-        self.extendedTracksContainerVboxLayout = QVBoxLayout(self)
-        self.extendedTracksContainerVboxLayout.addStretch(1)
-        self.extendedTracksContainerVboxLayout.addSpacing(2.0)
-        self.extendedTracksContainerVboxLayout.setContentsMargins(0,0,0,0)
-
-        self.extendedTracksContainerVboxLayout.addWidget(self.timelineMasterTrackWidget)
-        self.timelineMasterTrackWidget.setMinimumSize(minimumWidgetWidth, 50)
-        self.timelineMasterTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
 
         #Layout of Main Window:
-
-       # Loop through the videoFileTrackWidgets and add them
-        for i in range(0, len(self.videoFileTrackWidgets)):
-            currVideoTrackWidget = self.videoFileTrackWidgets[i]
-            # Video track specific setup
-            currVideoTrackWidget.selection_changed.connect(self.handle_child_selection_event)
-            currVideoTrackWidget.hover_changed.connect(self.handle_child_hover_event)
-            currVideoTrackWidget.setMouseTracking(True)
-            currVideoTrackWidget.shouldDismissSelectionUponMouseButtonRelease = False
-            currVideoTrackWidget.itemSelectionMode = ItemSelectionOptions.SingleSelection
-            # General Layout:
-            self.extendedTracksContainerVboxLayout.addWidget(currVideoTrackWidget)
-            currVideoTrackWidget.setMinimumSize(minimumWidgetWidth,50)
-            currVideoTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
-
-        # Loop through the eventTrackWidgets and add them
-        for i in range(0, len(self.eventTrackWidgets)):
-            currWidget = self.eventTrackWidgets[i]
-            self.extendedTracksContainerVboxLayout.addWidget(currWidget)
-            currWidget.setMinimumSize(minimumWidgetWidth,50)
-            currWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
-        self.extendedTracksContainer.setLayout(self.extendedTracksContainerVboxLayout)
-
-        self.extendedTracksContainer.setFixedWidth(minimumWidgetWidth)
-        ## Scroll Area: should contain only the extendedTracksContainer (not the video container)
-        self.timelineScroll = QScrollArea()
-        self.timelineScroll.setWidget(self.extendedTracksContainer)
-        self.timelineScroll.setWidgetResizable(True)
-        self.timelineScroll.setMouseTracking(True)
-        # self.timelineScroll.setFixedHeight(400)
-        # self.timelineScroll.setFixedWidth(self.width())
-
-        # Main Vertical Splitter:
-        self.verticalSplitter = QSplitter(Qt.Vertical)
-        self.verticalSplitter.setHandleWidth(8)
-        self.verticalSplitter.setMouseTracking(True)
-        self.verticalSplitter.addWidget(self.videoPlayerContainer)
-        self.verticalSplitter.addWidget(self.timelineScroll)
-        self.verticalSplitter.setMouseTracking(True)
-
-        # Size the widgets
-        self.verticalSplitter.setSizes([100, 600])
+        initUI_layout(self)
 
         # Complete setup
         self.setCentralWidget( self.verticalSplitter )
@@ -317,6 +326,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         # Video file objects for video tracks
         self.videoFileRecords = self.database_connection.load_video_file_info_from_database()
+        self.videoInfoObjects = []
         # Iterate through loaded database records to build videoInfoObjects
         for aVideoFileRecord in self.videoFileRecords:
             aVideoInfoObj = aVideoFileRecord.get_video_info_obj()
@@ -334,17 +344,30 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # self.videoLabels = []
         self.allVideoEventDisplayObjects = []
         self.trackVideoEventDisplayObjects = [[], []]
-        for videoInfoItem in self.videoInfoObjects:
+        for (index, videoInfoItem) in enumerate(self.videoInfoObjects):
             videoDates.append(videoInfoItem.startTime)
             videoEndDates.append(videoInfoItem.endTime)
             currExtraInfoDict = videoInfoItem.get_output_dict()
             # Event Generation
             currEvent = PhoDurationEvent_Video(videoInfoItem.startTime, videoInfoItem.endTime, videoInfoItem.fullName, QColor(51,204,255), currExtraInfoDict)
+            currRecord = self.videoFileRecords[index]
+
             self.allVideoEventDisplayObjects.append(currEvent)
-            if videoInfoItem.is_original_video:
-                self.trackVideoEventDisplayObjects[0].append(currEvent)
-            else:
-                self.trackVideoEventDisplayObjects[1].append(currEvent)
+
+            currBBID = currRecord.get_behavioral_box_id()
+            if currBBID is not None:
+                # If we have a valid behavioral box ID
+                if (currBBID < 2):
+                    # if the currBBID is 0 or 1, add it
+                    if videoInfoItem.is_original_video:
+                        self.trackVideoEventDisplayObjects[0].append(currEvent)
+                    else:
+                        self.trackVideoEventDisplayObjects[1].append(currEvent)
+                else:
+                    # currBBID is not 0 or 1
+                    continue
+
+
 
         self.videoDates = np.array(videoDates)
         self.videoEndDates = np.array(videoEndDates)
@@ -693,7 +716,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         
         return
 
-
     def on_jump_next(self):
         # Jump to the next available video in the video track
         # TODO: could highlight the video that's being jumped to.
@@ -711,7 +733,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         found_start_date = next_video_tuple[1].startTime
         self.sync_active_viewport_start_to_datetime(found_start_date)
         return
-
 
     def on_jump_to_end(self):
         print("on_jump_to_end()")
@@ -752,6 +773,10 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.videoPlayerWindow.show()
 
     def try_set_video_player_window_url(self, url):
+        #TODO: temp: set the videoPlayerWindow to None to ensure that a new one is created. Note that setting it to None doesn't actually close the old one.
+        self.videoPlayerWindow = None
+
+
         if (not (self.videoPlayerWindow is None)):
             print("Using existing Video Player Window...")
             self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
@@ -857,7 +882,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # print(text)
         return
 
-    
     def handle_timeline_hovered_position_update_event(self, x):
         # print("handle_timeline_hovered_position_update_event({0})".format(x))
         pass

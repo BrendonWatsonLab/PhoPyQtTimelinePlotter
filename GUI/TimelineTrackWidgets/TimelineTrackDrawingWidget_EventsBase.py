@@ -84,11 +84,44 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
 
     # Find the next event
     def find_next_event(self, following_datetime):
-        # Draw the duration objects
         for (index, obj) in enumerate(self.durationObjects):
             if (obj.startTime > following_datetime):
                 return (index, obj)
-        return None # If there is no next event, return None    
+        return None # If there is no next event, return None
+
+
+    # Find the previous event
+    # def find_previous_event(self, preceeding_datetime):
+    #     for (index, obj) in enumerate(self.durationObjects):
+    #         if (obj.startTime > following_datetime):
+    #             return (index, obj)
+    #     return None # If there is no next event, return None
+
+
+    def find_overlapping_events(self):
+        currOpenEvents = []
+        currTime = None
+        overlappingEvents = dict()
+
+        for (index, obj) in enumerate(self.durationObjects):
+            currTime = obj.startTime
+
+            for anOpenEventIndex, anOpenEvent in currOpenEvents:
+                if (anOpenEvent.endTime <= currTime):
+                    # the event is now closed. Remove it from the currOpenEvents array
+                    currOpenEvents.remove((anOpenEventIndex, anOpenEvent))
+                else:
+                    # Otherwise the event is still open and we should check and see if it overlaps this event                    
+                    if anOpenEventIndex in overlappingEvents.keys():
+                        overlappingEvents[anOpenEventIndex] = overlappingEvents[anOpenEventIndex] + 1
+                    else:
+                        overlappingEvents[anOpenEventIndex] = 1
+
+            # Add the current to the array of open events            
+            currOpenEvents.append((index, obj))
+
+
+        return overlappingEvents # If there is no next event, return None
 
 
     def on_button_clicked(self, event):
