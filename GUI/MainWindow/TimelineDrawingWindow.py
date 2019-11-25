@@ -426,6 +426,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
     # Event Handlers:
     def keyPressEvent(self, event):
+        print("TimelineDrawingWindow.keyPressEvent(): {0}".format(str(event.key())))
+
         # TODO: pass to all children
         # self.mainVideoTrack.on_key_pressed(event)
         for (anIndex, aTimelineVideoTrack) in enumerate(self.videoFileTrackWidgets):

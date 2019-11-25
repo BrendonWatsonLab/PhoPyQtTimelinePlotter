@@ -262,6 +262,10 @@ class MainVideoPlayerWindow(QMainWindow):
         self.media_player.video_set_key_input(False)
 
         self.timer.start(self.timer_period)
+
+        
+        self.update_video_frame_overlay_text()
+
         self.ui.show()
 
     # Movie Link:
@@ -393,7 +397,6 @@ class MainVideoPlayerWindow(QMainWindow):
     def wheel_handler(self, event):
         # self.modify_volume(1 if event.angleDelta().y() > 0 else -1)
         self.set_media_position(1 if event.angleDelta().y() > 0 else -1)
-
 
     def modify_volume(self, delta_percent):
         new_volume = self.media_player.audio_get_volume() + delta_percent
@@ -551,6 +554,12 @@ class MainVideoPlayerWindow(QMainWindow):
             # self.setWindowFilePath(self.video_filename)
             self.setWindowTitle("Video Player: " + str(self.video_filename))
             pass
+
+        
+    # This updates the text that is overlayed over the top of the video frame. It serves to temporarily display changes in state, like play, pause, stop, skip, etc to provide feedback and notifications to the user.
+    def update_video_frame_overlay_text(self):
+        #TODO: should display the message for a few seconds, and then timeout and disappear
+        self.ui.lblVideoStatusOverlay.setText("")
 
     # After a new media has been set, this function is called to start playing for a short bit to display the first few frames of the video
     def update_preview_frame(self):

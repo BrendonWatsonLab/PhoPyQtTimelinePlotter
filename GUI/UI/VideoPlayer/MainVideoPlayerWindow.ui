@@ -124,6 +124,28 @@
            <property name="lineWidth">
             <number>0</number>
            </property>
+           <widget class="QLabel" name="lblVideoStatusOverlay">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>0</y>
+              <width>231</width>
+              <height>31</height>
+             </rect>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>20</pointsize>
+              <stylestrategy>PreferAntialias</stylestrategy>
+             </font>
+            </property>
+            <property name="text">
+             <string>No Video</string>
+            </property>
+            <property name="textInteractionFlags">
+             <set>Qt::NoTextInteraction</set>
+            </property>
+           </widget>
           </widget>
          </item>
          <item>
