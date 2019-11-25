@@ -135,6 +135,9 @@ class MainVideoPlayerWindow(QMainWindow):
 
         self.ui.frame_video.doubleClicked.connect(self.toggle_full_screen)
         self.ui.frame_video.wheel.connect(self.wheel_handler)
+
+        # TODO: would send twice when the frame_video has focus.
+        # self.keyPressEvent.connect(self.key_handler)
         self.ui.frame_video.keyPressed.connect(self.key_handler)
 
         # Set up Labels:

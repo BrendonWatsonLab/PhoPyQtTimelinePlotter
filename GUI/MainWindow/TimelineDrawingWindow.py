@@ -432,6 +432,21 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         self.statusBar().showMessage(text)
 
+
+    def wheelEvent(self, event):
+        print("mouse wheel event! {0}".format(str(event)))
+        # vsb=self.timelineScroll.verticalScrollBar()
+        hsb=self.timelineScroll.horizontalScrollBar()
+        # self.modify_volume(1 if event.angleDelta().y() > 0 else -1)
+        # self.set_media_position(1 if event.angleDelta().y() > 0 else -1)
+
+        dy=((-event.angleDelta().y()/8)/15)*hsb.singleStep()
+        hsb.setSliderPosition(hsb.sliderPosition()+dy)
+
+        # self.timelineScroll.wheelEvent(event)
+
+        # self.wheel.emit(event)
+
     ## Zoom in/default/out events
     def get_minimum_track_width(self):
         return  (self.width() * self.activeScaleMultiplier)
@@ -515,8 +530,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         scrollbar_offset = scrollbar_scroll_relative_offset + self.timelineScroll.horizontalScrollBar().minimum()
         self.timelineScroll.horizontalScrollBar().setValue(scrollbar_offset)
 
-
-
     def on_jump_to_start(self):
         print("on_jump_to_start()")
         self.timelineScroll.horizontalScrollBar().setValue(self.timelineScroll.horizontalScrollBar().minimum())
@@ -528,8 +541,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.on_active_zoom_changed()
 
     def on_jump_next(self):
-        print("on_jump_next()")
         # Jump to the next available video in the video track
+        # TODO: could highlight the video that's being jumped to.
+        print("on_jump_next()")
         offset_x = self.percent_offset_to_track_offset(self.get_viewport_percent_scrolled())
         offset_datetime = self.offset_to_datetime(offset_x)
         # next_video_tuple: (index, videoObj) pair
