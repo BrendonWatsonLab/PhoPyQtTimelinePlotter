@@ -29,6 +29,7 @@ class TrackFilter(QObject):
         self.allow_labeled_videos = allow_labeled_videos
 
     def build_filter(self, session):
+        # query = session.query(VideoFile)
         if self.allow_original_videos and self.allow_labeled_videos:
             print("Warning: both allow_original_videos and allow_labeled_videos are True!")
             # No filtering needed, we allow any type of videos
