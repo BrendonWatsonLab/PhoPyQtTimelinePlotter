@@ -252,6 +252,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             
             
         def initUI_layout(self):
+
+            self.videoFileTrackWidgetHeaders = dict()
             # Loop through the videoFileTrackWidgets and add them
             for i in range(0, len(self.videoFileTrackWidgets)):
                 currVideoTrackWidget = self.videoFileTrackWidgets[i]
@@ -284,6 +286,13 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                     # currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
                     currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
+                    currHeaderWidget.toggleCollapsed.connect(self.on_track_header_toggle_collapse_activated)
+                    currHeaderWidget.showOptions.connect(self.on_track_header_show_options_activated)
+                    currHeaderWidget.refresh.connect(self.on_track_header_refresh_activated)
+
+                    # self.videoFileTrackWidgetHeaders.append(currHeaderWidget)
+                    self.videoFileTrackWidgetHeaders[currVideoTrackWidget.trackID] = currHeaderWidget
+
                     # currHeaderIncludedTrackHboxLayout.addWidget(currVideoTrackWidget)
                     # currHeaderIncludedContainer.setLayout(currHeaderIncludedTrackHboxLayout)
                     # self.extendedTracksContainerVboxLayout.addWidget(currHeaderIncludedContainer)
@@ -309,6 +318,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
 
 
+            self.eventTrackWidgetHeaders = dict()
 
             # Loop through the eventTrackWidgets and add them
             for i in range(0, len(self.eventTrackWidgets)):
@@ -1086,3 +1096,21 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         print("on_comment_create_at({0})".format(comment_datetime))
         # self.partitionsTrackWidget.try_cut_partition(comment_datetime)
         
+
+
+    # Track Header Operations:
+    @pyqtSlot(int, bool)
+    def on_track_header_toggle_collapse_activated(self, trackID, isCollapsed):
+        print("on_track_header_toggle_collapse({0}, {1})".format(trackID, isCollapsed))
+        currHeader = self.videoFileTrackWidgetHeaders[trackID]
+        currHeader.setHidden(True)
+        
+
+
+    @pyqtSlot(int)
+    def on_track_header_show_options_activated(self, trackID):
+        print("on_track_header_show_options({0})".format(trackID))
+        
+    @pyqtSlot(int)
+    def on_track_header_refresh_activated(self, trackID):
+        print("on_track_header_refresh_activated({0})".format(trackID))

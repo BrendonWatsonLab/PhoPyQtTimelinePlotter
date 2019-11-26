@@ -13,6 +13,11 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 class TimelineHeaderWidget(QFrame):
 
+    toggleCollapsed = pyqtSignal(int, bool)
+    showOptions = pyqtSignal(int)
+    refresh = pyqtSignal(int)
+
+
     def __init__(self, track_id, track_name=None, parent=None):
         super(TimelineHeaderWidget, self).__init__(parent=parent) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/UI/TimelineHeaderWidget/TimelineHeaderWidget.ui", self) # Load the .ui file
@@ -40,7 +45,6 @@ class TimelineHeaderWidget(QFrame):
         # self.ui.actionToggle_Track_Header_Collapsed.triggered.connect(self.on_collapse_pressed)
         # self.ui.actionShow_Track_Options.triggered.connect(self.on_options_pressed)
         # self.ui.actionRefresh_Track.triggered.connect(self.on_reload_pressed)
-
 
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setContentsMargins(0,0,0,0)
@@ -77,8 +81,6 @@ class TimelineHeaderWidget(QFrame):
         # self.ui.toolButton_0
         # self.ui.toolButton_1
         # self.ui.toolButton_2
-
-
         pass
 
     def get_title(self):
@@ -94,17 +96,15 @@ class TimelineHeaderWidget(QFrame):
     def set_body(self, updatedStr):
         return self.ui.textBrowser_Main.setPlainText(updatedStr)
     
-    # def set_editable(self, is_editable):
-    #     for aControl in [self.ui.lineEdit_Title, self.ui.lineEdit_Subtitle, self.ui.textBrowser_Body]:
-    #         aControl.setReadOnly(not is_editable)
-
-
     def on_collapse_pressed(self):
         print("on_collapse_pressed(...)")
+        self.toggleCollapsed.emit(self.track_id, False)
 
     def on_options_pressed(self):
         print("on_options_pressed(...)")
+        self.showOptions.emit(self.track_id)
         
     def on_reload_pressed(self):
         print("on_reload_pressed(...)")
+        self.refresh.emit(self.track_id)
         
