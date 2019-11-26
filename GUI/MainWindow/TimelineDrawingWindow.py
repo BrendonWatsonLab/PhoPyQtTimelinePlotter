@@ -279,10 +279,10 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                     # currHeaderIncludedTrackHboxLayout.setContentsMargins(0,0,0,0)
                     # currHeaderIncludedTrackHboxLayout.addWidget(currHeaderWidget)
 
-                    currHeaderWidget.setMinimumSize(150, 50)
+                    currHeaderWidget.setMinimumSize(50, self.minimumVideoTrackHeight)
                     # currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-                    currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-
+                    # currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+                    currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
                     # currHeaderIncludedTrackHboxLayout.addWidget(currVideoTrackWidget)
                     # currHeaderIncludedContainer.setLayout(currHeaderIncludedTrackHboxLayout)

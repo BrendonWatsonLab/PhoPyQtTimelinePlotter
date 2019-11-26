@@ -22,9 +22,9 @@ class TimelineHeaderWidget(QFrame):
         else:
             self.track_name = track_name
         
-        self.setAutoFillBackground(False)
-        self.setWindowFlags(Qt.FramelessWindowHint)
-        self.setAttribute(Qt.WA_TranslucentBackground)
+        # self.setAutoFillBackground(False)
+        # self.setWindowFlags(Qt.FramelessWindowHint)
+        # self.setAttribute(Qt.WA_TranslucentBackground)
 
         self.initUI()
         self.show() # Show the GUI
@@ -37,32 +37,41 @@ class TimelineHeaderWidget(QFrame):
         # self.ui.textBrowser_Main.setAutoFillBackground(False)
 
         # Actions:
-        self.ui.actionToggle_Track_Header_Collapsed.triggered.connect(self.on_collapse_pressed)
-        self.ui.actionShow_Track_Options.triggered.connect(self.on_options_pressed)
-        self.ui.actionRefresh_Track.triggered.connect(self.on_reload_pressed)
+        # self.ui.actionToggle_Track_Header_Collapsed.triggered.connect(self.on_collapse_pressed)
+        # self.ui.actionShow_Track_Options.triggered.connect(self.on_options_pressed)
+        # self.ui.actionRefresh_Track.triggered.connect(self.on_reload_pressed)
 
-        self.ui.frame_BottomButtons.setHidden(False)
 
-        
-        self.ui.toolButton_0.setIcon(self.style().standardIcon(QStyle.SP_TitleBarShadeButton))
+        self.verticalLayout.setSpacing(0)
+        self.verticalLayout.setContentsMargins(0,0,0,0)
+
+        self.ui.frame_TopButtons.setHidden(False)
+
+        self.ui.btnToggleCollapse.setIcon(self.style().standardIcon(QStyle.SP_TitleBarShadeButton))
+        self.ui.btnToggleCollapse.setText("")
+        # self.ui.toolButton_0.setIcon(self.style().standardIcon(QStyle.SP_TitleBarShadeButton))
         # self.ui.toolButton_0.setDefaultAction(self.ui.actionToggle_Track_Header_Collapsed)
-        self.ui.toolButton_0.triggered.connect(self.on_collapse_pressed)
+        self.ui.btnToggleCollapse.clicked.connect(self.on_collapse_pressed)
 
-        self.ui.toolButton_2.setIcon(self.style().standardIcon(QStyle.SP_FileDialogDetailedView))
+        self.ui.btnOptions.setIcon(self.style().standardIcon(QStyle.SP_FileDialogDetailedView))
+        self.ui.btnOptions.setText("")
+        # self.ui.toolButton_2.setIcon(self.style().standardIcon(QStyle.SP_FileDialogDetailedView))
         # self.ui.toolButton_2.setDefaultAction(self.ui.actionShow_Track_Options)
-        self.ui.toolButton_2.triggered.connect(self.on_options_pressed)
+        self.ui.btnOptions.clicked.connect(self.on_options_pressed)
 
-        self.ui.toolButton_3.setIcon(self.style().standardIcon(QStyle.SP_BrowserReload))
+        self.ui.btnRefresh.setIcon(self.style().standardIcon(QStyle.SP_BrowserReload))
+        self.ui.btnRefresh.setText("")
+        # self.ui.toolButton_3.setIcon(self.style().standardIcon(QStyle.SP_BrowserReload))
         # self.ui.toolButton_3.setDefaultAction(self.ui.actionRefresh_Track)
-        self.ui.toolButton_3.triggered.connect(self.on_reload_pressed)
+        self.ui.btnRefresh.clicked.connect(self.on_reload_pressed)
 
-        self.ui.toolButton_0.setEnabled(True)
-        self.ui.toolButton_2.setEnabled(True)
-        self.ui.toolButton_3.setEnabled(True)
+        # self.ui.toolButton_0.setEnabled(True)
+        # self.ui.toolButton_2.setEnabled(True)
+        # self.ui.toolButton_3.setEnabled(True)
 
-        self.ui.toolButton_0.setHidden(False)
-        self.ui.toolButton_2.setHidden(False)
-        self.ui.toolButton_3.setHidden(False)
+        # self.ui.toolButton_0.setHidden(True)
+        # self.ui.toolButton_2.setHidden(True)
+        # self.ui.toolButton_3.setHidden(True)
         # self.ui.textBrowser_Main
 
         # self.ui.toolButton_0
