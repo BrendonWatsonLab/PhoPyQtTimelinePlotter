@@ -11,6 +11,8 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 from orangecanvas.gui.dock import CollapsibleDockWidget
 
+from GUI.Model.Filters import *
+
 
 # from GUI.UI.TimelineHeaderWidget.TimelineHeaderWidget import TimelineHeaderWidget
 
@@ -68,7 +70,6 @@ class TimelineHeaderWidget_ContentsExpanded(QWidget):
 
     def set_title(self, updatedStr):
         self.ui.lblTitle.setText(updatedStr)
-        self.ui.dockWidget_Main.setWindowTitle(updatedStr)
 
     def set_body(self, updatedStr):
         return self.ui.textBrowser_Main.setPlainText(updatedStr)
@@ -81,14 +82,17 @@ class TimelineHeaderWidget(QFrame):
     refresh = pyqtSignal(int)
 
 
-    def __init__(self, track_id, track_name=None, parent=None):
+    def __init__(self, track_config, parent=None):
         super(TimelineHeaderWidget, self).__init__(parent=parent) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/UI/TimelineHeaderWidget/TimelineHeaderWidget.ui", self) # Load the .ui file
-        self.track_id = track_id
-        if track_name is None:
-            self.track_name = "track {0}".format(self.track_id)
-        else:
-            self.track_name = track_name
+        self.track_config = track_config
+        self.track_id = track_config.get_track_id()
+        self.track_name = track_config.get_track_title()
+        
+        # if track_name is None:
+        #     self.track_name = "track {0}".format(self.track_id)
+        # else:
+        #     self.track_name = track_name
         
         # self.setAutoFillBackground(False)
         # self.setWindowFlags(Qt.FramelessWindowHint)
@@ -96,6 +100,9 @@ class TimelineHeaderWidget(QFrame):
 
         self.timelineHeaderWidget_ContentsCollapsed = TimelineHeaderWidget_ContentsCollapsed(self)
         self.timelineHeaderWidget_ContentsExpanded = TimelineHeaderWidget_ContentsExpanded(self)
+
+        self.timelineHeaderWidget_ContentsExpanded.set_title(self.track_config.get_track_title())
+        self.timelineHeaderWidget_ContentsExpanded.set_body(self.track_config.get_track_extended_description())
 
         self.initUI()
         self.show() # Show the GUI
@@ -143,6 +150,15 @@ class TimelineHeaderWidget(QFrame):
 
         pass
 
+    def update_from_config(self):
+        self.track_id = self.track_config.get_track_id()
+        self.track_name = self.track_config.get_track_title()
+        self.set_title(self.track_config.get_track_title())
+        self.set_body(self.track_config.get_track_extended_description())
+
+    def get_config(self):
+        return self.track_config
+
     def get_title(self):
         return self.ui.lblTitle.text()
     
@@ -150,10 +166,12 @@ class TimelineHeaderWidget(QFrame):
         return self.ui.textBrowser_Main.toPlainText()
 
     def set_title(self, updatedStr):
+        self.track_config.track_name = updatedStr
         self.ui.lblTitle.setText(updatedStr)
         self.ui.dockWidget_Main.setWindowTitle(updatedStr)
 
     def set_body(self, updatedStr):
+        self.track_config.trackExtendedDescription = updatedStr
         return self.ui.textBrowser_Main.setPlainText(updatedStr)
     
     def on_collapse_pressed(self):
@@ -168,7 +186,6 @@ class TimelineHeaderWidget(QFrame):
         print("on_reload_pressed(...)")
         self.refresh.emit(self.track_id)
         
-
     def perform_collapse(self):
         # self.dockWidgetContents.setHidden(True)
         self.ui.dockWidget_Main.hide()
