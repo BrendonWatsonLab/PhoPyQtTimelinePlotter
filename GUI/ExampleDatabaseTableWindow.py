@@ -7,6 +7,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 from sqlalchemy import Column, ForeignKey, Integer, Table, Text, text
 from sqlalchemy.sql.sqltypes import NullType
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -32,8 +33,15 @@ from app.database.entry_models.db_model import Animal, VideoFile, BehavioralBox,
 
 class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
 
-    ActiveTableTabs = [Animal, Cohort, Experiment, BehavioralBox, Labjack]
-    ActiveTableTabStrings = ["Animal", "Cohort", "Experiment", "BehavioralBox", "Labjack"]
+    # ActiveTableTabs = [Animal, Cohort, Experiment, BehavioralBox, Labjack]
+    # ActiveTableTabStrings = ["Animal", "Cohort", "Experiment", "BehavioralBox", "Labjack"]
+
+    ActiveTableTabs = [FileParentFolder, Context, Subcontext, VideoFile]
+    ActiveTableTabStrings = ["FileParentFolder", "Context", "Subcontext", "VideoFile"]
+
+
+    ActiveTableTabs = [Animal, Cohort, Experiment, BehavioralBox, Labjack, VideoFile, TimestampedAnnotation]
+    ActiveTableTabStrings = ["Animal", "Cohort", "Experiment", "BehavioralBox", "Labjack", "VideoFile", "TimestampedAnnotation"]
 
     def __init__(self, database_connection):
         super().__init__(database_connection) # Call the inherited classes __init__ method
@@ -120,8 +128,14 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
 
             currBtnAddNewRecord = QPushButton("New", self)
             currBtnAddNewRecord.released.connect(self.handle_add_new_record_pressed)
+
+            currBtnExportAllRecords = QPushButton("Export", self)
+            currBtnExportAllRecords.released.connect(self.handle_export_all_records_pressed)
+
+            
             # mainLayout.addWidget(currBtnAddNewRecord)
             exec( 'self.tab'+str(i)+'.layout.addWidget(currBtnAddNewRecord)' )
+            exec( 'self.tab'+str(i)+'.layout.addWidget(currBtnExportAllRecords)' )
                    
 
         self.tabs.resize(300,200)
@@ -163,6 +177,11 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
         #     self.database_rollback()
 
         # print("done.")
+
+    
+    def handle_export_all_records_pressed(self):
+        print("handle_export_all_records_pressed(...)")
+        self.export_records()
 
 
     def display_context_menu(self, pos):
@@ -249,15 +268,58 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
 
     def store_new_record(self, name):
         self.currClass = ExampleDatabaseTableWindow.ActiveTableTabs[self.activeActionTabIndex]
-
+        self.currClassString = ExampleDatabaseTableWindow.ActiveTableTabStrings[self.activeActionTabIndex]
+        
         # rec = BehavioralBox()
         rec = self.currClass()
         rec.name = name
         
-        self.database_connection.session.add(rec)
-        self.database_connection.session.commit()
+        try:
+            self.database_connection.save_to_database([rec], self.currClassString)
+
+        except IntegrityError as e:
+            print("ERROR: Failed to commit changes! Rolling back", e)
+            self.database_rollback()
+            return
+        except Exception as e:
+            print("Other exception! Trying to continue", e)
+            self.database_rollback()
+            return
+
         print("storing new record")
         self.models[self.activeActionTabIndex].refresh()
 
+
     def update_current_record(self, x, y):
         self.current_record = self.table_selection_models[self.get_active_tab_index()].currentIndex().data(Qt.EditRole)
+
+
+    def export_records(self):
+        print("export_records()...")
+        self.activeActionTabIndex = self.get_active_tab_index()
+        # dialog = QInputDialog(self)
+        # dialog.setLabelText("Please enter the name for the exported Records file.")
+        # dialog.textValueSelected.connect(self.store_new_record)
+        # dialog.exec()
+
+        currModel = self.models[self.activeActionTabIndex]
+        # currNumRows = currModel.rowCount()
+
+        header_str = currModel.get_header_string()
+        print(header_str)
+        separator_str = ', '
+        for irow in range(currModel.rowCount(None)):
+            curr_row = []
+            for icol in range(currModel.columnCount(None)):
+                curr_cell = currModel.data(currModel.createIndex(irow, icol), Qt.DisplayRole)
+                curr_row.append(curr_cell)
+
+            # print all elems per row
+            curr_row_str = separator_str.join([str(c) for c in curr_row])
+            # print("record[{0}]: {1}".format(str(irow), curr_row_str))
+            print(curr_row_str)
+
+        # for (recordIndex, aRecord) in arange(currNumRows):
+        #     print("record[{0}]: {1}".format(str(recordIndex), str(aRecord)))
+
+        

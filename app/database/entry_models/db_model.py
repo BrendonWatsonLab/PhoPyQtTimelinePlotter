@@ -11,6 +11,13 @@ from datetime import datetime
 from GUI.Model.Videos import VideoInfo, ExperimentContextInfo
 
 from app.filesystem.VideoUtils import VideoParsedResults, FoundVideoFileResult
+
+from PyQt5 import QtGui, QtWidgets
+from PyQt5.QtWidgets import QWidget, QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
+from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
+
+from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
+
 # (Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, VideoFile)
 
 """
@@ -483,6 +490,7 @@ class VideoFile(Base):
     def get_output_dict(self):
         return {'base_name': self.file_basename, 'file_fullname': self.file_fullname, 'file_extension': self.get_extension(), 'parent_path': self.file_video_folder, 'path': self.get_full_path(), 'parsed_date': self.get_start_date(), 'computed_end_date': self.get_end_date(), 'is_deeplabcut_labeled_video': self.get_is_deeplabcut_labeled_video(), 'properties': self.get_currProperties(), 'extended_properties': self.get_extendedProperties()}
 
+    # returns a "VideoInfo" object
     def get_video_info_obj(self):
         parentFolder = self.fileParentFolder
         aFullParentPath = parentFolder.fullpath
@@ -491,6 +499,7 @@ class VideoFile(Base):
              self.get_start_date().replace(tzinfo=None), self.get_end_date().replace(tzinfo=None), self.get_duration(), self.get_is_original_video(), newExperimentContextInfoObj)
         return newVideoInfoObj
 
+    # returns a "VideoParsedResults" object
     def get_parsed_video_result_obj(self):
         parsedResults = VideoParsedResults(self.get_duration())
         newResultsObj = FoundVideoFileResult(str(self.get_full_path()), self.get_parent_path(), self.file_basename, self.file_fullname, self.get_extension(), \
@@ -523,6 +532,14 @@ class VideoFile(Base):
         duration = int(aParsedVideoResultObj.get_duration().total_seconds() * 1000.0)
 
         return VideoFile(None, aFullName, aBaseName, anExtension, aFullParentPath, startTime, endTime, duration, aBBID, anExperimentID, aCohortID, anAnimalID, is_original_video, notes)
+
+    @staticmethod
+    def get_gui_view(aVideoRecord, parent=None):
+        currExtraInfoDict = aVideoRecord.get_output_dict()
+        outGuiObj = PhoDurationEvent_Video(aVideoRecord.get_start_date(), aVideoRecord.get_end_date(), aVideoRecord.file_fullname, QColor(51,204,255), currExtraInfoDict, parent=parent)
+        # outGuiObj
+        return outGuiObj
+
 
 class FileParentFolder(Base):
     __tablename__ = 'fileParentFolders'

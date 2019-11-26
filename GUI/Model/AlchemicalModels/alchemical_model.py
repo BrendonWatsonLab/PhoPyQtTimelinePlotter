@@ -55,6 +55,18 @@ class SqlAlchemyTableModel(QSqlTableModel):
             return QVariant(self.fields[col][0])
         return QVariant()
 
+    def get_header_string(self):
+        separator_str = ', '
+        curr_header_labels = []
+        for icol in range(self.columnCount(None)):
+            # curr_header = self.headerData(icol, orientation, role)
+            curr_header = self.fields[icol][0]
+            curr_header_labels.append(curr_header)
+
+        curr_row_str = separator_str.join([str(c) for c in curr_header_labels])
+        return curr_row_str
+
+
     def setFilter(self, newFilter):
         """Sets or clears the newFilter.
         
