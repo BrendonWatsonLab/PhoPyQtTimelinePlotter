@@ -76,7 +76,7 @@ class TimelineApplication(QApplication):
         # If should show both main and side list GUI
         if (TimelineApplication.shouldShowMainGUIWindow and TimelineApplication.shouldShowListGUIWindow):
             self.sideListWindowGeometry.moveTopRight(self.mainWindowGeometry.topLeft())
-            self.mainListWindow.move(self.ideListWindowGeometry.topLeft())
+            self.mainListWindow.move(self.sideListWindowGeometry.topLeft())
 
     def on_application_about_to_quit(self):
         print("aboutToQuit")

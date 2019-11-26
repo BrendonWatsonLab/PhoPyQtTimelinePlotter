@@ -16,6 +16,8 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWindow
 
 from GUI.HelpWindow.HelpWindowFinal import *
+from GUI.MainObjectListsWindow.MainObjectListsWindow import *
+from GUI.ExampleDatabaseTableWindow import ExampleDatabaseTableWindow
 
 # from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget import *
 from GUI.UI.qtimeline import *
@@ -87,6 +89,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.videoPlayerWindow = None
         self.helpWindow = None
         self.setupWindow = None
+        self.videoTreeWindow = None
+        self.databaseBrowserUtilityWindow = None
+    
 
         self.setMouseTracking(True)
 
@@ -129,6 +134,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.ui.actionShow_Help.triggered.connect(self.handle_showHelpWindow)
             self.ui.actionVideo_Player.triggered.connect(self.handle_showVideoPlayerWindow)
             self.ui.actionSettings.triggered.connect(self.handle_showSetupWindow)
+            self.ui.actionVideo_FIle_ShowListWindow.triggered.connect(self.handle_showVideoTreeWindow)
+            self.ui.actionShowDatabase_Table_BrowserWindow.triggered.connect(self.handle_showDatabaseBrowserUtilityWindow)
             
             ## Setup Zoom:
             self.ui.actionZoom_In.triggered.connect(self.on_zoom_in)
@@ -833,6 +840,37 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
             return True
 
+
+    # Shows the Video File Tree window:
+    def handle_showVideoTreeWindow(self):
+        if self.videoTreeWindow:
+            self.videoTreeWindow.set_database_connection(self.database_connection)
+            self.videoTreeWindow.show()
+        else:
+            # Create a new setup window
+            self.videoTreeWindow = MainObjectListsWindow(self.database_connection, [])
+            self.videoTreeWindow.show()
+
+        self.reposition_videoTreeWindow()
+
+    def reposition_videoTreeWindow(self):
+        if self.videoTreeWindow is None:
+            return
+        self.mainWindowGeometry = self.frameGeometry()
+        self.sideListWindowGeometry = self.videoTreeWindow.frameGeometry()
+        self.sideListWindowGeometry.moveTopRight(self.mainWindowGeometry.topLeft())
+        self.videoTreeWindow.move(self.sideListWindowGeometry.topLeft())
+
+
+    # Shows the databaseBrowserUtilityWindow: a database table viewer/editor
+    def handle_showDatabaseBrowserUtilityWindow(self):
+        if self.databaseBrowserUtilityWindow:
+            self.databaseBrowserUtilityWindow.set_database_connection(self.database_connection)
+            self.databaseBrowserUtilityWindow.show()
+        else:
+            # Create a new setup window
+            self.databaseBrowserUtilityWindow = ExampleDatabaseTableWindow(self.database_connection)
+            self.databaseBrowserUtilityWindow.show()
 
         
         

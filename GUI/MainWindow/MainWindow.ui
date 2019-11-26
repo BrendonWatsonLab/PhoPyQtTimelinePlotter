@@ -41,7 +41,7 @@
      <x>0</x>
      <y>0</y>
      <width>1010</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -68,6 +68,8 @@
     </property>
     <addaction name="actionMain"/>
     <addaction name="actionVideo_Player"/>
+    <addaction name="actionVideo_FIle_ShowListWindow"/>
+    <addaction name="actionShowDatabase_Table_BrowserWindow"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -412,6 +414,16 @@
   <action name="actionCut_at_Active_Video_Playhead">
    <property name="text">
     <string>Cut at Active Video Playhead</string>
+   </property>
+  </action>
+  <action name="actionVideo_FIle_ShowListWindow">
+   <property name="text">
+    <string>Video FIle List</string>
+   </property>
+  </action>
+  <action name="actionShowDatabase_Table_BrowserWindow">
+   <property name="text">
+    <string>Database Table Browser</string>
    </property>
   </action>
  </widget>
