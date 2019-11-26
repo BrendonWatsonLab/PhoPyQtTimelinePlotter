@@ -1107,9 +1107,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     def on_track_header_toggle_collapse_activated(self, trackID, isCollapsed):
         print("on_track_header_toggle_collapse({0}, {1})".format(trackID, isCollapsed))
         currHeader = self.videoFileTrackWidgetHeaders[trackID]
-        currHeader.setHidden(True)
-
-
+        currHeader.perform_collapse()
+        # currHeader.setHidden(True)
 
     @pyqtSlot(int)
     def on_track_header_show_options_activated(self, trackID):

@@ -49,6 +49,9 @@ class TimelineHeaderWidget(QFrame):
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setContentsMargins(0,0,0,0)
 
+        self.dockWidgetContents.layout().setSpacing(0)
+        self.dockWidgetContents.layout().setContentsMargins(0,0,0,0)
+        
         self.ui.frame_TopButtons.setHidden(False)
 
         self.ui.btnToggleCollapse.setIcon(self.style().standardIcon(QStyle.SP_TitleBarShadeButton))
@@ -108,3 +111,9 @@ class TimelineHeaderWidget(QFrame):
         print("on_reload_pressed(...)")
         self.refresh.emit(self.track_id)
         
+
+    def perform_collapse(self):
+        self.dockWidgetContents.setHidden(True)
+
+    def perform_expand(self):
+        self.dockWidgetContents.setHidden(False)
