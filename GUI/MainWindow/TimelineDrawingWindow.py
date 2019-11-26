@@ -87,10 +87,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.trackConfigurations = []
 
         self.videoInfoObjects = []
-        self.trackVideoEventDisplayObjects = dict()
 
         self.reloadModelFromDatabase()
-
         self.build_video_display_events()
 
         self.videoPlayerWindow = None
@@ -107,6 +105,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
 
         self.initUI()
+        self.reload_videos_from_track_configs()
         # self.show() # Show the GUI
 
         overlappingVideoEvents = self.mainVideoTrack.find_overlapping_events()
@@ -419,45 +418,19 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
 
+    # Required to initialize the viewport with all record events
     # Build the PhoDurationEvent objects that are displayed in the main video timeline to represent the videos
     def build_video_display_events(self):
         videoDates = []
         videoEndDates = []
-        # self.videoLabels = []
-        self.allVideoEventDisplayObjects = []
-        # self.trackVideoEventDisplayObjects = [[], []]
-
-        self.trackVideoEventDisplayObjects = dict()
-        # self.trackVideoEventDisplayObjects = {1:([], []), 2:([], []), 6:([], []), 7:([], []), 9:([], []), 10:([], [])}
 
         for (index, videoInfoItem) in enumerate(self.videoInfoObjects):
             videoDates.append(videoInfoItem.startTime)
             videoEndDates.append(videoInfoItem.endTime)
             currExtraInfoDict = videoInfoItem.get_output_dict()
-            # Event Generation
-            currEvent = PhoDurationEvent_Video(videoInfoItem.startTime, videoInfoItem.endTime, videoInfoItem.fullName, QColor(51,204,255), currExtraInfoDict)
-            currRecord = self.videoFileRecords[index]
-
-            self.allVideoEventDisplayObjects.append(currEvent)
-
-            currBBID = currRecord.get_behavioral_box_id()
-            if currBBID is not None:
-                # If we have a valid behavioral box ID
-
-                # Create the key if we need it
-                if currBBID not in self.trackVideoEventDisplayObjects.keys():
-                    self.trackVideoEventDisplayObjects[currBBID] = ([], [])
-                    print("Adding BBID: {0}".format(currBBID))
-
-                if videoInfoItem.is_original_video:
-                    self.trackVideoEventDisplayObjects[currBBID][0].append(currEvent)
-                else:
-                    self.trackVideoEventDisplayObjects[currBBID][1].append(currEvent)
-
 
         self.videoDates = np.array(videoDates)
         self.videoEndDates = np.array(videoEndDates)
-        self.allVideoEventDisplayObjects = np.array(self.allVideoEventDisplayObjects)
 
         if videoDates:
             self.earliestVideoTime = self.videoDates.min()
@@ -482,7 +455,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             newLatestTime = self.latestVideoTime
             newEarliestTime = newLatestTime - TimelineDrawingWindow.ConstantOffsetFromMostRecentVideoDuration
             self.update_global_start_end_times(newEarliestTime, newLatestTime)
-
             ## TODO: Filter the videoEvents, self.videoDates, self.videoEndDates, and labels if we need them to the global self.totalStartTime and self.totalEndTime range
             # Set an "isInViewport" option or something
         else:
@@ -493,7 +465,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         if not self.shouldUseTrackHeaders:
             return
 
-        self.trackVideoEventDisplayObjects = dict()
 
         # Loop through the videoFileTrackWidgets and add them
         for i in range(0, len(self.videoFileTrackWidgets)):
