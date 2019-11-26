@@ -11,6 +11,13 @@ from datetime import datetime
 from GUI.Model.Videos import VideoInfo, ExperimentContextInfo
 
 from app.filesystem.VideoUtils import VideoParsedResults, FoundVideoFileResult
+
+from PyQt5 import QtGui, QtWidgets
+from PyQt5.QtWidgets import QWidget, QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
+from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
+
+from GUI.Model.PhoDurationEvent_Video import PhoDurationEvent_Video
+
 # (Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, VideoFile)
 
 """
@@ -525,6 +532,14 @@ class VideoFile(Base):
         duration = int(aParsedVideoResultObj.get_duration().total_seconds() * 1000.0)
 
         return VideoFile(None, aFullName, aBaseName, anExtension, aFullParentPath, startTime, endTime, duration, aBBID, anExperimentID, aCohortID, anAnimalID, is_original_video, notes)
+
+    @staticmethod
+    def get_gui_view(aVideoRecord, parent=None):
+        currExtraInfoDict = aVideoRecord.get_output_dict()
+        outGuiObj = PhoDurationEvent_Video(aVideoRecord.get_start_date(), aVideoRecord.get_end_date(), aVideoRecord.file_fullname, QColor(51,204,255), currExtraInfoDict, parent=parent)
+        # outGuiObj
+        return outGuiObj
+
 
 class FileParentFolder(Base):
     __tablename__ = 'fileParentFolders'

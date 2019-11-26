@@ -507,9 +507,18 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             currVideoTrackConfig = currVideoTrackHeader.get_config()
 
             found_records = currVideoTrackConfig.filter_records(self.database_connection.get_session())
-
             # print(str(found_records))
             print("track[{0}]: {1} records found".format(i, len(found_records)))
+
+
+            # Build the corresponding GUI objects
+            built_video_views = []
+            for (index, aRecord) in enumerate(found_records):
+                aGuiView = VideoFile.get_gui_view(aRecord, parent=currVideoTrackWidget)
+                built_video_views.append(aGuiView)
+
+            
+            # currVideoTrackWidget
 
         
 
