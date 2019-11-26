@@ -7,6 +7,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 from sqlalchemy import Column, ForeignKey, Integer, Table, Text, text
 from sqlalchemy.sql.sqltypes import NullType
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -32,8 +33,15 @@ from app.database.entry_models.db_model import Animal, VideoFile, BehavioralBox,
 
 class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
 
-    ActiveTableTabs = [Animal, Cohort, Experiment, BehavioralBox, Labjack]
-    ActiveTableTabStrings = ["Animal", "Cohort", "Experiment", "BehavioralBox", "Labjack"]
+    # ActiveTableTabs = [Animal, Cohort, Experiment, BehavioralBox, Labjack]
+    # ActiveTableTabStrings = ["Animal", "Cohort", "Experiment", "BehavioralBox", "Labjack"]
+
+    ActiveTableTabs = [FileParentFolder, Context, Subcontext, VideoFile]
+    ActiveTableTabStrings = ["FileParentFolder", "Context", "Subcontext", "VideoFile"]
+
+
+    ActiveTableTabs = [Animal, Cohort, Experiment, BehavioralBox, Labjack, VideoFile, TimestampedAnnotation]
+    ActiveTableTabStrings = ["Animal", "Cohort", "Experiment", "BehavioralBox", "Labjack", "VideoFile", "TimestampedAnnotation"]
 
     def __init__(self, database_connection):
         super().__init__(database_connection) # Call the inherited classes __init__ method
@@ -260,15 +268,27 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
 
     def store_new_record(self, name):
         self.currClass = ExampleDatabaseTableWindow.ActiveTableTabs[self.activeActionTabIndex]
-
+        self.currClassString = ExampleDatabaseTableWindow.ActiveTableTabStrings[self.activeActionTabIndex]
+        
         # rec = BehavioralBox()
         rec = self.currClass()
         rec.name = name
         
-        self.database_connection.session.add(rec)
-        self.database_connection.session.commit()
+        try:
+            self.database_connection.save_to_database([rec], self.currClassString)
+
+        except IntegrityError as e:
+            print("ERROR: Failed to commit changes! Rolling back", e)
+            self.database_rollback()
+            return
+        except Exception as e:
+            print("Other exception! Trying to continue", e)
+            self.database_rollback()
+            return
+
         print("storing new record")
         self.models[self.activeActionTabIndex].refresh()
+
 
     def update_current_record(self, x, y):
         self.current_record = self.table_selection_models[self.get_active_tab_index()].currentIndex().data(Qt.EditRole)

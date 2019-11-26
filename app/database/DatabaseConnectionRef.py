@@ -77,13 +77,19 @@ class DatabaseConnectionRef(QObject):
                     print("Committed changes!")
                 return True
             except IntegrityError as e:
-                self.session.rollback() # A constraint failed
                 if (self.enable_debug_printing):
                     print("ERROR: Failed to commit changes! Rolling back", e)
+
+                self.rollback() # A constraint failed
+                if (self.enable_debug_printing):
+                    print("rolled back.")
+                
                 return False
             except Exception as e:
                 print("Other exception! Trying to continue", e)
                 return False
+        else:
+            return False
 
     def rollback(self):
         if self.session:
@@ -177,7 +183,8 @@ class DatabaseConnectionRef(QObject):
 
     ## LOADING:=
     def load_categorical_duration_labels_from_database(self, contextConfigObj):
-        print("Loading categorical_duration_labels from database:")
+        if (self.enable_debug_printing):
+            print("Loading categorical_duration_labels from database:")
         session = self.get_session()
         currSearchSubcontext = contextConfigObj.get_subcontext()
         # annotations = session.query(CategoricalDurationLabel).options(selectinload(CategoricalDurationLabel.Context)).all()
@@ -185,14 +192,16 @@ class DatabaseConnectionRef(QObject):
         return records
 
     def load_annotation_events_from_database(self):
-        print("Loading annotation events from database:")
+        if (self.enable_debug_printing):
+            print("Loading annotation events from database:")
         session = self.get_session()
         annotations = session.query(TimestampedAnnotation).options(selectinload(TimestampedAnnotation.Context)).all()
         return annotations
 
     def load_contexts_from_database(self):
         outputRecordsDict = dict()
-        print("Loading contexts from database:")
+        if (self.enable_debug_printing):
+            print("Loading contexts from database:")
         session = self.get_session()
         records_list = session.query(Context).options(selectinload(Context.subcontexts)).all()
         for aRecord in records_list:
@@ -200,7 +209,8 @@ class DatabaseConnectionRef(QObject):
         return outputRecordsDict
 
     def load_subcontexts_from_database(self):
-        print("Loading subcontexts from database:")
+        if (self.enable_debug_printing):
+            print("Loading subcontexts from database:")
         session = self.get_session()
         subcontexts = session.query(Subcontext).all()
         return subcontexts
@@ -208,7 +218,8 @@ class DatabaseConnectionRef(QObject):
 
     def load_colors_from_database(self):
         outputColorsDict = dict()
-        print("Loading colors from database:")
+        if (self.enable_debug_printing):
+            print("Loading colors from database:")
         session = self.get_session()
         colors_list = session.query(CategoryColors).all()
         for aColor in colors_list:
@@ -216,19 +227,22 @@ class DatabaseConnectionRef(QObject):
         return outputColorsDict
 
     def load_behavior_groups_from_database(self):
-        print("Loading behavior_groups from database:")
+        if (self.enable_debug_printing):
+            print("Loading behavior_groups from database:")
         session = self.get_session()
         behaviorGroups = session.query(BehaviorGroup).options(selectinload(BehaviorGroup.behaviors)).all()
         return behaviorGroups
 
     def load_behaviors_from_database(self):
-        print("Loading behaviors from database:")
+        if (self.enable_debug_printing):
+            print("Loading behaviors from database:")
         session = self.get_session()
         behaviors = session.query(Behavior).all()
         return behaviors
 
     def load_static_file_extensions_from_database(self):
-        print("Loading static_file_extensions from database:")
+        if (self.enable_debug_printing):
+            print("Loading static_file_extensions from database:")
         outputFileExtensionsDict = dict()
         session = self.get_session()
         objs = session.query(StaticFileExtension).all()
@@ -237,7 +251,8 @@ class DatabaseConnectionRef(QObject):
         return outputFileExtensionsDict
 
     def load_file_parent_folders_from_database(self, include_video_files=True):
-        print("Loading file_parent_folders from database:")
+        if (self.enable_debug_printing):
+            print("Loading file_parent_folders from database:")
         session = self.get_session()
         if include_video_files:
             objs = session.query(FileParentFolder).options(selectinload(FileParentFolder.videoFiles)).all()
@@ -246,7 +261,8 @@ class DatabaseConnectionRef(QObject):
         return objs
 
     def load_video_file_info_from_database(self):
-        print("Loading video_file_info from database:")
+        if (self.enable_debug_printing):
+            print("Loading video_file_info from database:")
         session = self.get_session()
         objs = session.query(ExVideoFile).all()
         return objs
@@ -255,7 +271,8 @@ class DatabaseConnectionRef(QObject):
 
     ## SAVING:
     def save_to_database(self, recordsList, recordTypeName):
-        print("Saving {0} records of type <{1}> to database: {2}".format(len(recordsList), recordTypeName, self.get_path()))
+        if (self.enable_debug_printing):
+            print("Saving {0} records of type <{1}> to database: {2}".format(len(recordsList), recordTypeName, self.get_path()))
         session = self.get_session()
         num_found_records = len(recordsList)
         num_added_records = 0
@@ -270,15 +287,19 @@ class DatabaseConnectionRef(QObject):
                 num_skipped_records = num_skipped_records + 1
                 continue
 
-        print('Added ', num_added_records, 'of', num_found_records, recordTypeName, 'records to database.')
+        if (self.enable_debug_printing):
+            print('Added ', num_added_records, 'of', num_found_records, recordTypeName, 'records to database.')
 
         # Save (commit) the changes
         self.commit()
-        print("done.")
+
+        if (self.enable_debug_printing):
+            print("done.")
         return
 
     def save_contexts_to_database(self, contexts):
-        print("Saving contexts to database: {0}".format(self.get_path()))
+        if (self.enable_debug_printing):
+            print("Saving contexts to database: {0}".format(self.get_path()))
         session = self.get_session()
         num_found_records = len(contexts)
         num_added_records = 0
@@ -290,21 +311,24 @@ class DatabaseConnectionRef(QObject):
                 num_added_records = num_added_records + 1
 
             except Exception as e:
-                print(e)
                 print("Other exception! Trying to continue", e)
                 num_skipped_records = num_skipped_records + 1
                 continue
 
         # session.add_all(anOutRecord)
-        print('Added ', num_added_records, 'of', num_found_records, 'contexts to database.')
+        if (self.enable_debug_printing):
+            print('Added ', num_added_records, 'of', num_found_records, 'contexts to database.')
 
         # Save (commit) the changes
         self.commit()
-        print("done.")
+
+        if (self.enable_debug_printing):
+            print("done.")
         return
 
     def save_annotation_events_to_database(self, annotationEvents):
-        print("Saving annotation events to database: {0}".format(self.get_path()))
+        if (self.enable_debug_printing):
+            print("Saving annotation events to database: {0}".format(self.get_path()))
         session = self.get_session()
         num_found_records = len(annotationEvents)
         num_added_records = 0
@@ -316,24 +340,26 @@ class DatabaseConnectionRef(QObject):
                 num_added_records = num_added_records + 1
 
             except Exception as e:
-                print(e)
                 print("Other exception! Trying to continue", e)
                 num_skipped_records = num_skipped_records + 1
                 continue
 
         # session.add_all(anOutRecord)
-        print('Added ', num_added_records, 'of', num_found_records, 'annotation events to database.')
+        if (self.enable_debug_printing):
+            print('Added ', num_added_records, 'of', num_found_records, 'annotation events to database.')
 
         # Save (commit) the changes
         self.commit()
         # We can also close the connection if we are done with it.
         # Just be sure any changes have been committed or they will be lost.
         # session.close()
-        print("done.")
+        if (self.enable_debug_printing):
+            print("done.")
         return
 
     def save_colors_to_database(self, colors):
-        print("Saving colors events to database: {0}".format(self.get_path()))
+        if (self.enable_debug_printing):
+            print("Saving colors events to database: {0}".format(self.get_path()))
         session = self.get_session()
 
         # Behavior Groups:
@@ -350,14 +376,20 @@ class DatabaseConnectionRef(QObject):
                 num_skipped_records = num_skipped_records + 1
                 continue
 
-        print('Added ', num_added_records, 'of', num_found_records, 'colors to database.')
+        if (self.enable_debug_printing):
+            print('Added ', num_added_records, 'of', num_found_records, 'colors to database.')
+
         # Save (commit) the changes
         self.commit()
-        print("done.")
+
+        if (self.enable_debug_printing):
+            print("done.")
         return
 
     def save_behavior_events_to_database(self, behaviors, behavior_groups):
-        print("Saving behavior/behavior_group events to database: {0}".format(self.get_path()))
+        if (self.enable_debug_printing):
+            print("Saving behavior/behavior_group events to database: {0}".format(self.get_path()))
+
         session = self.get_session()
 
         # Behavior Groups:
@@ -374,7 +406,8 @@ class DatabaseConnectionRef(QObject):
                 num_skipped_records = num_skipped_records + 1
                 continue
 
-        print('Preparing to add ', num_added_records, 'of', num_found_records, 'behavior_groups to database.')
+        if (self.enable_debug_printing):
+            print('Preparing to add ', num_added_records, 'of', num_found_records, 'behavior_groups to database.')
 
         # Behaviors:
         num_found_records = len(behaviors)
@@ -390,18 +423,19 @@ class DatabaseConnectionRef(QObject):
                 num_skipped_records = num_skipped_records + 1
                 continue
 
-        print('Preparing to add ', num_added_records, 'of', num_found_records, 'behaviors to database.')
+        if (self.enable_debug_printing):
+            print('Preparing to add ', num_added_records, 'of', num_found_records, 'behaviors to database.')
 
         # Save (commit) the changes
         self.commit()
-        # We can also close the connection if we are done with it.
-        # Just be sure any changes have been committed or they will be lost.
-        # session.close()
-        print("done.")
+
+        if (self.enable_debug_printing):
+            print("done.")
         return
 
     def save_static_file_extensions_to_database(self, static_file_extensions):
-        print("Saving static_file_extensions to database: {0}".format(self.get_path()))
+        if (self.enable_debug_printing):
+            print("Saving static_file_extensions to database: {0}".format(self.get_path()))
         session = self.get_session()
 
         # Behavior Groups:
@@ -418,14 +452,18 @@ class DatabaseConnectionRef(QObject):
                 num_skipped_records = num_skipped_records + 1
                 continue
 
-        print('Added ', num_added_records, 'of', num_found_records, 'static_file_extensions to database.')
+        if (self.enable_debug_printing):
+            print('Added ', num_added_records, 'of', num_found_records, 'static_file_extensions to database.')
         # Save (commit) the changes
         self.commit()
-        print("done.")
+
+        if (self.enable_debug_printing):
+            print("done.")
         return
 
     def save_file_parent_folders_to_database(self, file_parent_folders):
-        print("Saving file_parent_folders to database: {0}".format(self.get_path()))
+        if (self.enable_debug_printing):
+            print("Saving file_parent_folders to database: {0}".format(self.get_path()))
         session = self.get_session()
 
         # Behavior Groups:
@@ -442,14 +480,18 @@ class DatabaseConnectionRef(QObject):
                 num_skipped_records = num_skipped_records + 1
                 continue
 
-        print('Added ', num_added_records, 'of', num_found_records, 'file_parent_folders to database.')
+        if (self.enable_debug_printing):
+            print('Added ', num_added_records, 'of', num_found_records, 'file_parent_folders to database.')
         # Save (commit) the changes
         self.commit()
-        print("done.")
+
+        if (self.enable_debug_printing):
+            print("done.")
         return
 
     def save_video_file_info_to_database(self, video_file_info):
-        print("Saving video_file_info to database: {0}".format(self.get_path()))
+        if (self.enable_debug_printing):
+            print("Saving video_file_info to database: {0}".format(self.get_path()))
         session = self.get_session()
 
         # Behavior Groups:
@@ -466,16 +508,21 @@ class DatabaseConnectionRef(QObject):
                 num_skipped_records = num_skipped_records + 1
                 continue
 
-        print('Added ', num_added_records, 'of', num_found_records, 'video_file_info to database.')
+        if (self.enable_debug_printing):
+            print('Added ', num_added_records, 'of', num_found_records, 'video_file_info to database.')
         # Save (commit) the changes
         self.commit()
-        print("done.")
+
+        if (self.enable_debug_printing):
+            print("done.")
+
         return
 
     ## Model Generation:
     # get_table_model(cls): should work for any record class with a ".getTableMapping()" function defined
     def get_table_model(self, cls):
-        print("get_table_model({0}) from database:".format(str(cls)))
+        if (self.enable_debug_printing):
+            print("get_table_model({0}) from database:".format(str(cls)))
         session = self.get_session()
         model = SqlAlchemyTableModel(
             session,
@@ -484,7 +531,8 @@ class DatabaseConnectionRef(QObject):
         return model
 
     def get_animal_table_model(self):
-        print("get_animal_table_model() from database:")
+        if (self.enable_debug_printing):
+            print("get_animal_table_model() from database:")
         session = self.get_session()
         model = SqlAlchemyTableModel(
             session,
@@ -538,7 +586,7 @@ class DatabaseConnectionRef(QObject):
 
         sampleBehavioralBoxes = [BehavioralBox(None, 'B{:02}'.format(i)) for i in range(0,16)]
         self.save_to_database(sampleBehavioralBoxes, 'BehavioralBox')
-        
+
         # Sample Subcontexts
 
 
