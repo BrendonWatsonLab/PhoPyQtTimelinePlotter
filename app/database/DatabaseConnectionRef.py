@@ -85,7 +85,6 @@ class DatabaseConnectionRef(QObject):
                 print("Other exception! Trying to continue", e)
                 return False
 
-
     def rollback(self):
         if self.session:
             try:
@@ -533,6 +532,13 @@ class DatabaseConnectionRef(QObject):
         ]
         self.save_to_database(sampleSubcontexts, 'Subcontext')
 
+        # Behavioral Boxes
+        sampleAnimals = [Animal(None, 'Animal_{:04}'.format(i)) for i in range(0,8)]
+        self.save_to_database(sampleAnimals, 'Animal')
+
+        sampleBehavioralBoxes = [BehavioralBox(None, 'B{:02}'.format(i)) for i in range(0,16)]
+        self.save_to_database(sampleBehavioralBoxes, 'BehavioralBox')
+        
         # Sample Subcontexts
 
 
@@ -548,5 +554,6 @@ class DatabaseConnectionRef(QObject):
             parent_file_extension_obj = StaticFileExtension(currFileExtension)
             # Add it to the database
             self.database_connection.save_static_file_extensions_to_database([parent_file_extension_obj])
+
 
 
