@@ -80,6 +80,12 @@ class TrackCache(QObject):
 
 # TrackConfiguration: a class that holds the settings for a timeline track
 class TrackConfiguration(QObject):
+
+    # dataChanged = pyqtSignal()
+    # recordsLoaded = pyqtSignal()
+
+    cacheUpdated = pyqtSignal()
+
     def __init__(self, trackIndex, trackTitle, trackExtendedDescription, allow_original_videos, allow_labeled_videos, behavioral_box_ids=None, experiment_ids=None, cohort_ids=None, animal_ids=None, parent=None):
         super(TrackConfiguration, self).__init__(parent=parent)
         self.trackIndex = trackIndex
@@ -103,6 +109,7 @@ class TrackConfiguration(QObject):
 
     def update_cache(self, newCachedModelViewArray):
         self.cache.set_model_view_array(newCachedModelViewArray)
+        self.cacheUpdated.emit()
 
     def get_cache(self):
         return self.cache

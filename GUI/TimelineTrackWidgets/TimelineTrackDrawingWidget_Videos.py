@@ -19,14 +19,23 @@ class TimelineTrackDrawingWidget_Videos(TimelineTrackDrawingWidget_EventsBase):
     default_shouldDismissSelectionUponMouseButtonRelease = True
     default_itemSelectionMode = ItemSelectionOptions.MultiSelection
 
-    def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
-        super(TimelineTrackDrawingWidget_Videos, self).__init__(trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
+    def __init__(self, trackConfig, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
+        super(TimelineTrackDrawingWidget_Videos, self).__init__(trackConfig.get_track_id(), [], [], totalStartTime, totalEndTime, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
         self.currNowPlayingVideoIndicies = []
         self.activeVideoEditDialog = None
+        self.trackConfig = trackConfig
+        self.trackConfig.cacheUpdated.connect(self.reloadModelFromConfigCache)
+
+
+    # def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
+    #     super(TimelineTrackDrawingWidget_Videos, self).__init__(trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
+    #     self.currNowPlayingVideoIndicies = []
+    #     self.activeVideoEditDialog = None
 
     # Updates the member variables from the database
     # Note: if there are any pending changes, they will be persisted on this action
     def reloadModelFromDatabase(self):
+        print("TimelineTrackDrawingWidget_Videos.reloadModelFromDatabase()")
         if self.parent is None:
             print("Invalid parent!")
             return
@@ -34,6 +43,22 @@ class TimelineTrackDrawingWidget_Videos(TimelineTrackDrawingWidget_EventsBase):
             pass
             # self.parent.
 
+
+    @pyqtSlot()
+    def reloadModelFromConfigCache(self):
+        print("TimelineTrackDrawingWidget_Videos.reloadModelFromConfigCache()")
+        active_cache = self.trackConfig.get_cache()
+        active_model_view_array = active_cache.get_model_view_array()
+        self.durationRecords = []
+        self.durationObjects = []
+
+        for aContainerObj in active_model_view_array:
+            self.durationRecords.append(aContainerObj.get_record())
+            self.durationObjects.append(aContainerObj.get_view())            
+
+
+        self.update()
+        
 
 
     def set_now_playing(self, videoObjectIndex):
