@@ -80,19 +80,8 @@ When the user modifies an existing partition:
 
 """
 
-# Partition: a simple container used by Partitioner that holds a reference to both the view and data objects
-#TODO: could extend the GUI partition view object to hold the actual record. This makes the most sense, as they have many overlapping properties that are duplicated.
-class Partition(QObject):
-    def __init__(self, record, view, parent=None):
-        super().__init__(parent)
-        self.record = record
-        self.view = view
+from GUI.Model.ModelViewContainer import ModelViewContainer
 
-    def get_record(self):
-        return self.record
-    
-    def get_view(self):
-        return self.view
 
 """
 A 0.0 to 1.0 timeline
@@ -168,7 +157,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
         new_partition_record.tertiary_text = ""
         new_partition_record.notes = 'auto'
 
-        new_partition_obj = Partition(new_partition_record, new_partition_view, self.owning_parent_track)
+        new_partition_obj = ModelViewContainer(new_partition_record, new_partition_view, self.owning_parent_track)
         return new_partition_obj
 
     # Builds "Partition" objects containing a reference to both a record and a view
@@ -216,7 +205,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
                 # theColor = self.owning_parent_track.behaviors[from_database_partition_record.subtype_id-1].primaryColor.get_QColor()
                 newGuiObject.setAccessibleName(str(newPartitionIndex))
                 # build the combined partition object
-                new_partition_obj = Partition(aDataPartition, newGuiObject, parent=self.owning_parent_track)
+                new_partition_obj = ModelViewContainer(aDataPartition, newGuiObject, parent=self.owning_parent_track)
                 # Add it to the output array
                 spanning_partition_records.append(new_partition_obj)
                 # Set the prevPartitionObj reference to the data partition
@@ -251,7 +240,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
         # # build a list
         # for (index, a_data_partition) in spanning_data_partitions:
         #     a_view_partition = spanning_view_partitions[index]
-        #     newPartition = Partition(a_data_partition, a_view_partition, self.owning_parent_track)
+        #     newPartition = ModelViewContainer(a_data_partition, a_view_partition, self.owning_parent_track)
         #     self.partitions.append(newPartition)
 
         self.partitions = self.construct_spanning_unlabeled_partition_records(loadedDataPartitions)
