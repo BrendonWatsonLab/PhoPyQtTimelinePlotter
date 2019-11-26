@@ -32,6 +32,7 @@ from app.database.SqlAlchemyDatabase import load_annotation_events_from_database
 
 from GUI.UI.VideoPlayer.MainVideoPlayerWindow import *
 from GUI.SetupWindow.SetupWindow import *
+from GUI.UI.VideoTrackFilterEditWidget.VideoTrackFilterEditDialog import *
 
 from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
 
@@ -86,19 +87,18 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         self.trackConfigurations = []
 
-        # self.videoInfoObjects = load_video_events_from_database(self.database_connection.get_path(), as_videoInfo_objects=True)
         self.videoInfoObjects = []
-        self.trackVideoEventDisplayObjects = dict()
 
         self.reloadModelFromDatabase()
-
-        self.build_video_display_events()
+        self.reload_timeline_display_bounds()
 
         self.videoPlayerWindow = None
         self.helpWindow = None
         self.setupWindow = None
         self.videoTreeWindow = None
         self.databaseBrowserUtilityWindow = None
+        self.activeVideoTrackConfigEditDialog = None
+        self.activeTrackID_ConfigEditingIndex = None
     
 
         self.setMouseTracking(True)
@@ -108,12 +108,13 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
 
         self.initUI()
+        self.reload_videos_from_track_configs()
         # self.show() # Show the GUI
 
-        overlappingVideoEvents = self.mainVideoTrack.find_overlapping_events()
-        for aTuple in overlappingVideoEvents:
-            print(aTuple)
-        # print(overlappingVideoEvents)
+        # overlappingVideoEvents = self.mainVideoTrack.find_overlapping_events()
+        # for aTuple in overlappingVideoEvents:
+        #     print(aTuple)
+        # # print(overlappingVideoEvents)
 
     def initUI(self):
 
@@ -188,31 +189,34 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             ## TODO: The video tracks must set:
             self.videoFileTrackWidgets = []
 
-            # self.trackVideoEventDisplayObjects[1]
-            # self.allVideoEventDisplayObjects.filter()
             currTrackIndex = 0
             currTrackBBID = 0
-            self.trackConfigurations.append(TrackConfiguration(currTrackIndex, "B{0:02}".format(currTrackBBID), "Originals", True, False, [currTrackBBID+1], None, None, None, self))
-            self.mainVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[currTrackBBID][0], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+            currTrackConfig = TrackConfiguration(currTrackIndex, "B{0:02}".format(currTrackBBID), "Originals", True, False, [currTrackBBID+1], None, None, None, self)
+            self.trackConfigurations.append(currTrackConfig)
+            self.mainVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
             self.mainVideoTrack.set_track_title_label('BBID: {0}, originals'.format(currTrackBBID))
             self.videoFileTrackWidgets.append(self.mainVideoTrack)
 
             currTrackIndex = currTrackIndex + 1
-            self.trackConfigurations.append(TrackConfiguration(currTrackIndex, "B{0:02}Labeled".format(currTrackBBID), "Labeled", False, True, [currTrackBBID+1], None, None, None, self))
-            self.labeledVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[currTrackBBID][1], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+            currTrackConfig = TrackConfiguration(currTrackIndex, "B{0:02}Labeled".format(currTrackBBID), "Labeled", False, True, [currTrackBBID+1], None, None, None, self)
+            self.trackConfigurations.append(currTrackConfig)
+            self.labeledVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
             self.labeledVideoTrack.set_track_title_label('BBID: {0}, labeled'.format(currTrackBBID))
             self.videoFileTrackWidgets.append(self.labeledVideoTrack)
 
+
             currTrackIndex = currTrackIndex + 1
             currTrackBBID = currTrackBBID + 1
-            self.trackConfigurations.append(TrackConfiguration(currTrackIndex, "B{0:02}".format(currTrackBBID), "Originals", True, False, [currTrackBBID+1], None, None, None, self))
-            self.mainVideoTrack1 = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[currTrackBBID][0], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+            currTrackConfig = TrackConfiguration(currTrackIndex, "B{0:02}".format(currTrackBBID), "Originals", True, False, [currTrackBBID+1], None, None, None, self)
+            self.trackConfigurations.append(currTrackConfig)
+            self.mainVideoTrack1 = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
             self.mainVideoTrack1.set_track_title_label('BBID: {0}, originals'.format(currTrackBBID))
             self.videoFileTrackWidgets.append(self.mainVideoTrack1)
 
             currTrackIndex = currTrackIndex + 1
-            self.trackConfigurations.append(TrackConfiguration(currTrackIndex, "B{0:02}Labeled".format(currTrackBBID), "Labeled", False, True, [currTrackBBID+1], None, None, None, self))
-            self.labeledVideoTrack1 = TimelineTrackDrawingWidget_Videos(currTrackIndex, self.trackVideoEventDisplayObjects[currTrackBBID][1], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+            currTrackConfig = TrackConfiguration(currTrackIndex, "B{0:02}Labeled".format(currTrackBBID), "Labeled", False, True, [currTrackBBID+1], None, None, None, self)
+            self.trackConfigurations.append(currTrackConfig)
+            self.labeledVideoTrack1 = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
             self.labeledVideoTrack1.set_track_title_label('BBID: {0}, labeled'.format(currTrackBBID))
             self.videoFileTrackWidgets.append(self.labeledVideoTrack1)
 
@@ -244,8 +248,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.timelineMasterTrackWidget.hoverChanged.connect(self.on_playhead_hover_position_updated)
             self.extendedTracksContainer.hoverChanged.connect(self.on_playhead_hover_position_updated)
 
-            # self.timelineMasterTrackWidget.hoverChanged.connect(self.extendedTracksContainer.on_update_hover)
-            
             #Layout of Extended Tracks Container Widget
             self.extendedTracksContainerVboxLayout = QVBoxLayout(self)
             self.extendedTracksContainerVboxLayout.addStretch(1)
@@ -317,9 +319,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
                 # General Layout:
 
-
-
-
             self.eventTrackWidgetHeaders = dict()
 
             # Loop through the eventTrackWidgets and add them
@@ -350,8 +349,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
             # Size the widgets
             self.verticalSplitter.setSizes([100, 600])
-
-
 
         desiredWindowWidth = 900
         self.resize( desiredWindowWidth, 800 )
@@ -424,45 +421,17 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
 
-    # Build the PhoDurationEvent objects that are displayed in the main video timeline to represent the videos
-    def build_video_display_events(self):
+    # Required to initialize the viewport to fit the video events
+    def reload_timeline_display_bounds(self):
         videoDates = []
         videoEndDates = []
-        # self.videoLabels = []
-        self.allVideoEventDisplayObjects = []
-        # self.trackVideoEventDisplayObjects = [[], []]
-
-        self.trackVideoEventDisplayObjects = dict()
-        # self.trackVideoEventDisplayObjects = {1:([], []), 2:([], []), 6:([], []), 7:([], []), 9:([], []), 10:([], [])}
 
         for (index, videoInfoItem) in enumerate(self.videoInfoObjects):
             videoDates.append(videoInfoItem.startTime)
             videoEndDates.append(videoInfoItem.endTime)
-            currExtraInfoDict = videoInfoItem.get_output_dict()
-            # Event Generation
-            currEvent = PhoDurationEvent_Video(videoInfoItem.startTime, videoInfoItem.endTime, videoInfoItem.fullName, QColor(51,204,255), currExtraInfoDict)
-            currRecord = self.videoFileRecords[index]
-
-            self.allVideoEventDisplayObjects.append(currEvent)
-
-            currBBID = currRecord.get_behavioral_box_id()
-            if currBBID is not None:
-                # If we have a valid behavioral box ID
-
-                # Create the key if we need it
-                if currBBID not in self.trackVideoEventDisplayObjects.keys():
-                    self.trackVideoEventDisplayObjects[currBBID] = ([], [])
-                    print("Adding BBID: {0}".format(currBBID))
-
-                if videoInfoItem.is_original_video:
-                    self.trackVideoEventDisplayObjects[currBBID][0].append(currEvent)
-                else:
-                    self.trackVideoEventDisplayObjects[currBBID][1].append(currEvent)
-
 
         self.videoDates = np.array(videoDates)
         self.videoEndDates = np.array(videoEndDates)
-        self.allVideoEventDisplayObjects = np.array(self.allVideoEventDisplayObjects)
 
         if videoDates:
             self.earliestVideoTime = self.videoDates.min()
@@ -487,7 +456,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             newLatestTime = self.latestVideoTime
             newEarliestTime = newLatestTime - TimelineDrawingWindow.ConstantOffsetFromMostRecentVideoDuration
             self.update_global_start_end_times(newEarliestTime, newLatestTime)
-
             ## TODO: Filter the videoEvents, self.videoDates, self.videoEndDates, and labels if we need them to the global self.totalStartTime and self.totalEndTime range
             # Set an "isInViewport" option or something
         else:
@@ -496,9 +464,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     # Reloads the video records from the current track configs
     def reload_videos_from_track_configs(self):
         if not self.shouldUseTrackHeaders:
+            print("Warning: Track headers-based configs are disabled!")
             return
-
-        self.trackVideoEventDisplayObjects = dict()
 
         # Loop through the videoFileTrackWidgets and add them
         for i in range(0, len(self.videoFileTrackWidgets)):
@@ -507,12 +474,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             currVideoTrackConfig = currVideoTrackHeader.get_config()
 
             found_records = currVideoTrackConfig.filter_records(self.database_connection.get_session())
-            # print(str(found_records))
             print("track[{0}]: {1} records found".format(i, len(found_records)))
 
-
             # Build the corresponding GUI objects
-            # built_video_views = []
             built_model_view_container_array = []
             for (index, aRecord) in enumerate(found_records):
                 aGuiView = VideoFile.get_gui_view(aRecord, parent=currVideoTrackWidget)
@@ -521,7 +485,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                 built_model_view_container_array.append(aModelViewContainer)
 
             currVideoTrackConfig.update_cache(built_model_view_container_array)
-            # currVideoTrackWidget
 
         
 
@@ -1139,8 +1102,76 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     @pyqtSlot(int)
     def on_track_header_show_options_activated(self, trackID):
         print("on_track_header_show_options({0})".format(trackID))
+        currVideoTrackHeader = self.videoFileTrackWidgetHeaders[trackID]
+        currVideoTrackConfig = currVideoTrackHeader.get_config()
+        self.activeTrackID_ConfigEditingIndex = trackID
+        self.activeVideoTrackConfigEditDialog = VideoTrackFilterEditDialog(currVideoTrackConfig, parent=self)
+        self.activeVideoTrackConfigEditDialog.on_commit.connect(self.try_update_video_track_filter)
+        self.activeVideoTrackConfigEditDialog.on_cancel.connect(self.video_track_config_dialog_canceled)
+
         
     @pyqtSlot(int)
     def on_track_header_refresh_activated(self, trackID):
         print("on_track_header_refresh_activated({0})".format(trackID))
         self.reload_videos_from_track_configs()
+
+
+
+
+    # Called when the partition edit dialog accept event is called.
+    @pyqtSlot(int, str, int, int, int, int, bool, bool)
+    def try_update_video_track_filter(self, trackID, trackName, behavioral_box_id, experiment_id, cohort_id, animal_id, allow_original_videos, allow_labeled_videos):
+        # Tries to update the video track config
+        print('TimelineDrawingWindow.try_update_video_track_filter(...): track_id: {0}, track_name: {1}'.format(trackID, trackName))
+        # if (not (self.trackContextConfig.get_is_valid())):
+        #     print('context is invalid! aborting try_update_video!')
+        #     return
+        
+        if (not (self.activeTrackID_ConfigEditingIndex is None)):
+            currVideoTrackHeader = self.videoFileTrackWidgetHeaders[trackID]
+            currVideoTrackConfig = currVideoTrackHeader.get_config()
+            currVideoTrackFilter = currVideoTrackConfig.get_filter()
+
+            # Convert -1 values for type_id and subtype_id back into "None" objects. They had to be an Int to be passed through the pyQtSlot()
+            # Note the values are record IDs (not indicies, so they're 1-indexed). This means that both -1 and 0 are invalid.
+            proposedModifiedFilter = TrackFilter(allow_original_videos, allow_labeled_videos, None, None, None, None, parent=currVideoTrackConfig.parent())
+
+            if (behavioral_box_id < 1):
+                proposedModifiedFilter.behavioral_box_ids = None
+            else:
+                proposedModifiedFilter.behavioral_box_ids = [behavioral_box_id]
+
+
+            if (experiment_id < 1):
+                proposedModifiedFilter.experiment_ids = None
+            else:
+                proposedModifiedFilter.experiment_ids = [experiment_id]
+
+
+            if (cohort_id < 1):
+                proposedModifiedFilter.cohort_ids = None
+            else:
+                proposedModifiedFilter.cohort_ids = [cohort_id]
+
+            if (animal_id < 1):
+                proposedModifiedFilter.animal_ids = None
+            else:
+                proposedModifiedFilter.animal_ids = [animal_id]
+
+            modifiedConfig = self.videoFileTrackWidgetHeaders[trackID].get_config()
+            modifiedConfig.set_filter(proposedModifiedFilter)
+            self.videoFileTrackWidgetHeaders[trackID].set_config(modifiedConfig)
+
+            self.reload_videos_from_track_configs()
+            self.update()
+        else:
+            print("Error: unsure what video track config to update!")
+            self.activeTrackID_ConfigEditingIndex = None
+            return
+
+        self.activeTrackID_ConfigEditingIndex = None
+
+
+    def video_track_config_dialog_canceled(self):
+        print('video_track_config_dialog_canceled()')
+        self.activeTrackID_ConfigEditingIndex = None
