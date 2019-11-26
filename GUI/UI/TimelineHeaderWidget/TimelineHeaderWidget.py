@@ -5,7 +5,7 @@ from enum import Enum
 
 from PyQt5 import QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
-from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QStyle
+from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QStyle, QDockWidget
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon, QStandardItem
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
@@ -25,8 +25,10 @@ class TimelineHeaderWidget_ContentsCollapsed(QWidget):
         self.ui = uic.loadUi("GUI/UI/TimelineHeaderWidget/TimelineHeaderWidget_ContentsCollapsed.ui", self) # Load the .ui file
         self.initUI()
         self.show() # Show the GUI
+
     def initUI(self):
-        pass
+        self.layout().setSpacing(0)
+        self.layout().setContentsMargins(0,0,0,0)
 
 
 class TimelineHeaderWidget_ContentsExpanded(QWidget):
@@ -101,7 +103,12 @@ class TimelineHeaderWidget(QFrame):
     def initUI(self):
 
         self.ui.dockWidget_Main = CollapsibleDockWidget(parent=self)
+        self.ui.dockWidget_Main.setAllowedAreas(Qt.LeftDockWidgetArea)
+        self.ui.dockWidget_Main.setFeatures(self.ui.dockWidget_Main.features()|QDockWidget.DockWidgetVerticalTitleBar)
+        self.ui.dockWidget_Main.setWindowTitle(self.track_name)
         self.layout().addWidget(self.ui.dockWidget_Main)
+        self.layout().setSpacing(0)
+        self.layout().setContentsMargins(0,0,0,0)
 
         self.ui.dockWidget_Main.setCollapsedWidget(self.timelineHeaderWidget_ContentsCollapsed)
         self.ui.dockWidget_Main.setExpandedWidget(self.timelineHeaderWidget_ContentsExpanded)
