@@ -27,11 +27,6 @@ class TimelineTrackDrawingWidget_Videos(TimelineTrackDrawingWidget_EventsBase):
         self.trackConfig.cacheUpdated.connect(self.reloadModelFromConfigCache)
 
 
-    # def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
-    #     super(TimelineTrackDrawingWidget_Videos, self).__init__(trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
-    #     self.currNowPlayingVideoIndicies = []
-    #     self.activeVideoEditDialog = None
-
     # Updates the member variables from the database
     # Note: if there are any pending changes, they will be persisted on this action
     def reloadModelFromDatabase(self):
