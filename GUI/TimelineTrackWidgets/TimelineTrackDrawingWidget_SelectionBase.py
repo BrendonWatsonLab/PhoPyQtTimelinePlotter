@@ -21,6 +21,9 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
     default_itemSelectionMode = ItemSelectionOptions.SingleSelection
     default_itemHoverMode = ItemSelectionOptions.SingleSelection
 
+    default_TrackTitleFont = QFont('Helvetica', 22)
+    default_TrackTitlePen = QPen(Qt.gray)
+
     def __init__(self, trackID, totalStartTime, totalEndTime, durationObjects, database_connection, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
         super(TimelineTrackDrawingWidget_SelectionBase, self).__init__(trackID, totalStartTime, totalEndTime, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
         self.reloadModelFromDatabase()

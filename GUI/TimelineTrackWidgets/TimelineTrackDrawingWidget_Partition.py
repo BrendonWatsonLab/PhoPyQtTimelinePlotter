@@ -417,3 +417,26 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
     def partition_dialog_canceled(self):
         print('comment_Dialog_canceled')
         self.activeEditingPartitionIndex = None
+
+
+    # try_cut_partition(...): tries to cut the partition programmatically at the specified datetime
+    def try_cut_partition(self, cut_datetime):
+        needs_update = False
+        cut_offset_x = self.datetime_to_offset(cut_datetime)
+        newlySelectedObjectIndex = self.find_child_object(cut_offset_x, 0)
+        if (newlySelectedObjectIndex is None):
+            print("couldn't cut partition!")
+            return
+        
+        # Create the partition cut:
+        was_cut_made = self.cut_partition(newlySelectedObjectIndex, cut_offset_x)
+        if(was_cut_made):
+            needs_update = True
+        
+        if needs_update:
+            self.update()
+
+
+
+        
+

@@ -5,7 +5,7 @@ import sys
 from datetime import datetime, timezone, timedelta
 import numpy as np
 from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget,QTableWidgetItem
+from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget,QTableWidgetItem, QWidget
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPalette, QLinearGradient
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 from enum import Enum
@@ -35,6 +35,9 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
         
         self.wantsKeyboardEvents = wantsKeyboardEvents
         self.wantsMouseEvents = wantsMouseEvents
+        
+        self.trackLabelText = None
+
         QToolTip.setFont(QFont('SansSerif', 10))
         
         # # Debug background fill
@@ -61,6 +64,12 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
 
     def sizeHint(self) -> QSize:
         return QSize(800, 100)
+
+    def set_track_title_label(self, title):
+        self.trackLabelText = title
+
+    def get_track_title_label(self):
+        return self.trackLabelText
         
     def paintEvent( self, event ):
         pass
@@ -145,3 +154,17 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
     def offset_to_datetime(self, event_x):
         duration_offset = self.offset_to_duration(event_x)
         return (self.totalStartTime + duration_offset)
+
+    def percent_to_offset(self, percent_offset):
+        event_x = percent_offset * self.width()
+        return event_x
+
+    def duration_to_offset(self, duration_offset):
+        percent_x = duration_offset / self.totalDuration
+        event_x = self.percent_to_offset(percent_x)
+        return event_x
+
+    def datetime_to_offset(self, newDatetime):
+        duration_offset = newDatetime - self.totalStartTime
+        event_x = self.duration_to_offset(duration_offset)
+        return event_x
