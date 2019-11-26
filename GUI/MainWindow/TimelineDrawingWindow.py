@@ -100,8 +100,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         self.setMouseTracking(True)
 
-        # self.minimumVideoTrackHeight = 50
-        self.minimumVideoTrackHeight = 25
+        self.minimumVideoTrackHeight = 50
+        # self.minimumVideoTrackHeight = 25
 
 
         self.initUI()
@@ -300,6 +300,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                     # currHeaderIncludedContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
                     currHeaderIncludedTrackLayout.addWidget(currVideoTrackWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
+                    currVideoTrackWidget.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
+                    currVideoTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
                     currHeaderIncludedTrackLayout.addWidget(currHeaderWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
 
                     currHeaderIncludedContainer.setLayout(currHeaderIncludedTrackLayout)
@@ -311,10 +314,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
                 else:
                     self.extendedTracksContainerVboxLayout.addWidget(currVideoTrackWidget)
+                    currVideoTrackWidget.setMinimumSize(minimumWidgetWidth,self.minimumVideoTrackHeight)
+                    currVideoTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
                 # General Layout:
-                currVideoTrackWidget.setMinimumSize(minimumWidgetWidth,self.minimumVideoTrackHeight)
-                currVideoTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)                
+
 
 
 
@@ -1104,7 +1108,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         print("on_track_header_toggle_collapse({0}, {1})".format(trackID, isCollapsed))
         currHeader = self.videoFileTrackWidgetHeaders[trackID]
         currHeader.setHidden(True)
-        
+
 
 
     @pyqtSlot(int)
