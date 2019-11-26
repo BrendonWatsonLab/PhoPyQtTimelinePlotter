@@ -21,7 +21,7 @@ from GUI.Model.ModelViewContainer import ModelViewContainer
 Represents a filter for a specific track
 """
 class TrackFilter(QObject):
-    def __init__(self, behavioral_box_ids, experiment_ids, cohort_ids, animal_ids, allow_original_videos, allow_labeled_videos, parent=None):
+    def __init__(self, allow_original_videos, allow_labeled_videos, behavioral_box_ids=None, experiment_ids=None, cohort_ids=None, animal_ids=None, parent=None):
         super(TrackFilter, self).__init__(parent=parent)
         self.behavioral_box_ids = behavioral_box_ids
         self.experiment_ids = experiment_ids
@@ -91,7 +91,7 @@ class TrackConfiguration(QObject):
         self.trackIndex = trackIndex
         self.trackTitle = trackTitle
         self.trackExtendedDescription = trackExtendedDescription
-        self.filter = TrackFilter(behavioral_box_ids, experiment_ids, cohort_ids, animal_ids, allow_original_videos, allow_labeled_videos, parent=parent)
+        self.filter = TrackFilter(allow_original_videos, allow_labeled_videos, behavioral_box_ids, experiment_ids, cohort_ids, animal_ids, parent=parent)
         self.cache = TrackCache([], parent=parent)
 
 
@@ -113,6 +113,12 @@ class TrackConfiguration(QObject):
 
     def get_cache(self):
         return self.cache
+
+    def get_filter(self):
+        return self.filter
+
+    def set_filter(self, newFilter):
+        self.filter = newFilter
 
     def __str__(self):
         return 'TrackConfiguration: trackIndex: {0}, trackTitle: {1}, trackExtendedDescription: {2}, filter: {3}'.format(self.trackIndex, self.trackTitle, self.trackExtendedDescription, str(self.filter))

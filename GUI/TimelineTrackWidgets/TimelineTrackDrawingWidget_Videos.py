@@ -14,6 +14,7 @@ from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_EventsBase import Timel
 
 from GUI.UI.VideoEditDialog.VideoEditDialog import *
 
+
 class TimelineTrackDrawingWidget_Videos(TimelineTrackDrawingWidget_EventsBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
     default_shouldDismissSelectionUponMouseButtonRelease = True

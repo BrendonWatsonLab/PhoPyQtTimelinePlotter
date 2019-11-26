@@ -131,6 +131,10 @@ class TimelineHeaderWidget(QFrame):
     def get_config(self):
         return self.track_config
 
+    def set_config(self, newConfig):
+        self.track_config = newConfig
+    
+
     def get_title(self):
         return self.ui.lblTitle.text()
     

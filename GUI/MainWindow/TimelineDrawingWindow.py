@@ -32,6 +32,7 @@ from app.database.SqlAlchemyDatabase import load_annotation_events_from_database
 
 from GUI.UI.VideoPlayer.MainVideoPlayerWindow import *
 from GUI.SetupWindow.SetupWindow import *
+from GUI.UI.VideoTrackFilterEditWidget.VideoTrackFilterEditDialog import *
 
 from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
 
@@ -96,6 +97,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.setupWindow = None
         self.videoTreeWindow = None
         self.databaseBrowserUtilityWindow = None
+        self.activeVideoTrackConfigEditDialog = None
+        self.activeTrackID_ConfigEditingIndex = None
     
 
         self.setMouseTracking(True)
@@ -1099,8 +1102,76 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     @pyqtSlot(int)
     def on_track_header_show_options_activated(self, trackID):
         print("on_track_header_show_options({0})".format(trackID))
+        currVideoTrackHeader = self.videoFileTrackWidgetHeaders[trackID]
+        currVideoTrackConfig = currVideoTrackHeader.get_config()
+        self.activeTrackID_ConfigEditingIndex = trackID
+        self.activeVideoTrackConfigEditDialog = VideoTrackFilterEditDialog(currVideoTrackConfig, parent=self)
+        self.activeVideoTrackConfigEditDialog.on_commit.connect(self.try_update_video_track_filter)
+        self.activeVideoTrackConfigEditDialog.on_cancel.connect(self.video_track_config_dialog_canceled)
+
         
     @pyqtSlot(int)
     def on_track_header_refresh_activated(self, trackID):
         print("on_track_header_refresh_activated({0})".format(trackID))
         self.reload_videos_from_track_configs()
+
+
+
+
+    # Called when the partition edit dialog accept event is called.
+    @pyqtSlot(int, str, int, int, int, int, bool, bool)
+    def try_update_video_track_filter(self, trackID, trackName, behavioral_box_id, experiment_id, cohort_id, animal_id, allow_original_videos, allow_labeled_videos):
+        # Tries to update the video track config
+        print('TimelineDrawingWindow.try_update_video_track_filter(...): track_id: {0}, track_name: {1}'.format(trackID, trackName))
+        # if (not (self.trackContextConfig.get_is_valid())):
+        #     print('context is invalid! aborting try_update_video!')
+        #     return
+        
+        if (not (self.activeTrackID_ConfigEditingIndex is None)):
+            currVideoTrackHeader = self.videoFileTrackWidgetHeaders[trackID]
+            currVideoTrackConfig = currVideoTrackHeader.get_config()
+            currVideoTrackFilter = currVideoTrackConfig.get_filter()
+
+            # Convert -1 values for type_id and subtype_id back into "None" objects. They had to be an Int to be passed through the pyQtSlot()
+            # Note the values are record IDs (not indicies, so they're 1-indexed). This means that both -1 and 0 are invalid.
+            # proposedModifiedFilter = TrackFilter(allow_original_videos, allow_labeled_videos, None, None, None, None, parent=currVideoTrackConfig.parent)
+
+            # if (behavioral_box_id < 1):
+            #     proposedModifiedFilter.behavioral_box_ids = None
+            # else:
+            #     proposedModifiedFilter.behavioral_box_ids = [behavioral_box_id]
+
+
+            # if (experiment_id < 1):
+            #     proposedModifiedFilter.experiment_ids = None
+            # else:
+            #     proposedModifiedFilter.experiment_ids = [experiment_id]
+
+
+            # if (cohort_id < 1):
+            #     proposedModifiedFilter.cohort_ids = None
+            # else:
+            #     proposedModifiedFilter.cohort_ids = [cohort_id]
+
+            # if (animal_id < 1):
+            #     proposedModifiedFilter.animal_ids = None
+            # else:
+            #     proposedModifiedFilter.animal_ids = [animal_id]
+
+            # modifiedConfig = self.videoFileTrackWidgetHeaders[trackID].get_config()
+            # modifiedConfig.set_filter(proposedModifiedFilter)
+            # self.videoFileTrackWidgetHeaders[trackID].set_config(modifiedConfig)
+
+            self.reload_videos_from_track_configs()
+            self.update()
+        else:
+            print("Error: unsure what video track config to update!")
+            self.activeTrackID_ConfigEditingIndex = None
+            return
+
+        self.activeTrackID_ConfigEditingIndex = None
+
+
+    def video_track_config_dialog_canceled(self):
+        print('video_track_config_dialog_canceled()')
+        self.activeTrackID_ConfigEditingIndex = None
