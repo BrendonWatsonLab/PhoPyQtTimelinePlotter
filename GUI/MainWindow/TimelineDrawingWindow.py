@@ -1134,33 +1134,33 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
             # Convert -1 values for type_id and subtype_id back into "None" objects. They had to be an Int to be passed through the pyQtSlot()
             # Note the values are record IDs (not indicies, so they're 1-indexed). This means that both -1 and 0 are invalid.
-            # proposedModifiedFilter = TrackFilter(allow_original_videos, allow_labeled_videos, None, None, None, None, parent=currVideoTrackConfig.parent)
+            proposedModifiedFilter = TrackFilter(allow_original_videos, allow_labeled_videos, None, None, None, None, parent=currVideoTrackConfig.parent())
 
-            # if (behavioral_box_id < 1):
-            #     proposedModifiedFilter.behavioral_box_ids = None
-            # else:
-            #     proposedModifiedFilter.behavioral_box_ids = [behavioral_box_id]
-
-
-            # if (experiment_id < 1):
-            #     proposedModifiedFilter.experiment_ids = None
-            # else:
-            #     proposedModifiedFilter.experiment_ids = [experiment_id]
+            if (behavioral_box_id < 1):
+                proposedModifiedFilter.behavioral_box_ids = None
+            else:
+                proposedModifiedFilter.behavioral_box_ids = [behavioral_box_id]
 
 
-            # if (cohort_id < 1):
-            #     proposedModifiedFilter.cohort_ids = None
-            # else:
-            #     proposedModifiedFilter.cohort_ids = [cohort_id]
+            if (experiment_id < 1):
+                proposedModifiedFilter.experiment_ids = None
+            else:
+                proposedModifiedFilter.experiment_ids = [experiment_id]
 
-            # if (animal_id < 1):
-            #     proposedModifiedFilter.animal_ids = None
-            # else:
-            #     proposedModifiedFilter.animal_ids = [animal_id]
 
-            # modifiedConfig = self.videoFileTrackWidgetHeaders[trackID].get_config()
-            # modifiedConfig.set_filter(proposedModifiedFilter)
-            # self.videoFileTrackWidgetHeaders[trackID].set_config(modifiedConfig)
+            if (cohort_id < 1):
+                proposedModifiedFilter.cohort_ids = None
+            else:
+                proposedModifiedFilter.cohort_ids = [cohort_id]
+
+            if (animal_id < 1):
+                proposedModifiedFilter.animal_ids = None
+            else:
+                proposedModifiedFilter.animal_ids = [animal_id]
+
+            modifiedConfig = self.videoFileTrackWidgetHeaders[trackID].get_config()
+            modifiedConfig.set_filter(proposedModifiedFilter)
+            self.videoFileTrackWidgetHeaders[trackID].set_config(modifiedConfig)
 
             self.reload_videos_from_track_configs()
             self.update()
