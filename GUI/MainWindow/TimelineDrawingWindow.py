@@ -528,7 +528,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         return event_x
 
 
-
     # Returns the index of the child object that the (x, y) point falls within, or None if it doesn't fall within an event.
     def find_hovered_timeline_track(self, event_x, event_y):
         hovered_timeline_track_object = None
