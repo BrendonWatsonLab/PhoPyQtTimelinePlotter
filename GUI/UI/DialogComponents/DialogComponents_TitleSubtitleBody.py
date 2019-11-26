@@ -46,3 +46,6 @@ class DialogComponents_TitleSubtitleBody(QFrame):
     def set_body(self, updatedStr):
         return self.ui.textBrowser_Body.setPlainText(updatedStr)
     
+    def set_editable(self, is_editable):
+        for aControl in [self.ui.lineEdit_Title, self.ui.lineEdit_Subtitle, self.ui.textBrowser_Body]:
+            aControl.setReadOnly(not is_editable)

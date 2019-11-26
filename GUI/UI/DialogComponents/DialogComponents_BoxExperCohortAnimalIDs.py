@@ -112,21 +112,7 @@ class DialogComponents_BoxExperCohortAnimalIDs(QFrame):
         self.update()
         return
 
-    # def get_title(self):
-    #     return self.ui.lineEdit_Title.text()
     
-    # def get_subtitle(self):
-    #     return self.ui.lineEdit_Subtitle.text()
-
-    # def get_body(self):
-    #     return self.ui.textBrowser_Body.toPlainText()
-
-    # def set_title(self, updatedStr):
-    #     self.ui.lineEdit_Title.setText(updatedStr)
-
-    # def set_subtitle(self, updatedStr):
-    #     return self.ui.lineEdit_Subtitle.setText(updatedStr)
-
-    # def set_body(self, updatedStr):
-    #     return self.ui.textBrowser_Body.setPlainText(updatedStr)
-    
+    def set_editable(self, is_editable):
+        for aControl in [self.ui.spinBox_bbID, self.ui.spinBox_experimentID, self.ui.spinBox_cohortID, self.ui.spinBox_animalID]:
+            aControl.setReadOnly(not is_editable)

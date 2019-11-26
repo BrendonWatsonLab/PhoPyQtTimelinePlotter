@@ -47,6 +47,8 @@ class VideoEditDialog(AbstractDatabaseAccessingDialog):
         # self.ui.frame_StartEndDates.
         # self.ui.frame_TitleSubtitleBody
         self.ui.frame_TypeSubtype.setModel(self.behaviorGroups, self.behaviors, self)
+        self.ui.frame_StartEndDates.set_editable(False)
+        self.ui.frame_TitleSubtitleBody.set_editable(False)
         # self.ui.frame_BoxExperCohortAnimalIDs
         # self.ui.Frame_BoxExperCohorAnimalID
         return

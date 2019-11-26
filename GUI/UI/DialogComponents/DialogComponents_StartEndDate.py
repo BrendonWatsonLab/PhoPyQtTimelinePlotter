@@ -36,3 +36,7 @@ class DialogComponents_StartEndDate(QFrame):
 
     def get_dates(self):
         return (self.get_start_date(), self.get_end_date())
+
+    def set_editable(self, is_editable):
+        for aControl in [self.ui.dateTimeEdit_Start, self.ui.dateTimeEdit_End]:
+            aControl.setReadOnly(not is_editable)
