@@ -89,7 +89,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.videoInfoObjects = []
 
         self.reloadModelFromDatabase()
-        self.build_video_display_events()
+        self.reload_timeline_display_bounds()
 
         self.videoPlayerWindow = None
         self.helpWindow = None
@@ -108,10 +108,10 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.reload_videos_from_track_configs()
         # self.show() # Show the GUI
 
-        overlappingVideoEvents = self.mainVideoTrack.find_overlapping_events()
-        for aTuple in overlappingVideoEvents:
-            print(aTuple)
-        # print(overlappingVideoEvents)
+        # overlappingVideoEvents = self.mainVideoTrack.find_overlapping_events()
+        # for aTuple in overlappingVideoEvents:
+        #     print(aTuple)
+        # # print(overlappingVideoEvents)
 
     def initUI(self):
 
@@ -418,16 +418,14 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
 
-    # Required to initialize the viewport with all record events
-    # Build the PhoDurationEvent objects that are displayed in the main video timeline to represent the videos
-    def build_video_display_events(self):
+    # Required to initialize the viewport to fit the video events
+    def reload_timeline_display_bounds(self):
         videoDates = []
         videoEndDates = []
 
         for (index, videoInfoItem) in enumerate(self.videoInfoObjects):
             videoDates.append(videoInfoItem.startTime)
             videoEndDates.append(videoInfoItem.endTime)
-            currExtraInfoDict = videoInfoItem.get_output_dict()
 
         self.videoDates = np.array(videoDates)
         self.videoEndDates = np.array(videoEndDates)
@@ -463,8 +461,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     # Reloads the video records from the current track configs
     def reload_videos_from_track_configs(self):
         if not self.shouldUseTrackHeaders:
+            print("Warning: Track headers-based configs are disabled!")
             return
-
 
         # Loop through the videoFileTrackWidgets and add them
         for i in range(0, len(self.videoFileTrackWidgets)):
