@@ -53,6 +53,34 @@ class PhoDurationEvent_Video(PhoDurationEvent):
             # exists
             return True
 
+    def get_parent_url(self):
+        return self.extended_data['parent_path']
+        
+    def get_extended_properties_dict(self):
+        return self.extended_data['extended_properties']
+
+    def get_bb_id(self):
+        return self.get_extended_properties_dict()['behavioral_box_id']
+    
+    def get_experiment_id(self):
+        return self.get_extended_properties_dict()['experiment_id']
+    
+    def get_cohort_id(self):
+        return self.get_extended_properties_dict()['cohort_id']
+    
+    def get_animal_id(self):
+        return self.get_extended_properties_dict()['animal_id']
+
+    def get_ids(self):
+        return (self.get_bb_id(), self.get_experiment_id(), self.get_cohort_id(), self.get_animal_id())
+    
+    def get_is_labeled_video(self):
+        return (self.extended_data['is_deeplabcut_labeled_video'] or False)
+
+    def get_is_original_video(self):
+        return (not self.get_is_labeled_video())
+    
+
 
     # Sets the painter's config based on the current object's state (active, emphasized, deemph, etc)
     def set_painter_config(self, aPainter):

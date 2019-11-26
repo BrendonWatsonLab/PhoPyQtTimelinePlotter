@@ -76,8 +76,13 @@ class TimelineTrackDrawingWidget_Videos(TimelineTrackDrawingWidget_EventsBase):
             # self.activeVideoEditDialog.set_type(selectedVideoObject.type_id)
             # self.activeVideoEditDialog.set_subtype(selectedVideoObject.subtype_id)
             self.activeVideoEditDialog.set_title(selectedVideoObject.name)
-            self.activeVideoEditDialog.set_subtitle(str(selectedVideoObject.get_video_url()))
+            self.activeVideoEditDialog.set_subtitle(str(selectedVideoObject.get_parent_url()))
             self.activeVideoEditDialog.set_body(str(selectedVideoObject.extended_data))
+            print(selectedVideoObject.extended_data)
+            
+            sel_behavioral_box_id, sel_experiment_id, sel_cohort_id, sel_animal_id = selectedVideoObject.get_ids()
+            self.activeVideoEditDialog.set_id_values(sel_behavioral_box_id, sel_experiment_id, sel_cohort_id, sel_animal_id)
+            self.activeVideoEditDialog.set_is_original_video(selectedVideoObject.get_is_original_video())
             self.activeVideoEditDialog.on_commit.connect(self.try_update_video)
             self.activeVideoEditDialog.on_cancel.connect(self.video_dialog_canceled)
         else:
@@ -86,40 +91,44 @@ class TimelineTrackDrawingWidget_Videos(TimelineTrackDrawingWidget_EventsBase):
 
 
     # Called when the partition edit dialog accept event is called.
-    def try_update_video(self, start_date, end_date, title, subtitle, body, type_id, subtype_id):
+    @pyqtSlot(datetime, datetime, int, int, int, int, bool)
+    def try_update_video(self, start_date, end_date, behavioral_box_id, experiment_id, cohort_id, animal_id, is_original):
         # Tries to create a new comment
         print('try_update_video')
         # if (not (self.trackContextConfig.get_is_valid())):
         #     print('context is invalid! aborting try_update_video!')
         #     return
         
-        # if (not (self.activeEditingVideoIndex is None)):
-        #     # Convert -1 values for type_id and subtype_id back into "None" objects. They had to be an Int to be passed through the pyQtSlot()
-        #     # Note the values are record IDs (not indicies, so they're 1-indexed). This means that both -1 and 0 are invalid.
-        #     if (type_id < 1):
-        #         type_id = None
-            
-        #     if (subtype_id < 1):
-        #         subtype_id = None
+        if (not (self.activeEditingVideoIndex is None)):
+            # Convert -1 values for type_id and subtype_id back into "None" objects. They had to be an Int to be passed through the pyQtSlot()
+            # Note the values are record IDs (not indicies, so they're 1-indexed). This means that both -1 and 0 are invalid.
+            if (behavioral_box_id < 1):
+                behavioral_box_id = None
+            if (experiment_id < 1):
+                experiment_id = None
+            if (cohort_id < 1):
+                cohort_id = None
+            if (animal_id < 1):
+                animal_id = None
                 
-        #     print('Modifying partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(self.activeEditingVideoIndex, type_id, subtype_id))
+            # print('Modifying partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(self.activeEditingVideoIndex, type_id, subtype_id))
             
-        #     # Get new color associated with the modified subtype_id
-        #     if ((type_id is None) or (subtype_id is None)):
-        #         newColor = PhoDurationEvent_Partition.ColorBase
-        #     else:
-        #         newColor = self.behaviors[subtype_id-1].primaryColor.get_QColor()
+            # # Get new color associated with the modified subtype_id
+            # if ((type_id is None) or (subtype_id is None)):
+            #     newColor = PhoDurationEvent_Partition.ColorBase
+            # else:
+            #     newColor = self.behaviors[subtype_id-1].primaryColor.get_QColor()
             
-        #     self.partitionManager.modify_partition(self.activeEditingVideoIndex, start_date, end_date, title, subtitle, body, type_id, subtype_id, newColor)
-        #     print('Modified partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(self.activeEditingVideoIndex, type_id, subtype_id))
-        #     self.reinitialize_from_partition_manager()
-        #     self.update()
-        #     # Save to database
-        #     # TODO: currently all saved partitions must be of the same context and subcontext.
-        #     self.partitionManager.save_partitions_to_database()
-        # else:
-        #     print("Error: unsure what partition to update!")
-        #     return
+            # self.partitionManager.modify_partition(self.activeEditingVideoIndex, start_date, end_date, title, subtitle, body, type_id, subtype_id, newColor)
+            # print('Modified partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(self.activeEditingVideoIndex, type_id, subtype_id))
+            # self.reinitialize_from_partition_manager()
+            self.update()
+            # Save to database
+            # TODO: currently all saved partitions must be of the same context and subcontext.
+            # self.partitionManager.save_partitions_to_database()
+        else:
+            print("Error: unsure what video to update!")
+            return
 
     def video_dialog_canceled(self):
         print('video_dialog_canceled')

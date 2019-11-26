@@ -33,7 +33,7 @@ class VideoEditDialog(AbstractDatabaseAccessingDialog):
     on_cancel = pyqtSignal()
 
      # This defines a signal called 'closed' that takes no arguments.
-    on_commit = pyqtSignal(datetime, datetime, str, str, str, int, int)
+    on_commit = pyqtSignal(datetime, datetime, int, int, int, int, bool)
 
     def __init__(self, database_connection, parent=None):
         super(VideoEditDialog, self).__init__(database_connection, parent) # Call the inherited classes __init__ method
@@ -47,6 +47,8 @@ class VideoEditDialog(AbstractDatabaseAccessingDialog):
         # self.ui.frame_StartEndDates.
         # self.ui.frame_TitleSubtitleBody
         self.ui.frame_TypeSubtype.setModel(self.behaviorGroups, self.behaviors, self)
+        # self.ui.frame_BoxExperCohortAnimalIDs
+        # self.ui.Frame_BoxExperCohorAnimalID
         return
 
     ## Data Model Functions:
@@ -62,10 +64,10 @@ class VideoEditDialog(AbstractDatabaseAccessingDialog):
     def accept(self):
         print('accept:')
         # Emit the signal.
-        final_type, final_subtype = int(self.get_type() or -1), int(self.get_subtype() or -1)
-        
-        self.on_commit.emit(self.get_start_date(), self.get_end_date(), self.get_title(), self.get_subtitle(), self.get_body(),
-            final_type, final_subtype)
+        behavioral_box_id, experiment_id, cohort_id, animal_id = self.get_id_values()
+        final_bb_id, final_experiment_id, final_cohort_id, final_animal_id = int(behavioral_box_id or -1), int(experiment_id or -1), int(cohort_id or -1), int(animal_id or -1)
+        self.on_commit.emit(self.get_start_date(), self.get_end_date(), final_bb_id, final_experiment_id, final_cohort_id,
+            final_animal_id, self.get_is_original_video())
         super(VideoEditDialog, self).accept()
 
     def reject(self):
@@ -119,3 +121,14 @@ class VideoEditDialog(AbstractDatabaseAccessingDialog):
     def set_body(self, updatedStr):
         self.ui.frame_TitleSubtitleBody.set_body(updatedStr)
     
+    def get_id_values(self):
+        return self.ui.frame_BoxExperCohortAnimalIDs.get_id_values()
+
+    def set_id_values(self, behavioral_box_id, experiment_id, cohort_id, animal_id):
+        self.ui.frame_BoxExperCohortAnimalIDs.set_id_values(behavioral_box_id, experiment_id, cohort_id, animal_id)
+  
+    def get_is_original_video(self):
+        return self.ui.checkBox_isOriginalVideo.isChecked()
+
+    def set_is_original_video(self, is_original):
+        self.ui.checkBox_isOriginalVideo.setChecked(is_original)

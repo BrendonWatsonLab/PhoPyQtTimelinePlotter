@@ -26,7 +26,26 @@
     </widget>
    </item>
    <item>
-    <widget class="DialogComponents_TitleSubtitleBody" name="frame_TitleSubtitleBody">
+    <widget class="QFrame" name="frame">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QCheckBox" name="checkBox_isOriginalVideo">
+        <property name="text">
+         <string>is Original Video</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="DialogComponents_BoxExperCohortAnimalIDs" name="frame_BoxExperCohortAnimalIDs">
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
      </property>
@@ -37,6 +56,16 @@
    </item>
    <item>
     <widget class="DialogComponents_TypeSubtype" name="frame_TypeSubtype">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="DialogComponents_TitleSubtitleBody" name="frame_TitleSubtitleBody">
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
      </property>
@@ -76,6 +105,12 @@
    <header location="global">GUI.UI.DialogComponents.DialogComponents_TypeSubtype</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>DialogComponents_BoxExperCohortAnimalIDs</class>
+   <extends>QFrame</extends>
+   <header location="global">GUI.UI.DialogComponents.DialogComponents_BoxExperCohortAnimalIDs</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
  <resources/>
  <connections>
@@ -86,8 +121,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
+     <x>254</x>
+     <y>522</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -102,8 +137,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>322</x>
+     <y>522</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
