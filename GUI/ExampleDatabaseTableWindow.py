@@ -120,8 +120,14 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
 
             currBtnAddNewRecord = QPushButton("New", self)
             currBtnAddNewRecord.released.connect(self.handle_add_new_record_pressed)
+
+            currBtnExportAllRecords = QPushButton("Export", self)
+            currBtnExportAllRecords.released.connect(self.handle_export_all_records_pressed)
+
+            
             # mainLayout.addWidget(currBtnAddNewRecord)
             exec( 'self.tab'+str(i)+'.layout.addWidget(currBtnAddNewRecord)' )
+            exec( 'self.tab'+str(i)+'.layout.addWidget(currBtnExportAllRecords)' )
                    
 
         self.tabs.resize(300,200)
@@ -163,6 +169,11 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
         #     self.database_rollback()
 
         # print("done.")
+
+    
+    def handle_export_all_records_pressed(self):
+        print("handle_export_all_records_pressed(...)")
+        self.export_records()
 
 
     def display_context_menu(self, pos):
@@ -261,3 +272,34 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
 
     def update_current_record(self, x, y):
         self.current_record = self.table_selection_models[self.get_active_tab_index()].currentIndex().data(Qt.EditRole)
+
+
+    def export_records(self):
+        print("export_records()...")
+        self.activeActionTabIndex = self.get_active_tab_index()
+        # dialog = QInputDialog(self)
+        # dialog.setLabelText("Please enter the name for the exported Records file.")
+        # dialog.textValueSelected.connect(self.store_new_record)
+        # dialog.exec()
+
+        currModel = self.models[self.activeActionTabIndex]
+        # currNumRows = currModel.rowCount()
+
+        header_str = currModel.get_header_string()
+        print(header_str)
+        separator_str = ', '
+        for irow in range(currModel.rowCount(None)):
+            curr_row = []
+            for icol in range(currModel.columnCount(None)):
+                curr_cell = currModel.data(currModel.createIndex(irow, icol), Qt.DisplayRole)
+                curr_row.append(curr_cell)
+
+            # print all elems per row
+            curr_row_str = separator_str.join([str(c) for c in curr_row])
+            # print("record[{0}]: {1}".format(str(irow), curr_row_str))
+            print(curr_row_str)
+
+        # for (recordIndex, aRecord) in arange(currNumRows):
+        #     print("record[{0}]: {1}".format(str(recordIndex), str(aRecord)))
+
+        
