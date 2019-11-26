@@ -23,13 +23,17 @@ TODO: Add "undo" functionality to creating cuts. Can use the "cutObjects" to fin
 # Each track has a (Context, Subcontext) pair that define what types of CategoricalDurationLabels it creates
 # TODO: the track context config should affect what type/subtype options are loaded into the partition edit dialog.
 class TrackContextConfig(QObject):
-    def __init__(self, contextName, subcontextIndex=0, parent=None):
+    def __init__(self, contextName, subcontextIndex=0, behavioral_box_id=None, experiment_id=None, cohort_id=None, animal_id=None, parent=None):
         super().__init__(parent=parent)
         self.is_valid = False
         self.contextName = contextName
         self.subcontextIndex = subcontextIndex
         self.context = None
         self.subcontext = None
+        self.behavioral_box_id = behavioral_box_id
+        self.experiment_id = experiment_id
+        self.cohort_id = cohort_id
+        self.animal_id = animal_id
 
     def get_context(self):
         return self.context

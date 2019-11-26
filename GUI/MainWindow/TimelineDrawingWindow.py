@@ -74,7 +74,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
         self.update_global_start_end_times(totalStartTime, totalEndTime)
 
-        self.partitionTrackContextsArray = [TrackContextConfig('Behavior'), TrackContextConfig('Unknown')]
+        # self.partitionTrackContextsArray = [TrackContextConfig('Behavior'), TrackContextConfig('Unknown')]
+        self.partitionTrackContextsArray = [TrackContextConfig('Behavior',0,1,None,None,None,self), TrackContextConfig('Behavior',0,2,None,None,None,self)]
 
         # self.videoInfoObjects = load_video_events_from_database(self.database_connection.get_path(), as_videoInfo_objects=True)
         self.videoInfoObjects = []
