@@ -51,8 +51,6 @@ class Animal(Base):
             ('Notes', cls.notes, 'notes', {'editable': True}),
         ]
     
-
-
 class BehavioralBox(Base):
     __tablename__ = 'BehavioralBoxes'
 
@@ -118,7 +116,6 @@ class Context(Base):
             ('Notes', cls.note, 'note', {'editable': True}),
         ]
 
-
 class Experiment(Base):
     __tablename__ = 'Experiments'
 
@@ -137,7 +134,6 @@ class Experiment(Base):
             ('EndDate', cls.end_date, 'end_date', {'editable': True}),
             ('Notes', cls.notes, 'notes', {'editable': True}),
         ]
-
 
 class Labjack(Base):
     __tablename__ = 'Labjacks'
@@ -190,7 +186,6 @@ class StaticFileExtension(Base):
             ('Version', cls.version, 'version', {'editable': True}),
         ]
 
-
 class Cohort(Base):
     __tablename__ = 'Cohorts'
 
@@ -211,8 +206,6 @@ class Cohort(Base):
             ('EndDate', cls.end_date, 'end_date', {'editable': True}),
             ('ExperimentID', cls.experiment, 'experiment', {'editable': True}), # TODO: should we disable this column?
         ]
-
-
 
 
 """
@@ -245,10 +238,20 @@ class CategoricalDurationLabel(Base):
     secondary_text = Column(Text)
     tertiary_text = Column(Text)
 
+    behavioral_box_id = Column(Integer, ForeignKey('BehavioralBoxes.numerical_id'))
+    experiment_id = Column(Integer, ForeignKey('Experiments.id'))
+    cohort_id = Column(Integer, ForeignKey('Cohorts.id'))
+    animal_id = Column(Integer, ForeignKey('Animals.id'))
+
     notes = Column(Text)
 
     Context = relationship('Context', foreign_keys=[context_id])
     Subcontext = relationship('Subcontext', foreign_keys=[subcontext_id])
+
+    animal = relationship('Animal')
+    behavioral_box = relationship('BehavioralBox')
+    cohort = relationship('Cohort')
+    experiment = relationship('Experiment')
 
     # def __init__(self,id,start_date,end_date,label_created_date,label_created_user,last_updated_date,last_updated_user,context_id,subcontext_id,\
     #      type_id, subtype_id, tertiarytype_id, primary_text, secondary_text, tertiary_text, notes):
@@ -276,6 +279,12 @@ class CategoricalDurationLabel(Base):
     # __table_args__ = (UniqueConstraint('start_date', 'end_date', 'type_id', 'subtype_id', 'tertiarytype_id' name='_customer_location_uc'),
     #                  )
 
+    def get_behavioral_box_id(self):
+        if (self.behavioral_box_id is None):
+            return None
+        else:
+            return (self.behavioral_box_id - 1)
+    
     @classmethod
     def getTableMapping(cls):
         return [
@@ -294,6 +303,10 @@ class CategoricalDurationLabel(Base):
             ('PrimaryTxt', cls.primary_text, 'primary_text', {'editable': True}),
             ('SecondaryTxt', cls.secondary_text, 'secondary_text', {'editable': True}),
             ('TertiaryTxt', cls.tertiary_text, 'tertiary_text', {'editable': True}),
+            ('BB ID', cls.behavioral_box_id, 'behavioral_box_id', {'editable': True}),
+            ('ExperimentID', cls.experiment_id, 'experiment_id', {'editable': True}),
+            ('CohortID', cls.cohort_id, 'cohort_id', {'editable': True}),
+            ('AnimalID', cls.animal_id, 'animal_id', {'editable': True}),
             ('Notes', cls.notes, 'notes', {'editable': True}),
         ]
 
@@ -322,14 +335,29 @@ class TimestampedAnnotation(Base):
     tertiary_text = Column(Text)
     overflow_text = Column(Text)
 
+    behavioral_box_id = Column(Integer, ForeignKey('BehavioralBoxes.numerical_id'))
+    experiment_id = Column(Integer, ForeignKey('Experiments.id'))
+    cohort_id = Column(Integer, ForeignKey('Cohorts.id'))
+    animal_id = Column(Integer, ForeignKey('Animals.id'))
+
     Context = relationship('Context', foreign_keys=[context])
     Subcontext = relationship('Subcontext', foreign_keys=[subcontext])
 
+    animal = relationship('Animal')
+    behavioral_box = relationship('BehavioralBox')
+    cohort = relationship('Cohort')
+    experiment = relationship('Experiment')
     """
     TimestampedAnnotation:
         .context = Column(Integer, ForeignKey('Contexts.id'), server_default=text("1"))
         Context = relationship('Context')
     """
+
+    def get_behavioral_box_id(self):
+        if (self.behavioral_box_id is None):
+            return None
+        else:
+            return (self.behavioral_box_id - 1)
 
     @classmethod
     def getTableMapping(cls):
@@ -345,6 +373,10 @@ class TimestampedAnnotation(Base):
             ('SecondaryTxt', cls.secondary_text, 'secondary_text', {'editable': True}),
             ('TertiaryTxt', cls.tertiary_text, 'tertiary_text', {'editable': True}),
             ('OverflowTxt', cls.overflow_text, 'overflow_text', {'editable': True}),
+            ('BB ID', cls.behavioral_box_id, 'behavioral_box_id', {'editable': True}),
+            ('ExperimentID', cls.experiment_id, 'experiment_id', {'editable': True}),
+            ('CohortID', cls.cohort_id, 'cohort_id', {'editable': True}),
+            ('AnimalID', cls.animal_id, 'animal_id', {'editable': True}),
         ]
 
 
