@@ -133,11 +133,11 @@ class Partitioner(AbstractDatabaseAccessingQObject):
         self.extended_data = extended_data
 
     # Returns a new Partition object (both data and view)
-    def create_new_partition(self, startTime, endTime, title, parentContextPair = None):
-        if parentContextPair is None:
-            parentContextPair = self.get_parent_contexts()
+    def create_new_partition(self, startTime, endTime, title, parentContextTuple = None):
+        if parentContextTuple is None:
+            parentContextTuple = self.get_parent_contexts()
             # If parentContextPair is still none even after trying to create it
-            if (parentContextPair is None):
+            if (parentContextTuple is None):
                 print("Error: Couldn't get parent context pair to create partition!! Aborting")
                 return 
 
@@ -156,8 +156,14 @@ class Partitioner(AbstractDatabaseAccessingQObject):
         new_partition_record.last_updated_user = new_partition_record.label_created_user
         new_partition_record.last_updated_date = new_partition_record.label_created_date
 
-        new_partition_record.Context = parentContextPair[0]
-        new_partition_record.Subcontext = parentContextPair[1]
+        new_partition_record.Context = parentContextTuple[0]
+        new_partition_record.Subcontext = parentContextTuple[1]
+
+        new_partition_record.behavioral_box_id = parentContextTuple[2]
+        new_partition_record.experiment_id = parentContextTuple[3]
+        new_partition_record.cohort_id = parentContextTuple[4]
+        new_partition_record.animal_id = parentContextTuple[5]
+
         # Since it's not user-labeled, the type and subtype will all be "None"
         new_partition_record.type_id = None
         new_partition_record.subtype_id = None
@@ -267,8 +273,11 @@ class Partitioner(AbstractDatabaseAccessingQObject):
             print('owning_parent_track context is invalid!')
             return None
         else:
-            newContext, newSubcontext = self.owning_parent_track.trackContextConfig.get_context(), self.owning_parent_track.trackContextConfig.get_subcontext()
-            return (newContext, newSubcontext)
+            # newContext, newSubcontext = self.owning_parent_track.trackContextConfig.get_context(), self.owning_parent_track.trackContextConfig.get_subcontext()
+            # return (newContext, newSubcontext)
+            newContext, newSubcontext, newBBID, newExperimentID, newCohortID, newAnimalID = self.owning_parent_track.trackContextConfig.get_context(), self.owning_parent_track.trackContextConfig.get_subcontext(), self.owning_parent_track.trackContextConfig.behavioral_box_id, self.owning_parent_track.trackContextConfig.experimental_id, self.owning_parent_track.trackContextConfig.cohort_id, self.owning_parent_track.trackContextConfig.animal_id
+            return (newContext, newSubcontext, newBBID, newExperimentID, newCohortID, newAnimalID)
+
 
     def __eq__(self, otherEvent):
         return self.name == otherEvent.name and self.totalDuration == otherEvent.totalDuration
@@ -298,8 +307,8 @@ class Partitioner(AbstractDatabaseAccessingQObject):
         partition_to_cut = self.partitions[cut_partition_index]
         # data_partition_to_cut = self.partitionDataObjects[cut_partition_index]
 
-        parentContextPair = self.get_parent_contexts()
-        if (parentContextPair is None):
+        parentContextTuple = self.get_parent_contexts()
+        if (parentContextTuple is None):
             print("Error: parent context pair is None! Aborting cut!")
             return 
             
@@ -308,7 +317,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
             # Create a new partition and insert it after the partition to cut. It should span from [cut_datetime, to the end of the cut partition]
             new_partition_index = cut_partition_index+1
             # Create the new partition object
-            new_partition_obj = self.create_new_partition(cut_datetime, partition_to_cut.get_view().endTime, str(new_partition_index), parentContextPair)
+            new_partition_obj = self.create_new_partition(cut_datetime, partition_to_cut.get_view().endTime, str(new_partition_index), parentContextTuple)
             self.partitions.insert(new_partition_index, new_partition_obj)
 
             self.partitions[cut_partition_index].get_record().end_date = cut_datetime # Truncate the partition to cut to the cut_datetime
@@ -464,7 +473,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
     # Only saves user-labled partitions
     def save_partitions_to_database(self):
         shouldDisableNoneTypeSaves = False
-        contextObj, subcontextObj = self.get_parent_contexts()
+        contextObj, subcontextObj, newBBID, newExperimentID, newCohortID, newAnimalID = self.get_parent_contexts()
         print("partitions manager: save_partitions_to_database({0}, {1})".format(str(contextObj), str(subcontextObj)))
         print("trying to save {0} partition objects".format(len(self.partitions)))
 

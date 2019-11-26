@@ -181,8 +181,22 @@ class DatabaseConnectionRef(QObject):
         print("Loading categorical_duration_labels from database:")
         session = self.get_session()
         currSearchSubcontext = contextConfigObj.get_subcontext()
-        # annotations = session.query(CategoricalDurationLabel).options(selectinload(CategoricalDurationLabel.Context)).all()
-        records = session.query(CategoricalDurationLabel).filter(CategoricalDurationLabel.Subcontext==currSearchSubcontext).order_by(CategoricalDurationLabel.start_date).all()
+        # records = session.query(CategoricalDurationLabel).filter(CategoricalDurationLabel.Subcontext==currSearchSubcontext).order_by(CategoricalDurationLabel.start_date).all()
+        recordQuery = session.query(CategoricalDurationLabel).filter(CategoricalDurationLabel.Subcontext==currSearchSubcontext)
+        
+        if contextConfigObj.behavioral_box_id is not None:
+            recordQuery = recordQuery.filter(CategoricalDurationLabel.behavioral_box_id==contextConfigObj.behavioral_box_id)
+
+        if contextConfigObj.experiment_id is not None:
+            recordQuery = recordQuery.filter(CategoricalDurationLabel.experiment_id==contextConfigObj.experiment_id)
+
+        if contextConfigObj.cohort_id is not None:
+            recordQuery = recordQuery.filter(CategoricalDurationLabel.cohort_id==contextConfigObj.cohort_id)
+
+        if contextConfigObj.animal_id is not None:
+            recordQuery = recordQuery.filter(CategoricalDurationLabel.animal_id==contextConfigObj.animal_id)
+
+        records = recordQuery.order_by(CategoricalDurationLabel.start_date).all()
         return records
 
     def load_annotation_events_from_database(self):
