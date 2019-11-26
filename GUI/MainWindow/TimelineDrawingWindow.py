@@ -474,7 +474,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.latestVideoTime = datetime.now()
             self.earliestVideoTime = self.latestVideoTime - TimelineDrawingWindow.ConstantOffsetFromMostRecentVideoDuration
 
-
         if TimelineDrawingWindow.GlobalTimelineConstraintOptions is GlobalTimeAdjustmentOptions.ConstrainGlobalToVideoTimeRange:
             # adjusts the global start and end times for the timeline to the range of the loaded videos.
             self.update_global_start_end_times(self.earliestVideoTime, self.latestVideoTime)
@@ -493,6 +492,24 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             # Set an "isInViewport" option or something
         else:
             print('INVALID ENUM VALUE!!!')
+
+
+    def reload_videos_from_track_configs(self):
+        if not self.shouldUseTrackHeaders:
+            return
+
+        self.trackVideoEventDisplayObjects = dict()
+
+        # Loop through the videoFileTrackWidgets and add them
+        for i in range(0, len(self.videoFileTrackWidgets)):
+            currVideoTrackWidget = self.videoFileTrackWidgets[i]
+            currVideoTrackHeader = self.videoFileTrackWidgetHeaders[currVideoTrackWidget.trackID]
+            currVideoTrackConfig = currVideoTrackHeader.get_config()
+
+            found_records = currVideoTrackConfig.filter_records(self.database_connection.get_session())
+
+            # print(str(found_records))
+            print("track[{0}]: {1} records found".format(i, len(found_records)))
 
         
 
@@ -1114,3 +1131,4 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     @pyqtSlot(int)
     def on_track_header_refresh_activated(self, trackID):
         print("on_track_header_refresh_activated({0})".format(trackID))
+        self.reload_videos_from_track_configs()

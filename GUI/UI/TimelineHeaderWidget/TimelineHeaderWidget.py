@@ -120,35 +120,7 @@ class TimelineHeaderWidget(QFrame):
         self.ui.dockWidget_Main.setCollapsedWidget(self.timelineHeaderWidget_ContentsCollapsed)
         self.ui.dockWidget_Main.setExpandedWidget(self.timelineHeaderWidget_ContentsExpanded)
 
-
-
-        # self.ui.comboBox_Type.activated[str].connect(self.on_type_combobox_changed)
-
-        # self.ui.dockWidget_Main.setWindowTitle(self.track_name)
-        # self.ui.dockWidget_Main.setAttribute(Qt.WA_WState_ExplicitShowHide)
-        # self.ui.lblTitle.setText(self.track_name)
-
-        # self.verticalLayout.setSpacing(0)
-        # self.verticalLayout.setContentsMargins(0,0,0,0)
-
-        # self.dockWidgetContents.layout().setSpacing(0)
-        # self.dockWidgetContents.layout().setContentsMargins(0,0,0,0)
-        
-        # self.ui.frame_TopButtons.setHidden(False)
-
-        # self.ui.btnToggleCollapse.setIcon(self.style().standardIcon(QStyle.SP_TitleBarShadeButton))
-        # self.ui.btnToggleCollapse.setText("")
-        # self.ui.btnToggleCollapse.clicked.connect(self.on_collapse_pressed)
-
-        # self.ui.btnOptions.setIcon(self.style().standardIcon(QStyle.SP_FileDialogDetailedView))
-        # self.ui.btnOptions.setText("")
-        # self.ui.btnOptions.clicked.connect(self.on_options_pressed)
-
-        # self.ui.btnRefresh.setIcon(self.style().standardIcon(QStyle.SP_BrowserReload))
-        # self.ui.btnRefresh.setText("")
-        # self.ui.btnRefresh.clicked.connect(self.on_reload_pressed)
-
-        pass
+        return
 
     def update_from_config(self):
         self.track_id = self.track_config.get_track_id()
