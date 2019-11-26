@@ -100,11 +100,14 @@ class TimelineHeaderWidget(QFrame):
 
     def initUI(self):
 
+        self.ui.dockWidget_Main = CollapsibleDockWidget(parent=self)
+        self.layout().addWidget(self.ui.dockWidget_Main)
+
         self.ui.dockWidget_Main.setCollapsedWidget(self.timelineHeaderWidget_ContentsCollapsed)
         self.ui.dockWidget_Main.setExpandedWidget(self.timelineHeaderWidget_ContentsExpanded)
 
 
-        # self.ui.dockWidget_Main = CollapsibleDockWidget(parent=self)
+
         # self.ui.comboBox_Type.activated[str].connect(self.on_type_combobox_changed)
 
         # self.ui.dockWidget_Main.setWindowTitle(self.track_name)
