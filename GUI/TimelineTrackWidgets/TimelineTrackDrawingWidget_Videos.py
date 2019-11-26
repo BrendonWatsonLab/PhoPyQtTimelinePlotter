@@ -24,6 +24,18 @@ class TimelineTrackDrawingWidget_Videos(TimelineTrackDrawingWidget_EventsBase):
         self.currNowPlayingVideoIndicies = []
         self.activeVideoEditDialog = None
 
+    # Updates the member variables from the database
+    # Note: if there are any pending changes, they will be persisted on this action
+    def reloadModelFromDatabase(self):
+        if self.parent is None:
+            print("Invalid parent!")
+            return
+        else:
+            pass
+            # self.parent.
+
+
+
     def set_now_playing(self, videoObjectIndex):
         if self.currNowPlayingVideoIndicies.__contains__(videoObjectIndex):
             # already playing, just return
