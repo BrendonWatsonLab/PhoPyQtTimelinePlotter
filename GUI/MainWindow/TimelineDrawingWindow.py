@@ -7,7 +7,7 @@ import numpy as np
 from enum import Enum
 
 from PyQt5 import QtGui, QtWidgets, uic
-from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea
+from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QGridLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea
 from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QAction, qApp, QApplication
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
@@ -263,22 +263,42 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                 currVideoTrackWidget.itemSelectionMode = ItemSelectionOptions.SingleSelection
 
                 if self.shouldUseTrackHeaders:
+                    # currHeaderIncludedTrackLayout = QGridLayout(self.extendedTracksContainer)
+                    currHeaderIncludedTrackLayout = QGridLayout(self)
+                    currHeaderIncludedTrackLayout.setSpacing(0)
+                    currHeaderIncludedTrackLayout.setContentsMargins(0,0,0,0)
+
+                    # label gets positioned above textBrowser and is an overlay
                     currHeaderIncludedContainer = QWidget(self)
 
-                    currHeaderWidget = TimelineHeaderWidget(currVideoTrackWidget.trackID, str(currVideoTrackWidget.trackID), parent=self)
+                    currHeaderWidget = TimelineHeaderWidget(currVideoTrackWidget.trackID, parent=self)
                     #Layout of Extended Tracks Container Widget
-                    currHeaderIncludedTrackHboxLayout = QHBoxLayout(self)
-                    currHeaderIncludedTrackHboxLayout.addStretch(1)
-                    currHeaderIncludedTrackHboxLayout.addSpacing(0.0)
-                    currHeaderIncludedTrackHboxLayout.setContentsMargins(0,0,0,0)
-                    currHeaderIncludedTrackHboxLayout.addWidget(currHeaderWidget)
-                    currHeaderWidget.setMinimumSize(50, self.minimumVideoTrackHeight)
-                    currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
-                    currHeaderIncludedTrackHboxLayout.addWidget(currVideoTrackWidget)
-                    currHeaderIncludedContainer.setLayout(currHeaderIncludedTrackHboxLayout)
+                    # currHeaderIncludedTrackHboxLayout = QHBoxLayout(self)
+                    # currHeaderIncludedTrackHboxLayout.addStretch(1)
+                    # currHeaderIncludedTrackHboxLayout.addSpacing(0.0)
+                    # currHeaderIncludedTrackHboxLayout.setContentsMargins(0,0,0,0)
+                    # currHeaderIncludedTrackHboxLayout.addWidget(currHeaderWidget)
+
+                    currHeaderWidget.setMinimumSize(150, 50)
+                    # currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+                    currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+
+
+                    # currHeaderIncludedTrackHboxLayout.addWidget(currVideoTrackWidget)
+                    # currHeaderIncludedContainer.setLayout(currHeaderIncludedTrackHboxLayout)
+                    # self.extendedTracksContainerVboxLayout.addWidget(currHeaderIncludedContainer)
+                    # currHeaderIncludedContainer.setMinimumSize(minimumWidgetWidth+50, self.minimumVideoTrackHeight)
+                    # currHeaderIncludedContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+                    currHeaderIncludedTrackLayout.addWidget(currVideoTrackWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
+                    currHeaderIncludedTrackLayout.addWidget(currHeaderWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
+
+                    currHeaderIncludedContainer.setLayout(currHeaderIncludedTrackLayout)
+
+                    # currHeaderIncludedContainer.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
+                    # currHeaderIncludedContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
                     self.extendedTracksContainerVboxLayout.addWidget(currHeaderIncludedContainer)
-                    currHeaderIncludedContainer.setMinimumSize(minimumWidgetWidth+50, self.minimumVideoTrackHeight)
-                    currHeaderIncludedContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
                 else:
                     self.extendedTracksContainerVboxLayout.addWidget(currVideoTrackWidget)

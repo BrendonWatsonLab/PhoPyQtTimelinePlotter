@@ -20,7 +20,7 @@ class TimelineApplication(QApplication):
     shouldShowGUIWindows = True
     shouldShowMainGUIWindow = True
     shouldShowListGUIWindow = False
-    shouldShowExampleWindow = True 
+    shouldShowExampleWindow = False 
 
     def __init__(self, args):
         super(TimelineApplication, self).__init__(args)
