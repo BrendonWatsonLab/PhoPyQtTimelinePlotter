@@ -9,7 +9,68 @@ from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon, QStandardItem
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
+from orangecanvas.gui.dock import CollapsibleDockWidget
+
+
 # from GUI.UI.TimelineHeaderWidget.TimelineHeaderWidget import TimelineHeaderWidget
+
+# _ContentsExpanded
+# TimelineHeaderWidget_ContentsExpanded.ui
+# TimelineHeaderWidget_ContentsCollapsed.ui
+
+
+class TimelineHeaderWidget_ContentsCollapsed(QWidget):
+    def __init__(self, parent=None):
+        super(TimelineHeaderWidget_ContentsCollapsed, self).__init__(parent=parent) # Call the inherited classes __init__ method
+        self.ui = uic.loadUi("GUI/UI/TimelineHeaderWidget/TimelineHeaderWidget_ContentsCollapsed.ui", self) # Load the .ui file
+        self.initUI()
+        self.show() # Show the GUI
+    def initUI(self):
+        pass
+
+
+class TimelineHeaderWidget_ContentsExpanded(QWidget):
+    def __init__(self, parent=None):
+        super(TimelineHeaderWidget_ContentsExpanded, self).__init__(parent=parent) # Call the inherited classes __init__ method
+        self.ui = uic.loadUi("GUI/UI/TimelineHeaderWidget/TimelineHeaderWidget_ContentsExpanded.ui", self) # Load the .ui file
+        self.initUI()
+        self.show() # Show the GUI
+
+    def initUI(self):
+        self.ui.lblTitle.setText(self.parent().track_name)
+        self.verticalLayout.setSpacing(0)
+        self.verticalLayout.setContentsMargins(0,0,0,0)
+
+        self.layout().setSpacing(0)
+        self.layout().setContentsMargins(0,0,0,0)
+        
+        self.ui.frame_TopButtons.setHidden(False)
+
+        self.ui.btnToggleCollapse.setIcon(self.style().standardIcon(QStyle.SP_TitleBarShadeButton))
+        self.ui.btnToggleCollapse.setText("")
+        self.ui.btnToggleCollapse.clicked.connect(self.parent().on_collapse_pressed)
+
+        self.ui.btnOptions.setIcon(self.style().standardIcon(QStyle.SP_FileDialogDetailedView))
+        self.ui.btnOptions.setText("")
+        self.ui.btnOptions.clicked.connect(self.parent().on_options_pressed)
+
+        self.ui.btnRefresh.setIcon(self.style().standardIcon(QStyle.SP_BrowserReload))
+        self.ui.btnRefresh.setText("")
+        self.ui.btnRefresh.clicked.connect(self.parent().on_reload_pressed)
+
+    def get_title(self):
+        return self.ui.lblTitle.text()
+    
+    def get_body(self):
+        return self.ui.textBrowser_Main.toPlainText()
+
+    def set_title(self, updatedStr):
+        self.ui.lblTitle.setText(updatedStr)
+        self.ui.dockWidget_Main.setWindowTitle(updatedStr)
+
+    def set_body(self, updatedStr):
+        return self.ui.textBrowser_Main.setPlainText(updatedStr)
+
 
 class TimelineHeaderWidget(QFrame):
 
@@ -31,59 +92,45 @@ class TimelineHeaderWidget(QFrame):
         # self.setWindowFlags(Qt.FramelessWindowHint)
         # self.setAttribute(Qt.WA_TranslucentBackground)
 
+        self.timelineHeaderWidget_ContentsCollapsed = TimelineHeaderWidget_ContentsCollapsed(self)
+        self.timelineHeaderWidget_ContentsExpanded = TimelineHeaderWidget_ContentsExpanded(self)
+
         self.initUI()
         self.show() # Show the GUI
 
     def initUI(self):
+
+        self.ui.dockWidget_Main.setCollapsedWidget(self.timelineHeaderWidget_ContentsCollapsed)
+        self.ui.dockWidget_Main.setExpandedWidget(self.timelineHeaderWidget_ContentsExpanded)
+
+
+        # self.ui.dockWidget_Main = CollapsibleDockWidget(parent=self)
         # self.ui.comboBox_Type.activated[str].connect(self.on_type_combobox_changed)
-        self.ui.dockWidget_Main.setWindowTitle(self.track_name)
-        self.ui.lblTitle.setText(self.track_name)
 
-        # self.ui.textBrowser_Main.setAutoFillBackground(False)
+        # self.ui.dockWidget_Main.setWindowTitle(self.track_name)
+        # self.ui.dockWidget_Main.setAttribute(Qt.WA_WState_ExplicitShowHide)
+        # self.ui.lblTitle.setText(self.track_name)
 
-        # Actions:
-        # self.ui.actionToggle_Track_Header_Collapsed.triggered.connect(self.on_collapse_pressed)
-        # self.ui.actionShow_Track_Options.triggered.connect(self.on_options_pressed)
-        # self.ui.actionRefresh_Track.triggered.connect(self.on_reload_pressed)
+        # self.verticalLayout.setSpacing(0)
+        # self.verticalLayout.setContentsMargins(0,0,0,0)
 
-        self.verticalLayout.setSpacing(0)
-        self.verticalLayout.setContentsMargins(0,0,0,0)
-
-        self.dockWidgetContents.layout().setSpacing(0)
-        self.dockWidgetContents.layout().setContentsMargins(0,0,0,0)
+        # self.dockWidgetContents.layout().setSpacing(0)
+        # self.dockWidgetContents.layout().setContentsMargins(0,0,0,0)
         
-        self.ui.frame_TopButtons.setHidden(False)
+        # self.ui.frame_TopButtons.setHidden(False)
 
-        self.ui.btnToggleCollapse.setIcon(self.style().standardIcon(QStyle.SP_TitleBarShadeButton))
-        self.ui.btnToggleCollapse.setText("")
-        # self.ui.toolButton_0.setIcon(self.style().standardIcon(QStyle.SP_TitleBarShadeButton))
-        # self.ui.toolButton_0.setDefaultAction(self.ui.actionToggle_Track_Header_Collapsed)
-        self.ui.btnToggleCollapse.clicked.connect(self.on_collapse_pressed)
+        # self.ui.btnToggleCollapse.setIcon(self.style().standardIcon(QStyle.SP_TitleBarShadeButton))
+        # self.ui.btnToggleCollapse.setText("")
+        # self.ui.btnToggleCollapse.clicked.connect(self.on_collapse_pressed)
 
-        self.ui.btnOptions.setIcon(self.style().standardIcon(QStyle.SP_FileDialogDetailedView))
-        self.ui.btnOptions.setText("")
-        # self.ui.toolButton_2.setIcon(self.style().standardIcon(QStyle.SP_FileDialogDetailedView))
-        # self.ui.toolButton_2.setDefaultAction(self.ui.actionShow_Track_Options)
-        self.ui.btnOptions.clicked.connect(self.on_options_pressed)
+        # self.ui.btnOptions.setIcon(self.style().standardIcon(QStyle.SP_FileDialogDetailedView))
+        # self.ui.btnOptions.setText("")
+        # self.ui.btnOptions.clicked.connect(self.on_options_pressed)
 
-        self.ui.btnRefresh.setIcon(self.style().standardIcon(QStyle.SP_BrowserReload))
-        self.ui.btnRefresh.setText("")
-        # self.ui.toolButton_3.setIcon(self.style().standardIcon(QStyle.SP_BrowserReload))
-        # self.ui.toolButton_3.setDefaultAction(self.ui.actionRefresh_Track)
-        self.ui.btnRefresh.clicked.connect(self.on_reload_pressed)
+        # self.ui.btnRefresh.setIcon(self.style().standardIcon(QStyle.SP_BrowserReload))
+        # self.ui.btnRefresh.setText("")
+        # self.ui.btnRefresh.clicked.connect(self.on_reload_pressed)
 
-        # self.ui.toolButton_0.setEnabled(True)
-        # self.ui.toolButton_2.setEnabled(True)
-        # self.ui.toolButton_3.setEnabled(True)
-
-        # self.ui.toolButton_0.setHidden(True)
-        # self.ui.toolButton_2.setHidden(True)
-        # self.ui.toolButton_3.setHidden(True)
-        # self.ui.textBrowser_Main
-
-        # self.ui.toolButton_0
-        # self.ui.toolButton_1
-        # self.ui.toolButton_2
         pass
 
     def get_title(self):
@@ -113,7 +160,8 @@ class TimelineHeaderWidget(QFrame):
         
 
     def perform_collapse(self):
-        self.dockWidgetContents.setHidden(True)
+        # self.dockWidgetContents.setHidden(True)
+        self.ui.dockWidget_Main.hide()
 
     def perform_expand(self):
         self.dockWidgetContents.setHidden(False)
