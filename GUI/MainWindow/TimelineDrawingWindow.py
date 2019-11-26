@@ -86,7 +86,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         self.trackConfigurations = []
 
-        # self.videoInfoObjects = load_video_events_from_database(self.database_connection.get_path(), as_videoInfo_objects=True)
         self.videoInfoObjects = []
         self.trackVideoEventDisplayObjects = dict()
 
@@ -188,8 +187,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             ## TODO: The video tracks must set:
             self.videoFileTrackWidgets = []
 
-            # self.trackVideoEventDisplayObjects[1]
-            # self.allVideoEventDisplayObjects.filter()
             currTrackIndex = 0
             currTrackBBID = 0
             currTrackConfig = TrackConfiguration(currTrackIndex, "B{0:02}".format(currTrackBBID), "Originals", True, False, [currTrackBBID+1], None, None, None, self)
@@ -249,8 +246,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.timelineMasterTrackWidget.hoverChanged.connect(self.on_playhead_hover_position_updated)
             self.extendedTracksContainer.hoverChanged.connect(self.on_playhead_hover_position_updated)
 
-            # self.timelineMasterTrackWidget.hoverChanged.connect(self.extendedTracksContainer.on_update_hover)
-            
             #Layout of Extended Tracks Container Widget
             self.extendedTracksContainerVboxLayout = QVBoxLayout(self)
             self.extendedTracksContainerVboxLayout.addStretch(1)
@@ -322,9 +317,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
                 # General Layout:
 
-
-
-
             self.eventTrackWidgetHeaders = dict()
 
             # Loop through the eventTrackWidgets and add them
@@ -355,8 +347,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
             # Size the widgets
             self.verticalSplitter.setSizes([100, 600])
-
-
 
         desiredWindowWidth = 900
         self.resize( desiredWindowWidth, 800 )
@@ -512,12 +502,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             currVideoTrackConfig = currVideoTrackHeader.get_config()
 
             found_records = currVideoTrackConfig.filter_records(self.database_connection.get_session())
-            # print(str(found_records))
             print("track[{0}]: {1} records found".format(i, len(found_records)))
 
-
             # Build the corresponding GUI objects
-            # built_video_views = []
             built_model_view_container_array = []
             for (index, aRecord) in enumerate(found_records):
                 aGuiView = VideoFile.get_gui_view(aRecord, parent=currVideoTrackWidget)
@@ -526,7 +513,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                 built_model_view_container_array.append(aModelViewContainer)
 
             currVideoTrackConfig.update_cache(built_model_view_container_array)
-            # currVideoTrackWidget
 
         
 
