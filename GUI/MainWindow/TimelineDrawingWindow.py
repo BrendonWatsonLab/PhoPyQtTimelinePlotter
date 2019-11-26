@@ -35,6 +35,9 @@ from GUI.SetupWindow.SetupWindow import *
 
 from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
 
+from GUI.UI.TimelineHeaderWidget.TimelineHeaderWidget import TimelineHeaderWidget
+
+
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.
         ConstrainVideosShownToGlobal = 2 #  keeps the global the same, and only shows the videos within the global start and end range
@@ -75,6 +78,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
         self.update_global_start_end_times(totalStartTime, totalEndTime)
+
+        self.shouldUseTrackHeaders = True
 
         self.partitionTrackContextsArray = [TrackContextConfig('Behavior'), TrackContextConfig('Unknown')]
 
@@ -214,7 +219,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
             # Partition tracks:
             currTrackIndex = currTrackIndex + 1
-            
             self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[0])
             self.eventTrackWidgets.append(self.partitionsTrackWidget)
 
@@ -257,10 +261,33 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                 currVideoTrackWidget.setMouseTracking(True)
                 currVideoTrackWidget.shouldDismissSelectionUponMouseButtonRelease = False
                 currVideoTrackWidget.itemSelectionMode = ItemSelectionOptions.SingleSelection
+
+                if self.shouldUseTrackHeaders:
+                    currHeaderIncludedContainer = QWidget(self)
+
+                    currHeaderWidget = TimelineHeaderWidget(currVideoTrackWidget.trackID, str(currVideoTrackWidget.trackID), parent=self)
+                    #Layout of Extended Tracks Container Widget
+                    currHeaderIncludedTrackHboxLayout = QHBoxLayout(self)
+                    currHeaderIncludedTrackHboxLayout.addStretch(1)
+                    currHeaderIncludedTrackHboxLayout.addSpacing(0.0)
+                    currHeaderIncludedTrackHboxLayout.setContentsMargins(0,0,0,0)
+                    currHeaderIncludedTrackHboxLayout.addWidget(currHeaderWidget)
+                    currHeaderWidget.setMinimumSize(50, self.minimumVideoTrackHeight)
+                    currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
+                    currHeaderIncludedTrackHboxLayout.addWidget(currVideoTrackWidget)
+                    currHeaderIncludedContainer.setLayout(currHeaderIncludedTrackHboxLayout)
+                    self.extendedTracksContainerVboxLayout.addWidget(currHeaderIncludedContainer)
+                    currHeaderIncludedContainer.setMinimumSize(minimumWidgetWidth+50, self.minimumVideoTrackHeight)
+                    currHeaderIncludedContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+                else:
+                    self.extendedTracksContainerVboxLayout.addWidget(currVideoTrackWidget)
+
                 # General Layout:
-                self.extendedTracksContainerVboxLayout.addWidget(currVideoTrackWidget)
                 currVideoTrackWidget.setMinimumSize(minimumWidgetWidth,self.minimumVideoTrackHeight)
-                currVideoTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+                currVideoTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)                
+
+
 
 
             # Loop through the eventTrackWidgets and add them
