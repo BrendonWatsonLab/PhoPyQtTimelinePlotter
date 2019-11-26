@@ -15,6 +15,8 @@ from app.database.entry_models.db_model import Animal, BehavioralBox, Context, E
 from app.database.entry_models.db_model import StaticFileExtension, FileParentFolder
 # from app.database.entry_models.db_model_extension import ExVideoFile
 
+from GUI.Model.ModelViewContainer import ModelViewContainer
+
 """
 Represents a filter for a specific track
 """
@@ -63,6 +65,19 @@ class TrackFilter(QObject):
         return {'behavioral_box_ids': self.behavioral_box_ids, 'experiment_ids': self.experiment_ids, 'cohort_ids': self.cohort_ids, 'animal_ids': self.animal_ids, 'allow_original_videos':self.allow_original_videos, 'allow_labeled_videos':self.allow_labeled_videos}
 
 
+
+class TrackCache(QObject):
+    def __init__(self, modelViewArray=[], parent=None):
+        super(TrackCache, self).__init__(parent=parent)
+        self.modelViewArray = modelViewArray
+
+    def get_model_view_array(self):
+        return self.modelViewArray
+
+    def set_model_view_array(self, newArray):
+        self.modelViewArray = newArray
+
+
 # TrackConfiguration: a class that holds the settings for a timeline track
 class TrackConfiguration(QObject):
     def __init__(self, trackIndex, trackTitle, trackExtendedDescription, allow_original_videos, allow_labeled_videos, behavioral_box_ids=None, experiment_ids=None, cohort_ids=None, animal_ids=None, parent=None):
@@ -71,6 +86,7 @@ class TrackConfiguration(QObject):
         self.trackTitle = trackTitle
         self.trackExtendedDescription = trackExtendedDescription
         self.filter = TrackFilter(behavioral_box_ids, experiment_ids, cohort_ids, animal_ids, allow_original_videos, allow_labeled_videos, parent=parent)
+        self.cache = TrackCache([], parent=parent)
 
 
     def get_track_id(self):
@@ -84,6 +100,12 @@ class TrackConfiguration(QObject):
     
     def filter_records(self, session):
         return self.filter.build_filter(session)
+
+    def update_cache(self, newCachedModelViewArray):
+        self.cache.set_model_view_array(newCachedModelViewArray)
+
+    def get_cache(self):
+        return self.cache
 
     def __str__(self):
         return 'TrackConfiguration: trackIndex: {0}, trackTitle: {1}, trackExtendedDescription: {2}, filter: {3}'.format(self.trackIndex, self.trackTitle, self.trackExtendedDescription, str(self.filter))

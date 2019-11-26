@@ -16,7 +16,7 @@ from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QWidget, QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 
-from GUI.Model.PhoDurationEvent_Video import PhoDurationEvent_Video
+from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
 
 # (Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, VideoFile)
 

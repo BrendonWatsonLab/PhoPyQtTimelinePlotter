@@ -15,6 +15,8 @@ from GUI.Model.Events.PhoDurationEvent_Partition import PhoDurationEvent_Partiti
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
 
 from app.database.entry_models.db_model import CategoricalDurationLabel, Context, Subcontext
+
+from GUI.Model.ModelViewContainer import ModelViewContainer
 # """
 # Represents a partition
 # """
@@ -79,8 +81,6 @@ When the user modifies an existing partition:
 
 
 """
-
-from GUI.Model.ModelViewContainer import ModelViewContainer
 
 
 """

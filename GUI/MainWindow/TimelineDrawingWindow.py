@@ -37,7 +37,7 @@ from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
 
 from GUI.UI.TimelineHeaderWidget.TimelineHeaderWidget import TimelineHeaderWidget
 from GUI.Model.Filters import *
-
+from GUI.Model.ModelViewContainer import ModelViewContainer
 
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.
@@ -512,12 +512,15 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
 
             # Build the corresponding GUI objects
-            built_video_views = []
+            # built_video_views = []
+            built_model_view_container_array = []
             for (index, aRecord) in enumerate(found_records):
                 aGuiView = VideoFile.get_gui_view(aRecord, parent=currVideoTrackWidget)
-                built_video_views.append(aGuiView)
+                # built_video_views.append(aGuiView)
+                aModelViewContainer = ModelViewContainer(aRecord, aGuiView)
+                built_model_view_container_array.append(aModelViewContainer)
 
-            
+            currVideoTrackConfig.update_cache(built_model_view_container_array)
             # currVideoTrackWidget
 
         
