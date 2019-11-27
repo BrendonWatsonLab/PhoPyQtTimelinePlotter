@@ -605,6 +605,7 @@ class DatabaseConnectionRef(QObject):
         for i in range(0,16):
             currNameString = ('B{:02}'.format(i))
             currRecord = BehavioralBox()
+            # currRecord.numerical_id = i
             currRecord.name = currNameString
             # currRecord.notes = 'sample auto'
             sampleBehavioralBoxes.append(currRecord)

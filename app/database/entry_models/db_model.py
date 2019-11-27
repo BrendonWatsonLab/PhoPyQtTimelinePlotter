@@ -45,7 +45,7 @@ class ReferenceBoxExperCohortAnimalMixin(object):
 
     @declared_attr
     def behavioral_box_id(cls):
-        return Column(Integer, ForeignKey('BehavioralBoxes.numerical_id'))
+        return Column(Integer, ForeignKey('BehavioralBoxes.id'))
 
     @declared_attr
     def experiment_id(cls):
@@ -87,7 +87,7 @@ class Animal(Base):
     __tablename__ = 'Animals'
 
     id = Column(Integer, primary_key=True)
-    name = Column(Text, nullable=False, server_default=text("'animal_0'"))
+    name = Column(Text, nullable=False, unique=True, server_default=text("'animal_0'"))
     birth_date = Column(Integer)
     receive_date = Column(Integer)
     death_date = Column(Integer)
@@ -109,13 +109,15 @@ class Animal(Base):
 class BehavioralBox(Base):
     __tablename__ = 'BehavioralBoxes'
 
-    numerical_id = Column(Integer, primary_key=True)
-    name = Column(Text, server_default=text("'B00'"))
+    id = Column(Integer, primary_key=True)
+    # numerical_id = Column(Integer, nullable=False)
+    name = Column(Text, server_default=text("'B00'"), unique=True, nullable=False)
 
     @classmethod
     def getTableMapping(cls):
         return [
-            ('ID', cls.numerical_id, 'numerical_id', {'editable': False}),
+            ('ID', cls.id, 'id', {'editable': False}),
+            # ('NumericalID', cls.numerical_id, 'numerical_id', {'editable': True}),
             ('Name', cls.name, 'name', {'editable': True}),
         ]
 
@@ -356,7 +358,7 @@ class CategoricalDurationLabel(Base):
 
 
 
-class TimestampedAnnotation(Base):
+class TimestampedAnnotation(ReferenceBoxExperCohortAnimalMixin, Base):
     __tablename__ = 'TimestampedAnnotations'
 
     id = Column(Integer, primary_key=True)
@@ -413,7 +415,7 @@ class ExperimentalConfigurationEvent(Base):
     cohort_id = Column(Integer, ForeignKey('Cohorts.id'))
     animal_id = Column(Integer, ForeignKey('Animals.id'))
     labjack_id = Column(Integer, ForeignKey('Labjacks.serial_number'))
-    behavioralbox_id = Column(Integer, ForeignKey('BehavioralBoxes.numerical_id'))
+    behavioralbox_id = Column(Integer, ForeignKey('BehavioralBoxes.id'))
     notes = Column(Text)
     event_type = Column(Text)
     event_subtype = Column(Text)
@@ -437,7 +439,7 @@ class VideoFile(ReferenceBoxExperCohortAnimalMixin, Base):
     start_date = Column(Integer, nullable=False)
     end_date = Column(Integer)
     duration = Column(Integer)
-    # behavioral_box_id = Column(Integer, ForeignKey('BehavioralBoxes.numerical_id'))
+    # behavioral_box_id = Column(Integer, ForeignKey('BehavioralBoxes.id'))
     # experiment_id = Column(Integer, ForeignKey('Experiments.id'))
     # cohort_id = Column(Integer, ForeignKey('Cohorts.id'))
     # animal_id = Column(Integer, ForeignKey('Animals.id'))
