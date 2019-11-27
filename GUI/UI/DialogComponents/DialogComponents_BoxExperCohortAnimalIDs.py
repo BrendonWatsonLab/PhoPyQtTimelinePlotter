@@ -12,6 +12,8 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 class DialogComponents_BoxExperCohortAnimalIDs(QFrame):
 
+    ValueNullString = "Any"
+
     def __init__(self, parent=None):
         super(DialogComponents_BoxExperCohortAnimalIDs, self).__init__(parent=parent) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/UI/DialogComponents/BoxExperCohortAnimalIDs_DialogComponents.ui", self) # Load the .ui file
@@ -19,6 +21,24 @@ class DialogComponents_BoxExperCohortAnimalIDs(QFrame):
         self.show() # Show the GUI
 
     def initUI(self):
+        self.spinBoxControls = [
+            self.ui.spinBox_bbID,
+            self.ui.spinBox_experimentID,
+            self.ui.spinBox_cohortID,
+            self.ui.spinBox_animalID
+        ]
+
+        # setSpecialValueText(...) sets the text that's displayed only when the spinBox is at it's minimum value
+        # self.ui.spinBox_bbID.setSpecialValueText(DialogComponents_BoxExperCohortAnimalIDs.ValueNullString)
+        # self.ui.spinBox_experimentID.setSpecialValueText(DialogComponents_BoxExperCohortAnimalIDs.ValueNullString)
+        # self.ui.spinBox_cohortID.setSpecialValueText(DialogComponents_BoxExperCohortAnimalIDs.ValueNullString)
+        # self.ui.spinBox_animalID.setSpecialValueText(DialogComponents_BoxExperCohortAnimalIDs.ValueNullString)
+
+        for aSpinBoxControl in self.spinBoxControls:
+            aSpinBoxControl.setSpecialValueText(DialogComponents_BoxExperCohortAnimalIDs.ValueNullString)
+
+
+
         self.ui.spinBox_bbID.valueChanged[int].connect(self.on_bb_id_value_changed)
         self.ui.spinBox_experimentID.valueChanged[int].connect(self.on_experiment_id_value_changed)
         self.ui.spinBox_cohortID.valueChanged[int].connect(self.on_cohort_id_value_changed)
@@ -105,7 +125,9 @@ class DialogComponents_BoxExperCohortAnimalIDs(QFrame):
         self.update()
         return
 
+    # def set_null_valued(self, spinBoxRef):
+    #     spinBoxRef.setSpecialValueText(DialogComponents_BoxExperCohortAnimalIDs.ValueNullString)
     
     def set_editable(self, is_editable):
-        for aControl in [self.ui.spinBox_bbID, self.ui.spinBox_experimentID, self.ui.spinBox_cohortID, self.ui.spinBox_animalID]:
+        for aControl in self.spinBoxControls:
             aControl.setReadOnly(not is_editable)
