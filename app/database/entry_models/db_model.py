@@ -45,19 +45,19 @@ class ReferenceBoxExperCohortAnimalMixin(object):
 
     @declared_attr
     def behavioral_box_id(cls):
-        return Column(Integer, ForeignKey('BehavioralBoxes.id'))
+        return Column(Integer, ForeignKey('BehavioralBoxes.id'), nullable=True)
 
     @declared_attr
     def experiment_id(cls):
-        return Column(Integer, ForeignKey('Experiments.id'))
+        return Column(Integer, ForeignKey('Experiments.id'), nullable=True)
 
     @declared_attr
     def cohort_id(cls):
-        return Column(Integer, ForeignKey('Cohorts.id'))
+        return Column(Integer, ForeignKey('Cohorts.id'), nullable=True)
 
     @declared_attr
     def animal_id(cls):
-        return Column(Integer, ForeignKey('Animals.id'))
+        return Column(Integer, ForeignKey('Animals.id'), nullable=True)
 
     ## Relationships:
     @declared_attr
@@ -76,6 +76,14 @@ class ReferenceBoxExperCohortAnimalMixin(object):
     def experiment(cls):
         return relationship("Experiment")
 
+    # @classmethod
+    # def getTableMapping(cls):
+    #     return [
+    #         ('BB ID', cls.behavioral_box_id, 'behavioral_box_id', {'editable': True}),
+    #         ('ExperimentID', cls.experiment_id, 'experiment_id', {'editable': True}),
+    #         ('CohortID', cls.cohort_id, 'cohort_id', {'editable': True}),
+    #         ('AnimalID', cls.animal_id, 'animal_id', {'editable': True}),
+    #     ]
     
 
 
@@ -198,7 +206,7 @@ class Labjack(Base):
     __tablename__ = 'Labjacks'
 
     serial_number = Column(Integer, primary_key=True)
-    name = Column(Text, server_default=text("'LJ-'"))
+    name = Column(Text, unique=True, server_default=text("'LJ-'"))
     model = Column(Text, server_default=text("'T7'"))
 
     @classmethod
@@ -250,7 +258,7 @@ class Cohort(Base):
     __tablename__ = 'Cohorts'
 
     id = Column(Integer, primary_key=True)
-    name = Column(Text, nullable=False, server_default=text("'cohort_'"))
+    name = Column(Text, nullable=False, unique=True, server_default=text("'cohort_'"))
     start_date = Column(Integer, nullable=False)
     end_date = Column(Integer)
     experiment = Column(Integer, ForeignKey('Experiments.id', ondelete='SET NULL'))
@@ -367,7 +375,6 @@ class TimestampedAnnotation(ReferenceBoxExperCohortAnimalMixin, Base):
 
 
     context = Column(Integer, ForeignKey('Contexts.id'), server_default=text("1"))
-    # subcontext = Column(Integer, server_default=text("1"))
     subcontext = Column(Integer, ForeignKey('Subcontext.id'))
 
     type = Column(Integer, nullable=False, server_default=text("1"))
@@ -401,6 +408,10 @@ class TimestampedAnnotation(ReferenceBoxExperCohortAnimalMixin, Base):
             ('SecondaryTxt', cls.secondary_text, 'secondary_text', {'editable': True}),
             ('TertiaryTxt', cls.tertiary_text, 'tertiary_text', {'editable': True}),
             ('OverflowTxt', cls.overflow_text, 'overflow_text', {'editable': True}),
+            ('BB ID', cls.behavioral_box_id, 'behavioral_box_id', {'editable': True}),
+            ('ExperimentID', cls.experiment_id, 'experiment_id', {'editable': True}),
+            ('CohortID', cls.cohort_id, 'cohort_id', {'editable': True}),
+            ('AnimalID', cls.animal_id, 'animal_id', {'editable': True}),
         ]
 
 
