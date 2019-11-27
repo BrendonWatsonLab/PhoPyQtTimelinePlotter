@@ -284,7 +284,7 @@ Datatypes:
 Interval: datetime.timedelta()
 Numeric
 """
-class CategoricalDurationLabel(Base):
+class CategoricalDurationLabel(ReferenceBoxExperCohortAnimalMixin, Base):
     __tablename__ = 'CategoricalDurationLabels'
 
     id = Column(Integer, primary_key=True)
@@ -358,6 +358,10 @@ class CategoricalDurationLabel(Base):
             ('SecondaryTxt', cls.secondary_text, 'secondary_text', {'editable': True}),
             ('TertiaryTxt', cls.tertiary_text, 'tertiary_text', {'editable': True}),
             ('Notes', cls.notes, 'notes', {'editable': True}),
+            ('BB ID', cls.behavioral_box_id, 'behavioral_box_id', {'editable': True}),
+            ('ExperimentID', cls.experiment_id, 'experiment_id', {'editable': True}),
+            ('CohortID', cls.cohort_id, 'cohort_id', {'editable': True}),
+            ('AnimalID', cls.animal_id, 'animal_id', {'editable': True}),
         ]
 
     __table_args__ = (UniqueConstraint('context_id', 'subcontext_id', name='_name_parent_uc'),
