@@ -9,13 +9,17 @@ from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
-class TextAnnotationDialog(QtWidgets.QDialog):
+from GUI.UI.DialogComponents.AbstractDialogMixins import BoxExperCohortAnimalIDsFrame_Mixin
+
+class TextAnnotationDialog(BoxExperCohortAnimalIDsFrame_Mixin, QtWidgets.QDialog):
 
      # This defines a signal called 'closed' that takes no arguments.
     on_cancel = pyqtSignal()
 
      # This defines a signal called 'closed' that takes no arguments.
-    on_commit = pyqtSignal([datetime, str, str, str], [datetime, datetime, str, str, str])
+    # on_commit = pyqtSignal([datetime, str, str, str], [datetime, datetime, str, str, str])
+
+    on_commit = pyqtSignal([datetime, str, str, str, int, int, int], [datetime, datetime, str, str, str, int, int, int])
 
 
     def __init__(self):
@@ -34,10 +38,11 @@ class TextAnnotationDialog(QtWidgets.QDialog):
     def accept(self):
         print('accept:')
         # Emit the signal.
+        behavioral_box_id, experiment_id, cohort_id, animal_id = self.frame_BoxExperCohortAnimalIDs.get_id_values(shouldReturnNoneTypes=False)
         if (self.get_end_date()):
-            self.on_commit[datetime, datetime, str, str, str].emit(self.get_start_date(), self.get_end_date(), self.get_title(), self.get_subtitle(), self.get_body())
+            self.on_commit[datetime, datetime, str, str, str, int, int, int].emit(self.get_start_date(), self.get_end_date(), self.get_title(), self.get_subtitle(), self.get_body(), behavioral_box_id, experiment_id, cohort_id, animal_id)
         else:
-            self.on_commit[datetime, str, str, str].emit(self.get_start_date(), self.get_title(), self.get_subtitle(), self.get_body())
+            self.on_commit[datetime, str, str, str, int, int, int].emit(self.get_start_date(), self.get_title(), self.get_subtitle(), self.get_body(), behavioral_box_id, experiment_id, cohort_id, animal_id)
             
         super(TextAnnotationDialog, self).accept()
 

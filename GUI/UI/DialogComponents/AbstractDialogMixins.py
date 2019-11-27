@@ -11,8 +11,8 @@ class BoxExperCohortAnimalIDsFrame_Mixin(object):
     # requires a property "self.ui.frame_BoxExperCohortAnimalIDs"
 
     # @property
-    def get_id_values(self):
-        return self.ui.frame_BoxExperCohortAnimalIDs.get_id_values()
+    def get_id_values(self, shouldReturnNoneTypes=True):
+        return self.ui.frame_BoxExperCohortAnimalIDs.get_id_values(shouldReturnNoneTypes)
 
     # @property
     def set_id_values(self, behavioral_box_id, experiment_id, cohort_id, animal_id):

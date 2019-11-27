@@ -37,8 +37,6 @@ class DialogComponents_BoxExperCohortAnimalIDs(QFrame):
         for aSpinBoxControl in self.spinBoxControls:
             aSpinBoxControl.setSpecialValueText(DialogComponents_BoxExperCohortAnimalIDs.ValueNullString)
 
-
-
         self.ui.spinBox_bbID.valueChanged[int].connect(self.on_bb_id_value_changed)
         self.ui.spinBox_experimentID.valueChanged[int].connect(self.on_experiment_id_value_changed)
         self.ui.spinBox_cohortID.valueChanged[int].connect(self.on_cohort_id_value_changed)
@@ -83,20 +81,22 @@ class DialogComponents_BoxExperCohortAnimalIDs(QFrame):
         self.ui.lblCohortID.setEnabled(self.ui.spinBox_cohortID.value() > 0)
         self.ui.lblAnimalID.setEnabled(self.ui.spinBox_animalID.value() > 0)
 
-    def get_id_values(self):
+    def get_id_values(self, shouldReturnNoneTypes):
         v1 = self.ui.spinBox_bbID.value()
         v2 = self.ui.spinBox_experimentID.value()
         v3 = self.ui.spinBox_cohortID.value()
         v4 = self.ui.spinBox_animalID.value()
 
-        if (v1 < 1):
-            v1 = None
-        if (v2 < 1):
-            v2 = None
-        if (v3 < 1):
-            v3 = None
-        if (v4 < 1):
-            v4 = None
+        # If shouldReturnNoneTypes is True, we replace any 0 values with None, otherwise we just return the 0 values
+        if (shouldReturnNoneTypes):
+            if (v1 < 1):
+                v1 = None
+            if (v2 < 1):
+                v2 = None
+            if (v3 < 1):
+                v3 = None
+            if (v4 < 1):
+                v4 = None
         
         return (v1, v2, v3, v4)
 

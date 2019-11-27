@@ -27,7 +27,7 @@ row_id      .id     array_index
 
 The child (subtype) index that's being retrieved from the type's first child row id is wrong with the additional Noneitem. It needs to have 1 added to it.
 """
-
+## TODO: The type/subtype functionality in this class can be replaced by a child DialogComponents_BoxExperCohortAnimalIDs and the appropriate Mixin
 class PartitionEditDialog(BoxExperCohortAnimalIDsFrame_Mixin, AbstractDatabaseAccessingDialog):
 
      # This defines a signal called 'closed' that takes no arguments.
