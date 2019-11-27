@@ -75,6 +75,7 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
             # first_item.setSelectable(False)
             types_model.appendRow(first_item)
 
+        last_index = 0
         for (anIndex, aBehaviorGroup) in enumerate(self.behaviorGroups):
             if aBehaviorGroup is None:
                 print("FATAL ERROR!!")
@@ -87,12 +88,13 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
                 item.setForeground(aBehaviorGroup.primaryColor.get_QColor())
             
             types_model.appendRow(item)
+            last_index = anIndex
 
         subtypes_model = self.ui.comboBox_Subtype.model()
         if enable_none_selection:
             first_item = QtGui.QStandardItem("")
             # first_item.setSelectable(True)
-            first_item.setData(anIndex)
+            first_item.setData(last_index)
             subtypes_model.appendRow(first_item)
 
         for (anIndex, aBehavior) in enumerate(self.behaviors):
@@ -107,6 +109,7 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
                 item.setForeground(aBehavior.primaryColor.get_QColor())
 
             subtypes_model.appendRow(item)
+            last_index = anIndex
 
     # def transform_combobox_index_to_array_index(self, combobox_index):
     #     if self.enable_none_selection:
