@@ -224,6 +224,10 @@ class Partitioner(AbstractDatabaseAccessingQObject):
             # create a partition to fill the empty timeline
             newPartitionIndex = len(spanning_partition_records)
             new_partition_obj = self.create_new_partition(self.totalStartTime, self.totalEndTime, str(newPartitionIndex))
+            if (new_partition_obj is None):
+                print("Couldn't create a new default partition, most likely due to invalid parent context!")
+                return []
+            
             new_partition_obj.get_view().setAccessibleName(str(newPartitionIndex))
             spanning_partition_records = [new_partition_obj]
 

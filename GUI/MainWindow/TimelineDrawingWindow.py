@@ -509,10 +509,30 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.contextsDict = self.database_connection.load_contexts_from_database()
         self.subcontexts = self.database_connection.load_subcontexts_from_database()
 
-        for (index, aPartitionTrackContextInfoObj) in enumerate(self.partitionTrackContextsArray):
-            newContext = self.contextsDict[aPartitionTrackContextInfoObj.get_context_name()]
-            newSubcontext = newContext.subcontexts[aPartitionTrackContextInfoObj.get_subcontext_index()]
-            aPartitionTrackContextInfoObj.update_on_load(newContext, newSubcontext)
+        try:
+            for (index, aPartitionTrackContextInfoObj) in enumerate(self.partitionTrackContextsArray):
+                newContext = self.contextsDict[aPartitionTrackContextInfoObj.get_context_name()]
+                newSubcontext = newContext.subcontexts[aPartitionTrackContextInfoObj.get_subcontext_index()]
+                aPartitionTrackContextInfoObj.update_on_load(newContext, newSubcontext)
+
+        except KeyError as e:
+            print("Warning: a requested database key didn't exist in the database! Are the sample contexts/subcontexts successfully added?")
+            self.database_connection.initSampleDatabase_ContextsSubcontexts()
+
+            try:
+                for (index, aPartitionTrackContextInfoObj) in enumerate(self.partitionTrackContextsArray):
+                    newContext = self.contextsDict[aPartitionTrackContextInfoObj.get_context_name()]
+                    newSubcontext = newContext.subcontexts[aPartitionTrackContextInfoObj.get_subcontext_index()]
+                    aPartitionTrackContextInfoObj.update_on_load(newContext, newSubcontext)
+
+            except KeyError as e:
+                print("Error: still failed even after trying to add sample records to database!!!")
+
+
+
+
+
+
 
         # Video file objects for video tracks
         self.videoFileRecords = self.database_connection.load_video_file_info_from_database()
