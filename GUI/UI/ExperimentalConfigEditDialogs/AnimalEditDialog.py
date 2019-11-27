@@ -9,7 +9,6 @@ from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon, QStandardItem
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
-# from app.BehaviorsList import BehaviorsManager, BehaviorInfoOptions
 from app.database.DatabaseConnectionRef import DatabasePendingItemsState, DatabaseConnectionRef
 from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingDialog
@@ -28,8 +27,6 @@ class AnimalEditDialog(AbstractDatabaseAccessingDialog):
     def __init__(self, database_connection, parent=None):
         super(AnimalEditDialog, self).__init__(database_connection, parent) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/UI/ExperimentalConfigEditDialogs/AnimalEditDialog.ui", self) # Load the .ui file
-        # self.behaviorsManager = BehaviorsManager()
-        # self.init_from_behaviors_manager()
         self.reloadModelFromDatabase()
         self.initUI()
         self.show() # Show the GUI

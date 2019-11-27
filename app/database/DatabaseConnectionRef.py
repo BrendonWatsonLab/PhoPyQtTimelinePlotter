@@ -11,7 +11,11 @@ from GUI.Model.AlchemicalModels.qvariantalchemy import String, Integer, Boolean
 from GUI.Model.AlchemicalModels.alchemical_model import SqlAlchemyTableModel
 
 # from app.database.SqlAlchemyDatabase import create_connection
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPalette
+# from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
+from app.BehaviorsList import BehaviorsManager, BehaviorInfoOptions
 
 ## DATABASE MODELS:
 from app.database.entry_models.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, CategoricalDurationLabel
@@ -368,7 +372,6 @@ class DatabaseConnectionRef(QObject):
             print("Saving colors events to database: {0}".format(self.get_path()))
         session = self.get_session()
 
-        # Behavior Groups:
         num_found_records = len(colors)
         num_added_records = 0
         num_skipped_records = 0
@@ -563,6 +566,106 @@ class DatabaseConnectionRef(QObject):
         self.save_to_database(sampleSubcontexts, 'Subcontext')
 
 
+    def initSampleDatabase_Behaviors(self):
+        # Creates both the behavior tree and the behaviors database from a set of hard-coded values defined in behaviorsManager
+        print("INITIALIZING SAMPLE BEHAVIORS DATABASE")
+        behaviorsManager = BehaviorsManager()
+        topLevelNodes = []
+        topLeftNodesDict = dict()
+
+        colorsDict = self.load_colors_from_database()
+        behaviorGroups = self.load_behavior_groups_from_database()
+
+        # Create new colors if needed
+        default_black_color_hex = QColor(0,0,0).name(QColor.HexRgb)
+        default_black_color = CategoryColors(None, default_black_color_hex, 'Black', 'Black', 0, 0, 0, None)
+        default_white_color_hex = QColor(255,255,255).name(QColor.HexRgb)
+        default_white_color = CategoryColors(None, default_white_color_hex,'White', 'White', 255, 255, 255, None)
+        defaultColors = [default_black_color,
+            default_white_color
+        ]
+
+        pending_colors_array = []
+        for aPotentialNewColor in defaultColors:
+            if (not (aPotentialNewColor.hex_color in colorsDict.keys())):
+                pending_colors_array.append(aPotentialNewColor)
+
+        self.save_colors_to_database(pending_colors_array)
+        colorsDict = self.load_colors_from_database()
+
+        # For adding to the DB
+        behaviorGroupsDBList = []
+        behaviorsDBList = []
+
+        # Add the top-level parent nodes
+        for (aTypeId, aUniqueBehavior) in enumerate(behaviorsManager.get_unique_behavior_groups()):
+            # aNewNode = QTreeWidgetItem([aUniqueBehavior, str(aTypeId), "String C"])
+            aNodeColor = behaviorsManager.groups_color_dictionary[aUniqueBehavior]
+            # aNewNode.setBackground(0, aNodeColor)
+            # topLevelNodes.append(aNewNode)
+            topLeftNodesDict[aUniqueBehavior] = (len(topLevelNodes)-1) # get the index of the added node
+
+            aNodeColorHexID = aNodeColor.name(QColor.HexRgb)
+            if (not (aNodeColorHexID in colorsDict.keys())):
+                # If the color is new, add it to the color table in the database
+                aDBColor = CategoryColors(None, aNodeColorHexID, aUniqueBehavior, ('Created for ' + aUniqueBehavior), aNodeColor.red(), aNodeColor.green(), aNodeColor.blue(), 'Auto-generated')
+                self.save_colors_to_database([aDBColor])
+                colorsDict = self.load_colors_from_database()
+            else:
+                #Else get the existing color
+                aDBColor = colorsDict[aNodeColorHexID]
+                            
+            if (not aDBColor.id):
+                print("INVALID COLOR ID!")
+
+            aNewDBNode = BehaviorGroup(None, aUniqueBehavior, aUniqueBehavior, aDBColor.id, default_black_color.id, 'auto')
+
+            behaviorGroupsDBList.append(aNewDBNode)
+
+        # Add the leaf nodes
+        for (aSubtypeID, aUniqueLeafBehavior) in enumerate(behaviorsManager.get_unique_behaviors()):
+            parentNodeName = behaviorsManager.leaf_to_behavior_groups_dict[aUniqueLeafBehavior]
+            parentNodeIndex = topLeftNodesDict[parentNodeName]
+            # parentNode = topLevelNodes[parentNodeIndex]
+            # if parentNode:
+            # found parent
+            # aNewNode = QTreeWidgetItem([aUniqueLeafBehavior, "(type: {0}, subtype: {1})".format(str(parentNodeIndex), str(aSubtypeID)), parentNodeName])
+            aNodeColor = behaviorsManager.color_dictionary[aUniqueLeafBehavior]
+            # aNewNode.setBackground(0, aNodeColor)
+            # parentNode.addChild(aNewNode)
+
+            aNodeColorHexID = aNodeColor.name(QColor.HexRgb)
+            if (not (aNodeColorHexID in colorsDict.keys())):
+                # If the color is new, add it to the color table in the database
+                aDBColor = CategoryColors(None, aNodeColorHexID, aUniqueLeafBehavior, ('Created for ' + aUniqueLeafBehavior), aNodeColor.red(), aNodeColor.green(), aNodeColor.blue(), 'Auto-generated')
+                self.save_colors_to_database([aDBColor])
+                colorsDict = self.load_colors_from_database()
+            else:
+                #Else get the existing color
+                aDBColor = colorsDict[aNodeColorHexID]
+
+            # Get parent node
+            parentDBNode = behaviorGroupsDBList[parentNodeIndex]
+            if (not parentDBNode):
+                print("Couldn't find parent node!")
+                parent_node_db_id = None
+            else:
+                if parentDBNode.id:
+                    print("Found parent with index {0}".format(parentDBNode.id))
+                    parent_node_db_id = parentDBNode.id
+                else:
+                    print("couldn't get parent node's .id property, using the index {0}".format(parentNodeIndex + 1))
+                    parent_node_db_id = int(parentNodeIndex + 1)
+
+            aNewDBNode = Behavior(None, aUniqueLeafBehavior, aUniqueLeafBehavior, parent_node_db_id, aDBColor.id, default_black_color.id, 'auto')
+
+            behaviorsDBList.append(aNewDBNode)
+
+            # else:
+            #     print('Failed to find the parent node with name: ', parentNodeName)
+            
+        self.save_behavior_events_to_database(behaviorsDBList, behaviorGroupsDBList)
+        return 
 
 
     ## Defaults/Static Database Setup:
@@ -570,7 +673,7 @@ class DatabaseConnectionRef(QObject):
         # Need to load all first
         print("Adding sample records if needed...")
 
-        # self.colorsDict = self.load_colors_from_database()
+        # colorsDict = self.load_colors_from_database()
         # self.behaviorGroups = self.load_behavior_groups_from_database()
         # self.behaviors = self.load_behaviors_from_database()
         # self.fileExtensionDict = self.load_static_file_extensions_from_database()
@@ -580,12 +683,13 @@ class DatabaseConnectionRef(QObject):
 
         # self.annotationDataObjects = self.load_annotation_events_from_database()
 
-        # self.videoFileRecords = self.database_connection.load_video_file_info_from_database()
+        # self.videoFileRecords = self.load_video_file_info_from_database()
 
         # Sample Contexts
         # if (not ('Behavior' in self.contextsDict.keys())):
         #     Context(None, "Behavior")
 
+        self.initSampleDatabase_Behaviors()
         self.initSampleDatabase_ContextsSubcontexts()
 
         # Behavioral Boxes

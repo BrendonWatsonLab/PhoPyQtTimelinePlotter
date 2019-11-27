@@ -9,10 +9,6 @@ from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon, QStandardItem
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
-# from app.BehaviorsList import BehaviorsManager, BehaviorInfoOptions
-# from app.database.DatabaseConnectionRef import DatabasePendingItemsState, DatabaseConnectionRef
-# from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
-
 # from GUI.UI.DialogComponents.DialogComponents_TypeSubtype import DialogComponents_TypeSubtype
 
 class DialogComponents_TypeSubtype(QFrame):

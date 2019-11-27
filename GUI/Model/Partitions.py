@@ -10,7 +10,6 @@ from GUI.Model.Events.PhoEvent import PhoEvent
 from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
 from GUI.Model.Events.PhoDurationEvent_Partition import PhoDurationEvent_Partition
 
-# from app.BehaviorsList import BehaviorsManager
 
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
 
@@ -97,7 +96,6 @@ class Partitioner(AbstractDatabaseAccessingQObject):
         self.name = name
         self.partitions = []
 
-        # self.behaviorsManager = BehaviorsManager()
         # needs_initialize_partitions = False
         if (not (partitionViews is None)):
             print("WARNING: Initializing Partitioner from partitionViews is no longer supported!!!!")
@@ -381,7 +379,6 @@ class Partitioner(AbstractDatabaseAccessingQObject):
 
         if (not (partition_to_modify.get_view().subtype_id == subtype_id)):
             partition_to_modify.get_view().subtype_id = subtype_id
-            # partition_to_modify.color = self.behaviorsManager.get_subtype_color(subtype_id)
             partition_to_modify.get_view().color = color
         
         if (not (partition_to_modify.get_record().subtype_id == subtype_id)):
