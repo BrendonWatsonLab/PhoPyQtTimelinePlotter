@@ -290,17 +290,26 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             # Other Tracks:
             self.eventTrackWidgets = []
 
+            # Set the ID for the configs that will be used to annotate/partition the timeline (the active box)
+            currTrackBBID = 1
+
             # Annotation Comments track:
             currTrackIndex = currTrackIndex + 1
+            currTrackConfig = TrackConfiguration(currTrackIndex, "A_B{0:02}Notes".format(currTrackBBID), "Notes", False, False, [currTrackBBID+1], None, None, None, self)
+            self.trackConfigurations.append(currTrackConfig)
             self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(currTrackIndex, [], [], self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
             self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
 
             # Partition tracks:
             currTrackIndex = currTrackIndex + 1
+            currTrackConfig = TrackConfiguration(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", False, False, [currTrackBBID+1], None, None, None, self)
+            self.trackConfigurations.append(currTrackConfig)
             self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[0])
             self.eventTrackWidgets.append(self.partitionsTrackWidget)
 
             currTrackIndex = currTrackIndex + 1
+            currTrackConfig = TrackConfiguration(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", False, False, [currTrackBBID+1], None, None, None, self)
+            self.trackConfigurations.append(currTrackConfig)
             self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackIndex, None, [], self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[1])
             self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
 
@@ -329,6 +338,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             
         def initUI_layout(self):
 
+            currTrackConfigurationIndex = 0
+
             self.videoFileTrackWidgetHeaders = dict()
             # Loop through the videoFileTrackWidgets and add them
             for i in range(0, len(self.videoFileTrackWidgets)):
@@ -341,29 +352,20 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                 currVideoTrackWidget.itemSelectionMode = ItemSelectionOptions.SingleSelection
 
                 if self.shouldUseTrackHeaders:
-                    # currHeaderIncludedTrackLayout = QGridLayout(self.extendedTracksContainer)
                     currHeaderIncludedTrackLayout = QGridLayout(self)
                     currHeaderIncludedTrackLayout.setSpacing(0)
                     currHeaderIncludedTrackLayout.setContentsMargins(0,0,0,0)
-
-                    # label gets positioned above textBrowser and is an overlay
                     currHeaderIncludedContainer = QWidget(self)
 
                     currHeaderTrackConfig = self.trackConfigurations[i]
                     currHeaderWidget = TimelineHeaderWidget(currHeaderTrackConfig, parent=self)
-                    #Layout of Extended Tracks Container Widget
-
-
                     currHeaderWidget.setMinimumSize(50, self.minimumVideoTrackHeight)
-                    # currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-                    # currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
                     currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
                     currHeaderWidget.toggleCollapsed.connect(self.on_track_header_toggle_collapse_activated)
                     currHeaderWidget.showOptions.connect(self.on_track_header_show_options_activated)
                     currHeaderWidget.refresh.connect(self.on_track_header_refresh_activated)
 
-                    # self.videoFileTrackWidgetHeaders.append(currHeaderWidget)
                     self.videoFileTrackWidgetHeaders[currVideoTrackWidget.trackID] = currHeaderWidget
 
                     currHeaderIncludedTrackLayout.addWidget(currVideoTrackWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
@@ -378,6 +380,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                     currHeaderIncludedContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
                     self.extendedTracksContainerVboxLayout.addWidget(currHeaderIncludedContainer)
+                    currTrackConfigurationIndex = currTrackConfigurationIndex + 1
 
                 else:
                     self.extendedTracksContainerVboxLayout.addWidget(currVideoTrackWidget)
@@ -391,9 +394,45 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             # Loop through the eventTrackWidgets and add them
             for i in range(0, len(self.eventTrackWidgets)):
                 currWidget = self.eventTrackWidgets[i]
-                self.extendedTracksContainerVboxLayout.addWidget(currWidget)
-                currWidget.setMinimumSize(minimumWidgetWidth,50)
-                currWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+                if self.shouldUseTrackHeaders:
+                    currHeaderIncludedTrackLayout = QGridLayout(self)
+                    currHeaderIncludedTrackLayout.setSpacing(0)
+                    currHeaderIncludedTrackLayout.setContentsMargins(0,0,0,0)
+                    currHeaderIncludedContainer = QWidget(self)
+
+                    currHeaderTrackConfig = self.trackConfigurations[currTrackConfigurationIndex] # use the absolute index into this config array
+                    currHeaderWidget = TimelineHeaderWidget(currHeaderTrackConfig, parent=self)
+                    currHeaderWidget.setMinimumSize(50, self.minimumVideoTrackHeight)
+                    currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+                    currHeaderWidget.toggleCollapsed.connect(self.on_track_header_toggle_collapse_activated)
+                    currHeaderWidget.showOptions.connect(self.on_track_header_show_options_activated)
+                    currHeaderWidget.refresh.connect(self.on_track_header_refresh_activated)
+
+                    self.eventTrackWidgetHeaders[currWidget.trackID] = currHeaderWidget
+
+                    currHeaderIncludedTrackLayout.addWidget(currWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
+                    currWidget.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
+                    currWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+                    currHeaderIncludedTrackLayout.addWidget(currHeaderWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
+
+                    currHeaderIncludedContainer.setLayout(currHeaderIncludedTrackLayout)
+
+                    currHeaderIncludedContainer.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
+                    currHeaderIncludedContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+                    self.extendedTracksContainerVboxLayout.addWidget(currHeaderIncludedContainer)
+                    currTrackConfigurationIndex = currTrackConfigurationIndex + 1
+
+                else:
+                    self.extendedTracksContainerVboxLayout.addWidget(currWidget)
+                    currWidget.setMinimumSize(minimumWidgetWidth,50)
+                    currWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+
+
 
             self.extendedTracksContainer.setLayout(self.extendedTracksContainerVboxLayout)
 
