@@ -44,6 +44,15 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="readOnly">
+        <bool>false</bool>
+       </property>
+       <property name="buttonSymbols">
+        <enum>QAbstractSpinBox::UpDownArrows</enum>
+       </property>
+       <property name="specialValueText">
+        <string>Any</string>
+       </property>
       </widget>
      </item>
     </layout>
@@ -70,6 +79,9 @@
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="specialValueText">
+        <string>Any</string>
        </property>
       </widget>
      </item>
@@ -98,6 +110,9 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="specialValueText">
+        <string>Any</string>
+       </property>
       </widget>
      </item>
     </layout>
@@ -124,6 +139,12 @@
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="specialValueText">
+        <string>Any</string>
+       </property>
+       <property name="value">
+        <number>0</number>
        </property>
       </widget>
      </item>

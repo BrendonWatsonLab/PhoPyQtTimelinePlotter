@@ -9,8 +9,9 @@ from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon, QStandardItem
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
+from GUI.UI.DialogComponents.AbstractDialogMixins import BoxExperCohortAnimalIDsFrame_Mixin
 
-class VideoTrackFilterEditDialog(QDialog):
+class VideoTrackFilterEditDialog(BoxExperCohortAnimalIDsFrame_Mixin, QDialog):
 
      # This defines a signal called 'closed' that takes no arguments.
     on_cancel = pyqtSignal()
@@ -90,12 +91,6 @@ class VideoTrackFilterEditDialog(QDialog):
     def set_trackName(self, updatedStr):
         self.ui.lblTrackName.setText(updatedStr)
 
-    def get_id_values(self):
-        return self.ui.frame_BoxExperCohortAnimalIDs.get_id_values()
-
-    def set_id_values(self, behavioral_box_id, experiment_id, cohort_id, animal_id):
-        self.ui.frame_BoxExperCohortAnimalIDs.set_id_values(behavioral_box_id, experiment_id, cohort_id, animal_id)
-  
     def get_is_original_video(self):
         return self.ui.checkBox_isOriginalVideo.isChecked()
 

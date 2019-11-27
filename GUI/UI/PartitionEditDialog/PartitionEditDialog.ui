@@ -117,6 +117,22 @@
      <item row="7" column="1">
       <widget class="QComboBox" name="comboBox_Subtype"/>
      </item>
+     <item row="8" column="1">
+      <widget class="DialogComponents_BoxExperCohortAnimalIDs" name="frame_BoxExperCohortAnimalIDs">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>100</height>
+        </size>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>
@@ -131,6 +147,14 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DialogComponents_BoxExperCohortAnimalIDs</class>
+   <extends>QFrame</extends>
+   <header location="global">GUI.UI.DialogComponents.DialogComponents_BoxExperCohortAnimalIDs</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>
