@@ -570,7 +570,7 @@ class DatabaseConnectionRef(QObject):
         # Creates both the behavior tree and the behaviors database from a set of hard-coded values defined in behaviorsManager
         print("INITIALIZING SAMPLE BEHAVIORS DATABASE")
         behaviorsManager = BehaviorsManager()
-        topLevelNodes = []
+        # topLevelNodes = []
         topLeftNodesDict = dict()
 
         colorsDict = self.load_colors_from_database()
@@ -603,7 +603,7 @@ class DatabaseConnectionRef(QObject):
             aNodeColor = behaviorsManager.groups_color_dictionary[aUniqueBehavior]
             # aNewNode.setBackground(0, aNodeColor)
             # topLevelNodes.append(aNewNode)
-            topLeftNodesDict[aUniqueBehavior] = (len(topLevelNodes)-1) # get the index of the added node
+            
 
             aNodeColorHexID = aNodeColor.name(QColor.HexRgb)
             if (not (aNodeColorHexID in colorsDict.keys())):
@@ -619,8 +619,11 @@ class DatabaseConnectionRef(QObject):
                 print("INVALID COLOR ID!")
 
             aNewDBNode = BehaviorGroup(None, aUniqueBehavior, aUniqueBehavior, aDBColor.id, default_black_color.id, 'auto')
-
             behaviorGroupsDBList.append(aNewDBNode)
+            topLeftNodesDict[aUniqueBehavior] = (len(behaviorGroupsDBList)-1) # get the index of the added node
+
+        self.save_to_database(behaviorGroupsDBList, 'BehaviorGroup')
+        behaviorGroupsDBList = self.load_behavior_groups_from_database()
 
         # Add the leaf nodes
         for (aSubtypeID, aUniqueLeafBehavior) in enumerate(behaviorsManager.get_unique_behaviors()):

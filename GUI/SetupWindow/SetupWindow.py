@@ -33,7 +33,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
     def __init__(self, database_connection):
         super(SetupWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/SetupWindow/SetupWindow.ui", self) # Load the .ui file
-        self.behaviorsManager = BehaviorsManager()
+        # self.behaviorsManager = BehaviorsManager()
 
         # The most recently selected/activated table cell index (column, row) or None
         self.behaviorsTableActiveIndex = None
