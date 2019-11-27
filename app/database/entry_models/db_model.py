@@ -2,7 +2,7 @@
 from sqlalchemy import Column, ForeignKey, Integer, Table, Text, text, DateTime, UniqueConstraint
 from sqlalchemy.sql.sqltypes import NullType
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import declarative_base, declared_attr
 
 from app.database.entry_models.DatabaseBase import Base, metadata
 from pathlib import Path
@@ -36,6 +36,50 @@ Mapping Helpers (unused, currently creating table mappings manually):
     ['fullname', 'nickname', 'name', 'id']
 
 """
+class ReferenceBoxExperCohortAnimalMixin(object):
+    # @declared_attr
+    # def address_id(cls):
+    #     return Column(Integer, ForeignKey('address.id'))
+
+    @declared_attr
+    def behavioral_box_id(cls):
+        return Column(Integer, ForeignKey('BehavioralBoxes.numerical_id'))
+
+    @declared_attr
+    def experiment_id(cls):
+        return Column(Integer, ForeignKey('Experiments.id'))
+
+    @declared_attr
+    def cohort_id(cls):
+        return Column(Integer, ForeignKey('Cohorts.id'))
+
+    @declared_attr
+    def animal_id(cls):
+        return Column(Integer, ForeignKey('Animals.id'))
+
+    ## Relationships:
+    @declared_attr
+    def animal(cls):
+        return relationship("Animal")
+
+    @declared_attr
+    def behavioral_box(cls):
+        return relationship("BehavioralBox")
+
+    @declared_attr
+    def cohort(cls):
+        return relationship("Cohort")
+
+    @declared_attr
+    def experiment(cls):
+        return relationship("Experiment")
+
+    
+
+
+
+
+
 
 class Animal(Base):
     __tablename__ = 'Animals'
@@ -329,6 +373,9 @@ class TimestampedAnnotation(Base):
     tertiary_text = Column(Text)
     overflow_text = Column(Text)
 
+
+    
+
     Context = relationship('Context', foreign_keys=[context])
     Subcontext = relationship('Subcontext', foreign_keys=[subcontext])
 
@@ -378,7 +425,7 @@ class ExperimentalConfigurationEvent(Base):
     labjack = relationship('Labjack')
 
 
-class VideoFile(Base):
+class VideoFile(ReferenceBoxExperCohortAnimalMixin, Base):
     __tablename__ = 'VideoFile'
 
     id = Column(Integer, primary_key=True)
@@ -390,17 +437,17 @@ class VideoFile(Base):
     start_date = Column(Integer, nullable=False)
     end_date = Column(Integer)
     duration = Column(Integer)
-    behavioral_box_id = Column(Integer, ForeignKey('BehavioralBoxes.numerical_id'))
-    experiment_id = Column(Integer, ForeignKey('Experiments.id'))
-    cohort_id = Column(Integer, ForeignKey('Cohorts.id'))
-    animal_id = Column(Integer, ForeignKey('Animals.id'))
+    # behavioral_box_id = Column(Integer, ForeignKey('BehavioralBoxes.numerical_id'))
+    # experiment_id = Column(Integer, ForeignKey('Experiments.id'))
+    # cohort_id = Column(Integer, ForeignKey('Cohorts.id'))
+    # animal_id = Column(Integer, ForeignKey('Animals.id'))
     is_original_video = Column(Integer)
     notes = Column(Text)
 
-    animal = relationship('Animal')
-    behavioral_box = relationship('BehavioralBox')
-    cohort = relationship('Cohort')
-    experiment = relationship('Experiment')
+    # animal = relationship('Animal')
+    # behavioral_box = relationship('BehavioralBox')
+    # cohort = relationship('Cohort')
+    # experiment = relationship('Experiment')
     staticFileExtension = relationship('StaticFileExtension')
     fileParentFolder = relationship('FileParentFolder', back_populates="videoFiles")
 
