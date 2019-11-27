@@ -33,7 +33,6 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
     def __init__(self, database_connection):
         super(SetupWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/SetupWindow/SetupWindow.ui", self) # Load the .ui file
-        # self.behaviorsManager = BehaviorsManager()
 
         # The most recently selected/activated table cell index (column, row) or None
         self.behaviorsTableActiveIndex = None
@@ -86,106 +85,6 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         
 
 ## General Functions:
-
-    # Creates both the behavior tree and the behaviors database from a set of hard-coded values defined in behaviorsManager
-    def initSampleBehaviorsDatabase(self):
-        print("INITIALIZING SAMPLE BEHAVIORS DATABASE")
-        self.topLevelNodes = []
-        self.topLeftNodesDict = dict()
-
-        # Create new colors if needed
-        default_black_color_hex = QColor(0,0,0).name(QColor.HexRgb)
-        default_black_color = CategoryColors(None, default_black_color_hex, 'Black', 'Black', 0, 0, 0, None)
-        default_white_color_hex = QColor(255,255,255).name(QColor.HexRgb)
-        default_white_color = CategoryColors(None, default_white_color_hex,'White', 'White', 255, 255, 255, None)
-        defaultColors = [default_black_color,
-            default_white_color
-        ]
-
-        pending_colors_array = []
-        for aPotentialNewColor in defaultColors:
-            if (not (aPotentialNewColor.hex_color in self.colorsDict.keys())):
-                pending_colors_array.append(aPotentialNewColor)
-
-        self.database_connection.save_colors_to_database(pending_colors_array)
-        self.colorsDict = self.database_connection.load_colors_from_database()
-
-        # For adding to the DB
-        behaviorGroupsDBList = []
-        behaviorsDBList = []
-
-        # Add the top-level parent nodes
-        for (aTypeId, aUniqueBehavior) in enumerate(self.behaviorsManager.get_unique_behavior_groups()):
-            aNewNode = QTreeWidgetItem([aUniqueBehavior, str(aTypeId), "String C"])
-            aNodeColor = self.behaviorsManager.groups_color_dictionary[aUniqueBehavior]
-            aNewNode.setBackground(0, aNodeColor)
-            self.topLevelNodes.append(aNewNode)
-            self.topLeftNodesDict[aUniqueBehavior] = (len(self.topLevelNodes)-1) # get the index of the added node
-
-            aNodeColorHexID = aNodeColor.name(QColor.HexRgb)
-            if (not (aNodeColorHexID in self.colorsDict.keys())):
-                # If the color is new, add it to the color table in the database
-                aDBColor = CategoryColors(None, aNodeColorHexID, aUniqueBehavior, ('Created for ' + aUniqueBehavior), aNodeColor.red(), aNodeColor.green(), aNodeColor.blue(), 'Auto-generated')
-                self.database_connection.save_colors_to_database([aDBColor])
-                self.colorsDict = self.database_connection.load_colors_from_database()
-            else:
-                #Else get the existing color
-                aDBColor = self.colorsDict[aNodeColorHexID]
-                            
-            if (not aDBColor.id):
-                print("INVALID COLOR ID!")
-
-            aNewDBNode = BehaviorGroup(None, aUniqueBehavior, aUniqueBehavior, aDBColor.id, default_black_color.id, 'auto')
-
-            behaviorGroupsDBList.append(aNewDBNode)
-
-        # Add the leaf nodes
-        for (aSubtypeID, aUniqueLeafBehavior) in enumerate(self.behaviorsManager.get_unique_behaviors()):
-            parentNodeName = self.behaviorsManager.leaf_to_behavior_groups_dict[aUniqueLeafBehavior]
-            parentNodeIndex = self.topLeftNodesDict[parentNodeName]
-            parentNode = self.topLevelNodes[parentNodeIndex]
-            if parentNode:
-                # found parent
-                aNewNode = QTreeWidgetItem([aUniqueLeafBehavior, "(type: {0}, subtype: {1})".format(str(parentNodeIndex), str(aSubtypeID)), parentNodeName])
-                aNodeColor = self.behaviorsManager.color_dictionary[aUniqueLeafBehavior]
-                aNewNode.setBackground(0, aNodeColor)
-                parentNode.addChild(aNewNode)
-
-                aNodeColorHexID = aNodeColor.name(QColor.HexRgb)
-                if (not (aNodeColorHexID in self.colorsDict.keys())):
-                    # If the color is new, add it to the color table in the database
-                    aDBColor = CategoryColors(None, aNodeColorHexID, aUniqueLeafBehavior, ('Created for ' + aUniqueLeafBehavior), aNodeColor.red(), aNodeColor.green(), aNodeColor.blue(), 'Auto-generated')
-                    self.database_connection.save_colors_to_database([aDBColor])
-                    self.colorsDict = self.database_connection.load_colors_from_database()
-                else:
-                    #Else get the existing color
-                    aDBColor = self.colorsDict[aNodeColorHexID]
-
-                # Get parent node
-                parentDBNode = behaviorGroupsDBList[parentNodeIndex]
-                if (not parentDBNode):
-                    print("Couldn't find parent node!")
-                    parent_node_db_id = None
-                else:
-                    if parentDBNode.id:
-                        print("Found parent with index {0}".format(parentDBNode.id))
-                        parent_node_db_id = parentDBNode.id
-                    else:
-                        print("couldn't get parent node's .id property, using the index {0}".format(parentNodeIndex + 1))
-                        parent_node_db_id = int(parentNodeIndex + 1)
-
-                aNewDBNode = Behavior(None, aUniqueLeafBehavior, aUniqueLeafBehavior, parent_node_db_id, aDBColor.id, default_black_color.id, 'auto')
-
-                behaviorsDBList.append(aNewDBNode)
-
-            else:
-                print('Failed to find the parent node with name: ', parentNodeName)
-            
-        self.ui.treeWidget_Settings_PartitionTrack.addTopLevelItems(self.topLevelNodes)
-        
-        self.database_connection.save_behavior_events_to_database(behaviorsDBList, behaviorGroupsDBList)
-        return 
-
 
     # Called to rebuild the behaviors tree and table from the behaviors data loaded from the database
     def build_behaviors_interfaces_from_loaded(self):
