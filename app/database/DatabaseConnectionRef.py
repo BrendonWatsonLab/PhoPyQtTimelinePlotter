@@ -61,9 +61,10 @@ class DatabaseConnectionRef(QObject):
         self.engine = None
         self.session = None
         self.DBSession = None
-        self.enable_debug_printing = False
+        self.enable_debug_printing = True
 
         self.connect()
+        self.initSampleDatabase()
 
     def connect(self):
         (self.engine, self.DBSession, self.session) = self.create_connection(db_file=self.db_file, shouldBuildTablesIfNeeded=True)
@@ -89,6 +90,7 @@ class DatabaseConnectionRef(QObject):
                 print("Other exception! Trying to continue", e)
                 return False
         else:
+            print("FATAL ERROR: DatabaseConnectionRef has no session!")
             return False
 
     def rollback(self):
@@ -99,7 +101,9 @@ class DatabaseConnectionRef(QObject):
             except Exception as e:
                 print("rollback: Other exception! Trying to continue", e)
                 return False
-        return False
+        else:
+            print("FATAL ERROR: DatabaseConnectionRef has no session!")
+            return False
 
 
     # Gets the modified records
@@ -164,6 +168,7 @@ class DatabaseConnectionRef(QObject):
 
     # 'G:\Google Drive\Modern Behavior Box\Results - Data\BehavioralBoxDatabase.db'
 
+    # Called by self.connect() on startup
     def create_connection(self, db_file, shouldBuildTablesIfNeeded=True):
         """ create a database connection to the SQLite database
             specified by the db_file
@@ -174,6 +179,7 @@ class DatabaseConnectionRef(QObject):
         Base.metadata.bind = engine
         if shouldBuildTablesIfNeeded:
             self.build_new_database(engine)
+            print("New database built at {0}".format(db_file))
 
         DBSession = sessionmaker()
         DBSession.bind = engine
@@ -283,7 +289,7 @@ class DatabaseConnectionRef(QObject):
                 num_added_records = num_added_records + 1
 
             except Exception as e:
-                print("Other exception ({0}) while trying to save {1} records to database! Trying to continue".format(str(e), recordTypeName))
+                print("ERROR: Other exception ({0}) while trying to save {1} records to database! Trying to continue".format(str(e), recordTypeName))
                 num_skipped_records = num_skipped_records + 1
                 continue
 
@@ -541,50 +547,68 @@ class DatabaseConnectionRef(QObject):
         return model
 
 
+
+    def initSampleDatabase_ContextsSubcontexts(self):
+        print("Creating sample contexts and subcontexts!")
+        sampleContexts = [
+            Context(None, "Unknown", "sample"),
+            Context(None, "Behavior", "sample"),
+        ]
+        self.save_to_database(sampleContexts, 'Context')
+
+        sampleSubcontexts = [
+            Subcontext(None, "Default",1,"sample"),
+            Subcontext(None, "Default",2,"sample"),
+        ]
+        self.save_to_database(sampleSubcontexts, 'Subcontext')
+
+
+
+
     ## Defaults/Static Database Setup:
     def initSampleDatabase(self):
         # Need to load all first
+        print("Adding sample records if needed...")
 
-        self.colorsDict = self.load_colors_from_database()
-        self.behaviorGroups = self.load_behavior_groups_from_database()
-        self.behaviors = self.load_behaviors_from_database()
-        self.fileExtensionDict = self.load_static_file_extensions_from_database()
+        # self.colorsDict = self.load_colors_from_database()
+        # self.behaviorGroups = self.load_behavior_groups_from_database()
+        # self.behaviors = self.load_behaviors_from_database()
+        # self.fileExtensionDict = self.load_static_file_extensions_from_database()
 
-        self.contextsDict = self.load_contexts_from_database()
-        self.subcontexts = self.load_subcontexts_from_database()
+        # self.contextsDict = self.load_contexts_from_database()
+        # self.subcontexts = self.load_subcontexts_from_database()
 
-        self.annotationDataObjects = self.load_annotation_events_from_database()
+        # self.annotationDataObjects = self.load_annotation_events_from_database()
 
-        self.videoFileRecords = self.database_connection.load_video_file_info_from_database()
+        # self.videoFileRecords = self.database_connection.load_video_file_info_from_database()
 
         # Sample Contexts
         # if (not ('Behavior' in self.contextsDict.keys())):
         #     Context(None, "Behavior")
 
-        sampleContexts = [
-            Context(None, "Unknown"),
-            Context(None, "Behavior"),
-        ]
-        self.save_to_database(sampleContexts, 'Context')
-
-        sampleSubcontexts = [
-            Subcontext(None, "Default",1),
-            Subcontext(None, "Default",2),
-        ]
-        self.save_to_database(sampleSubcontexts, 'Subcontext')
-
-
-        sampleSubcontexts = [
-            Subcontext(None, "Default",1),
-            Subcontext(None, "Default",2),
-        ]
-        self.save_to_database(sampleSubcontexts, 'Subcontext')
+        self.initSampleDatabase_ContextsSubcontexts()
 
         # Behavioral Boxes
-        sampleAnimals = [Animal(None, 'Animal_{:04}'.format(i)) for i in range(0,8)]
+        # sampleAnimals = [(Animal(None, ('Animal_{:04}'.format(i)))) for i in range(0,8)]
+        sampleAnimals = []
+        for i in range(0,8):
+            currNameString = ('Animal_{:04}'.format(i))
+            currRecord = Animal()
+            currRecord.name = currNameString
+            currRecord.notes = 'sample auto'
+            sampleAnimals.append(currRecord)
+
         self.save_to_database(sampleAnimals, 'Animal')
 
-        sampleBehavioralBoxes = [BehavioralBox(None, 'B{:02}'.format(i)) for i in range(0,16)]
+        # sampleBehavioralBoxes = [BehavioralBox(None, 'B{:02}'.format(i)) for i in range(0,16)]
+        sampleBehavioralBoxes = []
+        for i in range(0,16):
+            currNameString = ('B{:02}'.format(i))
+            currRecord = BehavioralBox()
+            currRecord.name = currNameString
+            # currRecord.notes = 'sample auto'
+            sampleBehavioralBoxes.append(currRecord)
+
         self.save_to_database(sampleBehavioralBoxes, 'BehavioralBox')
 
         # Sample Subcontexts
@@ -592,16 +616,19 @@ class DatabaseConnectionRef(QObject):
 
         # Static File Extensions:
         # Get the appropriate file extension parent
-        currFileExtension = aFoundVideoFile.file_extension[1:].lower()
-        parent_file_extension_obj = None
-        if currFileExtension in self.fileExtensionDict.keys():
-            parent_file_extension_obj = self.fileExtensionDict[currFileExtension]
-        else:
-            # Key doesn't exist!
-            print("extension {0} doesn't exist!".format(currFileExtension))
-            parent_file_extension_obj = StaticFileExtension(currFileExtension)
-            # Add it to the database
-            self.database_connection.save_static_file_extensions_to_database([parent_file_extension_obj])
+        # currFileExtension = aFoundVideoFile.file_extension[1:].lower()
+        # parent_file_extension_obj = None
+        # if currFileExtension in self.fileExtensionDict.keys():
+        #     parent_file_extension_obj = self.fileExtensionDict[currFileExtension]
+        # else:
+        #     # Key doesn't exist!
+        #     print("extension {0} doesn't exist!".format(currFileExtension))
+        #     parent_file_extension_obj = StaticFileExtension("mp4")
+        staticFileExtensionObjects = [StaticFileExtension("mp4","MP4 video"),
+                StaticFileExtension("mkv","MKV video"),
+                StaticFileExtension("avi","AVI video")]
+        # Add it to the database
+        self.save_static_file_extensions_to_database(staticFileExtensionObjects)
 
 
 
