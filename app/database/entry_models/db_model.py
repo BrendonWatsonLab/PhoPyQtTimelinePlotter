@@ -364,9 +364,9 @@ class CategoricalDurationLabel(ReferenceBoxExperCohortAnimalMixin, Base):
             ('AnimalID', cls.animal_id, 'animal_id', {'editable': True}),
         ]
 
-    __table_args__ = (UniqueConstraint('context_id', 'subcontext_id', name='_name_parent_uc'),
-                     )
-
+    # __table_args__ = (UniqueConstraint('context_id', 'subcontext_id', name='_name_parent_uc'),
+    #                  )
+        __table_args__ = (UniqueConstraint('context_id','subcontext_id','behavioral_box_id','experiment_id','cohort_id','animal_id', name="uix_context_filters_uc"))
 
 
 
