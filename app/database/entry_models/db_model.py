@@ -36,6 +36,8 @@ Mapping Helpers (unused, currently creating table mappings manually):
     ['fullname', 'nickname', 'name', 'id']
 
 """
+## This "Mixin" adds these columns and relationships to any file that inherits from it
+# See https://docs.sqlalchemy.org/en/13/orm/extensions/declarative/mixins.html for more info
 class ReferenceBoxExperCohortAnimalMixin(object):
     # @declared_attr
     # def address_id(cls):
@@ -373,8 +375,6 @@ class TimestampedAnnotation(Base):
     tertiary_text = Column(Text)
     overflow_text = Column(Text)
 
-
-    
 
     Context = relationship('Context', foreign_keys=[context])
     Subcontext = relationship('Subcontext', foreign_keys=[subcontext])
