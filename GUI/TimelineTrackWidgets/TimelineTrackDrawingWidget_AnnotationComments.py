@@ -207,17 +207,18 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         cut_duration_offset = self.offset_to_duration(cut_x)
         cut_datetime = self.offset_to_datetime(cut_x)
 
+        # TODO: should get the behavioral_box_id, experiment_id, cohort_id, animal_id from the track's context or config or w/e
         self.annotationEditingDialog = TextAnnotationDialog()
-        self.annotationEditingDialog.on_commit[datetime, str, str, str].connect(self.try_create_instantaneous_comment)
-        self.annotationEditingDialog.on_commit[datetime, datetime, str, str, str].connect(self.try_create_comment)
+        self.annotationEditingDialog.on_commit[datetime, str, str, str, int, int, int].connect(self.try_create_instantaneous_comment)
+        self.annotationEditingDialog.on_commit[datetime, datetime, str, str, str, int, int, int].connect(self.try_create_comment)
         self.annotationEditingDialog.on_cancel.connect(self.comment_dialog_canceled)
         self.annotationEditingDialog.set_start_date(cut_datetime)
         self.annotationEditingDialog.set_end_date(cut_datetime)
     
         return False
 
-    @pyqtSlot(datetime, datetime, str, str, str)
-    def try_create_comment(self, start_date, end_date, title, subtitle, body):
+    @pyqtSlot(datetime, datetime, str, str, str, int, int, int)
+    def try_create_comment(self, start_date, end_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
         # Tries to create a new comment
         print('try_create_comment')
         if end_date == start_date:
@@ -231,9 +232,9 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         self.rebuildDrawnObjects()
         self.update()
 
-    @pyqtSlot(datetime, str, str, str)
-    def try_create_instantaneous_comment(self, start_date, title, subtitle, body):
-        self.try_create_comment(start_date, None, title, subtitle, body)
+    @pyqtSlot(datetime, str, str, str, int, int, int)
+    def try_create_instantaneous_comment(self, start_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
+        self.try_create_comment(start_date, None, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id)
 
     # Called by a specific child annotation's menu to indicate that it should be edited in a new Annotation Editor Dialog
     @pyqtSlot()    
@@ -254,22 +255,26 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
             self.annotationEditingDialog.set_title(selectedAnnotationObject.title)
             self.annotationEditingDialog.set_subtitle(selectedAnnotationObject.subtitle)
             self.annotationEditingDialog.set_body(selectedAnnotationObject.name)
+
+            ## SHOULD BE SET TO TRACK's global values for these variables.
             
-            self.annotationEditingDialog.on_commit[datetime, str, str, str].connect(self.try_update_instantaneous_comment)
-            self.annotationEditingDialog.on_commit[datetime, datetime, str, str, str].connect(self.try_update_comment)
+            self.annotationEditingDialog.set_id_values(selectedAnnotationObject.)
+            
+            self.annotationEditingDialog.on_commit[datetime, str, str, str, int, int, int].connect(self.try_update_instantaneous_comment)
+            self.annotationEditingDialog.on_commit[datetime, datetime, str, str, str, int, int, int].connect(self.try_update_comment)
         else:
             print("Couldn't get active annotation object to edit!!")
             self.activeEditingAnnotationIndex = None
 
     # There's a bug in the database design and they're updating but overlapping. Figure this out. A new one is being created each time I change a field. This wasn't happening before.
-    @pyqtSlot(datetime, datetime, str, str, str)
-    def try_update_comment(self, start_date, end_date, title, subtitle, body):
+    @pyqtSlot(datetime, datetime, str, str, str, int, int, int)
+    def try_update_comment(self, start_date, end_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
         # Tries to update an existing comment
         print('try_update_comment')
         
         if (not (self.activeEditingAnnotationIndex is None)):
             currObjToModify = self.annotationDataObjects[self.activeEditingAnnotationIndex]
-            currObjToModify = modify_TimestampedAnnotation(currObjToModify, start_date, end_date, title, subtitle, body)
+            currObjToModify = modify_TimestampedAnnotation(currObjToModify, start_date, end_date, title, subtitle, body, '', behavioral_box_id, experiment_id, cohort_id, animal_id)
             self.annotationDataObjects[self.activeEditingAnnotationIndex] = currObjToModify
             # self.database_connection.save_annotation_events_to_database(self.annotationDataObjects)
             self.database_commit()
@@ -280,10 +285,11 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
             print("Error: unsure what comment to update!")
             return
 
-    @pyqtSlot(datetime, str, str, str)
-    def try_update_instantaneous_comment(self, start_date, title, subtitle, body):
-        self.try_update_comment(start_date, None, title, subtitle, body)
+    @pyqtSlot(datetime, str, str, str, int, int, int)
+    def try_update_instantaneous_comment(self, start_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
+        self.try_update_comment(start_date, None, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id)
 
+    @pyqtSlot()
     def comment_dialog_canceled(self):
         print('comment_Dialog_canceled')
         self.activeEditingAnnotationIndex = None
