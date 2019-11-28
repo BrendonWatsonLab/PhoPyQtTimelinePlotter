@@ -23,11 +23,11 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
     default_itemSelectionMode = ItemSelectionOptions.SingleSelection
 
     def __init__(self, trackConfig, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=False, wantsMouseEvents=True):
-        super(TimelineTrackDrawingWidget_AnnotationComments, self).__init__(trackConfig.get_track_id(), totalStartTime, totalEndTime, durationObjects, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
+        super(TimelineTrackDrawingWidget_AnnotationComments, self).__init__(trackConfig.get_track_id(), totalStartTime, totalEndTime, [], database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
         # self.durationObjects = durationObjects
         self.instantaneousObjects = []
         # self.eventRect = np.repeat(QRect(0,0,0,0), len(durationObjects))
-        self.instantaneousEventRect = np.repeat(QRect(0,0,0,0), len(instantaneousObjects))
+        self.instantaneousEventRect = np.repeat(QRect(0,0,0,0), len(self.instantaneousObjects))
         # Hovered Object
         self.hovered_object_index = None
         self.hovered_object = None
@@ -292,8 +292,20 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
             self.annotationEditingDialog.set_body(selectedAnnotationObject.name)
 
             ## SHOULD BE SET TO TRACK's global values for these variables.
-            
-            self.annotationEditingDialog.set_id_values(selectedAnnotationObject.)
+            ## TODO: the track can have multiple values
+            sel_behavioral_box_id, sel_experiment_id, sel_cohort_id, sel_animal_id = None, None, None, None
+            sel_behavioral_box_ids, sel_experiment_ids, sel_cohort_ids, sel_animal_ids = self.trackConfig.get_filter().get_ids()
+            if sel_behavioral_box_ids is not None:
+                sel_behavioral_box_id = sel_behavioral_box_ids[0]
+            if sel_experiment_ids is not None:
+                sel_experiment_id = sel_experiment_ids[0]   
+            if sel_cohort_ids is not None:
+                sel_cohort_id = sel_cohort_ids[0]
+            if sel_animal_ids is not None:
+                sel_animal_id = sel_animal_ids[0]
+
+
+            self.annotationEditingDialog.set_id_values(sel_behavioral_box_id, sel_experiment_id, sel_cohort_id, sel_animal_id)
             
             self.annotationEditingDialog.on_commit[datetime, str, str, str, int, int, int].connect(self.try_update_instantaneous_comment)
             self.annotationEditingDialog.on_commit[datetime, datetime, str, str, str, int, int, int].connect(self.try_update_comment)

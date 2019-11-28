@@ -300,20 +300,20 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
             # Annotation Comments track:
             currTrackIndex = currTrackIndex + 1
-            currTrackConfig = TrackConfigurationBase(currTrackIndex, "A_B{0:02}Notes".format(currTrackBBID), "Notes", False, False, [currTrackBBID+1], None, None, None, self)
+            currTrackConfig = TrackConfigurationBase(currTrackIndex, "A_B{0:02}Notes".format(currTrackBBID), "Notes", [currTrackBBID+1], None, None, None, self)
             self.trackConfigurations.append(currTrackConfig)
             self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
             self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
 
             # Partition tracks:
             currTrackIndex = currTrackIndex + 1
-            currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", False, False, [currTrackBBID+1], None, None, None, self)
+            currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", [currTrackBBID+1], None, None, None, self)
             self.trackConfigurations.append(currTrackConfig)
             self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[0])
             self.eventTrackWidgets.append(self.partitionsTrackWidget)
 
             currTrackIndex = currTrackIndex + 1
-            currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", False, False, [currTrackBBID+1], None, None, None, self)
+            currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", [currTrackBBID+1], None, None, None, self)
             self.trackConfigurations.append(currTrackConfig)
             self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[1])
             self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)

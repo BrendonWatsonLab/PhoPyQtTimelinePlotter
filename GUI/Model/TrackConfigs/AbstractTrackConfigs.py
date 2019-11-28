@@ -61,6 +61,9 @@ class TrackFilterBase(QObject):
     def get_output_dict(self):
         return {'behavioral_box_ids': self.behavioral_box_ids, 'experiment_ids': self.experiment_ids, 'cohort_ids': self.cohort_ids, 'animal_ids': self.animal_ids}
 
+    def get_ids(self):
+        return (self.behavioral_box_ids, self.experiment_ids, self.cohort_ids,  self.animal_ids)
+
 
 
 class TrackCache(QObject):
