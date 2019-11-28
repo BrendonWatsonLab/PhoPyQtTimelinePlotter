@@ -44,12 +44,10 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         self.annotationEditingDialog = None
         self.activeEditingAnnotationIndex = None
 
-        
         self.trackConfig.cacheUpdated.connect(self.reloadModelFromConfigCache)
 
-        self.annotationDataObjects = []
         self.reloadModelFromDatabase()
-        self.rebuildDrawnObjects()
+        
 
 
     ## Data Model Functions:
@@ -58,12 +56,11 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
     def reloadModelFromDatabase(self):
         # Load the latest behaviors and colors data from the database
         # tempAllAnnotationDataObjects = self.database_connection.load_annotation_events_from_database()
-        self.annotationDataObjects = self.trackConfig.filter_records(self.database_connection.get_session())
+        # self.durationRecords = self.trackConfig.filter_records(self.database_connection.get_session())
 
         ## TODO: add it to config cache instead
         self.contexts = self.database_connection.load_contexts_from_database()
-
-        self.rebuildDrawnObjects()
+        self.reloadModelFromConfigCache()
         self.update()
 
     
@@ -77,27 +74,33 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
 
         for aContainerObj in active_model_view_array:
             self.durationRecords.append(aContainerObj.get_record())
-            self.durationObjects.append(aContainerObj.get_view())            
+            newAnnotationIndex = len(self.durationObjects)
+            newAnnotation = aContainerObj.get_view()
+            newAnnotation.setAccessibleName(str(newAnnotationIndex))
+            # newAnnotation.on_edit.connect(self.on_annotation_modify_event)
+            # newAnnotation.on_edit_by_dragging_handle_start.connect(self.handleStartSliderValueChange)
+            # newAnnotation.on_edit_by_dragging_handle_end.connect(self.handleEndSliderValueChange)
+            self.durationObjects.append(newAnnotation)          
 
         self.update()
         
 
 
-    # Rebuilds the GUI event objects (self.durationObjects) from the self.annotationDataObjects
-    def rebuildDrawnObjects(self):
-        self.durationObjects = []
-        for (anIndex, aDataObj) in enumerate(self.annotationDataObjects):
-            # Create the graphical annotation object
-            newAnnotation = convert_TimestampedAnnotation(aDataObj, self)
-            newAnnotation.on_edit.connect(self.on_annotation_modify_event)
-            newAnnotation.on_edit_by_dragging_handle_start.connect(self.handleStartSliderValueChange)
-            newAnnotation.on_edit_by_dragging_handle_end.connect(self.handleEndSliderValueChange)
-            # newAnnotation.on_edit_by_dragging_handle.connect(self.try_resize_comment_with_handles)
-            # newAnnotation = PhoDurationEvent_AnnotationComment(start_date, end_date, body, title, subtitle)
-            newAnnotationIndex = len(self.durationObjects)
-            newAnnotation.setAccessibleName(str(newAnnotationIndex))
+    # Rebuilds the GUI event objects (self.durationObjects) from the self.durationRecords
+    # def rebuildDrawnObjects(self):
+    #     self.durationObjects = []
+    #     for (anIndex, aDataObj) in enumerate(self.durationRecords):
+    #         # Create the graphical annotation object
+    #         newAnnotation = convert_TimestampedAnnotation(aDataObj, self)
+    #         newAnnotation.on_edit.connect(self.on_annotation_modify_event)
+    #         newAnnotation.on_edit_by_dragging_handle_start.connect(self.handleStartSliderValueChange)
+    #         newAnnotation.on_edit_by_dragging_handle_end.connect(self.handleEndSliderValueChange)
+    #         # newAnnotation.on_edit_by_dragging_handle.connect(self.try_resize_comment_with_handles)
+    #         # newAnnotation = PhoDurationEvent_AnnotationComment(start_date, end_date, body, title, subtitle)
+    #         newAnnotationIndex = len(self.durationObjects)
+    #         newAnnotation.setAccessibleName(str(newAnnotationIndex))
 
-            self.durationObjects.append(newAnnotation)
+    #         self.durationObjects.append(newAnnotation)
 
 
     # Returns the currently selected annotation index or None if none are selected
@@ -277,11 +280,9 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
             
         # Create the database annotation object
         newAnnotationObj = create_TimestampedAnnotation(start_date, end_date, title, subtitle, body, '', behavioral_box_id, experiment_id, cohort_id, animal_id)
-        self.annotationDataObjects.append(newAnnotationObj)
-        # self.database_connection.save_annotation_events_to_database(self.annotationDataObjects)
+        # self.durationRecords.append(newAnnotationObj)
         self.database_connection.save_annotation_events_to_database([newAnnotationObj])
-        self.rebuildDrawnObjects()
-        self.update()
+        self.reloadModelFromDatabase()
 
     @pyqtSlot(datetime, str, str, str, int, int, int, int)
     def try_create_instantaneous_comment(self, start_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
@@ -336,14 +337,11 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         print('try_update_comment')
         
         if (not (self.activeEditingAnnotationIndex is None)):
-            currObjToModify = self.annotationDataObjects[self.activeEditingAnnotationIndex]
+            currObjToModify = self.durationRecords[self.activeEditingAnnotationIndex]
             currObjToModify = modify_TimestampedAnnotation(currObjToModify, start_date, end_date, title, subtitle, body, '', behavioral_box_id, experiment_id, cohort_id, animal_id)
-            self.annotationDataObjects[self.activeEditingAnnotationIndex] = currObjToModify
-            # self.database_connection.save_annotation_events_to_database(self.annotationDataObjects)
+            self.durationRecords[self.activeEditingAnnotationIndex] = currObjToModify
             self.database_commit()
             self.reloadModelFromDatabase()
-            self.rebuildDrawnObjects()
-            self.update()
         else:
             print("Error: unsure what comment to update!")
             return
@@ -366,9 +364,9 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
     #     print('try_resize_comment_with_handles')
         
     #     if (not (self.activeEditingAnnotationIndex is None)):
-    #         currObjToModify = self.annotationDataObjects[self.activeEditingAnnotationIndex]
+    #         currObjToModify = self.durationRecords[self.activeEditingAnnotationIndex]
     #         currObjToModify = modify_TimestampedAnnotation(currObjToModify, start_date, end_date, currObjToModify.title, currObjToModify.subtitle, currObjToModify.body)
-    #         self.annotationDataObjects[self.activeEditingAnnotationIndex] = currObjToModify
+    #         self.durationRecords[self.activeEditingAnnotationIndex] = currObjToModify
     #         self.database_commit()
     #         self.reloadModelFromDatabase()
     #         self.rebuildDrawnObjects()
@@ -387,14 +385,14 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
             return
 
         new_datetime = self.offset_to_datetime(value)
-        currObjToModify = self.annotationDataObjects[child_index]
+        currObjToModify = self.durationRecords[child_index]
         if (not (currObjToModify is None)):
             currObjToModify = modify_TimestampedAnnotation_startDate(currObjToModify, new_datetime)
-            self.annotationDataObjects[child_index] = currObjToModify
+            self.durationRecords[child_index] = currObjToModify
             self.database_commit()
             self.reloadModelFromDatabase()
-            self.rebuildDrawnObjects()
-            self.update()
+            # self.rebuildDrawnObjects()
+            # self.update()
         else:
             print("Error: unsure what comment to update!")
             return
@@ -410,14 +408,14 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
             return
 
         new_datetime = self.offset_to_datetime(value)
-        currObjToModify = self.annotationDataObjects[child_index]
+        currObjToModify = self.durationRecords[child_index]
         if (not (currObjToModify is None)):
             currObjToModify = modify_TimestampedAnnotation_endDate(currObjToModify, new_datetime)
-            self.annotationDataObjects[child_index] = currObjToModify
+            self.durationRecords[child_index] = currObjToModify
             self.database_commit()
             self.reloadModelFromDatabase()
-            self.rebuildDrawnObjects()
-            self.update()
+            # self.rebuildDrawnObjects()
+            # self.update()
         else:
             print("Error: unsure what comment to update!")
             return

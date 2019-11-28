@@ -1270,9 +1270,36 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     @pyqtSlot(int)
     def on_track_header_refresh_activated(self, trackID):
         print("on_track_header_refresh_activated({0})".format(trackID))
-        self.reload_videos_from_track_configs()
+
+        if trackID in self.videoFileTrackWidgetHeaders.keys():
+            #video track
+            # currVideoTrackHeader = self.videoFileTrackWidgetHeaders[trackID]
+            self.reload_videos_from_track_configs()
+            pass
+        elif trackID in self.eventTrackWidgetHeaders.keys():
+            # event track
+            currTrackHeader = self.eventTrackWidgetHeaders[trackID]
+            currTrackConfig = currTrackHeader.get_config()
+            currTrackWidget = None
+            for i in range(0, len(self.eventTrackWidgets)):
+                if (trackID == self.eventTrackWidgets[i].trackID):
+                    currTrackWidget = self.eventTrackWidgets[i]
+                    break
+                else:
+                    continue
+            
+            if (currTrackWidget is None):
+                print("ERROR: couldn't get the active track widget with event trackID: {0}".format(trackID))
+                return
+            currTrackConfig.reload(self.database_connection.get_session(), currTrackWidget)
+            self.update()
+            pass
+        else:
+            print("Error: unknown track type!")
+            return
 
 
+    
 
 
     # Called when the partition edit dialog accept event is called.
@@ -1331,11 +1358,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
     @pyqtSlot(int, str, int, int, int, int)
     def try_update_event_track_filter(self, trackID, trackName, behavioral_box_id, experiment_id, cohort_id, animal_id):
-        # Tries to update the video track config
+        # Tries to update the event track config
         print('TimelineDrawingWindow.try_update_event_track_filter(...): track_id: {0}, track_name: {1}'.format(trackID, trackName))
-        # if (not (self.trackContextConfig.get_is_valid())):
-        #     print('context is invalid! aborting try_update_video!')
-        #     return
         
         if (not (self.activeTrackID_ConfigEditingIndex is None)):
             currTrackHeader = self.eventTrackWidgetHeaders[trackID]
