@@ -12,7 +12,6 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QFontMetrics, QPa
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 from GUI.Model.Events.PhoDurationEvent import *
-from app.BehaviorsList import BehaviorsManager
 
 class PhoDurationEvent_Partition(PhoDurationEvent):
     InstantaneousEventDuration = timedelta(seconds=2)
@@ -32,7 +31,6 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
     # on_edit = pyqtSignal(datetime, datetime, str, str, str)
     # on_edit = pyqtSignal(PhoDurationEvent_Partition)
 
-    # def __init__(self, startTime=datetime.now(), endTime=None, name='', subtitle='', body='', color=QColor(55, 55, 55, PhoEvent.DefaultOpacity), type_id=BehaviorsManager.UnknownType_ID, subtype_id=BehaviorsManager.UnknownSubtype_ID, extended_data=dict(), parent=None):
     def __init__(self, startTime=datetime.now(), endTime=None, name='', subtitle='', body='', color=QColor(55, 55, 55, PhoEvent.DefaultOpacity), type_id=None, subtype_id=None, extended_data=dict(), parent=None):
         super(PhoDurationEvent_Partition, self).__init__(startTime, endTime, name, color, extended_data, parent=parent)
         self.subtitle = subtitle

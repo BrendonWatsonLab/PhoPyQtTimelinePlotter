@@ -11,19 +11,21 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 from GUI.UI.DialogComponents.AbstractDialogMixins import BoxExperCohortAnimalIDsFrame_Mixin
 
-class VideoTrackFilterEditDialog(BoxExperCohortAnimalIDsFrame_Mixin, QDialog):
+class TrackFilterEditDialogBase(BoxExperCohortAnimalIDsFrame_Mixin, QDialog):
 
      # This defines a signal called 'closed' that takes no arguments.
     on_cancel = pyqtSignal()
 
      # This defines a signal called 'closed' that takes no arguments.
-    on_commit = pyqtSignal(int, str, int, int, int, int, bool, bool)
+    on_commit = pyqtSignal(int, str, int, int, int, int)
 
     def __init__(self, trackConfig, parent=None):
-        super(VideoTrackFilterEditDialog, self).__init__(parent=parent) # Call the inherited classes __init__ method
+        super(TrackFilterEditDialogBase, self).__init__(parent=parent) # Call the inherited classes __init__ method
         self.trackConfig = trackConfig
         # self.ui = uic.loadUi("GUI/UI/VideoTrackFilterEditWidget/VideoTrackFilterEditWidget.ui", self) # Load the .ui file
         self.ui = uic.loadUi("GUI/UI/VideoTrackFilterEditWidget/VideoTrackFilterEditDialog.ui", self) # Load the .ui file
+        self.ui.checkBox_isOriginalVideo.setVisible(False)
+        self.ui.checkBox_isTaggedVideo.setVisible(False)
 
         self.enable_none_selection = True # if true, an "empty" item is added to the combobox dropdown lists which is selected by default
         self.reloadModelFromConfig()
@@ -59,9 +61,6 @@ class VideoTrackFilterEditDialog(BoxExperCohortAnimalIDsFrame_Mixin, QDialog):
         if currTrackFilter.animal_ids is not None:
             animal_id = currTrackFilter.animal_ids[0]            
 
-        self.set_is_original_video(currTrackFilter.allow_original_videos)
-        self.set_is_tagged_video(currTrackFilter.allow_labeled_videos)
-        
         self.set_id_values(behavioral_box_id, experiment_id, cohort_id, animal_id)
 
     def accept(self):
@@ -70,13 +69,13 @@ class VideoTrackFilterEditDialog(BoxExperCohortAnimalIDsFrame_Mixin, QDialog):
         behavioral_box_id, experiment_id, cohort_id, animal_id = self.get_id_values()
         final_bb_id, final_experiment_id, final_cohort_id, final_animal_id = int(behavioral_box_id or -1), int(experiment_id or -1), int(cohort_id or -1), int(animal_id or -1)
         self.on_commit.emit(int(self.get_trackID()), self.get_trackName(), final_bb_id, final_experiment_id, final_cohort_id,
-            final_animal_id, self.get_is_original_video(), self.get_is_tagged_video())
-        super(VideoTrackFilterEditDialog, self).accept()
+            final_animal_id)
+        super(TrackFilterEditDialogBase, self).accept()
 
     def reject(self):
         print('reject:')
         self.on_cancel.emit()
-        super(VideoTrackFilterEditDialog, self).reject()
+        super(TrackFilterEditDialogBase, self).reject()
 
     
     def get_trackID(self):
@@ -90,19 +89,3 @@ class VideoTrackFilterEditDialog(BoxExperCohortAnimalIDsFrame_Mixin, QDialog):
 
     def set_trackName(self, updatedStr):
         self.ui.lblTrackName.setText(updatedStr)
-
-    def get_is_original_video(self):
-        return self.ui.checkBox_isOriginalVideo.isChecked()
-
-    def set_is_original_video(self, is_original):
-        self.ui.checkBox_isOriginalVideo.setChecked(is_original)
-
-
-    def get_is_tagged_video(self):
-        return self.ui.checkBox_isTaggedVideo.isChecked()
-
-    def set_is_tagged_video(self, is_tagged):
-        self.ui.checkBox_isTaggedVideo.setChecked(is_tagged)
-
-
-        

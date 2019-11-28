@@ -11,8 +11,8 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 from orangecanvas.gui.dock import CollapsibleDockWidget
 
-from GUI.Model.Filters import *
-
+from GUI.Model.TrackConfigs.AbstractTrackConfigs import *
+from GUI.Model.TrackConfigs.VideoTrackConfig import *
 
 # from GUI.UI.TimelineHeaderWidget.TimelineHeaderWidget import TimelineHeaderWidget
 

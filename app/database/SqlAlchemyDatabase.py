@@ -229,7 +229,7 @@ def save_annotation_events_to_database(database_connection_ref, annotationEvents
     return
 
 ## Create Functions
-def create_TimestampedAnnotation(start_date, end_date, primary_text, secondary_text, tertiary_text, overflow_text):
+def create_TimestampedAnnotation(start_date, end_date, primary_text, secondary_text, tertiary_text, overflow_text, behavioral_box_id, experiment_id, cohort_id, animal_id):
     newObj = TimestampedAnnotation()
     # newObj.context = None
     newObj.start_date = datetime_to_database(start_date)
@@ -242,6 +242,10 @@ def create_TimestampedAnnotation(start_date, end_date, primary_text, secondary_t
     newObj.secondary_text = secondary_text
     newObj.tertiary_text = tertiary_text
     newObj.overflow_text = overflow_text
+    newObj.behavioral_box_id = behavioral_box_id
+    newObj.experiment_id = experiment_id
+    newObj.cohort_id = cohort_id
+    newObj.animal_id = animal_id
     return newObj
 
 # Converts an annotation database data object to a GUI element
@@ -255,11 +259,15 @@ def convert_TimestampedAnnotation(aTimestampedAnnotationObj, owning_parent):
     return newObj
 
 # Updates the provided TimestampedAnnotationObj with the data that was provided from the interface
-def modify_TimestampedAnnotation(aTimestampedAnnotationObj, start_date, end_date, title, subtitle, body, overflow_text=''):
+def modify_TimestampedAnnotation(aTimestampedAnnotationObj, start_date, end_date, title, subtitle, body, overflow_text, behavioral_box_id, experiment_id, cohort_id, animal_id):
     aTimestampedAnnotationObj.primary_text = title
     aTimestampedAnnotationObj.secondary_text = subtitle
     aTimestampedAnnotationObj.tertiary_text = body
-    aTimestampedAnnotationObj.overflow_text = ''
+    aTimestampedAnnotationObj.overflow_text = overflow_text
+    aTimestampedAnnotationObj.behavioral_box_id = behavioral_box_id
+    aTimestampedAnnotationObj.experiment_id = experiment_id
+    aTimestampedAnnotationObj.cohort_id = cohort_id
+    aTimestampedAnnotationObj.animal_id = animal_id
 
     aTimestampedAnnotationObj.start_date = datetime_to_database(start_date)
     if end_date:

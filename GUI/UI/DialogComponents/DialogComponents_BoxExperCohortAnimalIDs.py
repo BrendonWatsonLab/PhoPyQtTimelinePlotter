@@ -9,15 +9,10 @@ from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon, QStandardItem
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
-# from app.BehaviorsList import BehaviorsManager, BehaviorInfoOptions
-# from app.database.DatabaseConnectionRef import DatabasePendingItemsState, DatabaseConnectionRef
-# from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
-
-# from GUI.UI.DialogComponents.DialogComponents_StartEndDate
-
-# from GUI.UI.DialogComponents.DialogComponents_BoxExperCohortAnimalIDs import DialogComponents_BoxExperCohortAnimalIDs
 
 class DialogComponents_BoxExperCohortAnimalIDs(QFrame):
+
+    ValueNullString = "Any"
 
     def __init__(self, parent=None):
         super(DialogComponents_BoxExperCohortAnimalIDs, self).__init__(parent=parent) # Call the inherited classes __init__ method
@@ -26,6 +21,22 @@ class DialogComponents_BoxExperCohortAnimalIDs(QFrame):
         self.show() # Show the GUI
 
     def initUI(self):
+        self.spinBoxControls = [
+            self.ui.spinBox_bbID,
+            self.ui.spinBox_experimentID,
+            self.ui.spinBox_cohortID,
+            self.ui.spinBox_animalID
+        ]
+
+        # setSpecialValueText(...) sets the text that's displayed only when the spinBox is at it's minimum value
+        # self.ui.spinBox_bbID.setSpecialValueText(DialogComponents_BoxExperCohortAnimalIDs.ValueNullString)
+        # self.ui.spinBox_experimentID.setSpecialValueText(DialogComponents_BoxExperCohortAnimalIDs.ValueNullString)
+        # self.ui.spinBox_cohortID.setSpecialValueText(DialogComponents_BoxExperCohortAnimalIDs.ValueNullString)
+        # self.ui.spinBox_animalID.setSpecialValueText(DialogComponents_BoxExperCohortAnimalIDs.ValueNullString)
+
+        for aSpinBoxControl in self.spinBoxControls:
+            aSpinBoxControl.setSpecialValueText(DialogComponents_BoxExperCohortAnimalIDs.ValueNullString)
+
         self.ui.spinBox_bbID.valueChanged[int].connect(self.on_bb_id_value_changed)
         self.ui.spinBox_experimentID.valueChanged[int].connect(self.on_experiment_id_value_changed)
         self.ui.spinBox_cohortID.valueChanged[int].connect(self.on_cohort_id_value_changed)
@@ -70,20 +81,22 @@ class DialogComponents_BoxExperCohortAnimalIDs(QFrame):
         self.ui.lblCohortID.setEnabled(self.ui.spinBox_cohortID.value() > 0)
         self.ui.lblAnimalID.setEnabled(self.ui.spinBox_animalID.value() > 0)
 
-    def get_id_values(self):
+    def get_id_values(self, shouldReturnNoneTypes):
         v1 = self.ui.spinBox_bbID.value()
         v2 = self.ui.spinBox_experimentID.value()
         v3 = self.ui.spinBox_cohortID.value()
         v4 = self.ui.spinBox_animalID.value()
 
-        if (v1 < 1):
-            v1 = None
-        if (v2 < 1):
-            v2 = None
-        if (v3 < 1):
-            v3 = None
-        if (v4 < 1):
-            v4 = None
+        # If shouldReturnNoneTypes is True, we replace any 0 values with None, otherwise we just return the 0 values
+        if (shouldReturnNoneTypes):
+            if (v1 < 1):
+                v1 = None
+            if (v2 < 1):
+                v2 = None
+            if (v3 < 1):
+                v3 = None
+            if (v4 < 1):
+                v4 = None
         
         return (v1, v2, v3, v4)
 
@@ -112,7 +125,9 @@ class DialogComponents_BoxExperCohortAnimalIDs(QFrame):
         self.update()
         return
 
+    # def set_null_valued(self, spinBoxRef):
+    #     spinBoxRef.setSpecialValueText(DialogComponents_BoxExperCohortAnimalIDs.ValueNullString)
     
     def set_editable(self, is_editable):
-        for aControl in [self.ui.spinBox_bbID, self.ui.spinBox_experimentID, self.ui.spinBox_cohortID, self.ui.spinBox_animalID]:
+        for aControl in self.spinBoxControls:
             aControl.setReadOnly(not is_editable)

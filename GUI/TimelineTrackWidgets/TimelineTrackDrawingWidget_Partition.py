@@ -58,10 +58,13 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
     default_shouldDismissSelectionUponMouseButtonRelease = False
     default_itemSelectionMode = ItemSelectionOptions.SingleSelection
 
-    def __init__(self, trackID, partitionObjects, cutObjects, totalStartTime, totalEndTime, database_connection, trackContextConfig, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
-        super(TimelineTrackDrawingWidget_Partition, self).__init__(trackID, totalStartTime, totalEndTime, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
+    def __init__(self, trackConfig, totalStartTime, totalEndTime, database_connection, trackContextConfig, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
+        super(TimelineTrackDrawingWidget_Partition, self).__init__(trackConfig.get_track_id(), totalStartTime, totalEndTime, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
         
         self.trackContextConfig = trackContextConfig
+        
+        self.trackConfig = trackConfig
+        self.trackConfig.cacheUpdated.connect(self.reloadModelFromConfigCache)
 
         self.partitionDataObjects = []
         
@@ -72,8 +75,8 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
 
         self.reinitialize_from_partition_manager()
         ## TODO: can reconstruct partitions from cutObjects, but can't recover the specific partition's info.
-        self.cutObjects = cutObjects
-        self.instantaneousEventRect = np.repeat(QRect(0,0,0,0), len(cutObjects))
+        self.cutObjects = []
+        self.instantaneousEventRect = np.repeat(QRect(0,0,0,0), len(self.cutObjects))
         # Hovered Object
         self.hovered_object_index = None
         self.hovered_object = None
@@ -110,6 +113,21 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         else:
             # Builds the partition objects, meaning both the record and view components
             self.partitionManager.on_reload_partition_records(loadedPartitionRecordsList)
+
+
+    @pyqtSlot()
+    def reloadModelFromConfigCache(self):
+        print("TimelineTrackDrawingWidget_Partition.reloadModelFromConfigCache()")
+        active_cache = self.trackConfig.get_cache()
+        active_model_view_array = active_cache.get_model_view_array()
+        self.durationRecords = []
+        self.durationObjects = []
+
+        for aContainerObj in active_model_view_array:
+            self.durationRecords.append(aContainerObj.get_record())
+            self.durationObjects.append(aContainerObj.get_view())            
+
+        self.update()
 
 
     def reinitialize_from_partition_manager(self):

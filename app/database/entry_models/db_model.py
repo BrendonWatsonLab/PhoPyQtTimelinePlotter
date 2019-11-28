@@ -2,7 +2,7 @@
 from sqlalchemy import Column, ForeignKey, Integer, Table, Text, text, DateTime, UniqueConstraint
 from sqlalchemy.sql.sqltypes import NullType
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import declarative_base, declared_attr
 
 from app.database.entry_models.DatabaseBase import Base, metadata
 from pathlib import Path
@@ -17,6 +17,9 @@ from PyQt5.QtWidgets import QWidget, QMessageBox, QToolTip, QStackedWidget, QHBo
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 
 from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
+
+from app.database.SqlAlchemyDatabase import create_TimestampedAnnotation, convert_TimestampedAnnotation, modify_TimestampedAnnotation, modify_TimestampedAnnotation_startDate, modify_TimestampedAnnotation_endDate
+
 
 # (Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, VideoFile)
 
@@ -36,12 +39,66 @@ Mapping Helpers (unused, currently creating table mappings manually):
     ['fullname', 'nickname', 'name', 'id']
 
 """
+## This "Mixin" adds these columns and relationships to any file that inherits from it
+# See https://docs.sqlalchemy.org/en/13/orm/extensions/declarative/mixins.html for more info
+class ReferenceBoxExperCohortAnimalMixin(object):
+    # @declared_attr
+    # def address_id(cls):
+    #     return Column(Integer, ForeignKey('address.id'))
+
+    @declared_attr
+    def behavioral_box_id(cls):
+        return Column(Integer, ForeignKey('BehavioralBoxes.id'), nullable=True)
+
+    @declared_attr
+    def experiment_id(cls):
+        return Column(Integer, ForeignKey('Experiments.id'), nullable=True)
+
+    @declared_attr
+    def cohort_id(cls):
+        return Column(Integer, ForeignKey('Cohorts.id'), nullable=True)
+
+    @declared_attr
+    def animal_id(cls):
+        return Column(Integer, ForeignKey('Animals.id'), nullable=True)
+
+    ## Relationships:
+    @declared_attr
+    def animal(cls):
+        return relationship("Animal")
+
+    @declared_attr
+    def behavioral_box(cls):
+        return relationship("BehavioralBox")
+
+    @declared_attr
+    def cohort(cls):
+        return relationship("Cohort")
+
+    @declared_attr
+    def experiment(cls):
+        return relationship("Experiment")
+
+    # @classmethod
+    # def getTableMapping(cls):
+    #     return [
+    #         ('BB ID', cls.behavioral_box_id, 'behavioral_box_id', {'editable': True}),
+    #         ('ExperimentID', cls.experiment_id, 'experiment_id', {'editable': True}),
+    #         ('CohortID', cls.cohort_id, 'cohort_id', {'editable': True}),
+    #         ('AnimalID', cls.animal_id, 'animal_id', {'editable': True}),
+    #     ]
+    
+
+
+
+
+
 
 class Animal(Base):
     __tablename__ = 'Animals'
 
     id = Column(Integer, primary_key=True)
-    name = Column(Text, nullable=False, server_default=text("'animal_0'"))
+    name = Column(Text, nullable=False, unique=True, server_default=text("'animal_0'"))
     birth_date = Column(Integer)
     receive_date = Column(Integer)
     death_date = Column(Integer)
@@ -63,13 +120,15 @@ class Animal(Base):
 class BehavioralBox(Base):
     __tablename__ = 'BehavioralBoxes'
 
-    numerical_id = Column(Integer, primary_key=True)
-    name = Column(Text, server_default=text("'B00'"))
+    id = Column(Integer, primary_key=True)
+    # numerical_id = Column(Integer, nullable=False)
+    name = Column(Text, server_default=text("'B00'"), unique=True, nullable=False)
 
     @classmethod
     def getTableMapping(cls):
         return [
-            ('ID', cls.numerical_id, 'numerical_id', {'editable': False}),
+            ('ID', cls.id, 'id', {'editable': False}),
+            # ('NumericalID', cls.numerical_id, 'numerical_id', {'editable': True}),
             ('Name', cls.name, 'name', {'editable': True}),
         ]
 
@@ -150,7 +209,7 @@ class Labjack(Base):
     __tablename__ = 'Labjacks'
 
     serial_number = Column(Integer, primary_key=True)
-    name = Column(Text, server_default=text("'LJ-'"))
+    name = Column(Text, unique=True, server_default=text("'LJ-'"))
     model = Column(Text, server_default=text("'T7'"))
 
     @classmethod
@@ -202,7 +261,7 @@ class Cohort(Base):
     __tablename__ = 'Cohorts'
 
     id = Column(Integer, primary_key=True)
-    name = Column(Text, nullable=False, server_default=text("'cohort_'"))
+    name = Column(Text, nullable=False, unique=True, server_default=text("'cohort_'"))
     start_date = Column(Integer, nullable=False)
     end_date = Column(Integer)
     experiment = Column(Integer, ForeignKey('Experiments.id', ondelete='SET NULL'))
@@ -228,7 +287,7 @@ Datatypes:
 Interval: datetime.timedelta()
 Numeric
 """
-class CategoricalDurationLabel(Base):
+class CategoricalDurationLabel(ReferenceBoxExperCohortAnimalMixin, Base):
     __tablename__ = 'CategoricalDurationLabels'
 
     id = Column(Integer, primary_key=True)
@@ -302,15 +361,37 @@ class CategoricalDurationLabel(Base):
             ('SecondaryTxt', cls.secondary_text, 'secondary_text', {'editable': True}),
             ('TertiaryTxt', cls.tertiary_text, 'tertiary_text', {'editable': True}),
             ('Notes', cls.notes, 'notes', {'editable': True}),
+            ('BB ID', cls.behavioral_box_id, 'behavioral_box_id', {'editable': True}),
+            ('ExperimentID', cls.experiment_id, 'experiment_id', {'editable': True}),
+            ('CohortID', cls.cohort_id, 'cohort_id', {'editable': True}),
+            ('AnimalID', cls.animal_id, 'animal_id', {'editable': True}),
         ]
 
-    __table_args__ = (UniqueConstraint('context_id', 'subcontext_id', name='_name_parent_uc'),
-                     )
+    # __table_args__ = (UniqueConstraint('context_id', 'subcontext_id', name='_name_parent_uc'),
+    #                  )
+        __table_args__ = (UniqueConstraint('context_id','subcontext_id','behavioral_box_id','experiment_id','cohort_id','animal_id', name="uix_context_filters_uc"))
+
+    @staticmethod
+    def get_gui_view(aVideoRecord, parent=None):
+        #TODO: implement!
+        print("ERROR: NEEDS IMPLEMENTATION!!!")
+        # currExtraInfoDict = aVideoRecord.get_output_dict()
+        # outGuiObj = PhoDurationEvent_Video(aVideoRecord.get_start_date(), aVideoRecord.get_end_date(), aVideoRecord.file_fullname, QColor(51,204,255), currExtraInfoDict, parent=parent)
+        
+        # outGuiObj = convert_TimestampedAnnotation(aDataObj, self)
+        # outGuiObj.on_edit.connect(self.on_annotation_modify_event)
+        # outGuiObj.on_edit_by_dragging_handle_start.connect(self.handleStartSliderValueChange)
+        # outGuiObj.on_edit_by_dragging_handle_end.connect(self.handleEndSliderValueChange)
+        # # outGuiObj.on_edit_by_dragging_handle.connect(self.try_resize_comment_with_handles)
+        # # outGuiObj = PhoDurationEvent_AnnotationComment(start_date, end_date, body, title, subtitle)
+        # # newAnnotationIndex = len(self.durationObjects)
+        # # outGuiObj.setAccessibleName(str(newAnnotationIndex))
+        # # outGuiObj
+        # return outGuiObj
+        return None
 
 
-
-
-class TimestampedAnnotation(Base):
+class TimestampedAnnotation(ReferenceBoxExperCohortAnimalMixin, Base):
     __tablename__ = 'TimestampedAnnotations'
 
     id = Column(Integer, primary_key=True)
@@ -319,7 +400,6 @@ class TimestampedAnnotation(Base):
 
 
     context = Column(Integer, ForeignKey('Contexts.id'), server_default=text("1"))
-    # subcontext = Column(Integer, server_default=text("1"))
     subcontext = Column(Integer, ForeignKey('Subcontext.id'))
 
     type = Column(Integer, nullable=False, server_default=text("1"))
@@ -328,6 +408,7 @@ class TimestampedAnnotation(Base):
     secondary_text = Column(Text)
     tertiary_text = Column(Text)
     overflow_text = Column(Text)
+
 
     Context = relationship('Context', foreign_keys=[context])
     Subcontext = relationship('Subcontext', foreign_keys=[subcontext])
@@ -352,8 +433,22 @@ class TimestampedAnnotation(Base):
             ('SecondaryTxt', cls.secondary_text, 'secondary_text', {'editable': True}),
             ('TertiaryTxt', cls.tertiary_text, 'tertiary_text', {'editable': True}),
             ('OverflowTxt', cls.overflow_text, 'overflow_text', {'editable': True}),
+            ('BB ID', cls.behavioral_box_id, 'behavioral_box_id', {'editable': True}),
+            ('ExperimentID', cls.experiment_id, 'experiment_id', {'editable': True}),
+            ('CohortID', cls.cohort_id, 'cohort_id', {'editable': True}),
+            ('AnimalID', cls.animal_id, 'animal_id', {'editable': True}),
         ]
 
+    @staticmethod
+    def get_gui_view(aRecord, parent=None):
+        #TODO: check implementation!
+        outGuiObj = convert_TimestampedAnnotation(aRecord, parent)
+        if parent is not None:
+            outGuiObj.on_edit.connect(parent.on_annotation_modify_event)
+            outGuiObj.on_edit_by_dragging_handle_start.connect(parent.handleStartSliderValueChange)
+            outGuiObj.on_edit_by_dragging_handle_end.connect(parent.handleEndSliderValueChange)
+
+        return outGuiObj
 
 
 class ExperimentalConfigurationEvent(Base):
@@ -366,7 +461,7 @@ class ExperimentalConfigurationEvent(Base):
     cohort_id = Column(Integer, ForeignKey('Cohorts.id'))
     animal_id = Column(Integer, ForeignKey('Animals.id'))
     labjack_id = Column(Integer, ForeignKey('Labjacks.serial_number'))
-    behavioralbox_id = Column(Integer, ForeignKey('BehavioralBoxes.numerical_id'))
+    behavioralbox_id = Column(Integer, ForeignKey('BehavioralBoxes.id'))
     notes = Column(Text)
     event_type = Column(Text)
     event_subtype = Column(Text)
@@ -378,7 +473,7 @@ class ExperimentalConfigurationEvent(Base):
     labjack = relationship('Labjack')
 
 
-class VideoFile(Base):
+class VideoFile(ReferenceBoxExperCohortAnimalMixin, Base):
     __tablename__ = 'VideoFile'
 
     id = Column(Integer, primary_key=True)
@@ -390,17 +485,17 @@ class VideoFile(Base):
     start_date = Column(Integer, nullable=False)
     end_date = Column(Integer)
     duration = Column(Integer)
-    behavioral_box_id = Column(Integer, ForeignKey('BehavioralBoxes.numerical_id'))
-    experiment_id = Column(Integer, ForeignKey('Experiments.id'))
-    cohort_id = Column(Integer, ForeignKey('Cohorts.id'))
-    animal_id = Column(Integer, ForeignKey('Animals.id'))
+    # behavioral_box_id = Column(Integer, ForeignKey('BehavioralBoxes.id'))
+    # experiment_id = Column(Integer, ForeignKey('Experiments.id'))
+    # cohort_id = Column(Integer, ForeignKey('Cohorts.id'))
+    # animal_id = Column(Integer, ForeignKey('Animals.id'))
     is_original_video = Column(Integer)
     notes = Column(Text)
 
-    animal = relationship('Animal')
-    behavioral_box = relationship('BehavioralBox')
-    cohort = relationship('Cohort')
-    experiment = relationship('Experiment')
+    # animal = relationship('Animal')
+    # behavioral_box = relationship('BehavioralBox')
+    # cohort = relationship('Cohort')
+    # experiment = relationship('Experiment')
     staticFileExtension = relationship('StaticFileExtension')
     fileParentFolder = relationship('FileParentFolder', back_populates="videoFiles")
 

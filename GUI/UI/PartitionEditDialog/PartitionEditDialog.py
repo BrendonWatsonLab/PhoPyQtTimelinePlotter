@@ -9,10 +9,11 @@ from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon, QStandardItem
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
-# from app.BehaviorsList import BehaviorsManager, BehaviorInfoOptions
 from app.database.DatabaseConnectionRef import DatabasePendingItemsState, DatabaseConnectionRef
 from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingDialog
+
+from GUI.UI.DialogComponents.AbstractDialogMixins import BoxExperCohortAnimalIDsFrame_Mixin
 
 # When you set a subtype, ensure that its parent is selected as the type
 # When you select a type that's incompatible with the current subtype, probably change the subtype to the first of that type
@@ -26,8 +27,8 @@ row_id      .id     array_index
 
 The child (subtype) index that's being retrieved from the type's first child row id is wrong with the additional Noneitem. It needs to have 1 added to it.
 """
-
-class PartitionEditDialog(AbstractDatabaseAccessingDialog):
+## TODO: The type/subtype functionality in this class can be replaced by a child DialogComponents_BoxExperCohortAnimalIDs and the appropriate Mixin
+class PartitionEditDialog(BoxExperCohortAnimalIDsFrame_Mixin, AbstractDatabaseAccessingDialog):
 
      # This defines a signal called 'closed' that takes no arguments.
     on_cancel = pyqtSignal()
@@ -75,6 +76,7 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
             # first_item.setSelectable(False)
             types_model.appendRow(first_item)
 
+        last_index = 0
         for (anIndex, aBehaviorGroup) in enumerate(self.behaviorGroups):
             if aBehaviorGroup is None:
                 print("FATAL ERROR!!")
@@ -87,12 +89,13 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
                 item.setForeground(aBehaviorGroup.primaryColor.get_QColor())
             
             types_model.appendRow(item)
+            last_index = anIndex
 
         subtypes_model = self.ui.comboBox_Subtype.model()
         if enable_none_selection:
             first_item = QtGui.QStandardItem("")
             # first_item.setSelectable(True)
-            first_item.setData(anIndex)
+            first_item.setData(last_index)
             subtypes_model.appendRow(first_item)
 
         for (anIndex, aBehavior) in enumerate(self.behaviors):
@@ -107,6 +110,7 @@ class PartitionEditDialog(AbstractDatabaseAccessingDialog):
                 item.setForeground(aBehavior.primaryColor.get_QColor())
 
             subtypes_model.appendRow(item)
+            last_index = anIndex
 
     # def transform_combobox_index_to_array_index(self, combobox_index):
     #     if self.enable_none_selection:

@@ -9,10 +9,11 @@ from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon, QStandardItem
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
-# from app.BehaviorsList import BehaviorsManager, BehaviorInfoOptions
 from app.database.DatabaseConnectionRef import DatabasePendingItemsState, DatabaseConnectionRef
 from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingDialog
+
+from GUI.UI.DialogComponents.AbstractDialogMixins import BoxExperCohortAnimalIDsFrame_Mixin
 
 # When you set a subtype, ensure that its parent is selected as the type
 # When you select a type that's incompatible with the current subtype, probably change the subtype to the first of that type
@@ -27,7 +28,7 @@ row_id      .id     array_index
 The child (subtype) index that's being retrieved from the type's first child row id is wrong with the additional Noneitem. It needs to have 1 added to it.
 """
 
-class VideoEditDialog(AbstractDatabaseAccessingDialog):
+class VideoEditDialog(BoxExperCohortAnimalIDsFrame_Mixin, AbstractDatabaseAccessingDialog):
 
      # This defines a signal called 'closed' that takes no arguments.
     on_cancel = pyqtSignal()
@@ -123,12 +124,6 @@ class VideoEditDialog(AbstractDatabaseAccessingDialog):
     def set_body(self, updatedStr):
         self.ui.frame_TitleSubtitleBody.set_body(updatedStr)
     
-    def get_id_values(self):
-        return self.ui.frame_BoxExperCohortAnimalIDs.get_id_values()
-
-    def set_id_values(self, behavioral_box_id, experiment_id, cohort_id, animal_id):
-        self.ui.frame_BoxExperCohortAnimalIDs.set_id_values(behavioral_box_id, experiment_id, cohort_id, animal_id)
-  
     def get_is_original_video(self):
         return self.ui.checkBox_isOriginalVideo.isChecked()
 
