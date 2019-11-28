@@ -229,20 +229,29 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
 
         # TODO: should get the behavioral_box_id, experiment_id, cohort_id, animal_id from the track's context or config or w/e
         self.annotationEditingDialog = TextAnnotationDialog()
-        self.annotationEditingDialog.on_commit[datetime, str, str, str, int, int, int].connect(self.try_create_instantaneous_comment)
-        self.annotationEditingDialog.on_commit[datetime, datetime, str, str, str, int, int, int].connect(self.try_create_comment)
+        self.annotationEditingDialog.on_commit[datetime, str, str, str, int, int, int, int].connect(self.try_create_instantaneous_comment)
+        self.annotationEditingDialog.on_commit[datetime, datetime, str, str, str, int, int, int, int].connect(self.try_create_comment)
         self.annotationEditingDialog.on_cancel.connect(self.comment_dialog_canceled)
         self.annotationEditingDialog.set_start_date(cut_datetime)
         self.annotationEditingDialog.set_end_date(cut_datetime)
 
-        #TODO: Set self to track info        
-        sel_behavioral_box_id, sel_experiment_id, sel_cohort_id, sel_animal_id = self.trackConfig.get_ids()
-        self.activeVideoEditDialog.set_id_values(sel_behavioral_box_id, sel_experiment_id, sel_cohort_id, sel_animal_id)
+        ## SHOULD BE SET TO TRACK's global values for these variables.
+        ## TODO: the track can have multiple values
+        sel_behavioral_box_id, sel_experiment_id, sel_cohort_id, sel_animal_id = None, None, None, None
+        sel_behavioral_box_ids, sel_experiment_ids, sel_cohort_ids, sel_animal_ids = self.trackConfig.get_filter().get_ids()
+        if sel_behavioral_box_ids is not None:
+            sel_behavioral_box_id = sel_behavioral_box_ids[0]
+        if sel_experiment_ids is not None:
+            sel_experiment_id = sel_experiment_ids[0]   
+        if sel_cohort_ids is not None:
+            sel_cohort_id = sel_cohort_ids[0]
+        if sel_animal_ids is not None:
+            sel_animal_id = sel_animal_ids[0]
+        self.annotationEditingDialog.set_id_values(sel_behavioral_box_id, sel_experiment_id, sel_cohort_id, sel_animal_id)
             
-    
         return False
 
-    @pyqtSlot(datetime, datetime, str, str, str, int, int, int)
+    @pyqtSlot(datetime, datetime, str, str, str, int, int, int, int)
     def try_create_comment(self, start_date, end_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
         # Tries to create a new comment
         print('try_create_comment')
@@ -267,7 +276,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         self.rebuildDrawnObjects()
         self.update()
 
-    @pyqtSlot(datetime, str, str, str, int, int, int)
+    @pyqtSlot(datetime, str, str, str, int, int, int, int)
     def try_create_instantaneous_comment(self, start_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
         self.try_create_comment(start_date, None, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id)
 
@@ -307,14 +316,14 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
 
             self.annotationEditingDialog.set_id_values(sel_behavioral_box_id, sel_experiment_id, sel_cohort_id, sel_animal_id)
             
-            self.annotationEditingDialog.on_commit[datetime, str, str, str, int, int, int].connect(self.try_update_instantaneous_comment)
-            self.annotationEditingDialog.on_commit[datetime, datetime, str, str, str, int, int, int].connect(self.try_update_comment)
+            self.annotationEditingDialog.on_commit[datetime, str, str, str, int, int, int, int].connect(self.try_update_instantaneous_comment)
+            self.annotationEditingDialog.on_commit[datetime, datetime, str, str, str, int, int, int, int].connect(self.try_update_comment)
         else:
             print("Couldn't get active annotation object to edit!!")
             self.activeEditingAnnotationIndex = None
 
     # There's a bug in the database design and they're updating but overlapping. Figure this out. A new one is being created each time I change a field. This wasn't happening before.
-    @pyqtSlot(datetime, datetime, str, str, str, int, int, int)
+    @pyqtSlot(datetime, datetime, str, str, str, int, int, int, int)
     def try_update_comment(self, start_date, end_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
         # Tries to update an existing comment
         print('try_update_comment')
@@ -332,7 +341,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
             print("Error: unsure what comment to update!")
             return
 
-    @pyqtSlot(datetime, str, str, str, int, int, int)
+    @pyqtSlot(datetime, str, str, str, int, int, int, int)
     def try_update_instantaneous_comment(self, start_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
         self.try_update_comment(start_date, None, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id)
 
