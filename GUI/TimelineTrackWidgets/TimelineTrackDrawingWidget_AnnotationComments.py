@@ -22,10 +22,10 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
     default_shouldDismissSelectionUponMouseButtonRelease = True
     default_itemSelectionMode = ItemSelectionOptions.SingleSelection
 
-    def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=False, wantsMouseEvents=True):
-        super(TimelineTrackDrawingWidget_AnnotationComments, self).__init__(trackID, totalStartTime, totalEndTime, durationObjects, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
+    def __init__(self, trackConfig, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=False, wantsMouseEvents=True):
+        super(TimelineTrackDrawingWidget_AnnotationComments, self).__init__(trackConfig.get_track_id(), totalStartTime, totalEndTime, durationObjects, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
         # self.durationObjects = durationObjects
-        self.instantaneousObjects = instantaneousObjects
+        self.instantaneousObjects = []
         # self.eventRect = np.repeat(QRect(0,0,0,0), len(durationObjects))
         self.instantaneousEventRect = np.repeat(QRect(0,0,0,0), len(instantaneousObjects))
         # Hovered Object
@@ -42,6 +42,10 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
 
         self.annotationEditingDialog = None
         self.activeEditingAnnotationIndex = None
+
+        self.trackConfig = trackConfig
+        self.trackConfig.cacheUpdated.connect(self.reloadModelFromConfigCache)
+
         self.annotationDataObjects = []
         self.reloadModelFromDatabase()
         self.rebuildDrawnObjects()
@@ -54,6 +58,22 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         # Load the latest behaviors and colors data from the database
         self.annotationDataObjects = self.database_connection.load_annotation_events_from_database()
         self.contexts = self.database_connection.load_contexts_from_database()
+
+    
+    @pyqtSlot()
+    def reloadModelFromConfigCache(self):
+        print("TimelineTrackDrawingWidget_AnnotationComments.reloadModelFromConfigCache()")
+        active_cache = self.trackConfig.get_cache()
+        active_model_view_array = active_cache.get_model_view_array()
+        self.durationRecords = []
+        self.durationObjects = []
+
+        for aContainerObj in active_model_view_array:
+            self.durationRecords.append(aContainerObj.get_record())
+            self.durationObjects.append(aContainerObj.get_view())            
+
+        self.update()
+        
 
 
     # Rebuilds the GUI event objects (self.durationObjects) from the self.annotationDataObjects
@@ -214,6 +234,11 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         self.annotationEditingDialog.on_cancel.connect(self.comment_dialog_canceled)
         self.annotationEditingDialog.set_start_date(cut_datetime)
         self.annotationEditingDialog.set_end_date(cut_datetime)
+
+        #TODO: Set self to track info        
+        sel_behavioral_box_id, sel_experiment_id, sel_cohort_id, sel_animal_id = self.trackConfig.get_ids()
+        self.activeVideoEditDialog.set_id_values(sel_behavioral_box_id, sel_experiment_id, sel_cohort_id, sel_animal_id)
+            
     
         return False
 
@@ -224,8 +249,18 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         if end_date == start_date:
             end_date = None # This is a work-around because "None" value end_dates can't be passed through a PyQt signal
 
+        # "None-out" the ID's if they're 0
+        if (behavioral_box_id < 1):
+            behavioral_box_id = None
+        if (experiment_id < 1):
+            experiment_id = None
+        if (cohort_id < 1):
+            cohort_id = None
+        if (animal_id < 1):
+            animal_id = None
+            
         # Create the database annotation object
-        newAnnotationObj = create_TimestampedAnnotation(start_date, end_date, title, subtitle, body, '')
+        newAnnotationObj = create_TimestampedAnnotation(start_date, end_date, title, subtitle, body, '', behavioral_box_id, experiment_id, cohort_id, animal_id)
         self.annotationDataObjects.append(newAnnotationObj)
         # self.database_connection.save_annotation_events_to_database(self.annotationDataObjects)
         self.database_connection.save_annotation_events_to_database([newAnnotationObj])
