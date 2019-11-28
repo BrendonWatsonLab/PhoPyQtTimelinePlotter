@@ -17,8 +17,9 @@ from PyQt5.QtWidgets import QWidget, QMessageBox, QToolTip, QStackedWidget, QHBo
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 
 from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
+from GUI.Model.Events.PhoDurationEvent_AnnotationComment import PhoDurationEvent_AnnotationComment
 
-from app.database.SqlAlchemyDatabase import create_TimestampedAnnotation, convert_TimestampedAnnotation, modify_TimestampedAnnotation, modify_TimestampedAnnotation_startDate, modify_TimestampedAnnotation_endDate
+
 
 
 # (Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, VideoFile)
@@ -419,6 +420,15 @@ class TimestampedAnnotation(ReferenceBoxExperCohortAnimalMixin, Base):
         Context = relationship('Context')
     """
 
+    def get_start_date(self):
+        return datetime.fromtimestamp(float(self.start_date) / 1000.0)
+
+    def get_end_date(self):
+        if self.end_date is None:
+            return None
+        else:
+            return datetime.fromtimestamp(float(self.end_date) / 1000.0)
+
     @classmethod
     def getTableMapping(cls):
         return [
@@ -442,7 +452,14 @@ class TimestampedAnnotation(ReferenceBoxExperCohortAnimalMixin, Base):
     @staticmethod
     def get_gui_view(aRecord, parent=None):
         #TODO: check implementation!
-        outGuiObj = convert_TimestampedAnnotation(aRecord, parent)
+        # outGuiObj = convert_TimestampedAnnotation(aRecord, parent)
+        end_date = None
+        if aRecord.end_date:
+            end_date = aRecord.get_end_date()
+
+        outGuiObj = PhoDurationEvent_AnnotationComment(aRecord.get_start_date(), end_date,
+            aRecord.tertiary_text, aRecord.primary_text, aRecord.secondary_text, parent=parent)
+
         if parent is not None:
             outGuiObj.on_edit.connect(parent.on_annotation_modify_event)
             outGuiObj.on_edit_by_dragging_handle_start.connect(parent.handleStartSliderValueChange)

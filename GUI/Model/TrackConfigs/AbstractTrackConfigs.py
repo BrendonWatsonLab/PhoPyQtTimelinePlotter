@@ -25,10 +25,9 @@ Represents a filter for a specific track
 """
 class TrackFilterBase(QObject):
 
-    RecordClass = VideoFile
-
-    def __init__(self, behavioral_box_ids=None, experiment_ids=None, cohort_ids=None, animal_ids=None, parent=None):
+    def __init__(self, trackRecordClass, behavioral_box_ids=None, experiment_ids=None, cohort_ids=None, animal_ids=None, parent=None):
         super(TrackFilterBase, self).__init__(parent=parent)
+        self.trackRecordClass = trackRecordClass
         self.behavioral_box_ids = behavioral_box_ids
         self.experiment_ids = experiment_ids
         self.cohort_ids = cohort_ids
@@ -36,16 +35,16 @@ class TrackFilterBase(QObject):
 
     # Returns a filter query so that children classes can extend the filter
     def build_filter_query(self, session):
-        query = session.query(type(self).RecordClass)
+        query = session.query(self.trackRecordClass)
 
         if self.behavioral_box_ids is not None:
-            query = query.filter(type(self).RecordClass.behavioral_box_id.in_(self.behavioral_box_ids))            
+            query = query.filter(self.trackRecordClass.behavioral_box_id.in_(self.behavioral_box_ids))            
         if self.experiment_ids is not None:
-            query = query.filter(type(self).RecordClass.experiment_id.in_(self.experiment_ids))            
+            query = query.filter(self.trackRecordClass.experiment_id.in_(self.experiment_ids))            
         if self.cohort_ids is not None:
-            query = query.filter(type(self).RecordClass.cohort_id.in_(self.cohort_ids))            
+            query = query.filter(self.trackRecordClass.cohort_id.in_(self.cohort_ids))            
         if self.animal_ids is not None:
-            query = query.filter(type(self).RecordClass.animal_id.in_(self.animal_ids))            
+            query = query.filter(self.trackRecordClass.animal_id.in_(self.animal_ids))            
 
         return query
 
@@ -64,6 +63,8 @@ class TrackFilterBase(QObject):
     def get_ids(self):
         return (self.behavioral_box_ids, self.experiment_ids, self.cohort_ids,  self.animal_ids)
 
+    def get_track_record_class(self):
+        return self.trackRecordClass
 
 
 class TrackCache(QObject):
@@ -86,12 +87,12 @@ class TrackConfigurationBase(QObject):
 
     cacheUpdated = pyqtSignal()
 
-    def __init__(self, trackIndex, trackTitle, trackExtendedDescription, behavioral_box_ids=None, experiment_ids=None, cohort_ids=None, animal_ids=None, parent=None):
+    def __init__(self, trackIndex, trackTitle, trackExtendedDescription, trackRecordClass, behavioral_box_ids=None, experiment_ids=None, cohort_ids=None, animal_ids=None, parent=None):
         super(TrackConfigurationBase, self).__init__(parent=parent)
         self.trackIndex = trackIndex
         self.trackTitle = trackTitle
         self.trackExtendedDescription = trackExtendedDescription
-        self.filter = TrackFilterBase(behavioral_box_ids, experiment_ids, cohort_ids, animal_ids, parent=parent)
+        self.filter = TrackFilterBase(trackRecordClass, behavioral_box_ids, experiment_ids, cohort_ids, animal_ids, parent=parent)
         self.cache = TrackCache([], parent=parent)
 
 
@@ -104,9 +105,28 @@ class TrackConfigurationBase(QObject):
     def get_track_extended_description(self):
         return self.trackExtendedDescription
     
-    def filter_records(self, session):
-        return self.filter.build_filter(session)
+    def get_track_record_class(self):
+        return self.get_filter().get_track_record_class()
 
+    def filter_records(self, session):
+        return self.get_filter().build_filter(session)
+
+    # reload(...): called when the filter is changed to update the cache (reloading the records from the database) as needed
+    def reload(self, session, owning_parent_track):
+        found_records = self.filter_records(session)
+        print("track[{0}]: {1} records found".format(self.get_track_id(), len(found_records)))
+
+        # Build the corresponding GUI objects
+        built_model_view_container_array = []
+        for (index, aRecord) in enumerate(found_records):
+            aGuiView = self.get_filter().trackRecordClass.get_gui_view(aRecord, parent=owning_parent_track)
+            aModelViewContainer = ModelViewContainer(aRecord, aGuiView)
+            built_model_view_container_array.append(aModelViewContainer)
+
+        self.update_cache(built_model_view_container_array)
+
+
+    # called to update the cache from an external source. Also called internally in self.reload(...)
     def update_cache(self, newCachedModelViewArray):
         self.cache.set_model_view_array(newCachedModelViewArray)
         self.cacheUpdated.emit()

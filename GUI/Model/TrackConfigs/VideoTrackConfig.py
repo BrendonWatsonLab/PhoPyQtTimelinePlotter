@@ -22,10 +22,9 @@ from GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, 
 Represents a filter for a specific track
 """
 class VideoTrackFilter(TrackFilterBase):
-    RecordClass = VideoFile
 
     def __init__(self, allow_original_videos, allow_labeled_videos, behavioral_box_ids=None, experiment_ids=None, cohort_ids=None, animal_ids=None, parent=None):
-        super(VideoTrackFilter, self).__init__(behavioral_box_ids, experiment_ids, cohort_ids, animal_ids, parent=parent)
+        super(VideoTrackFilter, self).__init__(VideoFile, behavioral_box_ids, experiment_ids, cohort_ids, animal_ids, parent=parent)
         self.allow_original_videos = allow_original_videos
         self.allow_labeled_videos = allow_labeled_videos
 
@@ -38,13 +37,13 @@ class VideoTrackFilter(TrackFilterBase):
             # No filtering needed, we allow any type of videos
             pass
         elif self.allow_original_videos:
-            query = query.filter(type(self).RecordClass.is_original_video == 1)
+            query = query.filter(self.trackRecordClass.is_original_video == 1)
         elif self.allow_labeled_videos:
-            query = query.filter(VideoFile.is_original_video == 0)
+            query = query.filter(self.trackRecordClass.is_original_video == 0)
         else:
             #both are false
             print("Warning: both allow_original_videos and allow_labeled_videos are False!")
-            query = query.filter(type(self).RecordClass.is_original_video == None)
+            query = query.filter(self.trackRecordClass.is_original_video == None)
         return query
 
     def __str__(self):
@@ -58,7 +57,7 @@ class VideoTrackFilter(TrackFilterBase):
 class VideoTrackConfiguration(TrackConfigurationBase):
 
     def __init__(self, trackIndex, trackTitle, trackExtendedDescription, allow_original_videos, allow_labeled_videos, behavioral_box_ids=None, experiment_ids=None, cohort_ids=None, animal_ids=None, parent=None):
-        super(VideoTrackConfiguration, self).__init__(trackIndex, trackTitle, trackExtendedDescription, behavioral_box_ids, experiment_ids, cohort_ids, animal_ids, parent=parent)
+        super(VideoTrackConfiguration, self).__init__(trackIndex, trackTitle, trackExtendedDescription, VideoFile, behavioral_box_ids, experiment_ids, cohort_ids, animal_ids, parent=parent)
         self.filter = VideoTrackFilter(allow_original_videos, allow_labeled_videos, behavioral_box_ids, experiment_ids, cohort_ids, animal_ids, parent=parent)
 
     def __str__(self):

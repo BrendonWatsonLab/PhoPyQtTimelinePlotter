@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
+from app.database.entry_models.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, CategoricalDurationLabel, VideoFile
 
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWindow
 
@@ -303,20 +304,20 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
             # Annotation Comments track:
             currTrackIndex = currTrackIndex + 1
-            currTrackConfig = TrackConfigurationBase(currTrackIndex, "A_B{0:02}Notes".format(currTrackBBID), "Notes", [currTrackBBID+1], None, None, None, self)
+            currTrackConfig = TrackConfigurationBase(currTrackIndex, "A_B{0:02}Notes".format(currTrackBBID), "Notes", TimestampedAnnotation, [currTrackBBID+1], None, None, None, self)
             self.trackConfigurations.append(currTrackConfig)
             self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
             self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
 
             # Partition tracks:
             currTrackIndex = currTrackIndex + 1
-            currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", [currTrackBBID+1], None, None, None, self)
+            currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", CategoricalDurationLabel, [currTrackBBID+1], None, None, None, self)
             self.trackConfigurations.append(currTrackConfig)
             self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[0])
             self.eventTrackWidgets.append(self.partitionsTrackWidget)
 
             currTrackIndex = currTrackIndex + 1
-            currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", [currTrackBBID+1], None, None, None, self)
+            currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", CategoricalDurationLabel, [currTrackBBID+1], None, None, None, self)
             self.trackConfigurations.append(currTrackConfig)
             self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[1])
             self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
@@ -607,18 +608,19 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             currVideoTrackHeader = self.videoFileTrackWidgetHeaders[currVideoTrackWidget.trackID]
             currVideoTrackConfig = currVideoTrackHeader.get_config()
 
-            found_records = currVideoTrackConfig.filter_records(self.database_connection.get_session())
-            print("track[{0}]: {1} records found".format(i, len(found_records)))
+            currVideoTrackConfig.reload(self.database_connection.get_session(), currVideoTrackWidget)
+            # found_records = currVideoTrackConfig.filter_records(self.database_connection.get_session())
+            # print("track[{0}]: {1} records found".format(i, len(found_records)))
 
-            # Build the corresponding GUI objects
-            built_model_view_container_array = []
-            for (index, aRecord) in enumerate(found_records):
-                aGuiView = VideoFile.get_gui_view(aRecord, parent=currVideoTrackWidget)
-                # built_video_views.append(aGuiView)
-                aModelViewContainer = ModelViewContainer(aRecord, aGuiView)
-                built_model_view_container_array.append(aModelViewContainer)
+            # # Build the corresponding GUI objects
+            # built_model_view_container_array = []
+            # for (index, aRecord) in enumerate(found_records):
+            #     aGuiView = VideoFile.get_gui_view(aRecord, parent=currVideoTrackWidget)
+            #     # built_video_views.append(aGuiView)
+            #     aModelViewContainer = ModelViewContainer(aRecord, aGuiView)
+            #     built_model_view_container_array.append(aModelViewContainer)
 
-            currVideoTrackConfig.update_cache(built_model_view_container_array)
+            # currVideoTrackConfig.update_cache(built_model_view_container_array)
 
         
 
@@ -1340,9 +1342,23 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             currTrackConfig = currTrackHeader.get_config()
             currTrackFilter = currTrackConfig.get_filter()
 
+            currTrackWidget = None
+            for i in range(0, len(self.eventTrackWidgets)):
+                if (trackID == self.eventTrackWidgets[i].trackID):
+                    currTrackWidget = self.eventTrackWidgets[i]
+                    break
+                else:
+                    continue
+            
+            if (currTrackWidget is None):
+                print("ERROR: couldn't get the active track widget with event trackID: {0}".format(trackID))
+                return
+
+
+
             # Convert -1 values for type_id and subtype_id back into "None" objects. They had to be an Int to be passed through the pyQtSlot()
             # Note the values are record IDs (not indicies, so they're 1-indexed). This means that both -1 and 0 are invalid.
-            proposedModifiedFilter = TrackFilterBase(None, None, None, None, parent=currTrackConfig.parent())
+            proposedModifiedFilter = TrackFilterBase(currTrackFilter.get_track_record_class(), None, None, None, None, parent=currTrackConfig.parent())
 
             if (behavioral_box_id < 1):
                 proposedModifiedFilter.behavioral_box_ids = None
@@ -1372,7 +1388,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
             # self.reload_videos_from_track_configs()
             # TODO: Reload events
-            
+            modifiedConfig.reload(self.database_connection.get_session(), currTrackWidget)
 
             self.update()
         else:
