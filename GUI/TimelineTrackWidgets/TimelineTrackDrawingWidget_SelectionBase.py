@@ -114,7 +114,6 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
             self.hovered_duration_object_indicies.remove(prevSelectedItemIndex)
             self.durationObjects[prevSelectedItemIndex].set_state_deemphasized()
         
-
     def emphasize(self, new_emph_index):
         # Select the object
             if (self.hovered_duration_object_indicies.__contains__(new_emph_index)):

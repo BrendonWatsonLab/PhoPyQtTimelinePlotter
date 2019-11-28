@@ -118,6 +118,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         self.initUI()
         self.reload_videos_from_track_configs()
+        self.reload_events_from_track_configs()
+
         # self.show() # Show the GUI
 
         # overlappingVideoEvents = self.mainVideoTrack.find_overlapping_events()
@@ -538,11 +540,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                 print("Error: still failed even after trying to add sample records to database!!!")
 
 
-
-
-
-
-
         # Video file objects for video tracks
         self.videoFileRecords = self.database_connection.load_video_file_info_from_database()
         self.videoInfoObjects = []
@@ -550,6 +547,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         for aVideoFileRecord in self.videoFileRecords:
             aVideoInfoObj = aVideoFileRecord.get_video_info_obj()
             self.videoInfoObjects.append(aVideoInfoObj)
+
+        self.update()
 
     def update_global_start_end_times(self, totalStartTime, totalEndTime):
         self.totalStartTime = totalStartTime
@@ -609,18 +608,18 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             currVideoTrackConfig = currVideoTrackHeader.get_config()
 
             currVideoTrackConfig.reload(self.database_connection.get_session(), currVideoTrackWidget)
-            # found_records = currVideoTrackConfig.filter_records(self.database_connection.get_session())
-            # print("track[{0}]: {1} records found".format(i, len(found_records)))
 
-            # # Build the corresponding GUI objects
-            # built_model_view_container_array = []
-            # for (index, aRecord) in enumerate(found_records):
-            #     aGuiView = VideoFile.get_gui_view(aRecord, parent=currVideoTrackWidget)
-            #     # built_video_views.append(aGuiView)
-            #     aModelViewContainer = ModelViewContainer(aRecord, aGuiView)
-            #     built_model_view_container_array.append(aModelViewContainer)
+    def reload_events_from_track_configs(self):
+        if not self.shouldUseTrackHeaders:
+            print("Warning: Track headers-based configs are disabled!")
+            return
 
-            # currVideoTrackConfig.update_cache(built_model_view_container_array)
+        # Loop through the videoFileTrackWidgets and add them
+        for i in range(0, len(self.eventTrackWidgets)):
+            currTrackWidget = self.eventTrackWidgets[i]
+            currTrackHeader = self.eventTrackWidgetHeaders[currTrackWidget.trackID]
+            currTrackConfig = currTrackHeader.get_config()
+            currTrackConfig.reload(self.database_connection.get_session(), currTrackWidget)
 
         
 
@@ -1410,7 +1409,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             modifiedConfig.set_filter(proposedModifiedFilter)
             self.eventTrackWidgetHeaders[trackID].set_config(modifiedConfig)
 
-            # self.reload_videos_from_track_configs()
             # TODO: Reload events
             modifiedConfig.reload(self.database_connection.get_session(), currTrackWidget)
 
