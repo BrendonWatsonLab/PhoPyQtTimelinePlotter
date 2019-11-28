@@ -23,6 +23,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
     default_itemSelectionMode = ItemSelectionOptions.SingleSelection
 
     def __init__(self, trackConfig, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=False, wantsMouseEvents=True):
+        self.trackConfig = trackConfig
         super(TimelineTrackDrawingWidget_AnnotationComments, self).__init__(trackConfig.get_track_id(), totalStartTime, totalEndTime, [], database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
         # self.durationObjects = durationObjects
         self.instantaneousObjects = []
@@ -43,7 +44,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         self.annotationEditingDialog = None
         self.activeEditingAnnotationIndex = None
 
-        self.trackConfig = trackConfig
+        
         self.trackConfig.cacheUpdated.connect(self.reloadModelFromConfigCache)
 
         self.annotationDataObjects = []
@@ -56,8 +57,14 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
     # Note: if there are any pending changes, they will be persisted on this action
     def reloadModelFromDatabase(self):
         # Load the latest behaviors and colors data from the database
-        self.annotationDataObjects = self.database_connection.load_annotation_events_from_database()
+        # tempAllAnnotationDataObjects = self.database_connection.load_annotation_events_from_database()
+        self.annotationDataObjects = self.trackConfig.filter_records(self.database_connection.get_session())
+
+        ## TODO: add it to config cache instead
         self.contexts = self.database_connection.load_contexts_from_database()
+
+        self.rebuildDrawnObjects()
+        self.update()
 
     
     @pyqtSlot()

@@ -18,6 +18,9 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 
 from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
 
+from app.database.SqlAlchemyDatabase import create_TimestampedAnnotation, convert_TimestampedAnnotation, modify_TimestampedAnnotation, modify_TimestampedAnnotation_startDate, modify_TimestampedAnnotation_endDate
+
+
 # (Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, VideoFile)
 
 """
@@ -368,6 +371,24 @@ class CategoricalDurationLabel(ReferenceBoxExperCohortAnimalMixin, Base):
     #                  )
         __table_args__ = (UniqueConstraint('context_id','subcontext_id','behavioral_box_id','experiment_id','cohort_id','animal_id', name="uix_context_filters_uc"))
 
+    @staticmethod
+    def get_gui_view(aVideoRecord, parent=None):
+        #TODO: implement!
+        print("ERROR: NEEDS IMPLEMENTATION!!!")
+        # currExtraInfoDict = aVideoRecord.get_output_dict()
+        # outGuiObj = PhoDurationEvent_Video(aVideoRecord.get_start_date(), aVideoRecord.get_end_date(), aVideoRecord.file_fullname, QColor(51,204,255), currExtraInfoDict, parent=parent)
+        
+        # outGuiObj = convert_TimestampedAnnotation(aDataObj, self)
+        # outGuiObj.on_edit.connect(self.on_annotation_modify_event)
+        # outGuiObj.on_edit_by_dragging_handle_start.connect(self.handleStartSliderValueChange)
+        # outGuiObj.on_edit_by_dragging_handle_end.connect(self.handleEndSliderValueChange)
+        # # outGuiObj.on_edit_by_dragging_handle.connect(self.try_resize_comment_with_handles)
+        # # outGuiObj = PhoDurationEvent_AnnotationComment(start_date, end_date, body, title, subtitle)
+        # # newAnnotationIndex = len(self.durationObjects)
+        # # outGuiObj.setAccessibleName(str(newAnnotationIndex))
+        # # outGuiObj
+        # return outGuiObj
+        return None
 
 
 class TimestampedAnnotation(ReferenceBoxExperCohortAnimalMixin, Base):
@@ -418,6 +439,16 @@ class TimestampedAnnotation(ReferenceBoxExperCohortAnimalMixin, Base):
             ('AnimalID', cls.animal_id, 'animal_id', {'editable': True}),
         ]
 
+    @staticmethod
+    def get_gui_view(aRecord, parent=None):
+        #TODO: check implementation!
+        outGuiObj = convert_TimestampedAnnotation(aRecord, parent)
+        if parent is not None:
+            outGuiObj.on_edit.connect(parent.on_annotation_modify_event)
+            outGuiObj.on_edit_by_dragging_handle_start.connect(parent.handleStartSliderValueChange)
+            outGuiObj.on_edit_by_dragging_handle_end.connect(parent.handleEndSliderValueChange)
+
+        return outGuiObj
 
 
 class ExperimentalConfigurationEvent(Base):
