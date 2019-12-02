@@ -17,8 +17,12 @@ from app.database.entry_models.db_model import StaticFileExtension, FileParentFo
 
 from GUI.Model.ModelViewContainer import ModelViewContainer
 
-
+from GUI.Model.TrackType import TrackType
 # from GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, TrackCache, TrackFilterBase
+
+
+
+
 
 """
 Represents a filter for a specific track
@@ -119,46 +123,24 @@ class TrackFilterBase(QObject):
         array_opening_bracket = "["
         array_closing_bracket = "]"
         enable_single_element_arrays = False
+        show_track_type = True
 
+        if show_track_type:
+            currType = self.get_track_type()
+            out_string = out_string + currType.get_medium_str()
+            out_string = out_string + ":"
+            
         if self.behavioral_box_ids is not None:
             out_string = out_string + self._get_behavioral_box_ids_str("", array_opening_bracket=array_opening_bracket, array_closing_bracket=array_closing_bracket, enable_single_element_arrays=enable_single_element_arrays)
-            # currArray = self.behavioral_box_ids
-            # if (enable_single_element_arrays or (len(currArray)>1)):
-            #     out_string = out_string + array_opening_bracket
-            # for aBBID in currArray:
-            #     out_string = out_string + "B{0:02}".format(aBBID-1)
-            # if (enable_single_element_arrays or (len(currArray)>1)):
-            #     out_string = out_string + array_closing_bracket
-            
+
         if self.experiment_ids is not None:
             out_string = out_string + self._get_experiment_ids_str("", array_opening_bracket=array_opening_bracket, array_closing_bracket=array_closing_bracket, enable_single_element_arrays=enable_single_element_arrays)
-            # currArray = self.experiment_ids
-            # if (enable_single_element_arrays or (len(currArray)>1)):
-            #     out_string = out_string + array_opening_bracket
-            # for anID in self.experiment_ids:
-            #     out_string = out_string + "E{0:04}".format(anID-1)
-            # if (enable_single_element_arrays or (len(currArray)>1)):
-            #     out_string = out_string + array_closing_bracket
 
         if self.cohort_ids is not None:
             out_string = out_string + self._get_cohort_ids_str("", array_opening_bracket=array_opening_bracket, array_closing_bracket=array_closing_bracket, enable_single_element_arrays=enable_single_element_arrays)
-            # currArray = self.cohort_ids
-            # if (enable_single_element_arrays or (len(currArray)>1)):
-            #     out_string = out_string + array_opening_bracket
-            # for anID in self.cohort_ids:
-            #     out_string = out_string + "C{0:04}".format(anID-1)
-            # if (enable_single_element_arrays or (len(currArray)>1)):
-            #     out_string = out_string + array_closing_bracket
 
         if self.animal_ids is not None:
             out_string = out_string + self._get_animal_ids_str("", array_opening_bracket=array_opening_bracket, array_closing_bracket=array_closing_bracket, enable_single_element_arrays=enable_single_element_arrays)
-            # currArray = self.animal_ids
-            # if (enable_single_element_arrays or (len(currArray)>1)):
-            #     out_string = out_string + array_opening_bracket
-            # for anID in self.animal_ids:
-            #     out_string = out_string + "A{0:04}".format(anID-1)
-            # if (enable_single_element_arrays or (len(currArray)>1)):
-            #     out_string = out_string + array_closing_bracket
 
         return out_string
 
@@ -170,6 +152,10 @@ class TrackFilterBase(QObject):
 
     def get_track_record_class(self):
         return self.trackRecordClass
+
+    # get_track_type(): returns GUI.Model.TrackType type object
+    def get_track_type(self):
+        return self.get_track_record_class().get_track_type()
 
 
 class TrackCache(QObject):
@@ -197,6 +183,8 @@ class TrackConfigurationBase(QObject):
         self.trackIndex = trackIndex
         self.trackTitle = trackTitle
         self.trackExtendedDescription = trackExtendedDescription
+        # self.trackType = trackRecordClass.get_track_type()
+
         self.filter = TrackFilterBase(trackRecordClass, behavioral_box_ids, experiment_ids, cohort_ids, animal_ids, parent=parent)
         self.cache = TrackCache([], parent=parent)
 
@@ -212,6 +200,10 @@ class TrackConfigurationBase(QObject):
     
     def get_track_record_class(self):
         return self.get_filter().get_track_record_class()
+
+    # get_track_type(): returns GUI.Model.TrackType type object
+    def get_track_type(self):
+        return self.get_filter().get_track_type()
 
     def filter_records(self, session):
         return self.get_filter().build_filter(session)

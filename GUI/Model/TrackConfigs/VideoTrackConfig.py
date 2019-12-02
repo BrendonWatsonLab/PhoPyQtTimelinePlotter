@@ -17,6 +17,7 @@ from app.database.entry_models.db_model import StaticFileExtension, FileParentFo
 
 from GUI.Model.ModelViewContainer import ModelViewContainer
 from GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, TrackCache, TrackFilterBase
+from GUI.Model.TrackType import TrackType
 
 """
 Represents a filter for a specific track
