@@ -168,3 +168,11 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
         duration_offset = newDatetime - self.totalStartTime
         event_x = self.duration_to_offset(duration_offset)
         return event_x
+
+    def enterEvent(self, QEvent):
+        # here the code for mouse hover
+        pass
+
+    def leaveEvent(self, QEvent):
+        # here the code for mouse leave
+        pass
