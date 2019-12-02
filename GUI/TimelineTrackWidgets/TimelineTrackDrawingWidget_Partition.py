@@ -140,7 +140,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         print("on_partition_modify_event(...)")
         selectedPartitionIndex = self.get_selected_partition_index()
         selectedPartitionViewObject = self.get_selected_partition().get_view()
-        if (selectedPartitionViewObject):
+        if ((not (selectedPartitionViewObject is None))):
             self.activeEditingPartitionIndex = selectedPartitionIndex
             self.activePartitionEditDialog = PartitionEditDialog(self.database_connection, parent=self)
             self.activePartitionEditDialog.set_start_date(selectedPartitionViewObject.startTime)
@@ -150,6 +150,23 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
             self.activePartitionEditDialog.set_title(selectedPartitionViewObject.name)
             self.activePartitionEditDialog.set_subtitle(selectedPartitionViewObject.subtitle)
             self.activePartitionEditDialog.set_body(selectedPartitionViewObject.body)
+
+             ## SHOULD BE SET TO TRACK's global values for these variables.
+            ## TODO: the track can have multiple values
+            sel_behavioral_box_id, sel_experiment_id, sel_cohort_id, sel_animal_id = None, None, None, None
+            sel_behavioral_box_ids, sel_experiment_ids, sel_cohort_ids, sel_animal_ids = self.trackConfig.get_filter().get_ids()
+            if sel_behavioral_box_ids is not None:
+                sel_behavioral_box_id = sel_behavioral_box_ids[0]
+            if sel_experiment_ids is not None:
+                sel_experiment_id = sel_experiment_ids[0]   
+            if sel_cohort_ids is not None:
+                sel_cohort_id = sel_cohort_ids[0]
+            if sel_animal_ids is not None:
+                sel_animal_id = sel_animal_ids[0]
+
+
+            self.activePartitionEditDialog.set_id_values(sel_behavioral_box_id, sel_experiment_id, sel_cohort_id, sel_animal_id)
+
             self.activePartitionEditDialog.on_commit.connect(self.try_update_partition)
             self.activePartitionEditDialog.on_cancel.connect(self.partition_dialog_canceled)
         else:

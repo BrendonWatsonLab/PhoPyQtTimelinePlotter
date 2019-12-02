@@ -300,7 +300,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
     def try_create_instantaneous_comment(self, start_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
         self.try_create_comment(start_date, None, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id)
 
-    # Called by a specific child annotation's menu to indicate that it should be edited in a new Annotation Editor Dialog
+    # Called by a specific child annotation (double click or menu option) to indicate that it should be edited in a new Annotation Editor Dialog
     @pyqtSlot()    
     def on_annotation_modify_event(self):
         print("on_annotation_modify_event(...)")
