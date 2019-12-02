@@ -17,7 +17,9 @@ from GUI.UI.TextAnnotations.TextAnnotationDialog import *
 
 from app.database.SqlAlchemyDatabase import create_TimestampedAnnotation, convert_TimestampedAnnotation, modify_TimestampedAnnotation, modify_TimestampedAnnotation_startDate, modify_TimestampedAnnotation_endDate
 
-class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_SelectionBase):
+from GUI.Model.TrackType import TrackType, TrackConfigMixin
+
+class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTrackDrawingWidget_SelectionBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
     default_shouldDismissSelectionUponMouseButtonRelease = True
     default_itemSelectionMode = ItemSelectionOptions.SingleSelection
@@ -51,7 +53,6 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
 
         self.reloadModelFromDatabase()
         
-
 
     ## Data Model Functions:
     # Updates the member variables from the database

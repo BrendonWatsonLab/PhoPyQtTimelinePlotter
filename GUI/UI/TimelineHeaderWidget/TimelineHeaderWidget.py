@@ -11,8 +11,10 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 from orangecanvas.gui.dock import CollapsibleDockWidget
 
+from GUI.Model.TrackType import TrackType, TrackConfigMixin
 from GUI.Model.TrackConfigs.AbstractTrackConfigs import *
 from GUI.Model.TrackConfigs.VideoTrackConfig import *
+
 
 # from GUI.UI.TimelineHeaderWidget.TimelineHeaderWidget import TimelineHeaderWidget
 
@@ -75,7 +77,7 @@ class TimelineHeaderWidget_ContentsExpanded(QWidget):
         return self.ui.textBrowser_Main.setPlainText(updatedStr)
 
 
-class TimelineHeaderWidget(QFrame):
+class TimelineHeaderWidget(TrackConfigMixin, QFrame):
 
     toggleCollapsed = pyqtSignal(int, bool)
     showOptions = pyqtSignal(int)
@@ -124,6 +126,10 @@ class TimelineHeaderWidget(QFrame):
 
         return
 
+    #TrackConfigMixin override
+    def get_track_config(self):
+        return self.track_config
+
     def update_from_config(self):
         self.track_id = self.track_config.get_track_id()
         self.track_name = self.track_config.get_track_title()
@@ -138,7 +144,6 @@ class TimelineHeaderWidget(QFrame):
         if self.enableDynamicLabelUpdating:
             self.update_labels_dynamically()
         
-    
     def get_title(self):
         return self.ui.lblTitle.text()
     

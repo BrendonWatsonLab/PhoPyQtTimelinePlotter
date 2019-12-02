@@ -1240,10 +1240,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     def on_track_header_show_options_activated(self, trackID):
         print("on_track_header_show_options({0})".format(trackID))
 
-        # For other tracks
-        self.trackConfigurations
-
-        # For video tracks
         if trackID in self.videoFileTrackWidgetHeaders.keys():
             # video file
             currVideoTrackHeader = self.videoFileTrackWidgetHeaders[trackID]

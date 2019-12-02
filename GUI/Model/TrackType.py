@@ -1,10 +1,4 @@
 import sys
-from datetime import datetime, timezone, timedelta
-import numpy as np
-from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget,QTableWidgetItem, QWidget
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPalette, QLinearGradient
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 from enum import Enum
 
 ## IMPORT:
@@ -54,3 +48,17 @@ class TrackType(Enum):
 
     def __str__(self):
         return self.get_long_str()
+
+
+
+# TrackConfigMixin: Used to get the config 
+class TrackConfigMixin(object):
+    # Track config functions
+    def get_track_config(self):
+        return self.trackConfig
+
+    def get_track_filter(self):
+        return self.get_track_config().get_filter()
+
+    def get_track_type(self):
+        return self.get_track_filter().get_track_type()
