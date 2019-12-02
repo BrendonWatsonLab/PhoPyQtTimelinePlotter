@@ -59,7 +59,7 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
         # lgrad.setColorAt(1.0, Qt.yellow)
         qp.fillRect(drawRect, lgrad)
 
-        print("is_emphasized(...): {0}".format(self.is_track_emphasized()))
+        # print("is_emphasized(...): {0}".format(self.is_track_emphasized()))
 
         # Draw the text label if needed
         # if self.trackLabelText is not None:

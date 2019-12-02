@@ -23,62 +23,7 @@ from pathlib import Path
 from app.database.entry_models.db_model import FileParentFolder, StaticFileExtension, VideoFile
 from app.filesystem.VideoConversionHelpers import HandbrakeConversionQueue, save_handbrake_conversion_queue
 
-class CachedVideoFileLoadingOptions(Enum):
-        LoadOnlyFromDatabase = 1 # Only loads the video file records from the sqlite database. Doesn't search the disk for new video files or update existing ones
-        LoadDatabaseAndSearchVideoFileSearchPaths = 2 #  Load the video file records from the sqlite database AND search the video file search paths for new or updated video files.
-
-
-class ParentDirectoryCache(QObject):
-    def __init__(self, full_path):
-        super(ParentDirectoryCache, self).__init__(None)
-        self.full_path = full_path
-
-        self.database_parent_folder_obj = None
-        self.database_video_files = []
-        
-        self.found_filesystem_video_files = []
-        self.finalOutputParsedVideoResultFiles = []
-
-    def get_full_path(self):
-        return str(self.full_path)
-
-    def get_path_obj(self):
-        return Path(self.get_full_path()).resolve()
-
-    def get_root_anchor(self):
-        return self.get_path_obj().anchor
-
-    def get_non_root_remainder(self):
-        currPath = self.get_path_obj()
-        return currPath.relative_to(self.get_root_anchor())
-
-    def set_database_video_files(self, new_db_video_files):
-        self.database_video_files = new_db_video_files
-        for aLoadedVideoFileRecord in self.database_video_files:
-            newObj = aLoadedVideoFileRecord.get_parsed_video_result_obj()
-            self.finalOutputParsedVideoResultFiles.append(newObj)
-
-    def set_found_filesystem_video_files(self, new_found_filesystem_video_files):
-        self.found_filesystem_video_files = new_found_filesystem_video_files
-        for aLoadedVideoFileRecord in self.found_filesystem_video_files:
-            self.finalOutputParsedVideoResultFiles.append(aLoadedVideoFileRecord)
-        
-    def get_filesystem_video_files(self):
-        return self.found_filesystem_video_files
-
-    def get_database_video_files(self):
-        return self.database_video_files
-
-    def set_database_parent_folder_obj(self, new_db_parent):
-        self.database_parent_folder_obj = new_db_parent
-
-    def get_database_parent_folder(self):
-        return self.database_parent_folder_obj
-
-    def get_combined_video_files(self):
-        return self.finalOutputParsedVideoResultFiles
-
-
+from app.filesystem.VideoFilesystemLoadingMixin import CachedVideoFileLoadingOptions, ParentDirectoryCache, VideoFilesystemLoadingMixin
 
 class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
