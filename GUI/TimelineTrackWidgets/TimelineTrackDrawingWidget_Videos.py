@@ -32,6 +32,7 @@ class TimelineTrackDrawingWidget_Videos(TimelineTrackDrawingWidget_EventsBase):
     # Note: if there are any pending changes, they will be persisted on this action
     def reloadModelFromDatabase(self):
         print("TimelineTrackDrawingWidget_Videos.reloadModelFromDatabase()")
+        self.reset_on_reload()
         if self.parent is None:
             print("Invalid parent!")
             return
@@ -43,6 +44,7 @@ class TimelineTrackDrawingWidget_Videos(TimelineTrackDrawingWidget_EventsBase):
     @pyqtSlot()
     def reloadModelFromConfigCache(self):
         print("TimelineTrackDrawingWidget_Videos.reloadModelFromConfigCache()")
+        self.reset_on_reload()
         active_cache = self.trackConfig.get_cache()
         active_model_view_array = active_cache.get_model_view_array()
         self.durationRecords = []

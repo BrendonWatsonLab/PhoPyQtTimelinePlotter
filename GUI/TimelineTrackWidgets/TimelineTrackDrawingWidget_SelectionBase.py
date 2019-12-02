@@ -42,6 +42,16 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
         self.itemSelectionMode = TimelineTrackDrawingWidget_SelectionBase.default_itemSelectionMode
         self.itemHoverMode = TimelineTrackDrawingWidget_SelectionBase.default_itemHoverMode
 
+
+
+    # Called to reset the hover/selection whenever the data is reloaded
+    def reset_on_reload(self):
+        self.hovered_object_index = None
+        self.hovered_object = None
+        self.hovered_object_rect = None
+        self.hovered_duration_object_indicies = []
+        self.selected_duration_object_indicies = []
+
     
     # Returns the currently selected partition index or None if none are selected
     def get_selected_event_index(self):

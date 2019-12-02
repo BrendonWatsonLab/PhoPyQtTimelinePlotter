@@ -61,13 +61,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         # tempAllAnnotationDataObjects = self.database_connection.load_annotation_events_from_database()
         # self.durationRecords = self.trackConfig.filter_records(self.database_connection.get_session())
         # Clear previous stuff before switching
-        # self.deemphasize_all()
-        self.hovered_object_index = None
-        self.hovered_object = None
-        self.hovered_object_rect = None
-        self.hovered_duration_object_indicies = []
-        
-        self.selected_duration_object_indicies = []
+        self.reset_on_reload()
 
         ## TODO: add it to config cache instead
         self.contexts = self.database_connection.load_contexts_from_database()
@@ -83,7 +77,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
     def on_reloadModelFromConfigCache(self):
         print("TimelineTrackDrawingWidget_AnnotationComments.reloadModelFromConfigCache()")
         # TODO: close any open dialogs, etc, etc
-
+        self.reset_on_reload()
         active_cache = self.trackConfig.get_cache()
         active_model_view_array = active_cache.get_model_view_array()
         self.durationRecords = []
