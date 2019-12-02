@@ -11,7 +11,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
 
-from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult
+from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult, CachedFileSource
 from app.filesystem.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
 from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
 
@@ -37,6 +37,8 @@ class ParentDirectoryCache(QObject):
         self.database_video_files = []
         
         self.found_filesystem_video_files = []
+
+        self.finalOutputParsedVideoResultFileSources = dict()
         self.finalOutputParsedVideoResultFiles = []
 
     def get_full_path(self):
@@ -74,13 +76,65 @@ class ParentDirectoryCache(QObject):
 
     # Called to build an array of both database and filesystem video files. They are meant to be unique.
     def rebuild_combined_video_files(self):
+        self.finalOutputParsedVideoResultFileSources = dict()
         self.finalOutputParsedVideoResultFiles = []
+
+        finalOutputParsedVideoResultFilesDict = dict()
+        finalOutputParsedVideoResultFilesList = []
+
+        # Database:
         for aLoadedDatabaseVideoFileRecord in self.database_video_files:
             newObj = aLoadedDatabaseVideoFileRecord.get_parsed_video_result_obj()
-            self.finalOutputParsedVideoResultFiles.append(newObj)
+            newFullName = newObj.get_full_name()
+            
+            if newFullName in self.finalOutputParsedVideoResultFileSources.keys():
+                print("ERROR: this should be impossible! We just cleared the finalOutputParsedVideoResultFileSources!")
+                pass
+            else:
+                self.finalOutputParsedVideoResultFileSources[newFullName] = CachedFileSource.OnlyFromDatabase
+                newObj.set_source(self.finalOutputParsedVideoResultFileSources[newFullName])
+                finalOutputParsedVideoResultFilesDict[newFullName] = newObj
 
+            # self.finalOutputParsedVideoResultFiles.append(newObj)
+
+        should_add_curr_record = False
+
+        # Filesystem:
         for aLoadedFilesystemVideoFileRecord in self.found_filesystem_video_files:
-            self.finalOutputParsedVideoResultFiles.append(aLoadedFilesystemVideoFileRecord)
+            newFullName = aLoadedFilesystemVideoFileRecord.get_full_name()
+            
+            if newFullName in self.finalOutputParsedVideoResultFileSources.keys():
+                #This indicates that it was already found in the database
+                potentially_computed_end_date = aLoadedFilesystemVideoFileRecord.get_computed_end_date()
+                if (potentially_computed_end_date is not None):
+                    # if we have a valid computed end_date (meaning we loaded metadata) then we say the newest is from the filesystem.
+                    self.finalOutputParsedVideoResultFileSources[newFullName] = CachedFileSource.NewestFromFilesystem
+                    should_add_curr_record = True
+                    # should replace the one from the database
+                else:
+                    # otherwise we say the newest is from the database
+                    self.finalOutputParsedVideoResultFileSources[newFullName] = CachedFileSource.NewestFromDatabase
+                    should_add_curr_record = False
+                
+            else:
+                #if the key is missing, it wasn't found in the database.
+                self.finalOutputParsedVideoResultFileSources[newFullName] = CachedFileSource.OnlyFromFilesystem
+                should_add_curr_record = True
+
+            if (should_add_curr_record):
+                # aLoadedFilesystemVideoFileRecord.set_source(self.finalOutputParsedVideoResultFileSources[newFullName])
+                finalOutputParsedVideoResultFilesDict[newFullName] = aLoadedFilesystemVideoFileRecord
+                # self.finalOutputParsedVideoResultFiles.append(aLoadedFilesystemVideoFileRecord)
+
+            finalOutputParsedVideoResultFilesDict[newFullName].set_source(self.finalOutputParsedVideoResultFileSources[newFullName])
+
+        # Build final output array:
+        for (aKey, aValue) in finalOutputParsedVideoResultFilesDict.items():
+            finalOutputParsedVideoResultFilesList.append(aValue)
+
+        # Final output
+        self.finalOutputParsedVideoResultFiles = sorted(finalOutputParsedVideoResultFilesList, key=lambda obj: obj.parsed_date)
+            
 
     def get_combined_video_files(self):
         return self.finalOutputParsedVideoResultFiles

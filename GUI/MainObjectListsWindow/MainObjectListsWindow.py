@@ -14,7 +14,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWindow
 
-from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult
+from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult, CachedFileSource
 from app.filesystem.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
 from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
 
@@ -39,6 +39,8 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     TreeItem_Emphasized_Font = QtGui.QFont("Times", 11)
     TreeItem_Emphasized_Foreground = QBrush(Qt.darkBlue)
 
+    TreeItem_DatabaseOnly_Foreground = QBrush(Qt.blue)
+    TreeItem_FilesystemOnly_Foreground = QBrush(Qt.red)
 
     def __init__(self, database_connection, videoFileSearchPaths):
         super(MainObjectListsWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
@@ -144,8 +146,22 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
                     computed_end_date = 'Loading...'
                 aNewVideoNode = QTreeWidgetItem([str(aFoundVideoFile.full_name), str(aFoundVideoFile.parsed_date), computed_end_date, str(aFoundVideoFile.is_deeplabcut_labeled_video)])
                 # aNewVideoNode.setIcon(0,QIcon("your icon path or file name "))
-                aNewVideoNode.setForeground(0, MainObjectListsWindow.TreeItem_Default_Foreground)
-                aNewVideoNode.setFont(0, MainObjectListsWindow.TreeItem_Default_Font)
+
+                currSource = aFoundVideoFile.get_source()
+                currForeground = MainObjectListsWindow.TreeItem_Default_Foreground
+                currFont = MainObjectListsWindow.TreeItem_Default_Font
+
+                if currSource == CachedFileSource.OnlyFromDatabase:
+                    currForeground = MainObjectListsWindow.TreeItem_DatabaseOnly_Foreground
+                    pass
+                elif currSource == CachedFileSource.OnlyFromFilesystem:
+                    currForeground = MainObjectListsWindow.TreeItem_FilesystemOnly_Foreground
+                    pass
+                else:
+                    pass
+
+                aNewVideoNode.setForeground(0, currForeground)
+                aNewVideoNode.setFont(0, currFont)
                 
                 aNewGroupNode.addChild(aNewVideoNode)
 

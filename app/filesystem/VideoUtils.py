@@ -12,6 +12,7 @@ import fnmatch
 import re
 import subprocess
 import json # Used to decode ffprobe output
+from enum import Enum
 
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import QApplication, QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QPushButton, QColorDialog
@@ -84,11 +85,17 @@ def video_duration(vid_file_path):
     #return None
 
 
-
+class CachedFileSource(Enum):
+    Unknown = 1
+    OnlyFromDatabase = 2 # Indicates only loaded from database, not found in filesystem (or filesystem search isn't looking for this parent or it is but it isn't finished yet)
+    OnlyFromFilesystem = 3 # Indicates the file doesn't exist in the database, and was only found in the filesystem
+    NewestFromDatabase = 4 # Indcates the metadata hasn't be loaded from the filesystem or that the database version is newer for some reason
+    NewestFromFilesystem = 5 # Indicates the loaded metadata is newer than the cached database version, and the database needs to be updated 
+    Identical = 6 # 
 
 # Any type of file found on the filesystem
 class FoundFileResult(QObject):
-    def __init__(self, path, parent_path, base_name, full_name, file_extension, extended_data=dict()):
+    def __init__(self, path, parent_path, base_name, full_name, file_extension, extended_data=dict(), source=CachedFileSource.Unknown):
             super(FoundFileResult, self).__init__(None)
             self.path = path
             self.parent_path = parent_path
@@ -96,12 +103,25 @@ class FoundFileResult(QObject):
             self.full_name = full_name
             self.file_extension = file_extension
             self.extended_data = extended_data
+            self.source = source
 
+    def get_full_name(self):
+        return self.full_name
+
+    def get_base_name(self):
+        return self.base_name
+
+    def get_source(self):
+        return self.source
+
+    def set_source(self, new_source):
+        self.source = new_source
 
 # A video file found on the filesystem
 """
 
 """
+
 
 # The result of parsing a specific video
 class VideoParsedResults(QObject):
@@ -124,12 +144,15 @@ class VideoParsedResults(QObject):
 
 class FoundVideoFileResult(FoundFileResult):
 
-    def __init__(self, path, parent_path, base_name, full_name, file_extension, parsed_date, behavioral_box_id, is_deeplabcut_labeled_video, extended_data=dict()):
-            super(FoundVideoFileResult, self).__init__(path, parent_path, base_name, full_name, file_extension, extended_data)
+    def __init__(self, path, parent_path, base_name, full_name, file_extension, parsed_date, behavioral_box_id, is_deeplabcut_labeled_video, extended_data=dict(), source=CachedFileSource.Unknown):
+            super(FoundVideoFileResult, self).__init__(path, parent_path, base_name, full_name, file_extension, extended_data, source)
             self.parsed_date = parsed_date
             self.behavioral_box_id = behavioral_box_id
             self.is_deeplabcut_labeled_video = is_deeplabcut_labeled_video
             self.video_parsed_results = None
+
+    def get_parsed_start_date(self):
+        return self.parsed_date
 
     def get_duration(self):
         if self.video_parsed_results:
