@@ -368,7 +368,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TimelineTrackDrawingWidget_S
         self.activeEditingAnnotationIndex = None
 
         
-    # Resize Time with Handles:
+    ## Resize Time with Handles:
 
     # @pyqtSlot(datetime, datetime)
     # def try_resize_comment_with_handles(self, start_date, end_date):

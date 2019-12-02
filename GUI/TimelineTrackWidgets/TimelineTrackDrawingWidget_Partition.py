@@ -125,7 +125,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
 
         for aContainerObj in active_model_view_array:
             self.durationRecords.append(aContainerObj.get_record())
-            self.durationObjects.append(aContainerObj.get_view())            
+            self.durationObjects.append(aContainerObj.get_view())
 
         self.update()
 
@@ -134,7 +134,7 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
         self.partitions = self.partitionManager.get_partitions()
         self.eventRect = np.repeat(QRect(0,0,0,0), len(self.partitions))
 
-    # Called by a specific child partition's menu to indicate that it should be edited in a new Partition Editor Dialog
+    # Called by a specific child partition's (double click or menu option) to indicate that it should be edited in a new Partition Editor Dialog
     @pyqtSlot()    
     def on_partition_modify_event(self):
         print("on_partition_modify_event(...)")
@@ -164,8 +164,8 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
             if sel_animal_ids is not None:
                 sel_animal_id = sel_animal_ids[0]
 
-
             self.activePartitionEditDialog.set_id_values(sel_behavioral_box_id, sel_experiment_id, sel_cohort_id, sel_animal_id)
+            self.activePartitionEditDialog.set_id_frame_editability(False) # Ensure the id options aren't editable. For partitions they're determined entirely by the track's config.
 
             self.activePartitionEditDialog.on_commit.connect(self.try_update_partition)
             self.activePartitionEditDialog.on_cancel.connect(self.partition_dialog_canceled)
@@ -408,10 +408,6 @@ class TimelineTrackDrawingWidget_Partition(TimelineTrackDrawingWidgetBase):
             text = "event: {0}\nstart_time: {1}\nend_time: {2}\nduration: {3}".format(self.hovered_object.name, self.hovered_object.startTime, self.hovered_object.endTime, self.hovered_object.computeDuration())
             QToolTip.showText(event.globalPos(), text, self, self.hovered_object_rect)
             self.hover_changed.emit(self.trackID, self.hovered_object_index)
-
-    # def resizeEvent(self, event):
-    #         # self.widget.move(self.width() - self.widget.width() - 2, 2)
-    #         super(TimelineTrackDrawingWidget_Partition, self).resizeEvent(event)
 
     # Called when the partition edit dialog accept event is called.
     def try_update_partition(self, start_date, end_date, title, subtitle, body, type_id, subtype_id):
