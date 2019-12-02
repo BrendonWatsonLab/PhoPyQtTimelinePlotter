@@ -40,7 +40,12 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     TreeItem_Emphasized_Foreground = QBrush(Qt.darkBlue)
 
     TreeItem_DatabaseOnly_Foreground = QBrush(Qt.blue)
-    TreeItem_FilesystemOnly_Foreground = QBrush(Qt.red)
+    TreeItem_FilesystemOnly_Foreground = QBrush(Qt.green)
+    TreeItem_FilesystemNewer_Foreground = QBrush(Qt.darkGreen)
+    TreeItem_DatabaseNewer_Foreground = QBrush(Qt.darkBlue)
+
+
+
 
     def __init__(self, database_connection, videoFileSearchPaths):
         super(MainObjectListsWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
@@ -156,6 +161,15 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
                     pass
                 elif currSource == CachedFileSource.OnlyFromFilesystem:
                     currForeground = MainObjectListsWindow.TreeItem_FilesystemOnly_Foreground
+                    pass
+                elif currSource == CachedFileSource.NewestFromDatabase:
+                    currForeground = MainObjectListsWindow.TreeItem_DatabaseNewer_Foreground
+                    pass
+                elif currSource == CachedFileSource.NewestFromFilesystem:
+                    currForeground = MainObjectListsWindow.TreeItem_FilesystemNewer_Foreground
+                    pass
+                elif currSource == CachedFileSource.Identical:
+                    currForeground =  MainObjectListsWindow.TreeItem_Default_Foreground
                     pass
                 else:
                     pass
