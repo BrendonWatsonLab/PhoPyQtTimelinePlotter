@@ -54,14 +54,11 @@ class ParentDirectoryCache(QObject):
 
     def set_database_video_files(self, new_db_video_files):
         self.database_video_files = new_db_video_files
-        for aLoadedVideoFileRecord in self.database_video_files:
-            newObj = aLoadedVideoFileRecord.get_parsed_video_result_obj()
-            self.finalOutputParsedVideoResultFiles.append(newObj)
+        self.rebuild_combined_video_files()
 
     def set_found_filesystem_video_files(self, new_found_filesystem_video_files):
         self.found_filesystem_video_files = new_found_filesystem_video_files
-        for aLoadedVideoFileRecord in self.found_filesystem_video_files:
-            self.finalOutputParsedVideoResultFiles.append(aLoadedVideoFileRecord)
+        self.rebuild_combined_video_files()
         
     def get_filesystem_video_files(self):
         return self.found_filesystem_video_files
@@ -75,10 +72,57 @@ class ParentDirectoryCache(QObject):
     def get_database_parent_folder(self):
         return self.database_parent_folder_obj
 
+    # Called to build an array of both database and filesystem video files. They are meant to be unique.
+    def rebuild_combined_video_files(self):
+        self.finalOutputParsedVideoResultFiles = []
+        for aLoadedDatabaseVideoFileRecord in self.database_video_files:
+            newObj = aLoadedDatabaseVideoFileRecord.get_parsed_video_result_obj()
+            self.finalOutputParsedVideoResultFiles.append(newObj)
+
+        for aLoadedFilesystemVideoFileRecord in self.found_filesystem_video_files:
+            self.finalOutputParsedVideoResultFiles.append(aLoadedFilesystemVideoFileRecord)
+
     def get_combined_video_files(self):
         return self.finalOutputParsedVideoResultFiles
 
 
+class OperationTypes(Enum):
+        NoOperation = 1
+        FilesystemFileFind = 2
+        FilesystemMetadataLoad = 3
+
+class PendingFilesystemOperation(QObject):
+
+    def __init__(self, operation_type=OperationTypes.NoOperation, end_num = 0, start_num = 0, parent=None):
+        super().__init__(parent=parent)
+        self.operation_type = operation_type
+        self.end_num = end_num
+        self.start_num = 0
+
+    def restart(self, op_type, end_num):
+        self.operation_type = op_type
+        self.end_num = end_num
+        self.start_num = 0
+
+    # updates with the percent value
+    def update(self, new_percent):
+        newVal = (float(new_percent) * float(self.end_num))
+        self.start_num = newVal
+
+    def get_fraction(self):
+        if self.end_num > 0:
+            return (float(self.start_num)/float(self.end_num))
+        else:
+            return 0.0
+
+    def get_percent(self):
+        return (self.get_fraction()*100.0)
+
+    def is_finished(self):
+        if self.end_num > 0:
+            return (self.start_num == self.end_num)
+        else:
+            return False
 
 
 ## VideoFilesystemLoader: this object tries to find video files in the filesystem and add them to the database if they don't exist
@@ -87,7 +131,8 @@ Loads the VideoFiles from the database (cached versions) and then tries to searc
 """
 class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
 
-    VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
+    # VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
+    VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadOnlyFromDatabase
 
 
     foundFilesUpdated = pyqtSignal()
@@ -100,6 +145,7 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
         self.cache = dict()
         self.loadedParentFolders = []
         self.loadedVideoFiles = []
+        self.pending_operation_status = PendingFilesystemOperation(OperationTypes.NoOperation, 0, 0, parent=self)
 
         self.searchPaths = videoFileSearchPaths
         self.reload_on_search_paths_changed()
@@ -111,44 +157,61 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
         self.reload_data()
 
 
-
+    def get_cache(self):
+        return self.cache
 
     ## DATABASE Functions:
-    
-
     def reload_data(self):
+        print("VideoFilesystemLoader.reload_data(...)")
         # Load the video files depending on the setting.
         if VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadOnlyFromDatabase:
             print("Only loading video files from database. Ignoring search paths...")
-            self.rebuild_from_found_files()
+            self.reloadModelFromDatabase()
         elif VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths:
             print("Loading video files from database and searching search paths...")
+            self.reloadModelFromDatabase()
             self.find_filesystem_video()
         else:
             print("VideoFilesystemLoader ERROR: Unexpected enum type!")
             pass
+
+        self.foundFilesUpdated.emit()
+
 
     # TODO: should build parent nodes from a combination of the loaded parents and the search paths (if we're in a mode to load search paths)
     
     # Updates the member variables from the database
     # Note: if there are any pending changes, they will be persisted on this action
     def reloadModelFromDatabase(self):
+        print("VideoFilesystemLoader.reloadModelFromDatabase(...)")
         # Load the latest behaviors and colors data from the database
         self.fileExtensionDict = self.database_connection.load_static_file_extensions_from_database()
         self.loadedParentFolders = self.database_connection.load_file_parent_folders_from_database(include_video_files=True)
         self.loadedVideoFiles = []
+        currLoadedVideoFiles = []
 
         # Iterate through all found parent folders, replacing the versions in the cache with the ones from the database
         for aLoadedParentFolder in self.loadedParentFolders:
             self.cache[aLoadedParentFolder.fullpath] = ParentDirectoryCache(aLoadedParentFolder.fullpath)
-            loadedVideoFiles = aLoadedParentFolder.videoFiles
+            #TODO: don't replace the cache's entries in case they were loaded from the filesystem
+            currLoadedVideoFiles = aLoadedParentFolder.videoFiles
+            self.loadedVideoFiles.extend(currLoadedVideoFiles)
+            print("currLoadedVideoFiles[{0}]: {1}".format(str(aLoadedParentFolder.fullpath), len(currLoadedVideoFiles)))
             self.cache[aLoadedParentFolder.fullpath].set_database_parent_folder_obj(aLoadedParentFolder)
-            self.cache[aLoadedParentFolder.fullpath].set_database_video_files(loadedVideoFiles)
+            self.cache[aLoadedParentFolder.fullpath].set_database_video_files(currLoadedVideoFiles)
 
         self.foundFilesUpdated.emit()
 
 
+    # Called to add a searcg path
+    def add_search_path(self, newSearchPath):
+        self.searchPaths.append(newSearchPath)
+        self.reload_on_search_paths_changed()
+        self.reload_data()
+
+
     def reload_on_search_paths_changed(self):
+        print("VideoFilesystemLoader.reload_on_search_paths_changed(...)")
         self.reloadModelFromDatabase()
         self.rebuildParentFolders()
 
@@ -156,6 +219,7 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
 
 
     def saveVideoFilesToDatabase(self):
+        print("VideoFilesystemLoader.saveVideoFilesToDatabase(...)")
         for (key_path, cache_value) in self.cache.items():
             loaded_parent_folder_obj = cache_value.get_database_parent_folder()
             curr_search_path_video_files = cache_value.get_filesystem_video_files()
@@ -207,6 +271,7 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
 
     # Creates new "FileParentFolder" entries in the databse if existing ones can't be found
     def rebuildParentFolders(self):
+        print("VideoFilesystemLoader.rebuildParentFolders(...)")
         unresolvedSearchPaths = self.searchPaths
         # self.searchPathsParentIDs = []
 
@@ -264,6 +329,7 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
     ## Primary Filesystem Functions
     # Finds the video files in the self.searchPaths in a multithreaded way
     def find_filesystem_video(self):
+        print("VideoFilesystemLoader.find_filesystem_video(...)")
         # Pass the function to execute
         self.videoFilesystemWorker = VideoFilesystemWorker(self.on_find_filesystem_video_execute_thread) # Any other args, kwargs are passed to the run function
         self.videoFilesystemWorker.signals.result.connect(self.on_find_filesystem_video_print_output)
@@ -276,6 +342,7 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
 
     # Finds the video metadata in a multithreaded way
     def find_video_metadata(self):
+        print("VideoFilesystemLoader.find_video_metadata(...)")
         # Pass the function to execute
         self.videoMetadataWorker = VideoMetadataWorker(self.on_find_video_metadata_execute_thread) # Any other args, kwargs are passed to the run function
         self.videoMetadataWorker.signals.result.connect(self.on_find_video_metadata_print_output)
@@ -289,11 +356,14 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
     ## CALLBACK FUNCTIONS:
     ## Find_video_metadata:
     def on_find_video_metadata_progress_fn(self, n):
+        self.pending_operation_status.update(n)
         print("%d%% done" % n)
 
     def on_find_video_metadata_execute_thread(self, progress_callback):
         currProgress = 0.0
         parsedFiles = 0
+        self.pending_operation_status.restart(OperationTypes.FilesystemMetadataLoad, self.total_found_files)
+
         for (key_path, cache_value) in self.cache.items():
             # Iterate through all found file-lists
             for (sub_index, aFoundVideoFile) in enumerate(cache_value.get_filesystem_video_files()):
@@ -311,11 +381,12 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
     def on_find_video_metadata_thread_complete(self):
         print("THREAD COMPLETE!")
         self.findMetadataComplete.emit()
-        # self.rebuild_from_found_files()
+        self.foundFilesUpdated.emit()
 
 
     ## FILESYSTEM:
     def on_find_filesystem_video_progress_fn(self, n):
+        self.pending_operation_status.update(n)
         print("%d%% done" % n)
 
     def on_find_filesystem_video_execute_thread(self, progress_callback):
@@ -324,12 +395,13 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
         # TODO: clear old files from cache?
         self.total_found_files = 0
         self.total_search_paths = len(self.searchPaths)
+        self.pending_operation_status.restart(OperationTypes.FilesystemFileFind, self.total_search_paths)
 
         # Clear the top-level nodes
         for aSearchPath in self.searchPaths:
             curr_search_path_video_files = findVideoFiles(aSearchPath, shouldPrint=False)
             # self.found_files_lists.append(curr_search_path_video_files)
-            self.cache[aSearchPath].set_found_filesystem_video_files(curr_search_path_video_files)
+            self.cache[aSearchPath].set_found_filesystem_video_files(curr_search_path_video_files) ## TODO: Don't overwrite the previously cached/found video files
             self.total_found_files = self.total_found_files + len(curr_search_path_video_files)
             searchedSearchPaths = searchedSearchPaths + 1
             progress_callback.emit(searchedSearchPaths*100/self.total_search_paths)
@@ -343,6 +415,9 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
         print("THREAD COMPLETE!")
         # Returned results in self.found_files_lists
         # self.rebuild_from_found_files()
+        self.rebuildParentFolders()
         self.findVideosComplete.emit()
+        self.foundFilesUpdated.emit()
+
         # Find the metadata for all the video
         self.find_video_metadata()
