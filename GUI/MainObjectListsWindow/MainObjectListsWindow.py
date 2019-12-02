@@ -23,7 +23,7 @@ from pathlib import Path
 from app.database.entry_models.db_model import FileParentFolder, StaticFileExtension, VideoFile
 from app.filesystem.VideoConversionHelpers import HandbrakeConversionQueue, save_handbrake_conversion_queue
 
-from app.filesystem.VideoFilesystemLoadingMixin import CachedVideoFileLoadingOptions, ParentDirectoryCache, VideoFilesystemLoadingMixin
+from app.filesystem.VideoFilesystemLoadingMixin import CachedVideoFileLoadingOptions, ParentDirectoryCache, VideoFilesystemLoader
 
 class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
@@ -161,7 +161,6 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
 
     def saveVideoFilesToDatabase(self):
-
         for (key_path, cache_value) in self.cache.items():
             loaded_parent_folder_obj = cache_value.get_database_parent_folder()
             curr_search_path_video_files = cache_value.get_filesystem_video_files()

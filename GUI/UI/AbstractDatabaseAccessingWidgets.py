@@ -277,8 +277,8 @@ class AbstractDatabaseAccessingWidget(QtWidgets.QWidget):
 
 # An Abstract QtWidgets.QWidget superclass that holds a reference to an open database
 class AbstractDatabaseAccessingQObject(QObject):
-    def __init__(self, database_connection):
-        super(AbstractDatabaseAccessingQObject, self).__init__(None) # Call the inherited classes __init__ method
+    def __init__(self, database_connection, parent=None):
+        super(AbstractDatabaseAccessingQObject, self).__init__(parent) # Call the inherited classes __init__ method
         self.database_connection = database_connection
 
     def get_database_connection(self):
