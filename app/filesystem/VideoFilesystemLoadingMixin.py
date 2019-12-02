@@ -12,8 +12,10 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
 
 from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult, CachedFileSource
-from app.filesystem.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
-from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
+# from app.filesystem.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
+# from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
+from app.filesystem.VideoMetadataWorkers import VideoMetadataWorker
+from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker
 
 from pathlib import Path
 
@@ -233,7 +235,7 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
         elif VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths:
             print("Loading video files from database and searching search paths...")
             self.reloadModelFromDatabase()
-            self.find_filesystem_video()
+            self.find_filesystem_video(self.searchPaths)
         else:
             print("VideoFilesystemLoader ERROR: Unexpected enum type!")
             pass
@@ -407,10 +409,10 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
 
     ## Find_video_metadata:
         # Finds the video metadata in a multithreaded way
-    def find_video_metadata(self):
+    def find_video_metadata(self, activeSearchPaths):
         print("VideoFilesystemLoader.find_video_metadata(...)")
         # Pass the function to execute
-        self.videoMetadataWorker = VideoMetadataWorker(self.on_find_video_metadata_execute_thread) # Any other args, kwargs are passed to the run function
+        self.videoMetadataWorker = VideoMetadataWorker(activeSearchPaths, self.on_find_video_metadata_execute_thread) # Any other args, kwargs are passed to the run function
         self.videoMetadataWorker.signals.result.connect(self.on_find_video_metadata_print_output)
         self.videoMetadataWorker.signals.finished.connect(self.on_find_video_metadata_thread_complete)
         self.videoMetadataWorker.signals.progress.connect(self.on_find_video_metadata_progress_fn)
@@ -418,12 +420,12 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
         # Execute
         self.threadpool.start(self.videoMetadataWorker) 
 
-
-    def on_find_video_metadata_progress_fn(self, n):
+    @pyqtSlot(list, int)
+    def on_find_video_metadata_progress_fn(self, active_search_paths, n):
         self.pending_operation_status.update(n)
         print("%d%% done" % n)
 
-    def on_find_video_metadata_execute_thread(self, progress_callback):
+    def on_find_video_metadata_execute_thread(self, active_search_paths, progress_callback):
         currProgress = 0.0
         parsedFiles = 0
         self.pending_operation_status.restart(OperationTypes.FilesystemMetadataLoad, self.total_found_files)
@@ -439,57 +441,65 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
 
         return "Done."
  
-    def on_find_video_metadata_print_output(self, s):
+    @pyqtSlot(list, object)
+    def on_find_video_metadata_print_output(self, active_search_paths, s):
         print(s)
         
-    def on_find_video_metadata_thread_complete(self):
-        print("THREAD COMPLETE!")
+    @pyqtSlot(list)
+    def on_find_video_metadata_thread_complete(self, finished_search_paths):
+        print("THREAD on_find_video_metadata_thread_complete(...)! {0}".format(str(finished_search_paths)))
         self.findMetadataComplete.emit()
         self.foundFilesUpdated.emit()
 
 
     ## FILESYSTEM:
     # Finds the video files in the self.searchPaths in a multithreaded way
-    def find_filesystem_video(self):
-        print("VideoFilesystemLoader.find_filesystem_video(...)")
+    def find_filesystem_video(self, activeSearchPaths):
+        print("VideoFilesystemLoader.find_filesystem_video(...):  active_search_paths: {0}".format(str(activeSearchPaths)))
         # Pass the function to execute
-        self.videoFilesystemWorker = VideoFilesystemWorker(self.on_find_filesystem_video_execute_thread) # Any other args, kwargs are passed to the run function
+        
+        self.videoFilesystemWorker = VideoFilesystemWorker(activeSearchPaths, self.on_find_filesystem_video_execute_thread) # Any other args, kwargs are passed to the run function
         self.videoFilesystemWorker.signals.result.connect(self.on_find_filesystem_video_print_output)
         self.videoFilesystemWorker.signals.finished.connect(self.on_find_filesystem_video_thread_complete)
         self.videoFilesystemWorker.signals.progress.connect(self.on_find_filesystem_video_progress_fn)
         
         # Execute
-        self.threadpool.start(self.videoFilesystemWorker) 
+        self.threadpool.start(self.videoFilesystemWorker)
 
-
-    def on_find_filesystem_video_progress_fn(self, n):
+    @pyqtSlot(list, int)
+    def on_find_filesystem_video_progress_fn(self, active_search_paths, n):
         self.pending_operation_status.update(n)
         print("%d%% done" % n)
 
-    def on_find_filesystem_video_execute_thread(self, progress_callback):
+    def on_find_filesystem_video_execute_thread(self, active_search_paths, progress_callback):
+        print("THREAD on_find_filesystem_video_execute_thread(...)! active_search_paths: {0}".format(str(active_search_paths)))
+
         searchedSearchPaths = 0
         # self.found_files_lists = []
         # TODO: clear old files from cache?
         self.total_found_files = 0
-        self.total_search_paths = len(self.searchPaths)
+        self.total_search_paths = len(active_search_paths)
         self.pending_operation_status.restart(OperationTypes.FilesystemFileFind, self.total_search_paths)
 
         # Clear the top-level nodes
-        for aSearchPath in self.searchPaths:
+        for aSearchPath in active_search_paths:
             curr_search_path_video_files = findVideoFiles(aSearchPath, shouldPrint=False)
             # self.found_files_lists.append(curr_search_path_video_files)
             self.cache[aSearchPath].set_found_filesystem_video_files(curr_search_path_video_files) ## TODO: Don't overwrite the previously cached/found video files
             self.total_found_files = self.total_found_files + len(curr_search_path_video_files)
             searchedSearchPaths = searchedSearchPaths + 1
-            progress_callback.emit(searchedSearchPaths*100/self.total_search_paths)
+            progress_callback.emit(active_search_paths, (searchedSearchPaths*100/self.total_search_paths))
 
         return "Done."
  
-    def on_find_filesystem_video_print_output(self, s):
+    @pyqtSlot(list, object)
+    def on_find_filesystem_video_print_output(self, active_search_paths, s):
         print(s)
         
-    def on_find_filesystem_video_thread_complete(self):
-        print("THREAD COMPLETE!")
+    @pyqtSlot(list)
+    def on_find_filesystem_video_thread_complete(self, finished_search_paths):
+        print("THREAD on_find_filesystem_video_thread_complete(...)! {0}".format(str(finished_search_paths)))
+        
         # Returned results in self.found_files_lists
         # self.rebuild_from_found_files()
         self.rebuildParentFolders()
@@ -499,6 +509,6 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
         # Find the metadata for all the video
         if (self.shouldEnableFilesystemMetadataUpdate):
             print("Finding metadata...")
-            self.find_video_metadata()
+            self.find_video_metadata(finished_search_paths)
         else:
             print("skipping metadata...")

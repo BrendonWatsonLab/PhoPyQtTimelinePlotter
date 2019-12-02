@@ -35,10 +35,10 @@ class VideoWorkersBaseSignals(QObject):
         `int` indicating % progress 
 
     '''
-    finished = pyqtSignal()
-    error = pyqtSignal(tuple)
-    result = pyqtSignal(object)
-    progress = pyqtSignal(int)
+    finished = pyqtSignal(list)
+    error = pyqtSignal(list, tuple)
+    result = pyqtSignal(list, object)
+    progress = pyqtSignal(list, int)
 
 
 class VideoWorkersBase(QRunnable):
@@ -55,10 +55,11 @@ class VideoWorkersBase(QRunnable):
 
     '''
 
-    def __init__(self, fn, *args, **kwargs):
+    def __init__(self, search_paths, fn, *args, **kwargs):
         super(VideoWorkersBase, self).__init__()
 
         # Store constructor arguments (re-used for processing)
+        self.search_paths = search_paths
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
@@ -75,14 +76,15 @@ class VideoWorkersBase(QRunnable):
         
         # Retrieve args/kwargs here; and fire processing using them
         try:
-            result = self.fn(*self.args, **self.kwargs)
+            result = self.fn(self.search_paths, *self.args, **self.kwargs)
         except:
             traceback.print_exc()
             exctype, value = sys.exc_info()[:2]
-            self.signals.error.emit((exctype, value, traceback.format_exc()))
+            self.signals.error.emit(self.search_paths, (exctype, value, traceback.format_exc()))
         else:
-            self.signals.result.emit(result)  # Return the result of the processing
+            self.signals.result.emit(self.search_paths, result)  # Return the result of the processing
         finally:
-            self.signals.finished.emit()  # Done
+            # self.signals.finished.emit()  # Done
+            self.signals.finished.emit(self.search_paths)  # Done
         
 
