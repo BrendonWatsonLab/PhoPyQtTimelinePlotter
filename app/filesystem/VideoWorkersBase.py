@@ -1,3 +1,4 @@
+# VideoWorkersBase.py
 import os, time, traceback, sys
 
 from datetime import datetime, timezone, timedelta
@@ -10,13 +11,12 @@ import json # Used to decode ffprobe output
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QObject, QEvent, pyqtSignal, pyqtSlot, QRunnable
 
-from app.filesystem.VideoWorkersBase import VideoWorkersBase, VideoWorkersBaseSignals
 
 ## IMPORT:
-# from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
+# from app.filesystem.VideoWorkersBase import VideoWorkersBase, VideoWorkersBaseSignals
 
-## VideoFilesystemWorker
-class VideoFilesystemWorkerSignals(QObject):
+## VideoWorkersBase
+class VideoWorkersBaseSignals(QObject):
     '''
     Defines the signals available from a running worker thread.
 
@@ -41,7 +41,7 @@ class VideoFilesystemWorkerSignals(QObject):
     progress = pyqtSignal(int)
 
 
-class VideoFilesystemWorker(QRunnable):
+class VideoWorkersBase(QRunnable):
     '''
     Worker thread
 
@@ -56,13 +56,13 @@ class VideoFilesystemWorker(QRunnable):
     '''
 
     def __init__(self, fn, *args, **kwargs):
-        super(VideoFilesystemWorker, self).__init__()
+        super(VideoWorkersBase, self).__init__()
 
         # Store constructor arguments (re-used for processing)
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
-        self.signals = VideoFilesystemWorkerSignals()    
+        self.signals = VideoWorkersBaseSignals()    
 
         # Add the callback to our kwargs
         self.kwargs['progress_callback'] = self.signals.progress        

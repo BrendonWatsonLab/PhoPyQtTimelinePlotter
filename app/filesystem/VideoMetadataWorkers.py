@@ -10,6 +10,8 @@ import json # Used to decode ffprobe output
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QObject, QEvent, pyqtSignal, pyqtSlot, QRunnable
 
+from app.filesystem.VideoWorkersBase import VideoWorkersBase, VideoWorkersBaseSignals
+
 ## IMPORT:
 # from app.filesystem.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
 
