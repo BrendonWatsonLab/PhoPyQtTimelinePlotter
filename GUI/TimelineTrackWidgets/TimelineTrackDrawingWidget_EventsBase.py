@@ -178,6 +178,17 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
 
     def on_child_action_comment(self):
         print("on_child_action_comment()")
+        selected_obj = self.get_selected_duration_obj()
+        if (selected_obj is None):
+            print("ERROR: selected duration object is None! Can't perform action!")
+            return
+        else:
+            sel_start = selected_obj.startTime
+            sel_endtime = selected_obj.endTime
+            # Spawn new annotation dialog
+            # Need to find annotation track with the appropriate filter
+            
+
         pass
 
     def on_child_action_delete(self):

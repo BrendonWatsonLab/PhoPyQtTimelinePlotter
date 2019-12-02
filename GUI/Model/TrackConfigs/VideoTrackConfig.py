@@ -47,7 +47,25 @@ class VideoTrackFilter(TrackFilterBase):
         return query
 
     def __str__(self):
-        return 'VideoTrackFilter: behavioral_box_ids: {0}, experiment_ids: {1}, cohort_ids: {2}, animal_ids: {3}, allow_original_videos: {4}, allow_labeled_videos: {5}'.format(self.behavioral_box_ids, self.experiment_ids, self.cohort_ids, self.animal_ids, self.allow_original_videos, self.allow_labeled_videos)
+        return 'VideoTrackFilter: behavioral_box_ids: {0}, experiment_ids: {1}, cohort_ids: {2}, animal_ids: {3}, allow_original_videos: {4}, allow_labeled_videos: {5}'.format(self._get_behavioral_box_ids_str(), self._get_experiment_ids_str(), self._get_cohort_ids_str(), self._get_animal_ids_str(), self.allow_original_videos, self.allow_labeled_videos)
+
+    def get_selection_string(self):
+        out_string = super().get_selection_string()
+        if (self.allow_labeled_videos and self.allow_original_videos):
+            # Allow any, don't need to specify
+            pass
+        elif (self.allow_original_videos):
+            # Allow only originals
+            out_string = out_string + ", Originals"
+        elif (self.allow_labeled_videos):
+            # Allow only labeled
+            out_string = out_string + ", Labeled"
+        else:
+            # Allow no videos
+            out_string = out_string + ", None"
+
+        return out_string
+
 
     def get_output_dict(self):
         return {'behavioral_box_ids': self.behavioral_box_ids, 'experiment_ids': self.experiment_ids, 'cohort_ids': self.cohort_ids, 'animal_ids': self.animal_ids, 'allow_original_videos':self.allow_original_videos, 'allow_labeled_videos':self.allow_labeled_videos}

@@ -53,9 +53,114 @@ class TrackFilterBase(QObject):
     def build_filter(self, session):
         return self.build_filter_query(session).all()
 
+    def _get_behavioral_box_ids_str(self, noneString="Any", array_opening_bracket = "[", array_closing_bracket = "]", enable_single_element_arrays = False):
+        out_string = ""
+        if self.behavioral_box_ids is None:
+            return noneString
+        else:
+            currArray = self.behavioral_box_ids
+            if (enable_single_element_arrays or (len(currArray)>1)):
+                out_string = out_string + array_opening_bracket
+            for aBBID in currArray:
+                out_string = out_string + "B{0:02}".format(aBBID-1)
+            if (enable_single_element_arrays or (len(currArray)>1)):
+                out_string = out_string + array_closing_bracket
+            return out_string
+
+    def _get_experiment_ids_str(self, noneString="Any", array_opening_bracket = "[", array_closing_bracket = "]", enable_single_element_arrays = False):
+        out_string = ""
+        if self.experiment_ids is None:
+            return noneString
+        else:
+            currArray = self.experiment_ids
+            if (enable_single_element_arrays or (len(currArray)>1)):
+                out_string = out_string + array_opening_bracket
+            for anID in self.experiment_ids:
+                out_string = out_string + "E{0:04}".format(anID-1)
+            if (enable_single_element_arrays or (len(currArray)>1)):
+                out_string = out_string + array_closing_bracket
+            return out_string
+
+    def _get_cohort_ids_str(self, noneString="Any", array_opening_bracket = "[", array_closing_bracket = "]", enable_single_element_arrays = False):
+        out_string = ""
+        if self.cohort_ids is None:
+            return noneString
+        else:
+            currArray = self.cohort_ids
+            if (enable_single_element_arrays or (len(currArray)>1)):
+                out_string = out_string + array_opening_bracket
+            for anID in self.cohort_ids:
+                out_string = out_string + "C{0:04}".format(anID-1)
+            if (enable_single_element_arrays or (len(currArray)>1)):
+                out_string = out_string + array_closing_bracket
+            return out_string
+
+    def _get_animal_ids_str(self, noneString="Any", array_opening_bracket = "[", array_closing_bracket = "]", enable_single_element_arrays = False):
+        out_string = ""
+        if self.animal_ids is None:
+            return noneString
+        else:
+            currArray = self.animal_ids
+            if (enable_single_element_arrays or (len(currArray)>1)):
+                out_string = out_string + array_opening_bracket
+            for anID in self.animal_ids:
+                out_string = out_string + "A{0:04}".format(anID-1)
+            if (enable_single_element_arrays or (len(currArray)>1)):
+                out_string = out_string + array_closing_bracket
+            return out_string
+
 
     def __str__(self):
-        return 'TrackFilterBase: behavioral_box_ids: {0}, experiment_ids: {1}, cohort_ids: {2}, animal_ids: {3}'.format(self.behavioral_box_ids, self.experiment_ids, self.cohort_ids, self.animal_ids)
+        # return 'TrackFilterBase: behavioral_box_ids: {0}, experiment_ids: {1}, cohort_ids: {2}, animal_ids: {3}'.format(self.behavioral_box_ids, self.experiment_ids, self.cohort_ids, self.animal_ids)
+        return 'TrackFilterBase: behavioral_box_ids: {0}, experiment_ids: {1}, cohort_ids: {2}, animal_ids: {3}'.format(self._get_behavioral_box_ids_str(), self._get_experiment_ids_str(), self._get_cohort_ids_str(), self._get_animal_ids_str())
+
+    def get_selection_string(self):
+        out_string = ""
+        array_opening_bracket = "["
+        array_closing_bracket = "]"
+        enable_single_element_arrays = False
+
+        if self.behavioral_box_ids is not None:
+            out_string = out_string + self._get_behavioral_box_ids_str("", array_opening_bracket=array_opening_bracket, array_closing_bracket=array_closing_bracket, enable_single_element_arrays=enable_single_element_arrays)
+            # currArray = self.behavioral_box_ids
+            # if (enable_single_element_arrays or (len(currArray)>1)):
+            #     out_string = out_string + array_opening_bracket
+            # for aBBID in currArray:
+            #     out_string = out_string + "B{0:02}".format(aBBID-1)
+            # if (enable_single_element_arrays or (len(currArray)>1)):
+            #     out_string = out_string + array_closing_bracket
+            
+        if self.experiment_ids is not None:
+            out_string = out_string + self._get_experiment_ids_str("", array_opening_bracket=array_opening_bracket, array_closing_bracket=array_closing_bracket, enable_single_element_arrays=enable_single_element_arrays)
+            # currArray = self.experiment_ids
+            # if (enable_single_element_arrays or (len(currArray)>1)):
+            #     out_string = out_string + array_opening_bracket
+            # for anID in self.experiment_ids:
+            #     out_string = out_string + "E{0:04}".format(anID-1)
+            # if (enable_single_element_arrays or (len(currArray)>1)):
+            #     out_string = out_string + array_closing_bracket
+
+        if self.cohort_ids is not None:
+            out_string = out_string + self._get_cohort_ids_str("", array_opening_bracket=array_opening_bracket, array_closing_bracket=array_closing_bracket, enable_single_element_arrays=enable_single_element_arrays)
+            # currArray = self.cohort_ids
+            # if (enable_single_element_arrays or (len(currArray)>1)):
+            #     out_string = out_string + array_opening_bracket
+            # for anID in self.cohort_ids:
+            #     out_string = out_string + "C{0:04}".format(anID-1)
+            # if (enable_single_element_arrays or (len(currArray)>1)):
+            #     out_string = out_string + array_closing_bracket
+
+        if self.animal_ids is not None:
+            out_string = out_string + self._get_animal_ids_str("", array_opening_bracket=array_opening_bracket, array_closing_bracket=array_closing_bracket, enable_single_element_arrays=enable_single_element_arrays)
+            # currArray = self.animal_ids
+            # if (enable_single_element_arrays or (len(currArray)>1)):
+            #     out_string = out_string + array_opening_bracket
+            # for anID in self.animal_ids:
+            #     out_string = out_string + "A{0:04}".format(anID-1)
+            # if (enable_single_element_arrays or (len(currArray)>1)):
+            #     out_string = out_string + array_closing_bracket
+
+        return out_string
 
     def get_output_dict(self):
         return {'behavioral_box_ids': self.behavioral_box_ids, 'experiment_ids': self.experiment_ids, 'cohort_ids': self.cohort_ids, 'animal_ids': self.animal_ids}
@@ -143,3 +248,14 @@ class TrackConfigurationBase(QObject):
     def __str__(self):
         return 'TrackConfigurationBase: trackIndex: {0}, trackTitle: {1}, trackExtendedDescription: {2}, filter: {3}'.format(self.trackIndex, self.trackTitle, self.trackExtendedDescription, str(self.filter))
 
+
+    # update_labels_dynamically(): updates the labels dynamically from the active filter
+    def update_labels_dynamically(self):
+        self.trackTitle = self.get_filter().get_selection_string()
+        self.trackExtendedDescription = self.get_filter().get_selection_string()
+        
+        # self.trackExtendedDescription = str(self.get_filter())
+        # 'BBID: {0}, originals'.format(currTrackBBID)
+        # 
+        # "B{0:02}".format(currTrackBBID)
+        return

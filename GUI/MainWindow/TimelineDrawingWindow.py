@@ -377,6 +377,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                     currHeaderWidget.showOptions.connect(self.on_track_header_show_options_activated)
                     currHeaderWidget.refresh.connect(self.on_track_header_refresh_activated)
 
+                    currHeaderWidget.update_labels_dynamically()
                     self.videoFileTrackWidgetHeaders[currVideoTrackWidget.trackID] = currHeaderWidget
 
                     currHeaderIncludedTrackLayout.addWidget(currVideoTrackWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
@@ -421,6 +422,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                     currHeaderWidget.showOptions.connect(self.on_track_header_show_options_activated)
                     currHeaderWidget.refresh.connect(self.on_track_header_refresh_activated)
 
+                    currHeaderWidget.update_labels_dynamically()
                     self.eventTrackWidgetHeaders[currWidget.trackID] = currHeaderWidget
 
                     currHeaderIncludedTrackLayout.addWidget(currWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)

@@ -408,8 +408,6 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
 
     ## Primary Filesystem Functions
 
-
-
     ## Find_video_metadata:
         # Finds the video metadata in a multithreaded way
     def find_video_metadata(self, activeSearchPaths):
