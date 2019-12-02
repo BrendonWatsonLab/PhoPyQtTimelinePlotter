@@ -11,6 +11,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 from enum import Enum
 
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWidget
+from GUI.UI.UIState import ItemInteractionState, ItemHoverState, ItemSelectionState
 
 class ItemSelectionOptions(Enum):
         DisableSelection = 1 # disallows selection
@@ -39,6 +40,8 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
         self.trackLabelText = None
 
         QToolTip.setFont(QFont('SansSerif', 10))
+
+        self.trackInteractionState = ItemInteractionState(ItemHoverState.Default, ItemSelectionState.Default, parent=self)
         
         # # Debug background fill
         # p = self.palette()
@@ -81,6 +84,14 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
         transitionColor = QColor(255,255,255,200)
         innerGlowColor = QColor(255,255,255,64)
 
+        if (self.is_track_emphasized()):
+            brightnessAmount = 160
+            middleColor = middleColor.lighter(brightnessAmount) # returns a color that's 20% brighter
+            edgeColor = edgeColor.lighter(brightnessAmount) # returns a color that's 20% brighter
+            transitionColor = transitionColor.lighter(brightnessAmount) # returns a color that's 20% brighter
+            innerGlowColor = innerGlowColor.lighter(brightnessAmount) # returns a color that's 20% brighter
+
+
         gradientKeysMain = [(0.09, edgeColor),(0.095, transitionColor),(0.1, innerGlowColor), (0.16, middleColor),
         (0.84, middleColor),(0.9, innerGlowColor),(0.905, transitionColor), (0.91, edgeColor)]
 
@@ -90,6 +101,26 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
             out_gradient.setColorAt(stop, QColor(color))
 
         return out_gradient
+
+
+    # def get_track_emphasis_highlight(self):
+    #     if (self.is_track_emphasized):
+    #         return QColor(200,200,200,30)
+    #     else:
+    #         return None
+
+    def is_track_emphasized(self):
+        # return False
+        # if self.trackInteractionState.hoverState is ItemHoverState.Emphasized:
+        #     return True
+        # else:
+        #     return False
+        return self.trackInteractionState.is_emphasized()
+
+    def is_track_selected(self):
+        return self.trackInteractionState.is_selected()
+
+
 
     # def paintBackground(self, event):
     #     grad = QLinearGradient(80, 40, 30, 10)
@@ -171,8 +202,18 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
 
     def enterEvent(self, QEvent):
         # here the code for mouse hover
-        pass
+        print("TimelineTrackDrawingWidgetBase.enterEvent(...): track_id: {0}".format(self.trackID))
+        self.trackInteractionState.set_hover_state(ItemHoverState.Emphasized)
+        # self.trackInteractionState.hoverState = ItemHoverState.Emphasized
+        # print(self.trackInteractionState.hoverState)
+        self.update()
+        return QWidget.enterEvent(self, QEvent)
 
     def leaveEvent(self, QEvent):
         # here the code for mouse leave
-        pass
+        print("TimelineTrackDrawingWidgetBase.leaveEvent(...): track_id: {0}".format(self.trackID))
+        self.trackInteractionState.set_hover_state(ItemHoverState.Default)
+        # self.trackInteractionState.hoverState = ItemHoverState.Default
+        # print(self.trackInteractionState.hoverState)
+        self.update()
+        return QWidget.leaveEvent(self, QEvent)

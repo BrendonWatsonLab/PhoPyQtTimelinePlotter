@@ -63,17 +63,23 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
         # lgrad.setColorAt(1.0, Qt.yellow)
         qp.fillRect(drawRect, lgrad)
 
+        # currTrackEmphasisHighlight = self.get_track_emphasis_highlight()
+        # if (currTrackEmphasisHighlight is not None):
+        #     qp.fillRect(drawRect, currTrackEmphasisHighlight)
+
+        print("is_emphasized(...): {0}".format(self.is_track_emphasized()))
+
         # Draw the text label if needed
-        if self.trackLabelText is not None:
-            oldPen = qp.pen()
-            oldFont = qp.font()
+        # if self.trackLabelText is not None:
+        #     oldPen = qp.pen()
+        #     oldFont = qp.font()
 
-            qp.setPen(TimelineTrackDrawingWidget_SelectionBase.default_TrackTitlePen)
-            qp.setFont(TimelineTrackDrawingWidget_SelectionBase.default_TrackTitleFont)
-            qp.drawText(drawRect, Qt.AlignLeft, self.trackLabelText)
+        #     qp.setPen(TimelineTrackDrawingWidget_SelectionBase.default_TrackTitlePen)
+        #     qp.setFont(TimelineTrackDrawingWidget_SelectionBase.default_TrackTitleFont)
+        #     qp.drawText(drawRect, Qt.AlignLeft, self.trackLabelText)
 
-            qp.setPen(oldPen)
-            qp.setFont(oldFont)
+        #     qp.setPen(oldPen)
+        #     qp.setFont(oldFont)
 
 
         # Draw the duration objects

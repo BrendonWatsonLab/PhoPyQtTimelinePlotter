@@ -257,20 +257,18 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
         if needs_update:
             self.update()
 
-    def leaveEvent(self, ev):
-        self.hovering = False
-        self.update()
-        return QWidget.leaveEvent(self, ev)
+    # def leaveEvent(self, ev):
+    #     self.hovering = False
+    #     self.update()
+    #     return QWidget.leaveEvent(self, ev)
 
     def enterEvent(self, QEvent):
         # here the code for mouse hover
-        print("TimelineTrackDrawingWidget_SelectionBase.enterEvent(...): track_id: {0}".format(self.trackID))
-        pass
+        # print("TimelineTrackDrawingWidget_SelectionBase.enterEvent(...): track_id: {0}".format(self.trackID))
+        return super().enterEvent(QEvent)
 
     def leaveEvent(self, QEvent):
         # here the code for mouse leave
-        print("TimelineTrackDrawingWidget_SelectionBase.leaveEvent(...): track_id: {0}".format(self.trackID))
+        # print("TimelineTrackDrawingWidget_SelectionBase.leaveEvent(...): track_id: {0}".format(self.trackID))
         self.clear_hover()
-        # self.reset_hovered()
-        # self.update()
-        pass
+        return super().leaveEvent(QEvent)
