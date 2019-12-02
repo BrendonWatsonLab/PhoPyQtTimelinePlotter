@@ -80,6 +80,17 @@ class ReferenceBoxExperCohortAnimalMixin(object):
     def experiment(cls):
         return relationship("Experiment")
 
+    def get_id_values(self):
+        return (self.behavioral_box_id, self.experiment_id, self.cohort_id, self.animal_id)
+
+    def set_id_values(self, behavioral_box_id, experiment_id, cohort_id, animal_id):
+        self.behavioral_box_id = behavioral_box_id
+        self.experiment_id = experiment_id
+        self.cohort_id = cohort_id
+        self.animal_id = animal_id
+
+
+
     # @classmethod
     # def getTableMapping(cls):
     #     return [
