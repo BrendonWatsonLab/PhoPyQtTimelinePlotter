@@ -226,7 +226,7 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
         return self.cache
 
     ## DATABASE Functions:
-    def reload_data(self):
+    def reload_data(self, restricted_search_paths=None):
         print("VideoFilesystemLoader.reload_data(...)")
         # Load the video files depending on the setting.
         if VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadOnlyFromDatabase:
@@ -235,7 +235,10 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
         elif VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths:
             print("Loading video files from database and searching search paths...")
             self.reloadModelFromDatabase()
-            self.find_filesystem_video(self.searchPaths)
+            if restricted_search_paths is None:
+                restricted_search_paths = self.searchPaths
+
+            self.find_filesystem_video(restricted_search_paths)
         else:
             print("VideoFilesystemLoader ERROR: Unexpected enum type!")
             pass

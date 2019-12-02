@@ -185,6 +185,7 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         self.ui.treeWidget_VideoFiles.addTopLevelItems(self.top_level_nodes)
         # Expand all items
         self.expand_top_level_nodes()
+        self.ui.treeWidget_VideoFiles.resizeColumnToContents(0)
         self.update()
 
 
