@@ -51,10 +51,6 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
         # drawRect = event.rect()
         drawRect = self.rect()
 
-        # qp.setPen(QPen(Qt.black, 5, Qt.SolidLine))
-        # grad = QLinearGradient(80, 40, 30, 10)
-        # qp.setBrush(QBrush(grad))
-        # qp.drawRect(drawRect.x(), drawRect.y(), drawRect.width(), drawRect.height())
         # Draw the linear horizontal gradient.
         lgrad = self.get_background_gradient(drawRect.height())
 
@@ -62,10 +58,6 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
         # lgrad.setColorAt(0.0, Qt.red)
         # lgrad.setColorAt(1.0, Qt.yellow)
         qp.fillRect(drawRect, lgrad)
-
-        # currTrackEmphasisHighlight = self.get_track_emphasis_highlight()
-        # if (currTrackEmphasisHighlight is not None):
-        #     qp.fillRect(drawRect, currTrackEmphasisHighlight)
 
         print("is_emphasized(...): {0}".format(self.is_track_emphasized()))
 

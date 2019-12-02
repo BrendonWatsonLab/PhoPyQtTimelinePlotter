@@ -85,11 +85,11 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
         innerGlowColor = QColor(255,255,255,64)
 
         if (self.is_track_emphasized()):
-            brightnessAmount = 160
-            middleColor = middleColor.lighter(brightnessAmount) # returns a color that's 20% brighter
-            edgeColor = edgeColor.lighter(brightnessAmount) # returns a color that's 20% brighter
-            transitionColor = transitionColor.lighter(brightnessAmount) # returns a color that's 20% brighter
-            innerGlowColor = innerGlowColor.lighter(brightnessAmount) # returns a color that's 20% brighter
+            brightnessAmount = 160 # returns a color that's 60% brighter
+            middleColor = middleColor.lighter(brightnessAmount) 
+            edgeColor = edgeColor.lighter(brightnessAmount)
+            transitionColor = transitionColor.lighter(brightnessAmount)
+            innerGlowColor = innerGlowColor.lighter(brightnessAmount)
 
 
         gradientKeysMain = [(0.09, edgeColor),(0.095, transitionColor),(0.1, innerGlowColor), (0.16, middleColor),
@@ -103,29 +103,11 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
         return out_gradient
 
 
-    # def get_track_emphasis_highlight(self):
-    #     if (self.is_track_emphasized):
-    #         return QColor(200,200,200,30)
-    #     else:
-    #         return None
-
     def is_track_emphasized(self):
-        # return False
-        # if self.trackInteractionState.hoverState is ItemHoverState.Emphasized:
-        #     return True
-        # else:
-        #     return False
         return self.trackInteractionState.is_emphasized()
 
     def is_track_selected(self):
         return self.trackInteractionState.is_selected()
-
-
-
-    # def paintBackground(self, event):
-    #     grad = QLinearGradient(80, 40, 30, 10)
-    #     painter.setBrush(QBrush(grad))
-    #     painter.drawRect(10, 10, 200, 200)
     
     def deselect_all(self):
         pass
@@ -201,19 +183,13 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
         return event_x
 
     def enterEvent(self, QEvent):
-        # here the code for mouse hover
-        print("TimelineTrackDrawingWidgetBase.enterEvent(...): track_id: {0}".format(self.trackID))
+        # print("TimelineTrackDrawingWidgetBase.enterEvent(...): track_id: {0}".format(self.trackID))
         self.trackInteractionState.set_hover_state(ItemHoverState.Emphasized)
-        # self.trackInteractionState.hoverState = ItemHoverState.Emphasized
-        # print(self.trackInteractionState.hoverState)
         self.update()
         return QWidget.enterEvent(self, QEvent)
 
     def leaveEvent(self, QEvent):
-        # here the code for mouse leave
-        print("TimelineTrackDrawingWidgetBase.leaveEvent(...): track_id: {0}".format(self.trackID))
+        # print("TimelineTrackDrawingWidgetBase.leaveEvent(...): track_id: {0}".format(self.trackID))
         self.trackInteractionState.set_hover_state(ItemHoverState.Default)
-        # self.trackInteractionState.hoverState = ItemHoverState.Default
-        # print(self.trackInteractionState.hoverState)
         self.update()
         return QWidget.leaveEvent(self, QEvent)
