@@ -186,6 +186,10 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     def mouseMoveEvent(self, e):
         print("PhoDurationEvent_AnnotationComment.mouseMoveEvent({0})".format(str(e)))
 
+        # p = QPoint(e.x() + self.geometry().x(), e.y() + self.geometry().y())
+        self.updateEdgeAndCornerContainerActivePosition(e.pos(), True)
+        # self.updateEdgeAndCornerContainerActivePosition(p, True)
+
         # If drag active, move the stop.
         if (not (self._drag_position is None)):
             self._drag_position = e.x()
@@ -335,6 +339,8 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
                 painter.setBrush(QBrush(activeColor, Qt.SolidPattern))
 
             painter.drawPolygon(self.end_poly)
+
+        self.paintEvent_EdgeAndCornerContainerViewMixin(painter, self.finalEventRect)
 
         painter.restore()
 

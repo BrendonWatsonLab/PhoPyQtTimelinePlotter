@@ -12,8 +12,9 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QFontMetrics
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 from GUI.Model.Events.PhoEvent import *
+from GUI.UI.EdgeAndCornerSelectionViewHelpers import EdgeAndCornerContainerComponent, EdgeAndCornerContainerViewMixin
 
-class PhoDurationEvent(PhoEvent):
+class PhoDurationEvent(EdgeAndCornerContainerViewMixin, PhoEvent):
     InstantaneousEventDuration = timedelta(seconds=2)
     RectCornerRounding = 8
     ColorBase = QColor(51, 204, 255, PhoEvent.DefaultOpacity)  # Teal
@@ -23,7 +24,6 @@ class PhoDurationEvent(PhoEvent):
     ColorBorderBase = QColor('#e0e0e0')  # Whiteish
     ColorBorderActive = QColor(255, 222, 122)  # Yellowish
 
-
     MainTextFont = QFont('SansSerif', 10)
 
     # This defines a signal called 'on_edit' that takes no arguments.
@@ -32,10 +32,10 @@ class PhoDurationEvent(PhoEvent):
     on_annotate = pyqtSignal()
     on_delete = pyqtSignal()
 
-    
     def __init__(self, startTime=datetime.now(), endTime=None, name='', color=QColor(51, 204, 255, PhoEvent.DefaultOpacity), extended_data=dict(), parent=None):
         super(PhoDurationEvent, self).__init__(startTime, name, color, extended_data, parent=parent)
         self.endTime = endTime
+        self.init_EdgeAndCornerContainerViewMixin()
 
     # gets the child index that's set by the parent with "newAnnotationView.setAccessibleName(str(newAnnotationIndex))"
     def get_track_index(self):
@@ -261,6 +261,8 @@ class PhoDurationEvent(PhoEvent):
             # If it's not an instantaneous event, draw the label
             painter.drawText(self.finalEventRect, Qt.AlignCenter, self.name)
 
+        self.paintEvent_EdgeAndCornerContainerViewMixin(painter, self.finalEventRect)
+        
         painter.restore()
         return self.finalEventRect
 

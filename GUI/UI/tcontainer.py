@@ -19,17 +19,6 @@ from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QMenu, QLabel, Q
 "T"/"B": Top/Bottom
 "L"/"R": Left/Right
 """
-# class ResizableContainerMode(Enum):
-#     NONE = 0,
-#     MOVE = 1,
-#     RESIZETL = 2,
-#     RESIZET = 3,
-#     RESIZETR = 4,
-#     RESIZER = 5,
-#     RESIZEBR = 6,
-#     RESIZEB = 7,
-#     RESIZEBL = 8,
-#     RESIZEL = 9
 
 class ResizableContainerMode(IntEnum):
     NONE = 0,
@@ -42,20 +31,8 @@ class ResizableContainerMode(IntEnum):
     RESIZEB = 64,
     RESIZEBL = 128,
     RESIZEL = 256
-    # NONE = int(0x00),
-    # MOVE = int(0x01),
-    # RESIZETL = int(0x02),
-    # RESIZET = int(0x04),
-    # RESIZETR = int(0x08),
-    # RESIZER = int(0x16),
-    # RESIZEBR = int(0x32),
-    # RESIZEB = int(0x64),
-    # RESIZEBL = int(0x128),
-    # RESIZEL = int(0x256)
 
     # Note Margins are QMargins(int left, int top, int right, int bottom)
-    # QtCore.Q_DECLARE_FLAGS(ResizableContainerOptions, ResizableContainerOption)
-    # Q_FLAGS(ResizableContainerMode.ResizableContainerOption)
 
     def get_highlight_rect(self, parent_rect, border_handle_size_diff):
         const_corner_rect_size = QSize(10, 10)
@@ -492,20 +469,16 @@ class TContainer(QWidget):
         if ((not didModeChange) and (e_pos.x() < self.x() + self.border_handle_size_diff) or # Left
             (e_pos.x() > self.x() + self.width() - self.border_handle_size_diff)): # Right
             if e_pos.x() < self.x() + self.border_handle_size_diff: # Left
-                # self.setCursor(QCursor(QtCore.Qt.SizeHorCursor))
                 didModeChange = self.try_set_mode(ResizableContainerMode.RESIZEL)
             else: # Right
-                # self.setCursor(QCursor(QtCore.Qt.SizeHorCursor))
                 didModeChange = self.try_set_mode(ResizableContainerMode.RESIZER)
 
         # check cursor vertical position (check top and bottom edges)
         if ((not didModeChange) and (e_pos.y() > self.y() + self.height() - self.border_handle_size_diff) or # Bottom
             (e_pos.y() < self.y() + self.border_handle_size_diff)): # Top
             if e_pos.y() < self.y() + self.border_handle_size_diff: # Top
-                # self.setCursor(QCursor(QtCore.Qt.SizeVerCursor))
                 didModeChange = self.try_set_mode(ResizableContainerMode.RESIZET)
             else: # Bottom
-                # self.setCursor(QCursor(QtCore.Qt.SizeVerCursor))
                 didModeChange = self.try_set_mode(ResizableContainerMode.RESIZEB)
         
         # Otherwise we're not hovering any corners or edges. Check and see if we're moving
