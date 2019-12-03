@@ -4,7 +4,7 @@ import tempfile
 from base64 import b64encode
 
 from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import Qt, QPoint, QLine, QRect, QRectF, pyqtSignal, pyqtSlot, QObject
+from PyQt5.QtCore import Qt, QPoint, QLine, QRect, QRectF, pyqtSignal, pyqtSlot, QObject, QMargins
 from PyQt5.QtGui import QPainter, QColor, QFont, QBrush, QPalette, QPen, QPolygon, QPainterPath, QPixmap
 from PyQt5.QtWidgets import QWidget, QFrame, QScrollArea, QVBoxLayout
 import sys
@@ -12,8 +12,9 @@ import os
 
 
 __backgroudColor__ = QColor(60, 63, 65)
-__textColor__ = QColor(187, 187, 187)
-__font__ = QFont('Decorative', 10)
+# __textColor__ = QColor(187, 187, 187)
+__textColor__ = QColor(20, 20, 20)
+__font__ = QFont('Decorative', 12)
 
 class TickProperties:
     """
@@ -48,15 +49,14 @@ class ReferenceMarker(QObject):
 
     def draw_pointer(self, painter, drawRect, scale):
         if self.pointerPos is not None:
-            line = QLine(QPoint(self.get_pointerTimePos()/scale, 40),
-                         QPoint(self.get_pointerTimePos()/scale, drawRect.height()))
-            poly = QPolygon([QPoint(self.get_pointerTimePos()/scale - 10, 20),
-                             QPoint(self.get_pointerTimePos()/scale + 10, 20),
-                             QPoint(self.get_pointerTimePos()/scale, 40)])
+            currOffset = (self.get_pointerTimePos()/scale)
+            line = QLine(QPoint(currOffset, 40),
+                         QPoint(currOffset, drawRect.height()))
+            poly = QPolygon([QPoint(currOffset - 10, 20),
+                             QPoint(currOffset + 10, 20),
+                             QPoint(currOffset, 40)])
 
-            # painter.setPen(self.textColor)
-            # painter.setFont(self.font)
-            # painter.drawText(w - 50, 0, 100, 100, Qt.AlignHCenter, self.get_time_string(w * scale))
+            
         else:
             line = QLine(QPoint(0, 0), QPoint(0, self.height()))
             poly = QPolygon([QPoint(-10, 20), QPoint(10, 20), QPoint(0, 40)])
@@ -67,6 +67,17 @@ class ReferenceMarker(QObject):
 
         painter.drawPolygon(poly)
         painter.drawLine(line)
+
+        # Draw text
+        painter.setPen(self.textColor)
+        painter.setFont(self.font)
+        textRect = poly.boundingRect()
+        textRect = textRect.marginsRemoved(QMargins(0, 0, 0, 4))
+
+        # painter.drawText(currOffset - 10, 0, 20, 20, Qt.AlignHCenter, self.identifier)
+        # painter.drawText(currOffset - 10, 20, 20, 20, Qt.AlignCenter, self.identifier)
+        painter.drawText(textRect, Qt.AlignCenter, self.identifier)
+
 
     def draw(self, painter, drawRect, scale):
         self.updateScale(scale)
