@@ -118,7 +118,7 @@ class EdgeAndCornerContainerViewMixin(object):
         self.hoverEdgeRectFillBrush = QBrush(QColor(255,0,100,180), Qt.SolidPattern)
         self.hoveredEdgeAndCorners = EdgeAndCornerContainerComponent.NONE
         self.selectedEdgeAndCorners = EdgeAndCornerContainerComponent.NONE
-        self.setMouseTracking(True)
+        # self.setMouseTracking(True)
 
     def try_add_component(self, new_component, is_updating_hover):
         if (is_updating_hover):

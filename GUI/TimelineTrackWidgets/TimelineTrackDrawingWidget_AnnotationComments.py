@@ -100,7 +100,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
     # overrides
     def reset_hovered(self):
         super().reset_hovered()
-        
+
 
     def reset_selected(self):
         super().reset_selected()
@@ -251,6 +251,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
 
     def on_mouse_moved(self, event):
         super().on_mouse_moved(event)
+        
 
     
     # Annotation/Comment Specific functions:

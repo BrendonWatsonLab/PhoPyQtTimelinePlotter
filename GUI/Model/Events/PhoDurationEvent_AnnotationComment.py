@@ -59,7 +59,7 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         self.end_poly_is_active = False
 
         self._drag_position = None
-
+        
         # Can I get a double click effect?
 
     # overrides:
@@ -186,9 +186,10 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     def mouseMoveEvent(self, e):
         print("PhoDurationEvent_AnnotationComment.mouseMoveEvent({0})".format(str(e)))
 
-        # p = QPoint(e.x() + self.geometry().x(), e.y() + self.geometry().y())
-        self.updateEdgeAndCornerContainerActivePosition(e.pos(), True)
-        # self.updateEdgeAndCornerContainerActivePosition(p, True)
+        p = QPoint(e.x() + self.geometry().x(), e.y() + self.geometry().y())
+        # self.updateEdgeAndCornerContainerActivePosition(e.pos(), True)
+        # self.updateEdgeAndCornerContainerActivePosition(e.globalPos(), True)
+        self.updateEdgeAndCornerContainerActivePosition(p, True)
 
         # If drag active, move the stop.
         if (not (self._drag_position is None)):

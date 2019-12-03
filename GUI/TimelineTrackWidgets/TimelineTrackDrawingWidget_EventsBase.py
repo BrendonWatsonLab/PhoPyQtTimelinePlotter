@@ -85,7 +85,6 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
         #     qp.setPen(oldPen)
         #     qp.setFont(oldFont)
 
-
         # Draw the duration objects
         for (index, obj) in enumerate(self.durationObjects):
             self.eventRect[index] = obj.paint( qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)

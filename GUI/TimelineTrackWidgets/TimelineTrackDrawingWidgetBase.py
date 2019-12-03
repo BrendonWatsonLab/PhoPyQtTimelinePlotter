@@ -77,7 +77,6 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
     def paintEvent( self, event ):
         pass
 
-
     def get_background_gradient(self, height):
         middleColor = QColor(40,40,40,64)
         edgeColor = QColor(38,38,38,255)
@@ -127,7 +126,6 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
     def deemphasize(self, emph_index):
         pass
 
- 
     def on_button_clicked(self, event):
         pass
 
