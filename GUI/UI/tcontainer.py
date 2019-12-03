@@ -136,6 +136,8 @@ class ResizableContainerMode(IntEnum):
             return QCursor(QtCore.Qt.SizeVerCursor)
         elif (self == ResizableContainerMode.RESIZEL):
             return QCursor(QtCore.Qt.SizeHorCursor)
+        elif (self == ResizableContainerMode.MOVE):
+            return QCursor(QtCore.Qt.SizeAllCursor)
         else:
             return QCursor(QtCore.Qt.ArrowCursor)
 
@@ -359,28 +361,7 @@ TContainer: a freely resizable container widget that embeds its main contents in
 """
 class TContainer(QWidget):
     
-    # class ResizableContainerOption(Enum):
-    #     NONE = 0x00,
-    #     MOVE = 0x01,
-    #     RESIZETL = 0x02,
-    #     RESIZET = 0x04,
-    #     RESIZETR = 0x08,
-    #     RESIZER = 0x16,
-    #     RESIZEBR = 0x32,
-    #     RESIZEB = 0x64,
-    #     RESIZEBL = 0x128,
-    #     RESIZEL = 0x256
     class ResizableContainerOption(IntFlag):
-        # NONE = int(0x000),
-        # MOVE = int(0x001),
-        # RESIZETL = int(0x002),
-        # RESIZET = int(0x004),
-        # RESIZETR = int(0x008),
-        # RESIZER = int(0x016),
-        # RESIZEBR = int(0x032),
-        # RESIZEB = int(0x064),
-        # RESIZEBL = int(0x128),
-        # RESIZEL = int(0x256)
         NONE = 0,
         MOVE = 1,
         RESIZETL = 2,
@@ -468,6 +449,7 @@ class TContainer(QWidget):
     def setCursorShape(self, e_pos: QPoint):
         self.border_handle_size_diff = 3
         didModeChange = False
+        # Check corners
         # Left - Bottom
         if (((e_pos.y() > self.y() + self.height() - self.border_handle_size_diff) and # Bottom
             (e_pos.x() < self.x() + self.border_handle_size_diff)) or # Left
@@ -497,31 +479,39 @@ class TContainer(QWidget):
             if ((e_pos.y() < self.y() + self.border_handle_size_diff) and # Top
             (e_pos.x() > self.x() + self.width() - self.border_handle_size_diff)): # Right
                 didModeChange = self.try_set_mode(ResizableContainerMode.RESIZETR)
-        # check cursor horizontal position
-        elif ((e_pos.x() < self.x() + self.border_handle_size_diff) or # Left
+
+        # if we're ignoring the corners, try the edges
+        
+        # check cursor horizontal position (check left and right edges)
+        if ((not didModeChange) and (e_pos.x() < self.x() + self.border_handle_size_diff) or # Left
             (e_pos.x() > self.x() + self.width() - self.border_handle_size_diff)): # Right
             if e_pos.x() < self.x() + self.border_handle_size_diff: # Left
-                self.setCursor(QCursor(QtCore.Qt.SizeHorCursor))
+                # self.setCursor(QCursor(QtCore.Qt.SizeHorCursor))
                 didModeChange = self.try_set_mode(ResizableContainerMode.RESIZEL)
             else: # Right
-                self.setCursor(QCursor(QtCore.Qt.SizeHorCursor))
+                # self.setCursor(QCursor(QtCore.Qt.SizeHorCursor))
                 didModeChange = self.try_set_mode(ResizableContainerMode.RESIZER)
-        # check cursor vertical position
-        elif ((e_pos.y() > self.y() + self.height() - self.border_handle_size_diff) or # Bottom
+
+        # check cursor vertical position (check top and bottom edges)
+        if ((not didModeChange) and (e_pos.y() > self.y() + self.height() - self.border_handle_size_diff) or # Bottom
             (e_pos.y() < self.y() + self.border_handle_size_diff)): # Top
             if e_pos.y() < self.y() + self.border_handle_size_diff: # Top
-                self.setCursor(QCursor(QtCore.Qt.SizeVerCursor))
+                # self.setCursor(QCursor(QtCore.Qt.SizeVerCursor))
                 didModeChange = self.try_set_mode(ResizableContainerMode.RESIZET)
             else: # Bottom
-                self.setCursor(QCursor(QtCore.Qt.SizeVerCursor))
+                # self.setCursor(QCursor(QtCore.Qt.SizeVerCursor))
                 didModeChange = self.try_set_mode(ResizableContainerMode.RESIZEB)
-        else:
-            self.setCursor(self.mode.get_mode_cursor())
+        
+        # Otherwise we're not hovering any corners or edges. Check and see if we're moving
+        if (not didModeChange):
             didModeChange = self.try_set_mode(ResizableContainerMode.MOVE)
+            if (not didModeChange):
+                # if we don't allow MOVE mode, set to NONE mode
+                didModeChange = self.try_set_mode(ResizableContainerMode.NONE)
 
+        # Finally update the cursor
         if didModeChange:
             self.setCursor(self.mode.get_mode_cursor())
-
 
     def setChildWidget(self, cWidget):
         if cWidget:
