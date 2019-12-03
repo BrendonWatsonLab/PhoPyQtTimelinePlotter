@@ -527,6 +527,36 @@ class DatabaseConnectionRef(QObject):
 
         return
 
+
+    ## Deleting:
+    def delete_from_database(self, recordsList):
+        if (self.enable_debug_printing):
+            print("Deleting {0} records from database: {1}".format(len(recordsList), self.get_path()))
+        session = self.get_session()
+        num_found_records = len(recordsList)
+        num_deleted_records = 0
+        num_skipped_records = 0
+        for anOutRecord in recordsList:
+            recordTypeName = type(anOutRecord)
+            try:
+                session.delete(anOutRecord)
+                num_deleted_records = num_deleted_records + 1
+
+            except Exception as e:
+                print("ERROR: Other exception ({0}) while trying to delete record of type {1} to database! Trying to continue".format(str(e), recordTypeName))
+                num_skipped_records = num_skipped_records + 1
+                continue
+
+        if (self.enable_debug_printing):
+            print('Deleted ', num_deleted_records, 'of', num_found_records, recordTypeName, 'records from database.')
+
+        # Save (commit) the changes
+        self.commit()
+
+        if (self.enable_debug_printing):
+            print("done.")
+        return
+
     ## Model Generation:
     # get_table_model(cls): should work for any record class with a ".getTableMapping()" function defined
     def get_table_model(self, cls):
@@ -549,8 +579,6 @@ class DatabaseConnectionRef(QObject):
             Animal.getTableMapping())
         return model
 
-
-
     def initSampleDatabase_ContextsSubcontexts(self):
         print("Creating sample contexts and subcontexts!")
         sampleContexts = [
@@ -564,7 +592,6 @@ class DatabaseConnectionRef(QObject):
             Subcontext(None, "Default",2,"sample"),
         ]
         self.save_to_database(sampleSubcontexts, 'Subcontext')
-
 
     def initSampleDatabase_Behaviors(self):
         # Creates both the behavior tree and the behaviors database from a set of hard-coded values defined in behaviorsManager
@@ -669,7 +696,6 @@ class DatabaseConnectionRef(QObject):
             
         self.save_behavior_events_to_database(behaviorsDBList, behaviorGroupsDBList)
         return 
-
 
     ## Defaults/Static Database Setup:
     def initSampleDatabase(self):

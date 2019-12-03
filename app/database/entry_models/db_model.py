@@ -481,6 +481,7 @@ class TimestampedAnnotation(ReferenceBoxExperCohortAnimalMixin, Base):
 
         if parent is not None:
             outGuiObj.on_edit.connect(parent.on_annotation_modify_event)
+            outGuiObj.on_delete.connect(parent.on_annotation_delete_event)
             outGuiObj.on_edit_by_dragging_handle_start.connect(parent.handleStartSliderValueChange)
             outGuiObj.on_edit_by_dragging_handle_end.connect(parent.handleEndSliderValueChange)
 

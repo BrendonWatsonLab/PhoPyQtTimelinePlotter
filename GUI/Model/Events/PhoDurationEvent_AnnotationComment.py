@@ -39,7 +39,9 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     RightNibPainter = TrianglePainter(TriangleDrawOption_Horizontal.RightApex)
 
     # This defines a signal called 'on_edit' that takes no arguments.
-    on_edit = pyqtSignal()
+    on_info = pyqtSignal(int)
+    on_edit = pyqtSignal(int)
+    on_delete = pyqtSignal(int)
 
     on_edit_by_dragging_handle_start = pyqtSignal(str, int)
     on_edit_by_dragging_handle_end = pyqtSignal(str, int)
@@ -60,15 +62,48 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
 
         # Can I get a double click effect?
         
+    def buildMenu(self):
+        self.menu = QMenu()
+        self.info_action = self.menu.addAction("Get Info")
+        self.modify_action = self.menu.addAction("Modify Comment...")
+        self.delete_action = self.menu.addAction("Delete...")
+        return self.menu
+
     def showMenu(self, pos):
-        menu = QMenu()
-        clear_action = menu.addAction("Modify Comment")
-        action = menu.exec_(self.mapToGlobal(pos))
+        print("PhoDurationEvent_AnnotationComment.showMenu(pos: {0})".format(str(pos)))
+        curr_child_index = self.get_track_index()
+
+        self.menu = self.buildMenu()
+        action = self.menu.exec(self.mapToGlobal(pos))
+        # action = menu.popup(self.mapToGlobal(pos))
+        # action = menu.exec_(self.mapToGlobal(pos))
         # action = menu.exec_(self.mapToParent(pos))
         # action = menu.exec_(pos)
-        if action == clear_action:
+        if action == self.info_action:
+            print("PhoDurationEvent_AnnotationComment: Get Info action!")
+            self.on_info.emit(curr_child_index)
+        elif action == self.modify_action:
             print("PhoDurationEvent_AnnotationComment: Modify Comment action!")
-            self.on_edit.emit()
+            self.on_edit.emit(curr_child_index)
+        elif action == self.delete_action:
+            print("PhoDurationEvent_AnnotationComment: Delete action!")
+            self.on_delete.emit(curr_child_index)
+        else:
+            print("PhoDurationEvent_AnnotationComment: Unknown menu option!!")
+        
+        # self.menu.hide()
+        # self.menu = None
+        # self.menu.close()
+
+
+    # def showMenu(self, pos):
+    #     menu = QMenu()
+    #     clear_action = menu.addAction("Modify Comment")
+    #     action = menu.exec_(self.mapToGlobal(pos))
+    #     # action = menu.exec_(self.mapToParent(pos))
+    #     # action = menu.exec_(pos)
+    #     if action == clear_action:
+            
 
     def on_button_clicked(self, event):
         # self.set_state_selected()
@@ -131,15 +166,15 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         self.end_poly_is_active = False
         
         if event.button() == Qt.LeftButton:
-            print("PhoDurationEvent_AnnotationComment: Left click")
+            print("PhoDurationEvent_AnnotationComment.on_button_released(...): Left click")
         elif event.button() == Qt.RightButton:
-            print("PhoDurationEvent_AnnotationComment: Right click")
+            print("PhoDurationEvent_AnnotationComment.on_button_released(...): Right click")
             currPos = self.finalEventRect.topLeft()
             self.showMenu(currPos)
         elif event.button() == Qt.MiddleButton:
-            print("PhoDurationEvent_AnnotationComment: Middle click")
+            print("PhoDurationEvent_AnnotationComment.on_button_released(...): Middle click")
         else:
-            print("PhoDurationEvent_AnnotationComment: Unknown click event!")
+            print("PhoDurationEvent_AnnotationComment.on_button_released(...): Unknown click event!")
 
         self.update()
 
