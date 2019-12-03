@@ -373,10 +373,6 @@ class TContainer(QWidget):
         RESIZEBL = 128,
         RESIZEL = 256
 
-    # Qt.Q_DECLARE_FLAGS(ResizableContainerOptions, ResizableContainerOption)
-    # Q_FLAG(ResizableContainerOptions)
-    # Q_FLAGS(ResizableContainerOption)
-
     """ allow to move and resize by user"""
     menu = None
     mode = ResizableContainerMode.NONE
@@ -388,15 +384,14 @@ class TContainer(QWidget):
     outFocus = pyqtSignal(bool)
     newGeometry = pyqtSignal(QRect)
 
-
-
-    def __init__(self, parent, enabled_actions, p, cWidget):
+    def __init__(self, parent, selectable_regions, editable_regions, p, cWidget):
         super().__init__(parent=parent)
         # self.border_handle_size_diff: how many pixels you have to grab the edges
         self.border_handle_size_diff = 3
         self.hoverEdgeRectColor = QColor(100,255,0,200)
         # self.enabled_options = TContainer.ResizableContainerOption(TContainer.ResizableContainerOption.RESIZEL.value)
-        self.enabled_options = enabled_actions
+        self.read_only_options = selectable_regions
+        self.enabled_options = editable_regions
         
         self.menu = QMenu(parent=self, title='menu')
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
@@ -416,18 +411,29 @@ class TContainer(QWidget):
         self.installEventFilter(parent)
 
     def try_set_mode(self, proposed_mode):
-        print("try_set_mode[{0}]({1}): current_options: {2} ({3})".format(str(proposed_mode), str(proposed_mode.value), str(self.enabled_options), str(self.enabled_options.value)))
-        if (proposed_mode.value & self.enabled_options.value):
-        # if (proposed_mode.value in self.enabled_options):
+        # print("try_set_mode[{0}]({1}): current_options: {2} ({3})".format(str(proposed_mode), str(proposed_mode.value), str(self.enabled_options), str(self.enabled_options.value)))
+        if proposed_mode == ResizableContainerMode.NONE:
+            # print("None mode is always enabled!")
+            self.mode = proposed_mode
+            return True
 
-            print("Mode is enabled!")
+        if (proposed_mode.value & self.read_only_options.value):
+        # if (proposed_mode.value in self.enabled_options):
+            # print("Mode is enabled!")
             self.mode = proposed_mode
             return True
         else:
-            print("enabled_options doesn't contain the proposed mode: {0}".format(proposed_mode))
+            # print("enabled_options doesn't contain the proposed mode: {0}".format(proposed_mode))
             return False
         
         return
+
+    # get_can_edit_current_mode(): returns True if the current mode can be edited (it isn't read only)
+    def get_can_edit_current_mode(self):
+        if (self.mode.value & self.enabled_options.value):
+            return True
+        else:
+            return False
 
     def focusInEvent(self, a0: QtGui.QFocusEvent):
         self.m_infocus = True
@@ -603,50 +609,60 @@ class TContainer(QWidget):
             p = QPoint(e.x() + self.geometry().x(), e.y() + self.geometry().y())
             self.setCursorShape(p)
             self.update()
+
             return
 
-        if (self.mode == ResizableContainerMode.MOVE or self.mode == ResizableContainerMode.NONE) and e.buttons() and QtCore.Qt.LeftButton:
-            toMove = e.globalPos() - self.position
-            if toMove.x() < 0:return
-            if toMove.y() < 0:return
-            if toMove.x() > self.parentWidget().width() - self.width(): return
-            self.move(toMove)
-            self.newGeometry.emit(self.geometry())
-            self.parentWidget().repaint()
+        if (self.mode == ResizableContainerMode.MOVE) and e.buttons() and QtCore.Qt.LeftButton:
+            canEdit = self.get_can_edit_current_mode()
+            if canEdit:
+                toMove = e.globalPos() - self.position
+                if toMove.x() < 0:return
+                if toMove.y() < 0:return
+                if toMove.x() > self.parentWidget().width() - self.width(): return
+                self.move(toMove)
+                self.newGeometry.emit(self.geometry())
+                self.parentWidget().repaint()
+
             return
+
         if (self.mode != ResizableContainerMode.MOVE) and e.buttons() and QtCore.Qt.LeftButton:
-            if self.mode == ResizableContainerMode.RESIZETL: # Left - Top
-                newwidth = e.globalX() - self.position.x() - self.geometry().x()
-                newheight = e.globalY() - self.position.y() - self.geometry().y()
-                toMove = e.globalPos() - self.position
-                self.resize(self.geometry().width() - newwidth, self.geometry().height() - newheight)
-                self.move(toMove.x(), toMove.y())
-            elif self.mode == ResizableContainerMode.RESIZETR: # Right - Top
-                newheight = e.globalY() - self.position.y() - self.geometry().y()
-                toMove = e.globalPos() - self.position
-                self.resize(e.x(), self.geometry().height() - newheight)
-                self.move(self.x(), toMove.y())
-            elif self.mode== ResizableContainerMode.RESIZEBL: # Left - Bottom
-                newwidth = e.globalX() - self.position.x() - self.geometry().x()
-                toMove = e.globalPos() - self.position
-                self.resize(self.geometry().width() - newwidth, e.y())
-                self.move(toMove.x(), self.y())
-            elif self.mode == ResizableContainerMode.RESIZEB: # Bottom
-                self.resize(self.width(), e.y())
-            elif self.mode == ResizableContainerMode.RESIZEL: # Left
-                newwidth = e.globalX() - self.position.x() - self.geometry().x()
-                toMove = e.globalPos() - self.position
-                self.resize(self.geometry().width() - newwidth, self.height())
-                self.move(toMove.x(), self.y())
-            elif self.mode == ResizableContainerMode.RESIZET:# Top
-                newheight = e.globalY() - self.position.y() - self.geometry().y()
-                toMove = e.globalPos() - self.position
-                self.resize(self.width(), self.geometry().height() - newheight)
-                self.move(self.x(), toMove.y())
-            elif self.mode == ResizableContainerMode.RESIZER: # Right
-                self.resize(e.x(), self.height())
-            elif self.mode == ResizableContainerMode.RESIZEBR:# Right - Bottom
-                self.resize(e.x(), e.y())
+            canEdit = self.get_can_edit_current_mode()
+            if canEdit:
+                if self.mode == ResizableContainerMode.RESIZETL: # Left - Top
+                    newwidth = e.globalX() - self.position.x() - self.geometry().x()
+                    newheight = e.globalY() - self.position.y() - self.geometry().y()
+                    toMove = e.globalPos() - self.position
+                    self.resize(self.geometry().width() - newwidth, self.geometry().height() - newheight)
+                    self.move(toMove.x(), toMove.y())
+                elif self.mode == ResizableContainerMode.RESIZETR: # Right - Top
+                    newheight = e.globalY() - self.position.y() - self.geometry().y()
+                    toMove = e.globalPos() - self.position
+                    self.resize(e.x(), self.geometry().height() - newheight)
+                    self.move(self.x(), toMove.y())
+                elif self.mode== ResizableContainerMode.RESIZEBL: # Left - Bottom
+                    newwidth = e.globalX() - self.position.x() - self.geometry().x()
+                    toMove = e.globalPos() - self.position
+                    self.resize(self.geometry().width() - newwidth, e.y())
+                    self.move(toMove.x(), self.y())
+                elif self.mode == ResizableContainerMode.RESIZEB: # Bottom
+                    self.resize(self.width(), e.y())
+                elif self.mode == ResizableContainerMode.RESIZEL: # Left
+                    newwidth = e.globalX() - self.position.x() - self.geometry().x()
+                    toMove = e.globalPos() - self.position
+                    self.resize(self.geometry().width() - newwidth, self.height())
+                    self.move(toMove.x(), self.y())
+                elif self.mode == ResizableContainerMode.RESIZET:# Top
+                    newheight = e.globalY() - self.position.y() - self.geometry().y()
+                    toMove = e.globalPos() - self.position
+                    self.resize(self.width(), self.geometry().height() - newheight)
+                    self.move(self.x(), toMove.y())
+                elif self.mode == ResizableContainerMode.RESIZER: # Right
+                    self.resize(e.x(), self.height())
+                elif self.mode == ResizableContainerMode.RESIZEBR:# Right - Bottom
+                    self.resize(e.x(), e.y())
+            else:
+                print("Can't edit current mode! It's read only!")
+
             self.parentWidget().repaint()
         self.newGeometry.emit(self.geometry())
 
@@ -659,9 +675,16 @@ class MainWindow(QMainWindow):
         # self.showMaximized()
         lab1 = QLabel("Label1")
         lab2 = QLabel("Label2")
-        con1 = TContainer(self, (TContainer.ResizableContainerOption.NONE | TContainer.ResizableContainerOption.RESIZEL | TContainer.ResizableContainerOption.RESIZER), QPoint(10,10), lab1)
+        currReadOnlyOptions = (TContainer.ResizableContainerOption.NONE | TContainer.ResizableContainerOption.RESIZEL | TContainer.ResizableContainerOption.RESIZER)
+        currEditableOptions = (TContainer.ResizableContainerOption.NONE | TContainer.ResizableContainerOption.RESIZER)
+
+        con1 = TContainer(self, currReadOnlyOptions, currEditableOptions, QPoint(10,10), lab1)
+        
+        # con1 = TContainer(self, (TContainer.ResizableContainerOption.NONE | TContainer.ResizableContainerOption.RESIZEL | TContainer.ResizableContainerOption.RESIZER), QPoint(10,10), lab1)
         # con1.mode = ResizableContainerMode.RESIZER
-        con2 = TContainer(self, (TContainer.ResizableContainerOption.NONE | TContainer.ResizableContainerOption.MOVE | TContainer.ResizableContainerOption.RESIZEL | TContainer.ResizableContainerOption.RESIZER), QPoint(20,50), lab2)
+        currReadOnlyOptions = (TContainer.ResizableContainerOption.NONE | TContainer.ResizableContainerOption.MOVE | TContainer.ResizableContainerOption.RESIZEL | TContainer.ResizableContainerOption.RESIZER)
+        currEditableOptions = (TContainer.ResizableContainerOption.NONE | TContainer.ResizableContainerOption.RESIZEL | TContainer.ResizableContainerOption.RESIZER)
+        con2 = TContainer(self, currReadOnlyOptions, currEditableOptions, QPoint(20,50), lab2)
         # con2.mode = ResizableContainerMode.NONE
         self.show()
 
