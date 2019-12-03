@@ -19,7 +19,7 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
 from GUI.Model.Events.PhoDurationEvent_AnnotationComment import PhoDurationEvent_AnnotationComment
 
-
+from GUI.Model.TrackType import TrackType
 
 
 # (Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, VideoFile)
@@ -79,6 +79,17 @@ class ReferenceBoxExperCohortAnimalMixin(object):
     @declared_attr
     def experiment(cls):
         return relationship("Experiment")
+
+    def get_id_values(self):
+        return (self.behavioral_box_id, self.experiment_id, self.cohort_id, self.animal_id)
+
+    def set_id_values(self, behavioral_box_id, experiment_id, cohort_id, animal_id):
+        self.behavioral_box_id = behavioral_box_id
+        self.experiment_id = experiment_id
+        self.cohort_id = cohort_id
+        self.animal_id = animal_id
+
+
 
     # @classmethod
     # def getTableMapping(cls):
@@ -343,6 +354,10 @@ class CategoricalDurationLabel(ReferenceBoxExperCohortAnimalMixin, Base):
     # __table_args__ = (UniqueConstraint('start_date', 'end_date', 'type_id', 'subtype_id', 'tertiarytype_id' name='_customer_location_uc'),
     #                  )
 
+    @staticmethod
+    def get_track_type():
+        return TrackType.Partition
+
     @classmethod
     def getTableMapping(cls):
         return [
@@ -428,6 +443,10 @@ class TimestampedAnnotation(ReferenceBoxExperCohortAnimalMixin, Base):
             return None
         else:
             return datetime.fromtimestamp(float(self.end_date) / 1000.0)
+
+    @staticmethod
+    def get_track_type():
+        return TrackType.Annotation
 
     @classmethod
     def getTableMapping(cls):
@@ -515,6 +534,10 @@ class VideoFile(ReferenceBoxExperCohortAnimalMixin, Base):
     # experiment = relationship('Experiment')
     staticFileExtension = relationship('StaticFileExtension')
     fileParentFolder = relationship('FileParentFolder', back_populates="videoFiles")
+
+    @staticmethod
+    def get_track_type():
+        return TrackType.Video
 
     @classmethod
     def getTableMapping(cls):

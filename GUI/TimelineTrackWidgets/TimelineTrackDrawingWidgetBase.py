@@ -11,6 +11,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 from enum import Enum
 
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWidget
+from GUI.UI.UIState import ItemInteractionState, ItemHoverState, ItemSelectionState
 
 class ItemSelectionOptions(Enum):
         DisableSelection = 1 # disallows selection
@@ -39,6 +40,8 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
         self.trackLabelText = None
 
         QToolTip.setFont(QFont('SansSerif', 10))
+
+        self.trackInteractionState = ItemInteractionState(ItemHoverState.Default, ItemSelectionState.Default, parent=self)
         
         # # Debug background fill
         # p = self.palette()
@@ -81,6 +84,14 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
         transitionColor = QColor(255,255,255,200)
         innerGlowColor = QColor(255,255,255,64)
 
+        if (self.is_track_emphasized()):
+            brightnessAmount = 160 # returns a color that's 60% brighter
+            middleColor = middleColor.lighter(brightnessAmount) 
+            edgeColor = edgeColor.lighter(brightnessAmount)
+            transitionColor = transitionColor.lighter(brightnessAmount)
+            innerGlowColor = innerGlowColor.lighter(brightnessAmount)
+
+
         gradientKeysMain = [(0.09, edgeColor),(0.095, transitionColor),(0.1, innerGlowColor), (0.16, middleColor),
         (0.84, middleColor),(0.9, innerGlowColor),(0.905, transitionColor), (0.91, edgeColor)]
 
@@ -91,10 +102,12 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
 
         return out_gradient
 
-    # def paintBackground(self, event):
-    #     grad = QLinearGradient(80, 40, 30, 10)
-    #     painter.setBrush(QBrush(grad))
-    #     painter.drawRect(10, 10, 200, 200)
+
+    def is_track_emphasized(self):
+        return self.trackInteractionState.is_emphasized()
+
+    def is_track_selected(self):
+        return self.trackInteractionState.is_selected()
     
     def deselect_all(self):
         pass
@@ -168,3 +181,15 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
         duration_offset = newDatetime - self.totalStartTime
         event_x = self.duration_to_offset(duration_offset)
         return event_x
+
+    def enterEvent(self, QEvent):
+        # print("TimelineTrackDrawingWidgetBase.enterEvent(...): track_id: {0}".format(self.trackID))
+        self.trackInteractionState.set_hover_state(ItemHoverState.Emphasized)
+        self.update()
+        return QWidget.enterEvent(self, QEvent)
+
+    def leaveEvent(self, QEvent):
+        # print("TimelineTrackDrawingWidgetBase.leaveEvent(...): track_id: {0}".format(self.trackID))
+        self.trackInteractionState.set_hover_state(ItemHoverState.Default)
+        self.update()
+        return QWidget.leaveEvent(self, QEvent)

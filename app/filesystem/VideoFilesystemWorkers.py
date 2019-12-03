@@ -10,36 +10,38 @@ import json # Used to decode ffprobe output
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QObject, QEvent, pyqtSignal, pyqtSlot, QRunnable
 
+from app.filesystem.VideoWorkersBase import VideoWorkersBase, VideoWorkersBaseSignals
+
 ## IMPORT:
 # from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
 
 ## VideoFilesystemWorker
-class VideoFilesystemWorkerSignals(QObject):
-    '''
-    Defines the signals available from a running worker thread.
+# class VideoFilesystemWorkerSignals(QObject):
+#     '''
+#     Defines the signals available from a running worker thread.
 
-    Supported signals are:
+#     Supported signals are:
 
-    finished
-        No data
+#     finished
+#         No data
     
-    error
-        `tuple` (exctype, value, traceback.format_exc() )
+#     error
+#         `tuple` (exctype, value, traceback.format_exc() )
     
-    result
-        `object` data returned from processing, anything
+#     result
+#         `object` data returned from processing, anything
 
-    progress
-        `int` indicating % progress 
+#     progress
+#         `int` indicating % progress 
 
-    '''
-    finished = pyqtSignal()
-    error = pyqtSignal(tuple)
-    result = pyqtSignal(object)
-    progress = pyqtSignal(int)
+#     '''
+#     finished = pyqtSignal()
+#     error = pyqtSignal(tuple)
+#     result = pyqtSignal(object)
+#     progress = pyqtSignal(int)
 
 
-class VideoFilesystemWorker(QRunnable):
+class VideoFilesystemWorker(VideoWorkersBase):
     '''
     Worker thread
 
@@ -53,34 +55,34 @@ class VideoFilesystemWorker(QRunnable):
 
     '''
 
-    def __init__(self, fn, *args, **kwargs):
-        super(VideoFilesystemWorker, self).__init__()
+    def __init__(self, search_paths, fn, *args, **kwargs):
+        super(VideoFilesystemWorker, self).__init__(search_paths, fn, *args, **kwargs)
 
         # Store constructor arguments (re-used for processing)
-        self.fn = fn
-        self.args = args
-        self.kwargs = kwargs
-        self.signals = VideoFilesystemWorkerSignals()    
+        # self.fn = fn
+        # self.args = args
+        # self.kwargs = kwargs
+        # self.signals = VideoFilesystemWorkerSignals()    
 
         # Add the callback to our kwargs
-        self.kwargs['progress_callback'] = self.signals.progress        
+        # self.kwargs['progress_callback'] = self.signals.progress        
 
-    @pyqtSlot()
-    def run(self):
-        '''
-        Initialise the runner function with passed args, kwargs.
-        '''
+    # @pyqtSlot()
+    # def run(self):
+    #     '''
+    #     Initialise the runner function with passed args, kwargs.
+    #     '''
         
-        # Retrieve args/kwargs here; and fire processing using them
-        try:
-            result = self.fn(*self.args, **self.kwargs)
-        except:
-            traceback.print_exc()
-            exctype, value = sys.exc_info()[:2]
-            self.signals.error.emit((exctype, value, traceback.format_exc()))
-        else:
-            self.signals.result.emit(result)  # Return the result of the processing
-        finally:
-            self.signals.finished.emit()  # Done
+    #     # Retrieve args/kwargs here; and fire processing using them
+    #     try:
+    #         result = self.fn(*self.args, **self.kwargs)
+    #     except:
+    #         traceback.print_exc()
+    #         exctype, value = sys.exc_info()[:2]
+    #         self.signals.error.emit((exctype, value, traceback.format_exc()))
+    #     else:
+    #         self.signals.result.emit(result)  # Return the result of the processing
+    #     finally:
+    #         self.signals.finished.emit()  # Done
         
 

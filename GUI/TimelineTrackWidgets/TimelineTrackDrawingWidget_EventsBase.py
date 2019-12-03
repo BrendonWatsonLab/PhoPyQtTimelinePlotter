@@ -18,6 +18,11 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
     default_shouldDismissSelectionUponMouseButtonRelease = True
     default_itemSelectionMode = ItemSelectionOptions.MultiSelection
 
+
+    # child_action_comment = pyqtSignal(object, object)
+    child_action_comment = pyqtSignal(int, object)
+    
+
     def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
         super(TimelineTrackDrawingWidget_EventsBase, self).__init__(trackID, totalStartTime, totalEndTime, durationObjects, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
         # self.durationObjects = durationObjects
@@ -28,13 +33,20 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
         self.shouldDismissSelectionUponMouseButtonRelease = TimelineTrackDrawingWidget_EventsBase.default_shouldDismissSelectionUponMouseButtonRelease
         self.itemSelectionMode = TimelineTrackDrawingWidget_EventsBase.default_itemSelectionMode
 
+
+        # Set up signals to parent:
+        self.child_action_comment.connect(self.parent().on_track_child_create_comment)
+
         # Set up signals
+        self.attach_child_duration_object_signals()
+
+    # attach_child_duration_object_signals(): called to attach the signals to the children duration objects
+    def attach_child_duration_object_signals(self):
         for aDurationObject in self.durationObjects:
             aDurationObject.on_info.connect(self.on_child_action_info)
             aDurationObject.on_edit.connect(self.on_child_action_modify)
             aDurationObject.on_annotate.connect(self.on_child_action_comment)
             aDurationObject.on_delete.connect(self.on_child_action_delete)
-
     
     def paintEvent( self, event ):
         qp = QtGui.QPainter()
@@ -51,10 +63,6 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
         # drawRect = event.rect()
         drawRect = self.rect()
 
-        # qp.setPen(QPen(Qt.black, 5, Qt.SolidLine))
-        # grad = QLinearGradient(80, 40, 30, 10)
-        # qp.setBrush(QBrush(grad))
-        # qp.drawRect(drawRect.x(), drawRect.y(), drawRect.width(), drawRect.height())
         # Draw the linear horizontal gradient.
         lgrad = self.get_background_gradient(drawRect.height())
 
@@ -63,17 +71,19 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
         # lgrad.setColorAt(1.0, Qt.yellow)
         qp.fillRect(drawRect, lgrad)
 
+        # print("is_emphasized(...): {0}".format(self.is_track_emphasized()))
+
         # Draw the text label if needed
-        if self.trackLabelText is not None:
-            oldPen = qp.pen()
-            oldFont = qp.font()
+        # if self.trackLabelText is not None:
+        #     oldPen = qp.pen()
+        #     oldFont = qp.font()
 
-            qp.setPen(TimelineTrackDrawingWidget_SelectionBase.default_TrackTitlePen)
-            qp.setFont(TimelineTrackDrawingWidget_SelectionBase.default_TrackTitleFont)
-            qp.drawText(drawRect, Qt.AlignLeft, self.trackLabelText)
+        #     qp.setPen(TimelineTrackDrawingWidget_SelectionBase.default_TrackTitlePen)
+        #     qp.setFont(TimelineTrackDrawingWidget_SelectionBase.default_TrackTitleFont)
+        #     qp.drawText(drawRect, Qt.AlignLeft, self.trackLabelText)
 
-            qp.setPen(oldPen)
-            qp.setFont(oldFont)
+        #     qp.setPen(oldPen)
+        #     qp.setFont(oldFont)
 
 
         # Draw the duration objects
@@ -171,17 +181,27 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
 
     # Menu Event Handlers:
     def on_child_action_info(self):
-        print("on_child_action_info()")
+        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_info()")
         pass
 
     def on_child_action_modify(self):
-        print("on_child_action_modify()")
+        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_modify()")
         pass
 
     def on_child_action_comment(self):
-        print("on_child_action_comment()")
-        pass
+        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_comment()")
+        selected_obj = self.get_selected_duration_obj()
+        if (selected_obj is None):
+            print("ERROR: selected duration object is None! Can't perform action!")
+            return
+        else:
+            # Call parent
+            self.child_action_comment.emit(self.trackID, selected_obj)
+            # Spawn new annotation dialog
+            # Need to find annotation track with the appropriate filter            
+
+        return
 
     def on_child_action_delete(self):
-        print("on_child_action_delete()")
+        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_delete()")
         pass

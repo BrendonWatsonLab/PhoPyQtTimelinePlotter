@@ -11,8 +11,10 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 from orangecanvas.gui.dock import CollapsibleDockWidget
 
+from GUI.Model.TrackType import TrackType, TrackConfigMixin
 from GUI.Model.TrackConfigs.AbstractTrackConfigs import *
 from GUI.Model.TrackConfigs.VideoTrackConfig import *
+
 
 # from GUI.UI.TimelineHeaderWidget.TimelineHeaderWidget import TimelineHeaderWidget
 
@@ -75,12 +77,11 @@ class TimelineHeaderWidget_ContentsExpanded(QWidget):
         return self.ui.textBrowser_Main.setPlainText(updatedStr)
 
 
-class TimelineHeaderWidget(QFrame):
+class TimelineHeaderWidget(TrackConfigMixin, QFrame):
 
     toggleCollapsed = pyqtSignal(int, bool)
     showOptions = pyqtSignal(int)
     refresh = pyqtSignal(int)
-
 
     def __init__(self, track_config, parent=None):
         super(TimelineHeaderWidget, self).__init__(parent=parent) # Call the inherited classes __init__ method
@@ -88,6 +89,9 @@ class TimelineHeaderWidget(QFrame):
         self.track_config = track_config
         self.track_id = track_config.get_track_id()
         self.track_name = track_config.get_track_title()
+
+        # self.enableDynamicLabelUpdating: if True, automatically updates the labels from the config. Otherwise relies on the manually set labels
+        self.enableDynamicLabelUpdating = True
         
         # if track_name is None:
         #     self.track_name = "track {0}".format(self.track_id)
@@ -122,6 +126,10 @@ class TimelineHeaderWidget(QFrame):
 
         return
 
+    #TrackConfigMixin override
+    def get_track_config(self):
+        return self.track_config
+
     def update_from_config(self):
         self.track_id = self.track_config.get_track_id()
         self.track_name = self.track_config.get_track_title()
@@ -133,8 +141,9 @@ class TimelineHeaderWidget(QFrame):
 
     def set_config(self, newConfig):
         self.track_config = newConfig
-    
-
+        if self.enableDynamicLabelUpdating:
+            self.update_labels_dynamically()
+        
     def get_title(self):
         return self.ui.lblTitle.text()
     
@@ -143,13 +152,19 @@ class TimelineHeaderWidget(QFrame):
 
     def set_title(self, updatedStr):
         self.track_config.track_name = updatedStr
-        self.ui.lblTitle.setText(updatedStr)
+        self.timelineHeaderWidget_ContentsExpanded.set_title(updatedStr)
         self.ui.dockWidget_Main.setWindowTitle(updatedStr)
 
     def set_body(self, updatedStr):
         self.track_config.trackExtendedDescription = updatedStr
-        return self.ui.textBrowser_Main.setPlainText(updatedStr)
+        return self.timelineHeaderWidget_ContentsExpanded.set_body(updatedStr)
     
+    # update_labels_dynamically(): updates the labels dynamically from the active filter
+    def update_labels_dynamically(self):
+        self.track_config.update_labels_dynamically()
+        self.update_from_config()
+        return
+
     def on_collapse_pressed(self):
         print("on_collapse_pressed(...)")
         self.toggleCollapsed.emit(self.track_id, False)

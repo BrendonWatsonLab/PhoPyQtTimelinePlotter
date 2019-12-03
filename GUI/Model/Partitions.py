@@ -99,18 +99,6 @@ class Partitioner(AbstractDatabaseAccessingQObject):
         # needs_initialize_partitions = False
         if (not (partitionViews is None)):
             print("WARNING: Initializing Partitioner from partitionViews is no longer supported!!!!")
-            # if (len(partitionViews) > 0):
-            #     # self.partitions = partitionViews
-            #     # rebuild the records from views? Just ignore this method.
-            #     needs_initialize_partitions = False
-            # else:
-            #     needs_initialize_partitions = True
-        # else:
-        #     # if (partitionDataObjects is not None): # Initialize from loaded partitionDataObjects
-        #     #     # self.rebuild_gui_partitions(partitionDataObjects)
-        #     #     needs_initialize_partitions = (len(self.partitions) <= 0)
-        #     # else:
-        #     #     needs_initialize_partitions = True
 
         if (partitionDataObjects is None):
             partitionDataObjects = []
@@ -121,12 +109,19 @@ class Partitioner(AbstractDatabaseAccessingQObject):
 
     # Returns a new Partition object (both data and view)
     def create_new_partition(self, startTime, endTime, title, parentContextPair = None):
+        # Requires both parent context and parent config to create a new partition. Changing context or config requires a reload
         if parentContextPair is None:
             parentContextPair = self.get_parent_contexts()
             # If parentContextPair is still none even after trying to create it
             if (parentContextPair is None):
                 print("Error: Couldn't get parent context pair to create partition!! Aborting")
                 return 
+
+        parentConfig = self.get_parent_config()
+        # If parentContextPair is still none even after trying to create it
+        if (parentConfig is None):
+            print("Error: Couldn't get parent config to create partition!! Aborting")
+            return 
 
         # View Object:
         new_partition_view = PhoDurationEvent_Partition(startTime, endTime, title, parent=self.owning_parent_track)
@@ -154,6 +149,22 @@ class Partitioner(AbstractDatabaseAccessingQObject):
         new_partition_record.secondary_text = ""
         new_partition_record.tertiary_text = ""
         new_partition_record.notes = 'auto'
+
+        parentFilter = parentConfig.get_filter()
+        
+        # Set the id values
+        sel_behavioral_box_id, sel_experiment_id, sel_cohort_id, sel_animal_id = None, None, None, None
+        sel_behavioral_box_ids, sel_experiment_ids, sel_cohort_ids, sel_animal_ids = parentFilter.get_ids()
+        if sel_behavioral_box_ids is not None:
+            sel_behavioral_box_id = sel_behavioral_box_ids[0]
+        if sel_experiment_ids is not None:
+            sel_experiment_id = sel_experiment_ids[0]
+        if sel_cohort_ids is not None:
+            sel_cohort_id = sel_cohort_ids[0]
+        if sel_animal_ids is not None:
+            sel_animal_id = sel_animal_ids[0]
+
+        new_partition_record.set_id_values(sel_behavioral_box_id, sel_experiment_id, sel_cohort_id, sel_animal_id)
 
         new_partition_obj = ModelViewContainer(new_partition_record, new_partition_view, self.owning_parent_track)
         return new_partition_obj
@@ -236,15 +247,6 @@ class Partitioner(AbstractDatabaseAccessingQObject):
     # Called by the parent when the partition record objects have be loaded from the database. updates self.partitions
     def on_reload_partition_records(self, loadedDataPartitions):
         print("on_reload_partition_records(...)")
-        # self.partitions = []
-        # spanning_data_partitions = self.construct_spanning_unlabeled_partition_records(loadedDataPartitions)
-        # spanning_view_partitions = self.rebuild_gui_partitions(spanning_data_partitions)
-        # # build a list
-        # for (index, a_data_partition) in spanning_data_partitions:
-        #     a_view_partition = spanning_view_partitions[index]
-        #     newPartition = ModelViewContainer(a_data_partition, a_view_partition, self.owning_parent_track)
-        #     self.partitions.append(newPartition)
-
         self.partitions = self.construct_spanning_unlabeled_partition_records(loadedDataPartitions)
         print("on_reload_partition_records(...): {0} new partitions".format(len(self.partitions)))
 
@@ -260,6 +262,19 @@ class Partitioner(AbstractDatabaseAccessingQObject):
         else:
             newContext, newSubcontext = self.owning_parent_track.trackContextConfig.get_context(), self.owning_parent_track.trackContextConfig.get_subcontext()
             return (newContext, newSubcontext)
+
+    # Tries to get the config from the owning parent
+    def get_parent_config(self):
+        if (self.owning_parent_track is None):
+            print("ERROR: owning_parent_track isn't valid!")
+            return None
+
+        if (not (self.owning_parent_track.trackConfig)):
+            print('owning_parent_track config is invalid!')
+            return None
+        else:
+            return self.owning_parent_track.trackConfig
+
 
     def __eq__(self, otherEvent):
         return self.name == otherEvent.name and self.totalDuration == otherEvent.totalDuration
