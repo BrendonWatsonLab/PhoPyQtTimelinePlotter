@@ -358,6 +358,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                 # Video track specific setup
                 currVideoTrackWidget.selection_changed.connect(self.handle_child_selection_event)
                 currVideoTrackWidget.hover_changed.connect(self.handle_child_hover_event)
+                currVideoTrackWidget.on_create_marker.connect(self.on_create_playhead_selection)
+                
                 currVideoTrackWidget.setMouseTracking(True)
                 currVideoTrackWidget.shouldDismissSelectionUponMouseButtonRelease = False
                 currVideoTrackWidget.itemSelectionMode = ItemSelectionOptions.SingleSelection
