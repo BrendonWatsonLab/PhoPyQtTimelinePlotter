@@ -12,6 +12,8 @@ import os
 
 
 __backgroudColor__ = QColor(60, 63, 65)
+__textColor__ = QColor(187, 187, 187)
+__font__ = QFont('Decorative', 10)
 
 class TickProperties:
     """
@@ -23,26 +25,104 @@ class TickProperties:
     def get_pen(self):
         return self.pen
 
+    def get_color(self):
+        return self.get_pen().color()
+
 
 class ReferenceMarker(QObject):
 
     defaultProperties = TickProperties(QColor(250, 187, 187), 0.9, Qt.SolidLine)
     
-    def __init__(self, is_enabled, properties=TickProperties(QColor(250, 187, 187), 0.9, Qt.SolidLine), parent=None):
+    def __init__(self, identifier, is_enabled, properties=TickProperties(QColor(250, 187, 187), 0.9, Qt.SolidLine), parent=None):
         super().__init__(parent=parent)
+        self.identifier = identifier
         self.is_enabled = is_enabled
         self.properties = properties
+        self.scale = 1.0
         self.pos = None
         self.pointerPos = None
-        self.pointerTimePos = None
+        self.textColor = __textColor__
+        self.font = __font__
 
-    def draw(self, painter):
+        self.is_driven_externally = False
+
+    def draw_pointer(self, painter, drawRect, scale):
+        if self.pointerPos is not None:
+            line = QLine(QPoint(self.get_pointerTimePos()/scale, 40),
+                         QPoint(self.get_pointerTimePos()/scale, drawRect.height()))
+            poly = QPolygon([QPoint(self.get_pointerTimePos()/scale - 10, 20),
+                             QPoint(self.get_pointerTimePos()/scale + 10, 20),
+                             QPoint(self.get_pointerTimePos()/scale, 40)])
+
+            # painter.setPen(self.textColor)
+            # painter.setFont(self.font)
+            # painter.drawText(w - 50, 0, 100, 100, Qt.AlignHCenter, self.get_time_string(w * scale))
+        else:
+            line = QLine(QPoint(0, 0), QPoint(0, self.height()))
+            poly = QPolygon([QPoint(-10, 20), QPoint(10, 20), QPoint(0, 40)])
+
+        # Draw pointer
+        painter.setPen(self.properties.get_pen())
+        painter.setBrush(QBrush(self.properties.get_color()))
+
+        painter.drawPolygon(poly)
+        painter.drawLine(line)
+
+    def draw(self, painter, drawRect, scale):
+        self.updateScale(scale)
         if self.is_enabled:
             if self.pos is not None:
-                painter.setPen(self.properties.get_pen())
-                painter.drawLine(self.pos.x(), 0, self.pos.x(), self.height())
+                painter.setRenderHint(QPainter.Antialiasing)
 
-        
+                painter.setPen(self.properties.get_pen())
+                painter.drawLine(self.pos.x(), 0, self.pos.x(), drawRect.height())
+
+                self.draw_pointer(painter, drawRect, scale)
+
+    def getScale(self):
+        return self.scale
+
+    def get_pointerTimePos(self):
+        return (self.pointerPos * self.getScale())
+
+    def updateScale(self, newScale):
+        if (self.scale != newScale):
+            self.scale = newScale
+
+    # Updates the position and scale of the reference marker
+    def update_position(self, pos, scale):
+        self.pos = pos
+        x = self.pos.x()
+        self.pointerPos = x
+        self.updateScale(scale)
+
+
+
+class ReferenceMarkerManager(QObject):
+
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.markers = dict()
+
+    def get_scale(self):
+        return self.parent().getScale()
+
+    def add_reference_marker(self, with_identifier, properties=TickProperties(QColor(250, 187, 187), 0.9, Qt.SolidLine), position=QPoint(0.0, 0.0)):
+        new_obj = ReferenceMarker(with_identifier, True, properties=properties, parent=self)
+        new_obj.update_position(position, self.get_scale())
+
+        self.markers[with_identifier] = new_obj
+
+    def get_markers(self):
+        return self.markers
+
+    def draw(self, painter, event, scale):
+        for (id_key, value) in self.markers.items():
+            value.draw(painter, event, scale)
+
+
+
+
 
 class TickedTimelineDrawingBaseWidget(QWidget):
 
@@ -65,12 +145,17 @@ class TickedTimelineDrawingBaseWidget(QWidget):
         self.duration = duration
         self.length = length
 
+        # Reference Manager:
+        self.referenceManager = ReferenceMarkerManager(parent=self)
+        self.referenceManager.add_reference_marker("0", properties=TickProperties(QColor(250, 187, 187), 0.9, Qt.SolidLine), position=QPoint(100.0, 0.0))
+        self.referenceManager.add_reference_marker("1", properties=TickProperties(QColor(187, 250, 187), 0.9, Qt.SolidLine), position=QPoint(200.0, 0.0))
+        self.referenceManager.add_reference_marker("2", properties=TickProperties(QColor(187, 187, 250), 0.9, Qt.SolidLine), position=QPoint(300.0, 0.0))
+
         # Set variables
         self.backgroundColor = __backgroudColor__
         self.pos = None
         self.video_pos = None
         self.pointerPos = None
-        self.pointerTimePos = None
         self.clicking = False  # Check if mouse left button is being pressed
         self.is_in = False  # check if user is in the widget
         self.activeColor = TickedTimelineDrawingBaseWidget.defaultActiveColor
@@ -115,13 +200,25 @@ class TickedTimelineDrawingBaseWidget(QWidget):
                 painter.setPen(TickedTimelineDrawingBaseWidget.hoverLineProperties.get_pen())
                 painter.drawLine(self.pos.x(), 0, self.pos.x(), self.height())
 
-    def paintEvent(self, event):
+    def paintRect(self, event):
         qp = QPainter()
         qp.begin(self)
         qp.setRenderHint(QPainter.Antialiasing)
 
         self.draw_tick_lines(qp)
         self.draw_indicator_lines(qp)
+
+        print("paintRect({0})".format(str(event)))
+        curr_pos = QPoint((float(self.width()) * 0.10), 0.0)
+        self.referenceManager.get_markers()["0"].update_position(curr_pos, self.getScale())
+
+        curr_pos = QPoint((float(self.width()) * 0.20), 0.0)
+        self.referenceManager.get_markers()["1"].update_position(curr_pos, self.getScale())
+
+        curr_pos = QPoint((float(self.width()) * 0.30), 0.0)
+        self.referenceManager.get_markers()["2"].update_position(curr_pos, self.getScale())
+
+        self.referenceManager.draw(qp, event.rect(), self.getScale())
 
         # # Clear clip path
         # path = QPainterPath()
@@ -131,7 +228,7 @@ class TickedTimelineDrawingBaseWidget(QWidget):
         qp.end()
 
     # Mouse movement
-    def mouseMoveEvent(self, e):
+    def mouseMoveRect(self, e):
         self.pos = e.pos()
         x = self.pos.x()
 
@@ -146,7 +243,7 @@ class TickedTimelineDrawingBaseWidget(QWidget):
         self.update()
 
     # Mouse pressed
-    def mousePressEvent(self, e):
+    def mousePressRect(self, e):
         if e.button() == Qt.LeftButton:
             x = e.pos().x()
             self.pointerPos = x
@@ -157,17 +254,17 @@ class TickedTimelineDrawingBaseWidget(QWidget):
             self.clicking = True  # Set clicking check to true
 
     # Mouse release
-    def mouseReleaseEvent(self, e):
+    def mouseReleaseRect(self, e):
         if e.button() == Qt.LeftButton:
             self.clicking = False  # Set clicking check to false
 
     # Enter
-    def enterEvent(self, e):
+    def enterRect(self, e):
         self.is_in = True
         self.is_driven_externally = False
 
     # Leave
-    def leaveEvent(self, e):
+    def leaveRect(self, e):
         self.is_in = False
         self.update()
 
