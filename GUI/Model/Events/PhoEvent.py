@@ -80,7 +80,17 @@ class PhoEvent(QWidget):
 
     def get_fill_color(self):
         pass
-    
+
+    # Menu
+    def buildMenu(self):
+        pass
+
+    def handleMenuAction(self, action):
+        pass
+
+    def showMenu(self, pos):
+        pass
+
     # "pass": specifies that we're leaving this method "virtual" or intensionally empty to be overriden by a subclass.
     def paint(self, painter, totalDuration, totalParentCanvasRect):
         pass

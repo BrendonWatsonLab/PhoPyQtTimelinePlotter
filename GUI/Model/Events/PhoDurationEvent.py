@@ -100,12 +100,8 @@ class PhoDurationEvent(EdgeAndCornerContainerViewMixin, PhoEvent):
         self.delete_action = self.menu.addAction("Delete...")
         return self.menu
 
-    def showMenu(self, pos):
-        print("PhoDurationEvent.showMenu(pos: {0})".format(str(pos)))
-        menu = self.buildMenu()
-        action = menu.exec_(self.mapToGlobal(pos))
-        # action = menu.exec_(self.mapToParent(pos))
-        # action = menu.exec_(pos)
+    # handleMenuAction(action): returns None if the action was resolved, or the action if it wasn't
+    def handleMenuAction(self, action):
         if action == self.info_action:
             print("PhoDurationEvent.Get Info action!")
             self.on_info.emit(self.get_track_index())
@@ -117,17 +113,24 @@ class PhoDurationEvent(EdgeAndCornerContainerViewMixin, PhoEvent):
             self.on_delete.emit(self.get_track_index())
 
         elif action == self.createMarkerAtStart:
-            print("PhoDurationEvent.DelcreateMarkerAtStartete action!")
+            print("PhoDurationEvent.createMarkerAtStart action!")
             self.on_create_marker_at_start.emit(self.get_track_index(), self.startTime)
         elif action == self.createMarkerAtEnd:
             print("PhoDurationEvent.createMarkerAtEnd action!")
             self.on_create_marker_at_end.emit(self.get_track_index(), self.endTime)
-            
         else:
             print("Unknown menu option! for track {0}".format(str(self.get_track_index())))
             return action
         
         return None
+
+    # showMenu(pos): should NOT be overriden! Override buildMenu(...) and handleMenuAction(...) instead
+    def showMenu(self, pos):
+        print("PhoDurationEvent.showMenu(pos: {0})".format(str(pos)))
+        menu = self.buildMenu()
+        action = menu.exec_(self.mapToGlobal(pos))
+        self.handleMenuAction(action)
+
 
     def on_button_clicked(self, event):
         self.set_state_selected()

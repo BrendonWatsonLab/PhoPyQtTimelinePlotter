@@ -34,11 +34,9 @@ class PhoDurationEvent_Video(PhoDurationEvent):
         self.annotation_action = self.menu.addAction("Create annotation...")
         return self.menu
 
-    def showMenu(self, pos):
-        print("PhoDurationEvent_Video.showMenu(pos: {0})".format(str(pos)))
-        menu = self.buildMenu()
-        action = super().showMenu(pos)
-        if action is None:
+    def handleMenuAction(self, action):
+        resolved_action = super().handleMenuAction(action)
+        if resolved_action is None:
             print("Action was resolved by the parent showMenu(...) function")
             return None
         else:
