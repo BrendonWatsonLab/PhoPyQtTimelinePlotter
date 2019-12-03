@@ -181,6 +181,23 @@ class PhoDurationEvent(EdgeAndCornerContainerViewMixin, PhoEvent):
         y = 0.0
         return QRect(x, y, width, height)
 
+
+    # overrides:
+    def set_state_selected(self):
+        super().set_state_selected()
+
+    def set_state_deselected(self):
+        super().set_state_deselected()
+        self.clearSelected_EdgeAndCornerContainerViewMixin()
+        
+    def set_state_emphasized(self):
+        super().set_state_emphasized()
+
+    def set_state_deemphasized(self):
+        super().set_state_deemphasized()
+        self.clearHovered_EdgeAndCornerContainerViewMixin()
+
+
     # Sets the painter's config based on the current object's state (active, emphasized, deemph, etc)
     def set_painter_config(self, aPainter):
         currFillColor = self.color

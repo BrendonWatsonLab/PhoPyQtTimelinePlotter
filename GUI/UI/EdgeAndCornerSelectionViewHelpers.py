@@ -120,26 +120,45 @@ class EdgeAndCornerContainerViewMixin(object):
         self.selectedEdgeAndCorners = EdgeAndCornerContainerComponent.NONE
         # self.setMouseTracking(True)
 
+    def clearHovered_EdgeAndCornerContainerViewMixin(self):
+        self.hoveredEdgeAndCorners = EdgeAndCornerContainerComponent.NONE
+
+    def clearSelected_EdgeAndCornerContainerViewMixin(self):
+        self.selectedEdgeAndCorners = EdgeAndCornerContainerComponent.NONE
+
+    # def try_add_component(self, new_component, is_updating_hover):
+    #     if (is_updating_hover):
+    #         oldValue = self.hoveredEdgeAndCorners
+    #         self.hoveredEdgeAndCorners = self.hoveredEdgeAndCorners.value | new_component
+    #         return (oldValue.value != self.hoveredEdgeAndCorners.value)
+    #     else:
+    #         # otherwise updating selection
+    #         oldValue = self.selectedEdgeAndCorners
+    #         self.selectedEdgeAndCorners = self.selectedEdgeAndCorners.value | new_component
+    #         return (oldValue.value != self.selectedEdgeAndCorners.value)
+
     def try_add_component(self, new_component, is_updating_hover):
         if (is_updating_hover):
             oldValue = self.hoveredEdgeAndCorners
-            self.hoveredEdgeAndCorners = self.hoveredEdgeAndCorners.value | new_component
-            return (oldValue.value != self.hoveredEdgeAndCorners.value)
+            self.hoveredEdgeAndCorners = new_component
+            return (oldValue != self.hoveredEdgeAndCorners)
         else:
             # otherwise updating selection
             oldValue = self.selectedEdgeAndCorners
-            self.selectedEdgeAndCorners = self.selectedEdgeAndCorners.value | new_component
-            return (oldValue.value != self.selectedEdgeAndCorners.value)
+            self.selectedEdgeAndCorners = new_component
+            return (oldValue != self.selectedEdgeAndCorners)
+
+
 
 
     # It seems most of the magic is being done here. This function sets the cursor shape (whether it's a "resizing" handle or a mouse) and sets the "mode" variable to indicate which mode it's currently in.,
     def updateEdgeAndCornerContainerActivePosition(self, e_pos: QPoint, is_updating_hover):
         didModeChange = False
         # Clear the previous selections
-        if is_updating_hover:
-            self.hoveredEdgeAndCorners = EdgeAndCornerContainerComponent.NONE
-        else:
-            self.selectedEdgeAndCorners = EdgeAndCornerContainerComponent.NONE
+        # if is_updating_hover:
+        #     self.hoveredEdgeAndCorners = EdgeAndCornerContainerComponent.NONE
+        # else:
+        #     self.selectedEdgeAndCorners = EdgeAndCornerContainerComponent.NONE
 
         # Check corners
         # Left - Bottom
@@ -199,8 +218,14 @@ class EdgeAndCornerContainerViewMixin(object):
 
         # Finally update the cursor
         if didModeChange:
-            self.setCursor(self.mode.get_mode_cursor())
-            self.update()
+            if is_updating_hover:
+                newValue = self.hoveredEdgeAndCorners
+            else:
+                newValue = self.selectedEdgeAndCorners
+
+            self.setCursor(newValue.get_mode_cursor())
+
+        self.update()
 
 
     def paintEvent_EdgeAndCornerContainerViewMixin(self, painter, drawRect):

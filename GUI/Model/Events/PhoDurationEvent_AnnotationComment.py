@@ -70,7 +70,7 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         super().set_state_deselected()
         self.start_poly_is_active = False
         self.end_poly_is_active = False
-
+        
     def set_state_emphasized(self):
         super().set_state_emphasized()
 
@@ -186,7 +186,10 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     def mouseMoveEvent(self, e):
         print("PhoDurationEvent_AnnotationComment.mouseMoveEvent({0})".format(str(e)))
 
+        # p = QPoint(e.x() + self.geometry().x(), e.y() + self.geometry().y())
+
         p = QPoint(e.x() + self.geometry().x(), e.y() + self.geometry().y())
+
         # self.updateEdgeAndCornerContainerActivePosition(e.pos(), True)
         # self.updateEdgeAndCornerContainerActivePosition(e.globalPos(), True)
         self.updateEdgeAndCornerContainerActivePosition(p, True)

@@ -251,6 +251,17 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
 
     def on_mouse_moved(self, event):
         super().on_mouse_moved(event)
+        # if self.hovered_object_index is None:
+        #     return
+        if self.hovered_object is None:
+            return
+        else:
+            # Pass through event
+            self.hovered_object.mouseMoveEvent(event)
+            return
+
+        self.update()
+
         
 
     
