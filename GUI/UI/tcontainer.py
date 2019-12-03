@@ -86,7 +86,7 @@ class ResizableContainerMode(Enum):
             currMargins = QMargins(border_handle_size_diff,0,0,0)
             contents_rect = parent_rect.marginsRemoved(currMargins)
             currRect.setLeft(parent_rect.left())
-            currRect.setRight(contents_rect.right())
+            currRect.setRight(contents_rect.left())
             currRect.setTop(parent_rect.top())
             currRect.setBottom(parent_rect.bottom())
             # currRect.setHeight(border_handle_size_diff)
