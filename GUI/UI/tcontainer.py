@@ -10,7 +10,7 @@ import sys
 from enum import Enum
 
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtCore import QPoint, pyqtSignal, QRect
+from PyQt5.QtCore import QPoint, pyqtSignal, QRect, QSize, QMargins
 from PyQt5.QtGui import QColor, QCursor, QPainterPath, QBrush
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QMenu, QLabel, QMainWindow
 
@@ -30,6 +30,70 @@ class ResizableContainerMode(Enum):
     RESIZEB = 7,
     RESIZEBL = 8,
     RESIZEL = 9
+
+    # Note Margins are QMargins(int left, int top, int right, int bottom)
+
+    def get_highlight_rect(self, parent_rect, border_handle_size_diff):
+        const_corner_rect_size = QSize(10, 10)
+        currRect = QRect(QPoint(0, 0), const_corner_rect_size)
+        
+        if (self == ResizableContainerMode.RESIZETL):
+            currPoint = parent_rect.topLeft()
+            currRect.moveTopLeft(currPoint)
+        elif (self == ResizableContainerMode.RESIZETR):
+            currPoint = parent_rect.topRight()
+            currRect.moveTopRight(currPoint)
+        elif (self == ResizableContainerMode.RESIZEBR):
+            currPoint = parent_rect.bottomRight()
+            currRect.moveBottomRight(currPoint)
+        elif (self == ResizableContainerMode.RESIZEBL):
+            currPoint = parent_rect.bottomLeft()
+            currRect.moveBottomLeft(currPoint)
+        elif (self == ResizableContainerMode.RESIZET):
+            # currPoint = parent_rect.top()
+            # currRect = QRect(currPoint, const_corner_rect_size))
+            currMargins = QMargins(0,border_handle_size_diff,0,0)
+            contents_rect = parent_rect.marginsRemoved(currMargins)
+            currRect.setLeft(parent_rect.left())
+            currRect.setRight(parent_rect.right())
+            currRect.setTop(parent_rect.top())
+            currRect.setBottom(contents_rect.top())
+            # currRect.setHeight(border_handle_size_diff)
+        elif (self == ResizableContainerMode.RESIZER):
+            # currPoint = parent_rect.top()
+            # currRect = QRect(currPoint, const_corner_rect_size))
+            currMargins = QMargins(0,0,border_handle_size_diff,0)
+            contents_rect = parent_rect.marginsRemoved(currMargins)
+            currRect.setLeft(contents_rect.right())
+            currRect.setRight(parent_rect.right())
+            currRect.setTop(parent_rect.top())
+            currRect.setBottom(parent_rect.bottom())
+            # currRect.setHeight(border_handle_size_diff)
+        elif (self == ResizableContainerMode.RESIZEB):
+            # currPoint = parent_rect.top()
+            # currRect = QRect(currPoint, const_corner_rect_size))
+            currMargins = QMargins(0,0,0,border_handle_size_diff)
+            contents_rect = parent_rect.marginsRemoved(currMargins)
+            currRect.setLeft(parent_rect.left())
+            currRect.setRight(parent_rect.right())
+            # currRect.setTop(parent_rect.bottom()+border_handle_size_diff)
+            currRect.setTop(contents_rect.bottom())
+            currRect.setBottom(parent_rect.bottom())
+            # currRect.setHeight(border_handle_size_diff)
+        elif (self == ResizableContainerMode.RESIZEL):
+            # currPoint = parent_rect.top()
+            # currRect = QRect(currPoint, const_corner_rect_size))
+            currMargins = QMargins(border_handle_size_diff,0,0,0)
+            contents_rect = parent_rect.marginsRemoved(currMargins)
+            currRect.setLeft(parent_rect.left())
+            currRect.setRight(contents_rect.right())
+            currRect.setTop(parent_rect.top())
+            currRect.setBottom(parent_rect.bottom())
+            # currRect.setHeight(border_handle_size_diff)
+        else:
+            currRect = None
+
+        return currRect
 
 
 class ResizableContainerWidgetMixin(object):
@@ -72,54 +136,54 @@ class ResizableContainerWidgetMixin(object):
 
     # It seems most of the magic is being done here. This function sets the cursor shape (whether it's a "resizing" handle or a mouse) and sets the "mode" variable to indicate which mode it's currently in.,
     def setCursorShape(self, e_pos: QPoint):
-        diff = 3
+        self.border_handle_size_diff = 3
         # Left - Bottom
 
-        if (((e_pos.y() > self.y() + self.height() - diff) and # Bottom
-            (e_pos.x() < self.x() + diff)) or # Left
+        if (((e_pos.y() > self.y() + self.height() - self.border_handle_size_diff) and # Bottom
+            (e_pos.x() < self.x() + self.border_handle_size_diff)) or # Left
         # Right-Bottom
-        ((e_pos.y() > self.y() + self.height() - diff) and # Bottom
-        (e_pos.x() > self.x() + self.width() - diff)) or # Right
+        ((e_pos.y() > self.y() + self.height() - self.border_handle_size_diff) and # Bottom
+        (e_pos.x() > self.x() + self.width() - self.border_handle_size_diff)) or # Right
         # Left-Top
-        ((e_pos.y() < self.y() + diff) and # Top
-        (e_pos.x() < self.x() + diff)) or # Left
+        ((e_pos.y() < self.y() + self.border_handle_size_diff) and # Top
+        (e_pos.x() < self.x() + self.border_handle_size_diff)) or # Left
         # Right-Top
-        (e_pos.y() < self.y() + diff) and # Top
-        (e_pos.x() > self.x() + self.width() - diff)): # Right
+        (e_pos.y() < self.y() + self.border_handle_size_diff) and # Top
+        (e_pos.x() > self.x() + self.width() - self.border_handle_size_diff)): # Right
             # Left - Bottom
-            if ((e_pos.y() > self.y() + self.height() - diff) and # Bottom
+            if ((e_pos.y() > self.y() + self.height() - self.border_handle_size_diff) and # Bottom
             (e_pos.x() < self.x()
-                + diff)): # Left
+                + self.border_handle_size_diff)): # Left
                 self.mode = ResizableContainerMode.RESIZEBL
                 self.setCursor(QCursor(QtCore.Qt.SizeBDiagCursor))
                 # Right - Bottom
-            if ((e_pos.y() > self.y() + self.height() - diff) and # Bottom
-            (e_pos.x() > self.x() + self.width() - diff)): # Right
+            if ((e_pos.y() > self.y() + self.height() - self.border_handle_size_diff) and # Bottom
+            (e_pos.x() > self.x() + self.width() - self.border_handle_size_diff)): # Right
                 self.mode = ResizableContainerMode.RESIZEBR
                 self.setCursor(QCursor(QtCore.Qt.SizeFDiagCursor))
             # Left - Top
-            if ((e_pos.y() < self.y() + diff) and # Top
-            (e_pos.x() < self.x() + diff)): # Left
+            if ((e_pos.y() < self.y() + self.border_handle_size_diff) and # Top
+            (e_pos.x() < self.x() + self.border_handle_size_diff)): # Left
                 self.mode = ResizableContainerMode.RESIZETL
                 self.setCursor(QCursor(QtCore.Qt.SizeFDiagCursor))
             # Right - Top
-            if ((e_pos.y() < self.y() + diff) and # Top
-            (e_pos.x() > self.x() + self.width() - diff)): # Right
+            if ((e_pos.y() < self.y() + self.border_handle_size_diff) and # Top
+            (e_pos.x() > self.x() + self.width() - self.border_handle_size_diff)): # Right
                 self.mode = ResizableContainerMode.RESIZETR
                 self.setCursor(QCursor(QtCore.Qt.SizeBDiagCursor))
         # check cursor horizontal position
-        elif ((e_pos.x() < self.x() + diff) or # Left
-            (e_pos.x() > self.x() + self.width() - diff)): # Right
-            if e_pos.x() < self.x() + diff: # Left
+        elif ((e_pos.x() < self.x() + self.border_handle_size_diff) or # Left
+            (e_pos.x() > self.x() + self.width() - self.border_handle_size_diff)): # Right
+            if e_pos.x() < self.x() + self.border_handle_size_diff: # Left
                 self.setCursor(QCursor(QtCore.Qt.SizeHorCursor))
                 self.mode = ResizableContainerMode.RESIZEL
             else: # Right
                 self.setCursor(QCursor(QtCore.Qt.SizeHorCursor))
                 self.mode = ResizableContainerMode.RESIZER
         # check cursor vertical position
-        elif ((e_pos.y() > self.y() + self.height() - diff) or # Bottom
-            (e_pos.y() < self.y() + diff)): # Top
-            if e_pos.y() < self.y() + diff: # Top
+        elif ((e_pos.y() > self.y() + self.height() - self.border_handle_size_diff) or # Bottom
+            (e_pos.y() < self.y() + self.border_handle_size_diff)): # Top
+            if e_pos.y() < self.y() + self.border_handle_size_diff: # Top
                 self.setCursor(QCursor(QtCore.Qt.SizeVerCursor))
                 self.mode = ResizableContainerMode.RESIZET
             else: # Bottom
@@ -241,9 +305,14 @@ class TContainer(QWidget):
     outFocus = pyqtSignal(bool)
     newGeometry = pyqtSignal(QRect)
 
+
+
     def __init__(self, parent, p, cWidget):
         super().__init__(parent=parent)
-    
+        # self.border_handle_size_diff: how many pixels you have to grab the edges
+        self.border_handle_size_diff = 3
+        self.hoverEdgeRectColor = QColor(100,255,0,200)
+
         self.menu = QMenu(parent=self, title='menu')
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
         self.setVisible(True)
@@ -279,54 +348,53 @@ class TContainer(QWidget):
 
     # It seems most of the magic is being done here. This function sets the cursor shape (whether it's a "resizing" handle or a mouse) and sets the "mode" variable to indicate which mode it's currently in.,
     def setCursorShape(self, e_pos: QPoint):
-        diff = 3
+        self.border_handle_size_diff = 3
         # Left - Bottom
-
-        if (((e_pos.y() > self.y() + self.height() - diff) and # Bottom
-            (e_pos.x() < self.x() + diff)) or # Left
+        if (((e_pos.y() > self.y() + self.height() - self.border_handle_size_diff) and # Bottom
+            (e_pos.x() < self.x() + self.border_handle_size_diff)) or # Left
         # Right-Bottom
-        ((e_pos.y() > self.y() + self.height() - diff) and # Bottom
-        (e_pos.x() > self.x() + self.width() - diff)) or # Right
+        ((e_pos.y() > self.y() + self.height() - self.border_handle_size_diff) and # Bottom
+        (e_pos.x() > self.x() + self.width() - self.border_handle_size_diff)) or # Right
         # Left-Top
-        ((e_pos.y() < self.y() + diff) and # Top
-        (e_pos.x() < self.x() + diff)) or # Left
+        ((e_pos.y() < self.y() + self.border_handle_size_diff) and # Top
+        (e_pos.x() < self.x() + self.border_handle_size_diff)) or # Left
         # Right-Top
-        (e_pos.y() < self.y() + diff) and # Top
-        (e_pos.x() > self.x() + self.width() - diff)): # Right
+        (e_pos.y() < self.y() + self.border_handle_size_diff) and # Top
+        (e_pos.x() > self.x() + self.width() - self.border_handle_size_diff)): # Right
             # Left - Bottom
-            if ((e_pos.y() > self.y() + self.height() - diff) and # Bottom
+            if ((e_pos.y() > self.y() + self.height() - self.border_handle_size_diff) and # Bottom
             (e_pos.x() < self.x()
-                + diff)): # Left
+                + self.border_handle_size_diff)): # Left
                 self.mode = ResizableContainerMode.RESIZEBL
                 self.setCursor(QCursor(QtCore.Qt.SizeBDiagCursor))
                 # Right - Bottom
-            if ((e_pos.y() > self.y() + self.height() - diff) and # Bottom
-            (e_pos.x() > self.x() + self.width() - diff)): # Right
+            if ((e_pos.y() > self.y() + self.height() - self.border_handle_size_diff) and # Bottom
+            (e_pos.x() > self.x() + self.width() - self.border_handle_size_diff)): # Right
                 self.mode = ResizableContainerMode.RESIZEBR
                 self.setCursor(QCursor(QtCore.Qt.SizeFDiagCursor))
             # Left - Top
-            if ((e_pos.y() < self.y() + diff) and # Top
-            (e_pos.x() < self.x() + diff)): # Left
+            if ((e_pos.y() < self.y() + self.border_handle_size_diff) and # Top
+            (e_pos.x() < self.x() + self.border_handle_size_diff)): # Left
                 self.mode = ResizableContainerMode.RESIZETL
                 self.setCursor(QCursor(QtCore.Qt.SizeFDiagCursor))
             # Right - Top
-            if ((e_pos.y() < self.y() + diff) and # Top
-            (e_pos.x() > self.x() + self.width() - diff)): # Right
+            if ((e_pos.y() < self.y() + self.border_handle_size_diff) and # Top
+            (e_pos.x() > self.x() + self.width() - self.border_handle_size_diff)): # Right
                 self.mode = ResizableContainerMode.RESIZETR
                 self.setCursor(QCursor(QtCore.Qt.SizeBDiagCursor))
         # check cursor horizontal position
-        elif ((e_pos.x() < self.x() + diff) or # Left
-            (e_pos.x() > self.x() + self.width() - diff)): # Right
-            if e_pos.x() < self.x() + diff: # Left
+        elif ((e_pos.x() < self.x() + self.border_handle_size_diff) or # Left
+            (e_pos.x() > self.x() + self.width() - self.border_handle_size_diff)): # Right
+            if e_pos.x() < self.x() + self.border_handle_size_diff: # Left
                 self.setCursor(QCursor(QtCore.Qt.SizeHorCursor))
                 self.mode = ResizableContainerMode.RESIZEL
             else: # Right
                 self.setCursor(QCursor(QtCore.Qt.SizeHorCursor))
                 self.mode = ResizableContainerMode.RESIZER
         # check cursor vertical position
-        elif ((e_pos.y() > self.y() + self.height() - diff) or # Bottom
-            (e_pos.y() < self.y() + diff)): # Top
-            if e_pos.y() < self.y() + diff: # Top
+        elif ((e_pos.y() > self.y() + self.height() - self.border_handle_size_diff) or # Bottom
+            (e_pos.y() < self.y() + self.border_handle_size_diff)): # Top
+            if e_pos.y() < self.y() + self.border_handle_size_diff: # Top
                 self.setCursor(QCursor(QtCore.Qt.SizeVerCursor))
                 self.mode = ResizableContainerMode.RESIZET
             else: # Bottom
@@ -364,6 +432,13 @@ class TContainer(QWidget):
             rect.adjust(0,0,-1,-1)
             painter.setPen(QColor(r, g, b))
             painter.drawRect(rect)
+
+            # Draw highlighted edges:
+            currHighlightRect = self.mode.get_highlight_rect(rect, self.border_handle_size_diff)
+            if currHighlightRect is not None:
+                painter.setPen(self.hoverEdgeRectColor)
+                painter.drawRect(currHighlightRect)
+
 
     def mousePressEvent(self, e: QtGui.QMouseEvent):
         self.position = QPoint(e.globalX() - self.geometry().x(), e.globalY() - self.geometry().y())
