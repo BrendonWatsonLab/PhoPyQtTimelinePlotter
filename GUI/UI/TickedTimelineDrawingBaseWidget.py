@@ -4,7 +4,7 @@ import tempfile
 from base64 import b64encode
 
 from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import Qt, QPoint, QLine, QRect, QRectF, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import Qt, QPoint, QLine, QRect, QRectF, pyqtSignal, pyqtSlot, QObject
 from PyQt5.QtGui import QPainter, QColor, QFont, QBrush, QPalette, QPen, QPolygon, QPainterPath, QPixmap
 from PyQt5.QtWidgets import QWidget, QFrame, QScrollArea, QVBoxLayout
 import sys
@@ -19,10 +19,29 @@ class TickProperties:
     """
     def __init__(self, color, lineThickness=None, style=None):
         self.pen = QPen(color, lineThickness, style)
-        # Qt.SolidLine
 
     def get_pen(self):
         return self.pen
+
+
+class ReferenceMarker(QObject):
+
+    defaultProperties = TickProperties(QColor(250, 187, 187), 0.9, Qt.SolidLine)
+    
+    def __init__(self, is_enabled, properties=TickProperties(QColor(250, 187, 187), 0.9, Qt.SolidLine), parent=None):
+        super().__init__(parent=parent)
+        self.is_enabled = is_enabled
+        self.properties = properties
+        self.pos = None
+        self.pointerPos = None
+        self.pointerTimePos = None
+
+    def draw(self, painter):
+        if self.is_enabled:
+            if self.pos is not None:
+                painter.setPen(self.properties.get_pen())
+                painter.drawLine(self.pos.x(), 0, self.pos.x(), self.height())
+
         
 
 class TickedTimelineDrawingBaseWidget(QWidget):
