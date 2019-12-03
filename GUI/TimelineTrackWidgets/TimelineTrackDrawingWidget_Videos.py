@@ -55,7 +55,9 @@ class TimelineTrackDrawingWidget_Videos(TrackConfigMixin, TimelineTrackDrawingWi
             self.durationRecords.append(aContainerObj.get_record())
             self.durationObjects.append(aContainerObj.get_view())            
 
-
+        # Attach the signals to the new durationObjects:
+        self.attach_child_duration_object_signals()
+        
         self.update()
         
 

@@ -1263,7 +1263,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
 
 
-        
     @pyqtSlot(int)
     def on_track_header_refresh_activated(self, trackID):
         print("on_track_header_refresh_activated({0})".format(trackID))
@@ -1297,6 +1296,12 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
 
     
+    @pyqtSlot(int, object)
+    def on_track_child_create_comment(self, trackID, commentObj):
+        print("TimelineDrawingWindow.on_track_child_create_comment({0}, {1})".format(str(trackID), str(commentObj)))
+        sel_start = commentObj.startTime
+        sel_endtime = commentObj.endTime
+        return
 
 
     # Called when the partition edit dialog accept event is called.
