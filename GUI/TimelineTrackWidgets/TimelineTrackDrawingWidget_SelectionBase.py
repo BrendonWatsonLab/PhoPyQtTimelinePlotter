@@ -162,21 +162,32 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
     def on_button_clicked(self, event):
         newlySelectedObjectIndex = self.find_child_object(event.x(), event.y())
 
-        if newlySelectedObjectIndex is None:
-            self.deselect_all()
-            self.selected_duration_object_indicies = [] # Empty all the objects
-            self.selection_changed.emit(self.trackID, -1)
-        else:
-            # Select the object
-            didSelectionChange = self.select(newlySelectedObjectIndex)
-            if (not didSelectionChange):
-                # Already contains the object.
-                return
+        if event.button() == Qt.LeftButton:
+            print("SelectionBase Track on_button_released(...): Left click")
+            if newlySelectedObjectIndex is None:
+                self.deselect_all()
+                self.selected_duration_object_indicies = [] # Empty all the objects
+                self.selection_changed.emit(self.trackID, -1)
             else:
-                # Doesn't already contain the object
-                self.durationObjects[newlySelectedObjectIndex].on_button_clicked(event)
-                self.update()
-                self.selection_changed.emit(self.trackID, newlySelectedObjectIndex)
+                # Select the object
+                didSelectionChange = self.select(newlySelectedObjectIndex)
+                if (not didSelectionChange):
+                    # Already contains the object.
+                    return
+                else:
+                    # Doesn't already contain the object
+                    self.durationObjects[newlySelectedObjectIndex].on_button_clicked(event)
+                    self.update()
+                    self.selection_changed.emit(self.trackID, newlySelectedObjectIndex)
+
+        elif event.button() == Qt.RightButton:
+            print("SelectionBase Track on_button_released(...): Right click")
+
+        elif event.button() == Qt.MiddleButton:
+            print("SelectionBase Track on_button_released(...): Middle click")
+        else:
+            print("SelectionBase Track on_button_released(...): Unknown click event!")
+
 
     def on_button_released(self, event):
         # Check if we want to dismiss the selection when the mouse button is released (requiring the user to hold down the button to see the results)

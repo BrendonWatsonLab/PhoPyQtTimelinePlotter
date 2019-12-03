@@ -1078,7 +1078,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         
 
     # @pyqtSlot(int, int)
-    # Occurs when the user selects an object in the child video track with the mouse
+    # Occurs when the user selects an object (durationObject) in the child video track with the mouse
     def handle_child_selection_event(self, trackIndex, trackObjectIndex):
         text = "handle_child_selection_event(...): trackIndex: {0}, trackObjectIndex: {1}".format(trackIndex, trackObjectIndex)
         print(text)
