@@ -115,6 +115,7 @@ class ReferenceMarkerManager(QObject):
 
     def __init__(self, num_markers, parent=None):
         super().__init__(parent=parent)
+        self.used_mark_stack = []
         self.markers = dict()
         self.bulk_add_reference_makers(num_markers)
 
@@ -122,6 +123,7 @@ class ReferenceMarkerManager(QObject):
         return self.parent().getScale()
 
     def bulk_add_reference_makers(self, num_markers):
+        self.used_mark_stack = []
         self.markers = dict()
         for a_marker_index in range(num_markers):
             curr_color = QColor.fromHslF((float(a_marker_index)/float(num_markers)), 0.9, 0.9, 1.0)
@@ -154,6 +156,21 @@ class ReferenceMarkerManager(QObject):
         else:
             self.get_markers()[potential_unused_marker_key].update_position(new_position, self.get_scale())
             self.get_markers()[potential_unused_marker_key].is_enabled = True
+            # Add the key of the now used item to the used_stack
+            self.used_mark_stack.append(potential_unused_marker_key)
+
+
+    def get_last_used_markers(self, max_num):
+        actual_max_num = min(max_num, len(self.used_mark_stack))
+        out_objs = []
+        curr_pop_count = 0
+        while curr_pop_count < actual_max_num:
+            out_objs.append(self.used_mark_stack.pop())
+            curr_pop_count = curr_pop_count + 1
+        else:
+            print("popped {0} objects".format(str(len(out_objs))))
+        return out_objs
+
 
 
     def get_markers(self):

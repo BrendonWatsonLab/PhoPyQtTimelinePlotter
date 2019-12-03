@@ -208,16 +208,24 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
             print("SelectionBase Track on_button_released(...): Right click")
             # The menu is called twice because we check both the selected and the hoverred item, of which an event can be both.
             prevHoveredObj = self.hovered_object
-            if prevHoveredObj:
+            if (prevHoveredObj is not None):
                 prevHoveredObj.on_button_released(event)
             else:
                 print('SelectionBase Track on_button_released(...): No valid hoverred object')
 
             prevSelectedPartitionObj = self.get_selected_duration_obj()
-            if (prevSelectedPartitionObj):
+            if (prevSelectedPartitionObj is not None):
+                is_same_object = False
                 # make sure the selected object isn't the same as the hoverred object
-                if (prevSelectedPartitionObj != prevHoveredObj):
+                if prevHoveredObj is not None:
+                    is_same_object = (prevSelectedPartitionObj == prevHoveredObj)
+                else:
+                    # If the object is None, there's no chance that it was already called
+                    is_same_object = False
+                
+                if (not is_same_object):
                     prevSelectedPartitionObj.on_button_released(event)
+
             else:
                 print('SelectionBase Track on_button_released(...): No valid selection object')
 
