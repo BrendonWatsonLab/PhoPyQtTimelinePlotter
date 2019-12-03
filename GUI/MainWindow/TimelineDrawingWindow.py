@@ -467,7 +467,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.verticalSplitter.setMouseTracking(True)
 
             # Size the widgets
-            self.verticalSplitter.setSizes([100, 600])
+            self.verticalSplitter.setSizes([30, 670])
 
         desiredWindowWidth = 900
         self.resize( desiredWindowWidth, 800 )
@@ -488,6 +488,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         # Video Player Container: the container that holds the video player
         self.videoPlayerContainer = QtWidgets.QWidget()
+        # self.videoPlayerContainer.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
         self.videoPlayerContainer.setMouseTracking(True)
         ## TODO: Add the video player to the container.
         ## TODO: Needs a layout
