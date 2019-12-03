@@ -5,7 +5,7 @@ import queue
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import Qt, QPoint, QLine, QRect, QRectF, pyqtSignal, pyqtSlot, QObject, QMargins
 from PyQt5.QtGui import QPainter, QColor, QFont, QBrush, QPalette, QPen, QPolygon, QPainterPath, QPixmap
-from PyQt5.QtWidgets import QWidget, QFrame, QScrollArea, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QFrame, QScrollArea, QVBoxLayout, QGridLayout, QListWidget
 import sys
 import os
 
@@ -78,7 +78,6 @@ class ReferenceMarker(QObject):
         # painter.drawText(currOffset - 10, 20, 20, 20, Qt.AlignCenter, self.identifier)
         painter.drawText(textRect, Qt.AlignCenter, self.identifier)
 
-
     def draw(self, painter, drawRect, scale):
         self.updateScale(scale)
         if self.is_enabled:
@@ -107,6 +106,8 @@ class ReferenceMarker(QObject):
         self.pointerPos = x
         self.updateScale(scale)
 
+    def __str__(self):
+        return 'RefMark[identifier: {0}]: (pos: {1}, pointerPos: {2}, get_pointerTimePos: {3})'.format(self.identifier, self.pos, self.pointerPos, self.get_pointerTimePos())
 
 
 class ReferenceMarkerManager(QObject):
@@ -115,6 +116,7 @@ class ReferenceMarkerManager(QObject):
 
     def __init__(self, num_markers, parent=None):
         super().__init__(parent=parent)
+        self.activeMarkersWindow = None
         self.used_mark_stack = []
         self.markers = dict()
         self.bulk_add_reference_makers(num_markers)
@@ -158,6 +160,7 @@ class ReferenceMarkerManager(QObject):
             self.get_markers()[potential_unused_marker_key].is_enabled = True
             # Add the key of the now used item to the used_stack
             self.used_mark_stack.append(potential_unused_marker_key)
+            self.show_active_markers_list()
 
 
     def get_last_used_markers(self, max_num):
@@ -171,8 +174,6 @@ class ReferenceMarkerManager(QObject):
             print("popped {0} objects".format(str(len(out_objs))))
         return out_objs
 
-
-
     def get_markers(self):
         return self.markers
 
@@ -180,3 +181,31 @@ class ReferenceMarkerManager(QObject):
         for (id_key, value) in self.markers.items():
             value.draw(painter, event, scale)
 
+    def show_active_markers_list(self):
+        # all_markers = self.get_last_used_markers(len(self.used_mark_stack))
+        all_markers = [self.get_markers()[aKey] for aKey in self.used_mark_stack]
+        self.activeMarkersWindow = ActiveReferenceMarkersWindow(all_markers)
+        self.activeMarkersWindow.show()
+
+
+
+class ActiveReferenceMarkersWindow(QWidget):
+    def __init__(self, activeMarkersList):
+        QWidget.__init__(self)
+        self.activeMarkersList = activeMarkersList
+        layout = QGridLayout()
+        self.setLayout(layout)
+        self.listwidget = QListWidget()
+        self.listwidget.clicked.connect(self.clicked)
+        layout.addWidget(self.listwidget)
+
+        self.reload_list()
+
+    def reload_list(self):
+        self.listwidget.clear()
+        for (anIndex, anItem) in enumerate(self.activeMarkersList):
+            self.listwidget.insertItem(anIndex, str(anItem))
+
+    def clicked(self, qmodelindex):
+        item = self.listwidget.currentItem()
+        print(item.text())
