@@ -13,9 +13,10 @@ from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import TimelineTrac
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_EventsBase import TimelineTrackDrawingWidget_EventsBase
 
 from GUI.UI.VideoEditDialog.VideoEditDialog import *
+from GUI.Model.TrackType import TrackType, TrackConfigMixin
 
 
-class TimelineTrackDrawingWidget_Videos(TimelineTrackDrawingWidget_EventsBase):
+class TimelineTrackDrawingWidget_Videos(TrackConfigMixin, TimelineTrackDrawingWidget_EventsBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
     default_shouldDismissSelectionUponMouseButtonRelease = True
     default_itemSelectionMode = ItemSelectionOptions.MultiSelection
@@ -54,7 +55,9 @@ class TimelineTrackDrawingWidget_Videos(TimelineTrackDrawingWidget_EventsBase):
             self.durationRecords.append(aContainerObj.get_record())
             self.durationObjects.append(aContainerObj.get_view())            
 
-
+        # Attach the signals to the new durationObjects:
+        self.attach_child_duration_object_signals()
+        
         self.update()
         
 

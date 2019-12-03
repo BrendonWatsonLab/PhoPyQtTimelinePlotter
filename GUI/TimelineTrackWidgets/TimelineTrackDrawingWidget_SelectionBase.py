@@ -44,13 +44,20 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
 
 
 
-    # Called to reset the hover/selection whenever the data is reloaded
-    def reset_on_reload(self):
+    def reset_hovered(self):
         self.hovered_object_index = None
         self.hovered_object = None
         self.hovered_object_rect = None
         self.hovered_duration_object_indicies = []
+
+    def reset_selected(self):
         self.selected_duration_object_indicies = []
+
+    # Called to reset the hover/selection whenever the data is reloaded
+    def reset_on_reload(self):
+        self.reset_hovered()
+        self.reset_selected()
+        
 
     
     # Returns the currently selected partition index or None if none are selected
@@ -250,3 +257,14 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
         if needs_update:
             self.update()
 
+
+    def enterEvent(self, QEvent):
+        # here the code for mouse hover
+        # print("TimelineTrackDrawingWidget_SelectionBase.enterEvent(...): track_id: {0}".format(self.trackID))
+        return super().enterEvent(QEvent)
+
+    def leaveEvent(self, QEvent):
+        # here the code for mouse leave
+        # print("TimelineTrackDrawingWidget_SelectionBase.leaveEvent(...): track_id: {0}".format(self.trackID))
+        self.clear_hover()
+        return super().leaveEvent(QEvent)

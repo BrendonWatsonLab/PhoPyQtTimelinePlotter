@@ -60,15 +60,23 @@ class PhoDurationEvent_Video(PhoDurationEvent):
         return self.extended_data['extended_properties']
 
     def get_bb_id(self):
+        if 'behavioral_box_id' not in self.get_extended_properties_dict().keys():
+            return None
         return self.get_extended_properties_dict()['behavioral_box_id']
     
     def get_experiment_id(self):
+        if 'experiment_id' not in self.get_extended_properties_dict().keys():
+            return None
         return self.get_extended_properties_dict()['experiment_id']
     
     def get_cohort_id(self):
+        if 'cohort_id' not in self.get_extended_properties_dict().keys():
+            return None
         return self.get_extended_properties_dict()['cohort_id']
     
     def get_animal_id(self):
+        if 'animal_id' not in self.get_extended_properties_dict().keys():
+            return None
         return self.get_extended_properties_dict()['animal_id']
 
     def get_ids(self):

@@ -14,7 +14,7 @@
    <string>TimelineHeaderWidget_ContentsExpanded</string>
   </property>
   <property name="autoFillBackground">
-   <bool>true</bool>
+   <bool>false</bool>
   </property>
   <property name="styleSheet">
    <string notr="true">background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(30, 30, 30, 200), stop:1 rgba(60, 66, 60, 200));
@@ -125,7 +125,7 @@ color:rgb(243, 243, 243);
     <widget class="QTextBrowser" name="textBrowser_Main">
      <property name="font">
       <font>
-       <pointsize>10</pointsize>
+       <pointsize>8</pointsize>
       </font>
      </property>
      <property name="acceptDrops">
