@@ -251,26 +251,20 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
 
     def on_mouse_moved(self, event):
         super().on_mouse_moved(event)
-        # if self.hovered_object_index is None:
+        # if self.hovered_object is None:
         #     return
-        if self.hovered_object is None:
-            return
-        else:
-            # Pass through event
-            self.hovered_object.mouseMoveEvent(event)
-            return
+        # else:
+        #     # Pass through event
+        #     self.hovered_object.mouseMoveEvent(event)
+        #     return
 
-        self.update()
+        # self.update()
 
-        
-
-    
     # Annotation/Comment Specific functions:
     def create_comment(self, cut_x):
         cut_duration_offset = self.offset_to_duration(cut_x)
         cut_datetime = self.offset_to_datetime(cut_x)
         return self.create_comment_datetime(cut_datetime, cut_datetime)
-
 
     def create_comment_datetime(self, start_datetime, end_datetime):
         # TODO: should get the behavioral_box_id, experiment_id, cohort_id, animal_id from the track's context or config or w/e
@@ -296,8 +290,6 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
         self.annotationEditingDialog.set_id_values(sel_behavioral_box_id, sel_experiment_id, sel_cohort_id, sel_animal_id)
             
         return False
-
-
 
     @pyqtSlot(datetime, datetime, str, str, str, int, int, int, int)
     def try_create_comment(self, start_date, end_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):

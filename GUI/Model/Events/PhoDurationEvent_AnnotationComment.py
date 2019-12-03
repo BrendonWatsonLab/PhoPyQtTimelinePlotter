@@ -326,9 +326,12 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
             painter.drawText(self.bodyTextLabelRect, Qt.AlignCenter, self.name)
 
             # Draw Nibs:
+            self.hoveredEdgeAndCorners = EdgeAndCornerContainerComponent.NONE
+
             if self.start_poly_is_active:
                 painter.setPen(QtGui.QPen(PhoDurationEvent_AnnotationComment.ColorBorderActive, 1.0, join=Qt.MiterJoin))
                 painter.setBrush(QBrush(PhoDurationEvent_AnnotationComment.ColorNibHandleActive, Qt.SolidPattern))
+                self.hoveredEdgeAndCorners = EdgeAndCornerContainerComponent.Edge_Left
             else:
                 painter.setPen(QtGui.QPen(PhoDurationEvent_AnnotationComment.ColorBorderBase, 0.8, join=Qt.MiterJoin))
                 painter.setBrush(QBrush(activeColor, Qt.SolidPattern))
@@ -338,6 +341,7 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
             if self.end_poly_is_active:
                 painter.setPen(QtGui.QPen(PhoDurationEvent_AnnotationComment.ColorBorderActive, 1.0, join=Qt.MiterJoin))
                 painter.setBrush(QBrush(PhoDurationEvent_AnnotationComment.ColorNibHandleActive, Qt.SolidPattern))
+                self.hoveredEdgeAndCorners = EdgeAndCornerContainerComponent.Edge_Right
             else:
                 painter.setPen(QtGui.QPen(PhoDurationEvent_AnnotationComment.ColorBorderBase, 0.8, join=Qt.MiterJoin))
                 painter.setBrush(QBrush(activeColor, Qt.SolidPattern))
