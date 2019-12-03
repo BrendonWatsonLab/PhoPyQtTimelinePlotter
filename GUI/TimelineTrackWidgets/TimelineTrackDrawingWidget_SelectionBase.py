@@ -185,6 +185,7 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
 
         elif event.button() == Qt.MiddleButton:
             print("SelectionBase Track on_button_released(...): Middle click")
+
         else:
             print("SelectionBase Track on_button_released(...): Unknown click event!")
 
@@ -195,31 +196,33 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
         # print("on_button_released({0},{1})".format(event.x(), event.y()))
         newlySelectedObjectIndex = self.find_child_object(event.x(), event.y())
 
-        if newlySelectedObjectIndex is None:
-            if self.shouldDismissSelectionUponMouseButtonRelease:
-                self.deselect_all()
-                self.selection_changed.emit(self.trackID, -1) # Deselect
-            # No Durations to create
-            return
-        else:
-            if self.shouldDismissSelectionUponMouseButtonRelease:
-                didSelectionChange = self.deselect(newlySelectedObjectIndex)
-                if (not didSelectionChange):
-                    # Already contains the object.
-                    return
-                else:
-                    # Doesn't already contain the object
-                    self.durationObjects[newlySelectedObjectIndex].on_button_released(event)
-                    self.selection_changed.emit(self.trackID, newlySelectedObjectIndex) #TODO: do we need to do this?
-                    needs_update = True
-
         if event.button() == Qt.LeftButton:
             print("SelectionBase Track on_button_released(...): Left click")
+            if newlySelectedObjectIndex is None:
+                if self.shouldDismissSelectionUponMouseButtonRelease:
+                    self.deselect_all()
+                    self.selection_changed.emit(self.trackID, -1) # Deselect
+                # No Durations to create
+                return
+            else:
+                if self.shouldDismissSelectionUponMouseButtonRelease:
+                    didSelectionChange = self.deselect(newlySelectedObjectIndex)
+                    if (not didSelectionChange):
+                        # Already contains the object.
+                        return
+                    else:
+                        # Doesn't already contain the object
+                        print("DEBUG: on_button_released({0}): call 1 (left_click) for hovered_object".format(str(event)))
+                        self.durationObjects[newlySelectedObjectIndex].on_button_released(event)
+                        self.selection_changed.emit(self.trackID, newlySelectedObjectIndex) #TODO: do we need to do this?
+                        needs_update = True
+
         elif event.button() == Qt.RightButton:
             print("SelectionBase Track on_button_released(...): Right click")
             # The menu is called twice because we check both the selected and the hoverred item, of which an event can be both.
             prevHoveredObj = self.hovered_object
             if (prevHoveredObj is not None):
+                print("DEBUG: on_button_released({0}): call 1 (right_click) for hovered_object".format(str(event)))
                 prevHoveredObj.on_button_released(event)
             else:
                 print('SelectionBase Track on_button_released(...): No valid hoverred object')
@@ -229,19 +232,21 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
                 is_same_object = False
                 # make sure the selected object isn't the same as the hoverred object
                 if prevHoveredObj is not None:
-                    is_same_object = (prevSelectedPartitionObj == prevHoveredObj)
+                    is_same_object = (prevSelectedPartitionObj.get_track_index() == prevHoveredObj.get_track_index())
                 else:
                     # If the object is None, there's no chance that it was already called
                     is_same_object = False
                 
                 if (not is_same_object):
                     prevSelectedPartitionObj.on_button_released(event)
+                    print("DEBUG: on_button_released({0}): call 2 (right_click) for get_selected_duration_obj()".format(str(event)))
 
             else:
                 print('SelectionBase Track on_button_released(...): No valid selection object')
 
         elif event.button() == Qt.MiddleButton:
             print("SelectionBase Track on_button_released(...): Middle click")
+            
         else:
             print("SelectionBase Track on_button_released(...): Unknown click event!")
 

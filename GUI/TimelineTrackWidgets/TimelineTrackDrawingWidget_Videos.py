@@ -167,6 +167,6 @@ class TimelineTrackDrawingWidget_Videos(TrackConfigMixin, TimelineTrackDrawingWi
 
     @pyqtSlot(int, datetime)
     def on_create_playhead_selection(self, trackID, desired_datetime):
-        print("on_create_playhead_selection(...)")
+        print("TimelineTrackDrawingWidget_Videos.on_create_playhead_selection(trackID: {0}, desired_datetime: {1})".format(str(trackID), str(desired_datetime)))
         self.on_create_marker.emit(desired_datetime)
         # self.parent().on_create_playhead_selection(desired_datetime)
