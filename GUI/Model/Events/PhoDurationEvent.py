@@ -38,6 +38,17 @@ class PhoDurationEvent(PhoEvent):
         super(PhoDurationEvent, self).__init__(startTime, name, color, extended_data, parent=parent)
         self.endTime = endTime
 
+    # gets the child index that's set by the parent with "newAnnotationView.setAccessibleName(str(newAnnotationIndex))"
+    def get_track_index(self):
+        curr_name = self.accessibleName()
+        return int(curr_name)
+        # try:
+        #     return int(curr_name)
+        # except expression as identifier:
+        #     return curr_name
+        
+
+
     def __eq__(self, otherEvent):
         return self.name == otherEvent.name and self.startTime == otherEvent.startTime and self.endTime == otherEvent.endTime
 
@@ -96,31 +107,32 @@ class PhoDurationEvent(PhoEvent):
         else:
             return PhoDurationEvent.InstantaneousEventDuration
 
-    def showMenu(self, pos):
-        menu = QMenu()
-        info_action = menu.addAction("Get Info")
-        modify_action = menu.addAction("Modify...")
-        annotation_action = menu.addAction("Create annotation...")
-        delete_action = menu.addAction("Delete...")
+    def buildMenu(self):
+        self.menu = QMenu()
+        self.info_action = self.menu.addAction("Get Info")
+        self.modify_action = self.menu.addAction("Modify...")
+        self.annotation_action = self.menu.addAction("Create annotation...")
+        self.delete_action = self.menu.addAction("Delete...")
+        return self.menu
 
+    def showMenu(self, pos):
+        print("PhoDurationEvent.showMenu(pos: {0})".format(str(pos)))
+        menu = self.buildMenu()
         action = menu.exec_(self.mapToGlobal(pos))
         # action = menu.exec_(self.mapToParent(pos))
         # action = menu.exec_(pos)
-        if action == info_action:
-            print("Get Info action!")
+        if action == self.info_action:
+            print("PhoDurationEvent.Get Info action!")
             self.on_info.emit()
-        elif action == modify_action:
-            print("Modify action!")
+        elif action == self.modify_action:
+            print("PhoDurationEvent.Modify action!")
             self.on_edit.emit()
-        elif action == annotation_action:
-            print("Annotation action!")
+        elif action == self.annotation_action:
+            print("PhoDurationEvent.Annotation action!")
             self.on_annotate.emit()
-        elif action == delete_action:
-            print("Delete action!")
+        elif action == self.delete_action:
+            print("PhoDurationEvent.Delete action!")
             self.on_delete.emit()
-        # elif action == modify_action:
-        #     print("Get Info action!")
-        #     self.on_edit.emit()
         else:
             print("Unknown menu option!!")
 
@@ -130,15 +142,15 @@ class PhoDurationEvent(PhoEvent):
     def on_button_released(self, event):
         self.set_state_deselected()
         if event.button() == Qt.LeftButton:
-            print("Left click")
+            print("PhoDurationEvent.on_button_released(...): Left click")
         elif event.button() == Qt.RightButton:
-            print("Right click")
+            print("PhoDurationEvent.on_button_released(...): Right click")
             currPos = self.finalEventRect.topLeft()
             self.showMenu(currPos)
         elif event.button() == Qt.MiddleButton:
-            print("Middle click")
+            print("PhoDurationEvent.on_button_released(...): Middle click")
         else:
-            print("Unknown click event!")
+            print("PhoDurationEvent.on_button_released(...): Unknown click event!")
 
     def on_key_pressed(self, event):
         gey = event.key()

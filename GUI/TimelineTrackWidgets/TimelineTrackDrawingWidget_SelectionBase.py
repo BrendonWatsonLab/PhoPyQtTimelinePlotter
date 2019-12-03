@@ -206,25 +206,25 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
                     needs_update = True
 
         if event.button() == Qt.LeftButton:
-            print("SelectionBase Track: Left click")
+            print("SelectionBase Track on_button_released(...): Left click")
         elif event.button() == Qt.RightButton:
-            print("SelectionBase Track: Right click")
+            print("SelectionBase Track on_button_released(...): Right click")
             prevHoveredObj = self.hovered_object
             if prevHoveredObj:
                 prevHoveredObj.on_button_released(event)
             else:
-                print('SelectionBase Track: No valid hoverred object')
+                print('SelectionBase Track on_button_released(...): No valid hoverred object')
 
             prevSelectedPartitionObj = self.get_selected_duration_obj()
             if (prevSelectedPartitionObj):
                 prevSelectedPartitionObj.on_button_released(event)
             else:
-                print('SelectionBase Track: No valid selection object')
+                print('SelectionBase Track on_button_released(...): No valid selection object')
 
         elif event.button() == Qt.MiddleButton:
-            print("SelectionBase Track: Middle click")
+            print("SelectionBase Track on_button_released(...): Middle click")
         else:
-            print("SelectionBase Track: Unknown click event!")
+            print("SelectionBase Track on_button_released(...): Unknown click event!")
 
         if needs_update:
             self.update()

@@ -87,12 +87,12 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
         for aContainerObj in active_model_view_array:
             self.durationRecords.append(aContainerObj.get_record())
             newAnnotationIndex = len(self.durationObjects)
-            newAnnotation = aContainerObj.get_view()
-            newAnnotation.setAccessibleName(str(newAnnotationIndex))
+            newAnnotationView = aContainerObj.get_view()
+            newAnnotationView.setAccessibleName(str(newAnnotationIndex))
             # newAnnotation.on_edit.connect(self.on_annotation_modify_event)
             # newAnnotation.on_edit_by_dragging_handle_start.connect(self.handleStartSliderValueChange)
             # newAnnotation.on_edit_by_dragging_handle_end.connect(self.handleEndSliderValueChange)
-            self.durationObjects.append(newAnnotation)          
+            self.durationObjects.append(newAnnotationView)          
 
         self.update()
         
@@ -170,7 +170,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
                 self.selection_changed.emit(self.trackID, newlySelectedObjectIndex)
 
             # Called once the selected annotation object has been set 
-            self.on_annotation_modify_event()
+            self.on_annotation_modify_event(newlySelectedObjectIndex)
         
         pass
 
@@ -194,7 +194,8 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
 
             prevSelectedAnnotationObj = self.get_selected_annotation()
             if (prevSelectedAnnotationObj):
-                prevSelectedAnnotationObj.on_button_released(event)
+                print("commentTrack: Calling child prevSelectedAnnotationObj.on_button_released(event)...")
+                # prevSelectedAnnotationObj.on_button_released(event)
             else:
                 print('commentTrack: No valid selection object')
 
@@ -307,24 +308,27 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
         self.try_create_comment(start_date, None, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id)
 
     # Called by a specific child annotation (double click or menu option) to indicate that it should be edited in a new Annotation Editor Dialog
-    @pyqtSlot()    
-    def on_annotation_modify_event(self):
+    @pyqtSlot(int)    
+    def on_annotation_modify_event(self, childIndex):
         print("on_annotation_modify_event(...)")
-        selectedAnnotationIndex = self.get_selected_annotation_index()
-        selectedAnnotationObject = self.get_selected_annotation()
-
-        if ((not (selectedAnnotationObject is None))):
+        # selectedAnnotationIndex = self.get_selected_annotation_index()
+        # selectedAnnotationObject = self.get_selected_annotation()
+        selectedAnnotationIndex = childIndex
+        selectedAnnotationRecord = self.durationRecords[selectedAnnotationIndex]
+        selectedAnnotationView = self.durationObjects[selectedAnnotationIndex]
+        
+        if ((not (selectedAnnotationView is None))):
             self.activeEditingAnnotationIndex = selectedAnnotationIndex
             self.annotationEditingDialog = TextAnnotationDialog()
             self.annotationEditingDialog.on_cancel.connect(self.comment_dialog_canceled)
 
-            self.annotationEditingDialog.set_start_date(selectedAnnotationObject.startTime)
-            self.annotationEditingDialog.set_end_date(selectedAnnotationObject.endTime)
-            # self.annotationEditingDialog.set_type(selectedAnnotationObject.type_id)
-            # self.annotationEditingDialog.set_subtype(selectedAnnotationObject.subtype_id)
-            self.annotationEditingDialog.set_title(selectedAnnotationObject.title)
-            self.annotationEditingDialog.set_subtitle(selectedAnnotationObject.subtitle)
-            self.annotationEditingDialog.set_body(selectedAnnotationObject.name)
+            self.annotationEditingDialog.set_start_date(selectedAnnotationView.startTime)
+            self.annotationEditingDialog.set_end_date(selectedAnnotationView.endTime)
+            # self.annotationEditingDialog.set_type(selectedAnnotationView.type_id)
+            # self.annotationEditingDialog.set_subtype(selectedAnnotationView.subtype_id)
+            self.annotationEditingDialog.set_title(selectedAnnotationView.title)
+            self.annotationEditingDialog.set_subtitle(selectedAnnotationView.subtitle)
+            self.annotationEditingDialog.set_body(selectedAnnotationView.name)
 
             ## SHOULD BE SET TO TRACK's global values for these variables.
             ## TODO: the track can have multiple values
@@ -339,7 +343,6 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
             if sel_animal_ids is not None:
                 sel_animal_id = sel_animal_ids[0]
 
-
             self.annotationEditingDialog.set_id_values(sel_behavioral_box_id, sel_experiment_id, sel_cohort_id, sel_animal_id)
             
             self.annotationEditingDialog.on_commit[datetime, str, str, str, int, int, int, int].connect(self.try_update_instantaneous_comment)
@@ -347,6 +350,26 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
         else:
             print("Couldn't get active annotation object to edit!!")
             self.activeEditingAnnotationIndex = None
+
+    @pyqtSlot(int)    
+    def on_annotation_delete_event(self, childIndex):
+        print("on_annotation_delete_event(...)")
+        selectedAnnotationIndex = childIndex
+        selectedAnnotationRecord = self.durationRecords[selectedAnnotationIndex]
+        selectedAnnotationView = self.durationObjects[selectedAnnotationIndex]
+        
+        if ((not (selectedAnnotationRecord is None))):
+            self.activeEditingAnnotationIndex = None
+            # Delete the record from the database
+            self.database_connection.delete_from_database([selectedAnnotationRecord])
+            self.database_commit()
+            self.reloadModelFromDatabase()
+
+        else:
+            print("Couldn't get active annotation object to delete!!")
+            self.activeEditingAnnotationIndex = None
+
+
 
     # There's a bug in the database design and they're updating but overlapping. Figure this out. A new one is being created each time I change a field. This wasn't happening before.
     @pyqtSlot(datetime, datetime, str, str, str, int, int, int, int)
