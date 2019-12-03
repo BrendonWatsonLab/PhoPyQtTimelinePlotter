@@ -1190,6 +1190,20 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # self.extendedTracksContainer.on_update_hover
 
 
+    ## Playhead Operations:
+    @pyqtSlot(datetime)
+    def on_create_playhead_selection(self, desired_datetime):
+        print("on_create_playhead_selection({0})".format(str(desired_datetime)))
+        x_offset = self.datetime_to_offset(desired_datetime)
+
+        self.timelineMasterTrackWidget.blockSignals(True)
+        self.extendedTracksContainer.blockSignals(True)
+
+        self.timelineMasterTrackWidget.on_update_selected_position(x_offset)
+        self.extendedTracksContainer.on_update_hover(x_offset)
+
+        self.extendedTracksContainer.blockSignals(False)
+        self.timelineMasterTrackWidget.blockSignals(False)
 
 
     ## Track Operations:
@@ -1262,8 +1276,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         else:
             print("WARNING: Couldn't find header with trackID: {0}".format(trackID))
 
-
-
     @pyqtSlot(int)
     def on_track_header_refresh_activated(self, trackID):
         print("on_track_header_refresh_activated({0})".format(trackID))
@@ -1294,8 +1306,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         else:
             print("Error: unknown track type!")
             return
-
-
     
     @pyqtSlot(int, object)
     def on_track_child_create_comment(self, trackID, commentObj):
@@ -1369,7 +1379,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             return
 
         return
-
 
     # Called when the partition edit dialog accept event is called.
     @pyqtSlot(int, str, int, int, int, int, bool, bool)
@@ -1490,7 +1499,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         self.activeTrackID_ConfigEditingIndex = None
 
-
+    @pyqtSlot()
     def track_config_dialog_canceled(self):
         print('track_config_dialog_canceled()')
         self.activeTrackID_ConfigEditingIndex = None

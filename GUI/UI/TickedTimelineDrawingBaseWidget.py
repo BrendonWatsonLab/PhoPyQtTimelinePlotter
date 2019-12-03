@@ -115,8 +115,6 @@ class TickedTimelineDrawingBaseWidget(QWidget):
                 painter.setPen(TickedTimelineDrawingBaseWidget.hoverLineProperties.get_pen())
                 painter.drawLine(self.pos.x(), 0, self.pos.x(), self.height())
 
-
-
     def paintEvent(self, event):
         qp = QPainter()
         qp.begin(self)
@@ -191,6 +189,13 @@ class TickedTimelineDrawingBaseWidget(QWidget):
     # Set background color
     def setBackgroundColor(self, color):
         self.backgroundColor = color
+
+    @pyqtSlot(float)
+    def on_update_selected_position(self, pointer_desired_x):
+        self.pointerPos = pointer_desired_x
+        self.positionChanged.emit(pointer_desired_x)
+        self.pointerTimePos = self.pointerPos * self.getScale()
+        self.update()
 
 
     @pyqtSlot(int)

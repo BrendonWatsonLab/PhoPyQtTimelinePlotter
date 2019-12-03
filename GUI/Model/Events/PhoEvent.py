@@ -21,6 +21,9 @@ class PhoEvent(QWidget):
     on_edit = pyqtSignal(int)
     on_delete = pyqtSignal(int)
 
+    on_create_marker_at_start = pyqtSignal(int, datetime)
+    on_create_marker_at_end = pyqtSignal(int, datetime)
+
     def __init__(self, startTime=datetime.now(), name='', color=Qt.black, extended_data=dict(), parent=None):
         super(PhoEvent, self).__init__(parent)
         self.name = name
