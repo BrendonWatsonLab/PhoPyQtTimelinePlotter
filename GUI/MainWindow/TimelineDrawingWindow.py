@@ -1212,12 +1212,20 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     def on_create_playhead_selection(self, desired_datetime):
         print("TimelineDrawingWindow.on_create_playhead_selection({0})".format(str(desired_datetime)))
         x_offset = self.datetime_to_offset(desired_datetime)
+        new_pos = QPoint(x_offset, 0)
 
         self.timelineMasterTrackWidget.blockSignals(True)
         self.extendedTracksContainer.blockSignals(True)
 
-        self.timelineMasterTrackWidget.on_update_reference_marker_position(x_offset)
-        self.extendedTracksContainer.on_update_reference_marker_position(x_offset)
+        # Update the reference manager
+        self.referenceManager.update_next_unused_marker(new_pos)
+
+
+        # self.timelineMasterTrackWidget.on_update_reference_marker_position(x_offset)
+        # self.extendedTracksContainer.on_update_reference_marker_position(x_offset)
+
+        self.timelineMasterTrackWidget.update()
+        self.extendedTracksContainer.update()
 
         self.extendedTracksContainer.blockSignals(False)
         self.timelineMasterTrackWidget.blockSignals(False)
