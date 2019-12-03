@@ -20,6 +20,7 @@ from GUI.HelpWindow.HelpWindowFinal import *
 from GUI.MainObjectListsWindow.MainObjectListsWindow import *
 from GUI.ExampleDatabaseTableWindow import ExampleDatabaseTableWindow
 
+from GUI.Model.ReferenceLineManager import TickProperties, ReferenceMarker, ReferenceMarkerManager
 # from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget import *
 from GUI.UI.qtimeline import *
 
@@ -98,6 +99,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         self.videoInfoObjects = []
 
+        # Reference Manager:
+        self.referenceManager = ReferenceMarkerManager(10, parent=self)
+
         self.reloadModelFromDatabase()
         self.reload_timeline_display_bounds()
 
@@ -126,6 +130,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # for aTuple in overlappingVideoEvents:
         #     print(aTuple)
         # # print(overlappingVideoEvents)
+
+    def get_reference_manager(self):
+        return self.referenceManager
 
     def initUI(self):
 
@@ -190,7 +197,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         def initUI_timelineTracks(self):
             # Timeline Numberline track:
             masterTimelineDurationSeconds = self.totalDuration.total_seconds()
-            self.timelineMasterTrackWidget = QTimeLine(masterTimelineDurationSeconds, minimumWidgetWidth)
+            self.timelineMasterTrackWidget = QTimeLine(masterTimelineDurationSeconds, minimumWidgetWidth, parent=self)
             self.timelineMasterTrackWidget.setMouseTracking(True)
             self.timelineMasterTrackWidget.hoverChanged.connect(self.handle_timeline_hovered_position_update_event)
             self.timelineMasterTrackWidget.positionChanged.connect(self.handle_timeline_position_update_event)
@@ -325,7 +332,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
 
             # Build the bottomPanelWidget
-            self.extendedTracksContainer = ExtendedTracksContainerWidget(masterTimelineDurationSeconds, minimumWidgetWidth, self)
+            self.extendedTracksContainer = ExtendedTracksContainerWidget(masterTimelineDurationSeconds, minimumWidgetWidth, parent=self)
             self.extendedTracksContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
             self.extendedTracksContainer.setAutoFillBackground(True)
             self.extendedTracksContainer.setMouseTracking(True)
@@ -760,6 +767,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
     def get_viewport_width(self):
         return self.timelineScroll.width()
+
+    # Get scale from length. Only used for ReferenceManager
+    def getScale(self):
+        return float(self.totalDuration.total_seconds())/float(self.get_minimum_track_width())
+
 
     # Returns the percent of the total duration that the active viewport is currently displaying
     def get_active_viewport_duration_percent_viewport_total(self):
@@ -1201,8 +1213,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.timelineMasterTrackWidget.blockSignals(True)
         self.extendedTracksContainer.blockSignals(True)
 
-        self.timelineMasterTrackWidget.on_update_selected_position(x_offset)
-        self.extendedTracksContainer.on_update_hover(x_offset)
+        self.timelineMasterTrackWidget.on_update_reference_marker_position(x_offset)
+        self.extendedTracksContainer.on_update_reference_marker_position(x_offset)
 
         self.extendedTracksContainer.blockSignals(False)
         self.timelineMasterTrackWidget.blockSignals(False)
