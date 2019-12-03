@@ -127,13 +127,14 @@ class ReferenceMarkerManager(QObject):
             curr_color = QColor.fromHslF((float(a_marker_index)/float(num_markers)), 0.9, 0.9, 1.0)
             curr_properties = TickProperties(curr_color, 0.9, Qt.SolidLine)
             new_obj = ReferenceMarker(str(a_marker_index), False, properties=curr_properties, parent=self)
-            new_obj.update_position(QPoint(0.0, 0.0), self.get_scale())
+            curr_pos = QPoint(0.0, 0.0)
+            new_obj.update_position(curr_pos, self.get_scale())
             self.markers[str(a_marker_index)] = new_obj
 
-    def add_reference_marker(self, with_identifier, properties=TickProperties(QColor(250, 187, 187), 0.9, Qt.SolidLine), position=QPoint(0.0, 0.0)):
-        new_obj = ReferenceMarker(with_identifier, True, properties=properties, parent=self)
-        new_obj.update_position(position, self.get_scale())
-        self.markers[with_identifier] = new_obj
+    # def add_reference_marker(self, with_identifier, properties=TickProperties(QColor(250, 187, 187), 0.9, Qt.SolidLine), position=QPoint(0.0, 0.0)):
+    #     new_obj = ReferenceMarker(with_identifier, True, properties=properties, parent=self)
+    #     new_obj.update_position(position, self.get_scale())
+    #     self.markers[with_identifier] = new_obj
 
     # Returns the next unused marker so it can be used
     def get_next_unused_marker(self):

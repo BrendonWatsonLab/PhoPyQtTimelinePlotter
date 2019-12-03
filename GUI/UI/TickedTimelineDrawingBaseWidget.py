@@ -191,7 +191,8 @@ class TickedTimelineDrawingBaseWidget(QWidget):
 
     @pyqtSlot(float)
     def on_update_reference_marker_position(self, pointer_desired_x):
-        self.referenceManager.update_next_unused_marker(pointer_desired_x)
+        new_pos = QPoint(pointer_desired_x, 0)
+        self.referenceManager.update_next_unused_marker(new_pos)
         self.update()
 
 
