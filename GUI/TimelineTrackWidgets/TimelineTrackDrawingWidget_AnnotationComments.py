@@ -194,7 +194,8 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
 
             prevSelectedAnnotationObj = self.get_selected_annotation()
             if (prevSelectedAnnotationObj):
-                prevSelectedAnnotationObj.on_button_released(event)
+                print("commentTrack: Calling child prevSelectedAnnotationObj.on_button_released(event)...")
+                # prevSelectedAnnotationObj.on_button_released(event)
             else:
                 print('commentTrack: No valid selection object')
 
