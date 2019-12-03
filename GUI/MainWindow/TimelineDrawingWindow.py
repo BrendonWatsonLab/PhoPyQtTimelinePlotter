@@ -101,6 +101,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         # Reference Manager:
         self.referenceManager = ReferenceMarkerManager(10, parent=self)
+        self.referenceManager.used_markers_updated.connect(self.on_reference_line_markers_updated)
+        self.referenceManager.wants_extended_data.connect(self.on_request_extended_reference_line_data)
+        self.referenceManager.selection_changed.connect(self.on_reference_line_marker_list_selection_changed)
 
         self.reloadModelFromDatabase()
         self.reload_timeline_display_bounds()
@@ -1207,7 +1210,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     ## Playhead Operations:
     @pyqtSlot(datetime)
     def on_create_playhead_selection(self, desired_datetime):
-        print("on_create_playhead_selection({0})".format(str(desired_datetime)))
+        print("TimelineDrawingWindow.on_create_playhead_selection({0})".format(str(desired_datetime)))
         x_offset = self.datetime_to_offset(desired_datetime)
 
         self.timelineMasterTrackWidget.blockSignals(True)
@@ -1218,6 +1221,39 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         self.extendedTracksContainer.blockSignals(False)
         self.timelineMasterTrackWidget.blockSignals(False)
+
+    @pyqtSlot(list)
+    def on_request_extended_reference_line_data(self, referenceLineList):
+        print("TimelineDrawingWindow.request_extended_reference_line_data(...)")
+        # on_request_extended_reference_line_data(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
+        additional_data = []
+        for aListItem in referenceLineList:
+            curr_x = aListItem.pointerPos
+            curr_datetime = self.offset_to_datetime(curr_x)
+            additional_data.append(curr_datetime)
+
+        self.referenceManager.update_marker_metadata(additional_data)
+
+
+
+    @pyqtSlot(list)
+    def on_reference_line_markers_updated(self, referenceLineList):
+        print("TimelineDrawingWindow.on_reference_line_markers_updated(...)")
+         # on_reference_line_markers_updated(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
+        additional_data = []
+        for aListItem in referenceLineList:
+            curr_x = aListItem.pointerPos
+            curr_datetime = self.offset_to_datetime(curr_x)
+            additional_data.append(curr_datetime)
+
+        print(additional_data)
+        #  self.referenceManager.
+
+        
+    @pyqtSlot(list, int)
+    def on_reference_line_marker_list_selection_changed(self, referenceLineList, selected_index):
+        print("TimelineDrawingWindow.on_reference_line_marker_list_selection_changed(referenceLineList, selected_index: {0})".format(str(selected_index)))
+         # on_reference_line_marker_list_selection_changed(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
 
 
     ## Track Operations:
