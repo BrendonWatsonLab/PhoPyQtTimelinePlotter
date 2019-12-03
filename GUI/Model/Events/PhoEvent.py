@@ -17,6 +17,10 @@ class PhoEvent(QWidget):
     ActiveOpacity = 220
     DeEmphOpacity = 160
 
+    on_info = pyqtSignal(int)
+    on_edit = pyqtSignal(int)
+    on_delete = pyqtSignal(int)
+
     def __init__(self, startTime=datetime.now(), name='', color=Qt.black, extended_data=dict(), parent=None):
         super(PhoEvent, self).__init__(parent)
         self.name = name
@@ -27,6 +31,12 @@ class PhoEvent(QWidget):
         self.is_active = False
         self.extended_data = extended_data
 
+    # gets the child index that's set by the parent with "newAnnotationView.setAccessibleName(str(newAnnotationIndex))"
+    def get_track_index(self):
+        curr_name = self.accessibleName()
+        return int(curr_name)
+
+        
     def __eq__(self, otherEvent):
         return self.name == otherEvent.name and self.startTime == otherEvent.startTime
 

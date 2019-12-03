@@ -26,21 +26,10 @@ class PhoDurationEvent(EdgeAndCornerContainerViewMixin, PhoEvent):
 
     MainTextFont = QFont('SansSerif', 10)
 
-    # This defines a signal called 'on_edit' that takes no arguments.
-    on_info = pyqtSignal()
-    on_edit = pyqtSignal()
-    on_annotate = pyqtSignal()
-    on_delete = pyqtSignal()
-
     def __init__(self, startTime=datetime.now(), endTime=None, name='', color=QColor(51, 204, 255, PhoEvent.DefaultOpacity), extended_data=dict(), parent=None):
         super(PhoDurationEvent, self).__init__(startTime, name, color, extended_data, parent=parent)
         self.endTime = endTime
         self.init_EdgeAndCornerContainerViewMixin()
-
-    # gets the child index that's set by the parent with "newAnnotationView.setAccessibleName(str(newAnnotationIndex))"
-    def get_track_index(self):
-        curr_name = self.accessibleName()
-        return int(curr_name)
 
     def __eq__(self, otherEvent):
         return self.name == otherEvent.name and self.startTime == otherEvent.startTime and self.endTime == otherEvent.endTime
@@ -104,7 +93,6 @@ class PhoDurationEvent(EdgeAndCornerContainerViewMixin, PhoEvent):
         self.menu = QMenu()
         self.info_action = self.menu.addAction("Get Info")
         self.modify_action = self.menu.addAction("Modify...")
-        self.annotation_action = self.menu.addAction("Create annotation...")
         self.delete_action = self.menu.addAction("Delete...")
         return self.menu
 
@@ -116,18 +104,18 @@ class PhoDurationEvent(EdgeAndCornerContainerViewMixin, PhoEvent):
         # action = menu.exec_(pos)
         if action == self.info_action:
             print("PhoDurationEvent.Get Info action!")
-            self.on_info.emit()
+            self.on_info.emit(self.get_track_index())
         elif action == self.modify_action:
             print("PhoDurationEvent.Modify action!")
-            self.on_edit.emit()
-        elif action == self.annotation_action:
-            print("PhoDurationEvent.Annotation action!")
-            self.on_annotate.emit()
+            self.on_edit.emit(self.get_track_index())
         elif action == self.delete_action:
             print("PhoDurationEvent.Delete action!")
-            self.on_delete.emit()
+            self.on_delete.emit(self.get_track_index())
         else:
-            print("Unknown menu option!!")
+            print("Unknown menu option! for track {0}".format(str(self.get_track_index())))
+            return action
+        
+        return None
 
     def on_button_clicked(self, event):
         self.set_state_selected()

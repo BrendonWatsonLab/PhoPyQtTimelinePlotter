@@ -136,8 +136,8 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigMixin, TimelineTrackDrawin
         self.eventRect = np.repeat(QRect(0,0,0,0), len(self.partitions))
 
     # Called by a specific child partition's (double click or menu option) to indicate that it should be edited in a new Partition Editor Dialog
-    @pyqtSlot()    
-    def on_partition_modify_event(self):
+    @pyqtSlot(int)    
+    def on_partition_modify_event(self, childIndex):
         print("on_partition_modify_event(...)")
         selectedPartitionIndex = self.get_selected_partition_index()
         selectedPartitionViewObject = self.get_selected_partition().get_view()

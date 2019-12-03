@@ -179,16 +179,17 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
 
 
     # Menu Event Handlers:
-    def on_child_action_info(self):
-        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_info()")
+    def on_child_action_info(self, childIndex):
+        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_info({0})".format(str(childIndex)))
         pass
 
-    def on_child_action_modify(self):
-        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_modify()")
+    def on_child_action_modify(self, childIndex):
+        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_modify{0})".format(str(childIndex)))
         pass
 
-    def on_child_action_comment(self):
-        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_comment()")
+    def on_child_action_comment(self, childIndex):
+        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_comment({0})".format(str(childIndex)))
+        #TODO: shouldn't need to get_selected_duration_obj(). Should be able to use the childIndex.
         selected_obj = self.get_selected_duration_obj()
         if (selected_obj is None):
             print("ERROR: selected duration object is None! Can't perform action!")
@@ -201,6 +202,6 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
 
         return
 
-    def on_child_action_delete(self):
-        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_delete()")
+    def on_child_action_delete(self, childIndex):
+        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_delete({0})".format(str(childIndex)))
         pass

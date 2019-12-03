@@ -38,11 +38,7 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     LeftNibPainter = TrianglePainter(TriangleDrawOption_Horizontal.LeftApex)
     RightNibPainter = TrianglePainter(TriangleDrawOption_Horizontal.RightApex)
 
-    # This defines a signal called 'on_edit' that takes no arguments.
-    on_info = pyqtSignal(int)
-    on_edit = pyqtSignal(int)
-    on_delete = pyqtSignal(int)
-
+    # This defines a signal called 'on_edit' that takes no arguments
     on_edit_by_dragging_handle_start = pyqtSignal(int, int)
     on_edit_by_dragging_handle_end = pyqtSignal(int, int)
 
@@ -77,6 +73,7 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     def set_state_deemphasized(self):
         super().set_state_deemphasized()
 
+    # Direct override for menu items
     def buildMenu(self):
         self.menu = QMenu()
         self.info_action = self.menu.addAction("Get Info")
@@ -90,10 +87,6 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
 
         self.menu = self.buildMenu()
         action = self.menu.exec(self.mapToGlobal(pos))
-        # action = menu.popup(self.mapToGlobal(pos))
-        # action = menu.exec_(self.mapToGlobal(pos))
-        # action = menu.exec_(self.mapToParent(pos))
-        # action = menu.exec_(pos)
         if action == self.info_action:
             print("PhoDurationEvent_AnnotationComment: Get Info action!")
             self.on_info.emit(curr_child_index)
