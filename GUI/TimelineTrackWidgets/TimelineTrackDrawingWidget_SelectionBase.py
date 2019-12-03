@@ -42,8 +42,6 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
         self.itemSelectionMode = TimelineTrackDrawingWidget_SelectionBase.default_itemSelectionMode
         self.itemHoverMode = TimelineTrackDrawingWidget_SelectionBase.default_itemHoverMode
 
-
-
     def reset_hovered(self):
         self.hovered_object_index = None
         self.hovered_object = None
@@ -184,7 +182,6 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
         # Check if we want to dismiss the selection when the mouse button is released (requiring the user to hold down the button to see the results)
         needs_update = False
         # print("on_button_released({0},{1})".format(event.x(), event.y()))
-
         newlySelectedObjectIndex = self.find_child_object(event.x(), event.y())
 
         if newlySelectedObjectIndex is None:
@@ -209,6 +206,7 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
             print("SelectionBase Track on_button_released(...): Left click")
         elif event.button() == Qt.RightButton:
             print("SelectionBase Track on_button_released(...): Right click")
+            # The menu is called twice because we check both the selected and the hoverred item, of which an event can be both.
             prevHoveredObj = self.hovered_object
             if prevHoveredObj:
                 prevHoveredObj.on_button_released(event)
@@ -217,7 +215,9 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
 
             prevSelectedPartitionObj = self.get_selected_duration_obj()
             if (prevSelectedPartitionObj):
-                prevSelectedPartitionObj.on_button_released(event)
+                # make sure the selected object isn't the same as the hoverred object
+                if (prevSelectedPartitionObj != prevHoveredObj):
+                    prevSelectedPartitionObj.on_button_released(event)
             else:
                 print('SelectionBase Track on_button_released(...): No valid selection object')
 
