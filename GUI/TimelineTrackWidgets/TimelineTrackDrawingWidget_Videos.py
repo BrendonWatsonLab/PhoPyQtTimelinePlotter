@@ -53,7 +53,10 @@ class TimelineTrackDrawingWidget_Videos(TrackConfigMixin, TimelineTrackDrawingWi
 
         for aContainerObj in active_model_view_array:
             self.durationRecords.append(aContainerObj.get_record())
-            self.durationObjects.append(aContainerObj.get_view())            
+            newViewIndex = len(self.durationObjects)
+            newView = aContainerObj.get_view()
+            newView.setAccessibleName(str(newViewIndex))
+            self.durationObjects.append(newView)
 
         # Attach the signals to the new durationObjects:
         self.attach_child_duration_object_signals()

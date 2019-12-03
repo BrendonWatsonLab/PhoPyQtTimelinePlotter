@@ -470,8 +470,6 @@ class TimestampedAnnotation(ReferenceBoxExperCohortAnimalMixin, Base):
 
     @staticmethod
     def get_gui_view(aRecord, parent=None):
-        #TODO: check implementation!
-        # outGuiObj = convert_TimestampedAnnotation(aRecord, parent)
         end_date = None
         if aRecord.end_date:
             end_date = aRecord.get_end_date()
@@ -517,22 +515,13 @@ class VideoFile(ReferenceBoxExperCohortAnimalMixin, Base):
     file_fullname = Column(Text, nullable=False)
     file_basename = Column(Text, nullable=False)
     file_extension = Column(Text, ForeignKey('staticFileExtensions.extension'), nullable=False)
-    # file_extension = Column(Integer, ForeignKey('staticFileExtensions.extension'), nullable=False)
     file_video_folder = Column(Integer, ForeignKey('fileParentFolders.id'))
     start_date = Column(Integer, nullable=False)
     end_date = Column(Integer)
     duration = Column(Integer)
-    # behavioral_box_id = Column(Integer, ForeignKey('BehavioralBoxes.id'))
-    # experiment_id = Column(Integer, ForeignKey('Experiments.id'))
-    # cohort_id = Column(Integer, ForeignKey('Cohorts.id'))
-    # animal_id = Column(Integer, ForeignKey('Animals.id'))
     is_original_video = Column(Integer)
     notes = Column(Text)
 
-    # animal = relationship('Animal')
-    # behavioral_box = relationship('BehavioralBox')
-    # cohort = relationship('Cohort')
-    # experiment = relationship('Experiment')
     staticFileExtension = relationship('StaticFileExtension')
     fileParentFolder = relationship('FileParentFolder', back_populates="videoFiles")
 
@@ -673,7 +662,6 @@ class VideoFile(ReferenceBoxExperCohortAnimalMixin, Base):
     def get_gui_view(aVideoRecord, parent=None):
         currExtraInfoDict = aVideoRecord.get_output_dict()
         outGuiObj = PhoDurationEvent_Video(aVideoRecord.get_start_date(), aVideoRecord.get_end_date(), aVideoRecord.file_fullname, QColor(51,204,255), currExtraInfoDict, parent=parent)
-        # outGuiObj
         return outGuiObj
 
 

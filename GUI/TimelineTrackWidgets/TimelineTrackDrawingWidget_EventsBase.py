@@ -119,6 +119,7 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
     #             return (index, obj)
     #     return None # If there is no next event, return None
 
+
     # TODO: find_overlapping_events(...) doesn't yet work
     def find_overlapping_events(self):
         currOpenEvents = []
