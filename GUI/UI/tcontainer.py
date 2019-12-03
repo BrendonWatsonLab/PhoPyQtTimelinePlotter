@@ -7,10 +7,10 @@ distributed without any warranty. Code bellow can contains mistakes taken from c
 """
 
 import sys
-from enum import Enum
+from enum import Enum, IntFlag, IntEnum
 
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtCore import QPoint, pyqtSignal, QRect, QSize, QMargins
+from PyQt5.QtCore import QPoint, pyqtSignal, QRect, QSize, QMargins, Q_FLAGS
 from PyQt5.QtGui import QColor, QCursor, QPainterPath, QBrush
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QMenu, QLabel, QMainWindow
 
@@ -19,19 +19,43 @@ from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QMenu, QLabel, Q
 "T"/"B": Top/Bottom
 "L"/"R": Left/Right
 """
-class ResizableContainerMode(Enum):
+# class ResizableContainerMode(Enum):
+#     NONE = 0,
+#     MOVE = 1,
+#     RESIZETL = 2,
+#     RESIZET = 3,
+#     RESIZETR = 4,
+#     RESIZER = 5,
+#     RESIZEBR = 6,
+#     RESIZEB = 7,
+#     RESIZEBL = 8,
+#     RESIZEL = 9
+
+class ResizableContainerMode(IntEnum):
     NONE = 0,
     MOVE = 1,
     RESIZETL = 2,
-    RESIZET = 3,
-    RESIZETR = 4,
-    RESIZER = 5,
-    RESIZEBR = 6,
-    RESIZEB = 7,
-    RESIZEBL = 8,
-    RESIZEL = 9
+    RESIZET = 4,
+    RESIZETR = 8,
+    RESIZER = 16,
+    RESIZEBR = 32,
+    RESIZEB = 64,
+    RESIZEBL = 128,
+    RESIZEL = 256
+    # NONE = int(0x00),
+    # MOVE = int(0x01),
+    # RESIZETL = int(0x02),
+    # RESIZET = int(0x04),
+    # RESIZETR = int(0x08),
+    # RESIZER = int(0x16),
+    # RESIZEBR = int(0x32),
+    # RESIZEB = int(0x64),
+    # RESIZEBL = int(0x128),
+    # RESIZEL = int(0x256)
 
     # Note Margins are QMargins(int left, int top, int right, int bottom)
+    # QtCore.Q_DECLARE_FLAGS(ResizableContainerOptions, ResizableContainerOption)
+    # Q_FLAGS(ResizableContainerMode.ResizableContainerOption)
 
     def get_highlight_rect(self, parent_rect, border_handle_size_diff):
         const_corner_rect_size = QSize(10, 10)
@@ -95,8 +119,45 @@ class ResizableContainerMode(Enum):
 
         return currRect
 
+    def get_mode_cursor(self):
+        if (self == ResizableContainerMode.RESIZETL):
+            return QCursor(QtCore.Qt.SizeFDiagCursor)
+        elif (self == ResizableContainerMode.RESIZETR):
+            return QCursor(QtCore.Qt.SizeBDiagCursor)
+        elif (self == ResizableContainerMode.RESIZEBR):
+            return QCursor(QtCore.Qt.SizeFDiagCursor)
+        elif (self == ResizableContainerMode.RESIZEBL):
+            return QCursor(QtCore.Qt.SizeBDiagCursor)
+        elif (self == ResizableContainerMode.RESIZET):
+            return QCursor(QtCore.Qt.SizeVerCursor)
+        elif (self == ResizableContainerMode.RESIZER):
+            return QCursor(QtCore.Qt.SizeHorCursor)
+        elif (self == ResizableContainerMode.RESIZEB):
+            return QCursor(QtCore.Qt.SizeVerCursor)
+        elif (self == ResizableContainerMode.RESIZEL):
+            return QCursor(QtCore.Qt.SizeHorCursor)
+        else:
+            return QCursor(QtCore.Qt.ArrowCursor)
+
+
+    # QtCore.Q_DECLARE_FLAGS(ResizableContainerOptions, ResizableContainerOption)
+# Q_FLAGS(ResizableContainerMode)
+    # QtCore.Q_DECLARE_OPERATORS_FOR_FLAGS(ResizableContainerMode.ResizableContainerOptions)
+# class ResizableContainerOption:
+#     Enable_Move = int(ResizableContainerMode.MOVE)
+#     EnableResize_Corner_TL = int(ResizableContainerMode.RESIZETL)
+#     EnableResize_Corner_TR = int(ResizableContainerMode.RESIZETR)
+#     EnableResize_Corner_BR = int(ResizableContainerMode.RESIZEBR)
+#     EnableResize_Corner_BL = int(ResizableContainerMode.RESIZEBL)
+#     EnableResize_Edge_Top = int(ResizableContainerMode.RESIZET)
+#     EnableResize_Edge_Right = int(ResizableContainerMode.RESIZER)
+#     EnableResize_Edge_Bottom = int(ResizableContainerMode.RESIZEB)
+#     EnableResize_Edge_Left = int(ResizableContainerMode.RESIZEL)
+
+
 
 class ResizableContainerWidgetMixin(object):
+
     mode = ResizableContainerMode.NONE
     position = None
     inFocus = pyqtSignal(bool)
@@ -297,9 +358,50 @@ TContainer: a freely resizable container widget that embeds its main contents in
     - If it detects a mode that isn't permitted in the mask, it returns self.mode = None
 """
 class TContainer(QWidget):
+    
+    # class ResizableContainerOption(Enum):
+    #     NONE = 0x00,
+    #     MOVE = 0x01,
+    #     RESIZETL = 0x02,
+    #     RESIZET = 0x04,
+    #     RESIZETR = 0x08,
+    #     RESIZER = 0x16,
+    #     RESIZEBR = 0x32,
+    #     RESIZEB = 0x64,
+    #     RESIZEBL = 0x128,
+    #     RESIZEL = 0x256
+    class ResizableContainerOption(IntFlag):
+        # NONE = int(0x000),
+        # MOVE = int(0x001),
+        # RESIZETL = int(0x002),
+        # RESIZET = int(0x004),
+        # RESIZETR = int(0x008),
+        # RESIZER = int(0x016),
+        # RESIZEBR = int(0x032),
+        # RESIZEB = int(0x064),
+        # RESIZEBL = int(0x128),
+        # RESIZEL = int(0x256)
+        NONE = 0,
+        MOVE = 1,
+        RESIZETL = 2,
+        RESIZET = 4,
+        RESIZETR = 8,
+        RESIZER = 16,
+        RESIZEBR = 32,
+        RESIZEB = 64,
+        RESIZEBL = 128,
+        RESIZEL = 256
+
+    # Qt.Q_DECLARE_FLAGS(ResizableContainerOptions, ResizableContainerOption)
+    # Q_FLAG(ResizableContainerOptions)
+    # Q_FLAGS(ResizableContainerOption)
+
     """ allow to move and resize by user"""
     menu = None
     mode = ResizableContainerMode.NONE
+    # (ResizableContainerOption.RESIZEL | ResizableContainerOption.RESIZER)
+
+    # QFlags()
     position = None
     inFocus = pyqtSignal(bool)
     outFocus = pyqtSignal(bool)
@@ -307,12 +409,14 @@ class TContainer(QWidget):
 
 
 
-    def __init__(self, parent, p, cWidget):
+    def __init__(self, parent, enabled_actions, p, cWidget):
         super().__init__(parent=parent)
         # self.border_handle_size_diff: how many pixels you have to grab the edges
         self.border_handle_size_diff = 3
         self.hoverEdgeRectColor = QColor(100,255,0,200)
-
+        # self.enabled_options = TContainer.ResizableContainerOption(TContainer.ResizableContainerOption.RESIZEL.value)
+        self.enabled_options = enabled_actions
+        
         self.menu = QMenu(parent=self, title='menu')
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
         self.setVisible(True)
@@ -329,6 +433,20 @@ class TContainer(QWidget):
         self.m_showMenu = False
         self.m_isEditing = True
         self.installEventFilter(parent)
+
+    def try_set_mode(self, proposed_mode):
+        print("try_set_mode[{0}]({1}): current_options: {2} ({3})".format(str(proposed_mode), str(proposed_mode.value), str(self.enabled_options), str(self.enabled_options.value)))
+        if (proposed_mode.value & self.enabled_options.value):
+        # if (proposed_mode.value in self.enabled_options):
+
+            print("Mode is enabled!")
+            self.mode = proposed_mode
+            return True
+        else:
+            print("enabled_options doesn't contain the proposed mode: {0}".format(proposed_mode))
+            return False
+        
+        return
 
     def focusInEvent(self, a0: QtGui.QFocusEvent):
         self.m_infocus = True
@@ -349,6 +467,7 @@ class TContainer(QWidget):
     # It seems most of the magic is being done here. This function sets the cursor shape (whether it's a "resizing" handle or a mouse) and sets the "mode" variable to indicate which mode it's currently in.,
     def setCursorShape(self, e_pos: QPoint):
         self.border_handle_size_diff = 3
+        didModeChange = False
         # Left - Bottom
         if (((e_pos.y() > self.y() + self.height() - self.border_handle_size_diff) and # Bottom
             (e_pos.x() < self.x() + self.border_handle_size_diff)) or # Left
@@ -365,44 +484,43 @@ class TContainer(QWidget):
             if ((e_pos.y() > self.y() + self.height() - self.border_handle_size_diff) and # Bottom
             (e_pos.x() < self.x()
                 + self.border_handle_size_diff)): # Left
-                self.mode = ResizableContainerMode.RESIZEBL
-                self.setCursor(QCursor(QtCore.Qt.SizeBDiagCursor))
+                didModeChange = self.try_set_mode(ResizableContainerMode.RESIZEBL)
                 # Right - Bottom
             if ((e_pos.y() > self.y() + self.height() - self.border_handle_size_diff) and # Bottom
             (e_pos.x() > self.x() + self.width() - self.border_handle_size_diff)): # Right
-                self.mode = ResizableContainerMode.RESIZEBR
-                self.setCursor(QCursor(QtCore.Qt.SizeFDiagCursor))
+                didModeChange = self.try_set_mode(ResizableContainerMode.RESIZEBR)
             # Left - Top
             if ((e_pos.y() < self.y() + self.border_handle_size_diff) and # Top
             (e_pos.x() < self.x() + self.border_handle_size_diff)): # Left
-                self.mode = ResizableContainerMode.RESIZETL
-                self.setCursor(QCursor(QtCore.Qt.SizeFDiagCursor))
+                didModeChange = self.try_set_mode(ResizableContainerMode.RESIZETL)
             # Right - Top
             if ((e_pos.y() < self.y() + self.border_handle_size_diff) and # Top
             (e_pos.x() > self.x() + self.width() - self.border_handle_size_diff)): # Right
-                self.mode = ResizableContainerMode.RESIZETR
-                self.setCursor(QCursor(QtCore.Qt.SizeBDiagCursor))
+                didModeChange = self.try_set_mode(ResizableContainerMode.RESIZETR)
         # check cursor horizontal position
         elif ((e_pos.x() < self.x() + self.border_handle_size_diff) or # Left
             (e_pos.x() > self.x() + self.width() - self.border_handle_size_diff)): # Right
             if e_pos.x() < self.x() + self.border_handle_size_diff: # Left
                 self.setCursor(QCursor(QtCore.Qt.SizeHorCursor))
-                self.mode = ResizableContainerMode.RESIZEL
+                didModeChange = self.try_set_mode(ResizableContainerMode.RESIZEL)
             else: # Right
                 self.setCursor(QCursor(QtCore.Qt.SizeHorCursor))
-                self.mode = ResizableContainerMode.RESIZER
+                didModeChange = self.try_set_mode(ResizableContainerMode.RESIZER)
         # check cursor vertical position
         elif ((e_pos.y() > self.y() + self.height() - self.border_handle_size_diff) or # Bottom
             (e_pos.y() < self.y() + self.border_handle_size_diff)): # Top
             if e_pos.y() < self.y() + self.border_handle_size_diff: # Top
                 self.setCursor(QCursor(QtCore.Qt.SizeVerCursor))
-                self.mode = ResizableContainerMode.RESIZET
+                didModeChange = self.try_set_mode(ResizableContainerMode.RESIZET)
             else: # Bottom
                 self.setCursor(QCursor(QtCore.Qt.SizeVerCursor))
-                self.mode = ResizableContainerMode.RESIZEB
+                didModeChange = self.try_set_mode(ResizableContainerMode.RESIZEB)
         else:
-            self.setCursor(QCursor(QtCore.Qt.ArrowCursor))
-            self.mode = ResizableContainerMode.MOVE
+            self.setCursor(self.mode.get_mode_cursor())
+            didModeChange = self.try_set_mode(ResizableContainerMode.MOVE)
+
+        if didModeChange:
+            self.setCursor(self.mode.get_mode_cursor())
 
 
     def setChildWidget(self, cWidget):
@@ -427,17 +545,18 @@ class TContainer(QWidget):
         color = (r, g, b, a) = (255, 0, 0, 16)
         painter.fillRect(e.rect(), QColor(r, g, b, a))
 
+        rect = e.rect()
+        rect.adjust(0,0,-1,-1)
+
         if self.m_infocus:
-            rect = e.rect()
-            rect.adjust(0,0,-1,-1)
             painter.setPen(QColor(r, g, b))
             painter.drawRect(rect)
 
-            # Draw highlighted edges:
-            currHighlightRect = self.mode.get_highlight_rect(rect, self.border_handle_size_diff)
-            if currHighlightRect is not None:
-                painter.setPen(self.hoverEdgeRectColor)
-                painter.drawRect(currHighlightRect)
+        # Draw highlighted edges:
+        currHighlightRect = self.mode.get_highlight_rect(rect, self.border_handle_size_diff)
+        if currHighlightRect is not None:
+            painter.setPen(self.hoverEdgeRectColor)
+            painter.drawRect(currHighlightRect)
 
 
     def mousePressEvent(self, e: QtGui.QMouseEvent):
@@ -493,6 +612,7 @@ class TContainer(QWidget):
         if not e.buttons() and QtCore.Qt.LeftButton:
             p = QPoint(e.x() + self.geometry().x(), e.y() + self.geometry().y())
             self.setCursorShape(p)
+            self.update()
             return
 
         if (self.mode == ResizableContainerMode.MOVE or self.mode == ResizableContainerMode.NONE) and e.buttons() and QtCore.Qt.LeftButton:
@@ -546,13 +666,14 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.showMaximized()
+        # self.showMaximized()
         lab1 = QLabel("Label1")
         lab2 = QLabel("Label2")
-        con1 = TContainer(self, QPoint(10,10), lab1)
-        con1.mode = ResizableContainerMode.RESIZER
-        con2 = TContainer(self, QPoint(20,50), lab2)
-        con2.mode = ResizableContainerMode.NONE
+        con1 = TContainer(self, (TContainer.ResizableContainerOption.NONE | TContainer.ResizableContainerOption.RESIZEL | TContainer.ResizableContainerOption.RESIZER), QPoint(10,10), lab1)
+        # con1.mode = ResizableContainerMode.RESIZER
+        con2 = TContainer(self, (TContainer.ResizableContainerOption.NONE | TContainer.ResizableContainerOption.MOVE | TContainer.ResizableContainerOption.RESIZEL | TContainer.ResizableContainerOption.RESIZER), QPoint(20,50), lab2)
+        # con2.mode = ResizableContainerMode.NONE
+        self.show()
 
 
 if __name__ == '__main__':
