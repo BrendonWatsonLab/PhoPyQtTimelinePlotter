@@ -18,7 +18,7 @@ from GUI.Model.TrackType import TrackType, TrackConfigMixin
 
 class TimelineTrackDrawingWidget_Videos(TrackConfigMixin, TimelineTrackDrawingWidget_EventsBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
-    default_shouldDismissSelectionUponMouseButtonRelease = True
+    default_shouldDismissSelectionUponMouseButtonRelease = False
     default_itemSelectionMode = ItemSelectionOptions.MultiSelection
 
     def __init__(self, trackConfig, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
