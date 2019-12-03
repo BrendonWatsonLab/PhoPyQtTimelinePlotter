@@ -92,6 +92,10 @@ class PhoDurationEvent(EdgeAndCornerContainerViewMixin, PhoEvent):
     def buildMenu(self):
         self.menu = QMenu()
         self.info_action = self.menu.addAction("Get Info")
+        sep1 = self.menu.addSeparator()
+        self.createMarkerAtStart = self.menu.addAction("Marker at Start")
+        self.createMarkerAtEnd = self.menu.addAction("Marker at End")
+        sep2 = self.menu.addSeparator()
         self.modify_action = self.menu.addAction("Modify...")
         self.delete_action = self.menu.addAction("Delete...")
         return self.menu
@@ -111,6 +115,14 @@ class PhoDurationEvent(EdgeAndCornerContainerViewMixin, PhoEvent):
         elif action == self.delete_action:
             print("PhoDurationEvent.Delete action!")
             self.on_delete.emit(self.get_track_index())
+
+        elif action == self.createMarkerAtStart:
+            print("PhoDurationEvent.DelcreateMarkerAtStartete action!")
+            self.on_create_marker_at_start.emit(self.get_track_index(), self.startTime)
+        elif action == self.createMarkerAtEnd:
+            print("PhoDurationEvent.createMarkerAtEnd action!")
+            self.on_create_marker_at_end.emit(self.get_track_index(), self.endTime)
+            
         else:
             print("Unknown menu option! for track {0}".format(str(self.get_track_index())))
             return action
