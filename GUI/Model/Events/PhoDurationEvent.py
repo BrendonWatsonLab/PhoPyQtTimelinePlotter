@@ -33,7 +33,6 @@ class PhoDurationEvent(PhoEvent):
     on_delete = pyqtSignal()
 
     
-
     def __init__(self, startTime=datetime.now(), endTime=None, name='', color=QColor(51, 204, 255, PhoEvent.DefaultOpacity), extended_data=dict(), parent=None):
         super(PhoDurationEvent, self).__init__(startTime, name, color, extended_data, parent=parent)
         self.endTime = endTime
@@ -42,12 +41,6 @@ class PhoDurationEvent(PhoEvent):
     def get_track_index(self):
         curr_name = self.accessibleName()
         return int(curr_name)
-        # try:
-        #     return int(curr_name)
-        # except expression as identifier:
-        #     return curr_name
-        
-
 
     def __eq__(self, otherEvent):
         return self.name == otherEvent.name and self.startTime == otherEvent.startTime and self.endTime == otherEvent.endTime

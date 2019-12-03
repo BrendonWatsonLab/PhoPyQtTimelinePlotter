@@ -97,6 +97,14 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
         self.update()
         
 
+    # overrides
+    def reset_hovered(self):
+        super().reset_hovered()
+        
+
+    def reset_selected(self):
+        super().reset_selected()
+
 
     # Rebuilds the GUI event objects (self.durationObjects) from the self.durationRecords
     # def rebuildDrawnObjects(self):
@@ -416,22 +424,17 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
     #         print("Error: unsure what comment to update!")
     #         return
 
-    @pyqtSlot(str, int)
-    def handleStartSliderValueChange(self, child_name, value):
-        print('handleStartSliderValueChange({0}, {1})'.format(child_name, value))
-        try:
-            child_index = int(child_name)
-        except:
-            print("Error decoding child_index! Aborting handle update!")
-            return
-
+    @pyqtSlot(int, int)
+    def handleStartSliderValueChange(self, child_index, value):
+        print('handleStartSliderValueChange({0}, {1})'.format(str(child_index), value))
         new_datetime = self.offset_to_datetime(value)
         currObjToModify = self.durationRecords[child_index]
         if (not (currObjToModify is None)):
-            currObjToModify = modify_TimestampedAnnotation_startDate(currObjToModify, new_datetime)
-            self.durationRecords[child_index] = currObjToModify
-            self.database_commit()
-            self.reloadModelFromDatabase()
+            print("found object to modify...")
+            # currObjToModify = modify_TimestampedAnnotation_startDate(currObjToModify, new_datetime)
+            # self.durationRecords[child_index] = currObjToModify
+            # self.database_commit()
+            # self.reloadModelFromDatabase()
             # self.rebuildDrawnObjects()
             # self.update()
         else:
@@ -439,22 +442,17 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
             return
 
 
-    @pyqtSlot(str, int)
-    def handleEndSliderValueChange(self, child_name, value):
-        print('handleEndSliderValueChange({0}, {1})'.format(child_name, value))
-        try:
-            child_index = int(child_name)
-        except:
-            print("Error decoding child_index! Aborting handle update!")
-            return
-
+    @pyqtSlot(int, int)
+    def handleEndSliderValueChange(self, child_index, value):
+        print('handleEndSliderValueChange({0}, {1})'.format(str(child_index), value))
         new_datetime = self.offset_to_datetime(value)
         currObjToModify = self.durationRecords[child_index]
         if (not (currObjToModify is None)):
-            currObjToModify = modify_TimestampedAnnotation_endDate(currObjToModify, new_datetime)
-            self.durationRecords[child_index] = currObjToModify
-            self.database_commit()
-            self.reloadModelFromDatabase()
+            print("found object to modify...")
+            # currObjToModify = modify_TimestampedAnnotation_endDate(currObjToModify, new_datetime)
+            # self.durationRecords[child_index] = currObjToModify
+            # self.database_commit()
+            # self.reloadModelFromDatabase()
             # self.rebuildDrawnObjects()
             # self.update()
         else:
