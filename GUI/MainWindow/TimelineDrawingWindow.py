@@ -1343,6 +1343,25 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             sel_endtime = commentObj.endTime
             # Call the create_annotation function on the track with found_dest_track_id
             print("trying to create annotation from {0} to {1}".format(str(sel_start), str(sel_endtime)))
+            currTrackWidget = None
+            for i in range(0, len(self.eventTrackWidgets)):
+                if (found_dest_track_id == self.eventTrackWidgets[i].trackID):
+                    currTrackWidget = self.eventTrackWidgets[i]
+                    break
+                else:
+                    continue
+            
+            if (currTrackWidget is None):
+                print("ERROR: couldn't get the active track widget with event trackID: {0}".format(trackID))
+                return
+            else:
+                print("creating annotation....")
+                currTrackWidget.create_comment_datetime(sel_start, sel_endtime)
+
+
+            
+
+
 
         else:
             print("WARNING: Couldn't find matching annotation track for filter {0}".format(str(currTrackFilter)))

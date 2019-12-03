@@ -248,14 +248,17 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
     def create_comment(self, cut_x):
         cut_duration_offset = self.offset_to_duration(cut_x)
         cut_datetime = self.offset_to_datetime(cut_x)
+        return self.create_comment_datetime(cut_datetime, cut_datetime)
 
+
+    def create_comment_datetime(self, start_datetime, end_datetime):
         # TODO: should get the behavioral_box_id, experiment_id, cohort_id, animal_id from the track's context or config or w/e
         self.annotationEditingDialog = TextAnnotationDialog()
         self.annotationEditingDialog.on_commit[datetime, str, str, str, int, int, int, int].connect(self.try_create_instantaneous_comment)
         self.annotationEditingDialog.on_commit[datetime, datetime, str, str, str, int, int, int, int].connect(self.try_create_comment)
         self.annotationEditingDialog.on_cancel.connect(self.comment_dialog_canceled)
-        self.annotationEditingDialog.set_start_date(cut_datetime)
-        self.annotationEditingDialog.set_end_date(cut_datetime)
+        self.annotationEditingDialog.set_start_date(start_datetime)
+        self.annotationEditingDialog.set_end_date(end_datetime)
 
         ## SHOULD BE SET TO TRACK's global values for these variables.
         ## TODO: the track can have multiple values
@@ -272,6 +275,8 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
         self.annotationEditingDialog.set_id_values(sel_behavioral_box_id, sel_experiment_id, sel_cohort_id, sel_animal_id)
             
         return False
+
+
 
     @pyqtSlot(datetime, datetime, str, str, str, int, int, int, int)
     def try_create_comment(self, start_date, end_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
