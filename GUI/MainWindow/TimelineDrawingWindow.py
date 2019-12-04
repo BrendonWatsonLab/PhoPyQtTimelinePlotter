@@ -366,6 +366,12 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.videoFileTrackWidgetHeaders = dict()
             self.trackFloatingWidgetHeaders = dict()
 
+            # Create the layout for the timeline viewport:
+            self.timelineViewportLayout = QGridLayout(self)
+            self.timelineViewportLayout.setSpacing(0)
+            self.timelineViewportLayout.setContentsMargins(0,0,0,0)
+            self.timelineViewportContainer = QWidget(self)
+
             # Loop through the videoFileTrackWidgets and add them
             for i in range(0, len(self.videoFileTrackWidgets)):
                 currVideoTrackWidget = self.videoFileTrackWidgets[i]
@@ -494,11 +500,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             # self.timelineScroll.setFixedHeight(400)
             # self.timelineScroll.setFixedWidth(self.width())
 
-            # Create the layout for the timeline viewport:
-            self.timelineViewportLayout = QGridLayout(self)
-            self.timelineViewportLayout.setSpacing(0)
-            self.timelineViewportLayout.setContentsMargins(0,0,0,0)
-            self.timelineViewportContainer = QWidget(self)
+ 
 
             # Add the timeline scroll to the layout
             self.timelineViewportLayout.addWidget(self.timelineScroll,0,0,-1,-1) # Set the timeline to span all rows/columns of the layout
