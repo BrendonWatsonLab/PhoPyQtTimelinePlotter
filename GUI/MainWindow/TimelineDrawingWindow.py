@@ -372,6 +372,10 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.timelineViewportLayout.setContentsMargins(0,0,0,0)
             self.timelineViewportContainer = QWidget(self)
 
+            # Add the blank grid row to account for the master track (which should occupy row 0)
+            # Set the minimum grid row height
+            self.timelineViewportLayout.setRowMinimumHeight(0, 50)
+
             # Loop through the videoFileTrackWidgets and add them
             for i in range(0, len(self.videoFileTrackWidgets)):
                 currVideoTrackWidget = self.videoFileTrackWidgets[i]
@@ -408,6 +412,10 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                     currFloatingHeader.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
                     currFloatingHeader.update_labels_dynamically()
                     self.trackFloatingWidgetHeaders[currVideoTrackWidget.trackID] = currFloatingHeader
+
+                    # Set the minimum grid row height
+                    currFloatingHeaderGridRowID = currTrackConfigurationIndex + 1
+                    self.timelineViewportLayout.setRowMinimumHeight(currFloatingHeaderGridRowID, self.minimumVideoTrackHeight)
 
 
                     currHeaderIncludedTrackLayout.addWidget(currVideoTrackWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
@@ -464,8 +472,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                     currFloatingHeader.setMinimumSize(25, (self.minimumVideoTrackHeight / 2.0))
                     currFloatingHeader.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
                     currFloatingHeader.update_labels_dynamically()
-                    self.trackFloatingWidgetHeaders[currVideoTrackWidget.trackID] = currFloatingHeader
+                    self.trackFloatingWidgetHeaders[currWidget.trackID] = currFloatingHeader
 
+                    # Set the minimum grid row height
+                    currFloatingHeaderGridRowID = currTrackConfigurationIndex + 1
+                    self.timelineViewportLayout.setRowMinimumHeight(currFloatingHeaderGridRowID, self.minimumVideoTrackHeight)
 
                     currHeaderIncludedTrackLayout.addWidget(currWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
                     currWidget.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
@@ -506,8 +517,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.timelineViewportLayout.addWidget(self.timelineScroll,0,0,-1,-1) # Set the timeline to span all rows/columns of the layout
 
             # Add header tracks to self.timelineScroll (the viewport)
+            currRowIndex = 1 # the row index starts at 1 to skip the timeline master track
             for (aTrackID, aFloatingHeader) in self.trackFloatingWidgetHeaders.items():
-                self.timelineViewportLayout.addWidget(aFloatingHeader, 0, 0, Qt.AlignHCenter|Qt.AlignTop)
+                # self.timelineViewportLayout.addWidget(aFloatingHeader, 0, 0, Qt.AlignHCenter|Qt.AlignTop)
+                self.timelineViewportLayout.addWidget(aFloatingHeader, currRowIndex, 0, Qt.AlignRight|Qt.AlignTop)
+                currRowIndex = currRowIndex + 1
 
 
             # Set the timelineViewportContainer's layout to the timeline viewport layout
