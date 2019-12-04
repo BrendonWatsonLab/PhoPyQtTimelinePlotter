@@ -119,7 +119,7 @@ class ReferenceMarkerManager(QObject):
     wants_extended_data = pyqtSignal(list)
     used_markers_extended_data_updated = pyqtSignal(list)
 
-    selection_changed = pyqtSignal(list, int)
+    selection_changed = pyqtSignal(list, list)
 
     
 
@@ -228,7 +228,7 @@ class ReferenceMarkerManager(QObject):
 
 class ActiveReferenceMarkersWindow(QWidget):
 
-    selection_changed = pyqtSignal(list, int)
+    selection_changed = pyqtSignal(list, list)
 
     def __init__(self, activeMarkersList):
         QWidget.__init__(self)
@@ -238,7 +238,9 @@ class ActiveReferenceMarkersWindow(QWidget):
         layout = QGridLayout()
         self.setLayout(layout)
         self.listwidget = QListWidget()
-        self.listwidget.clicked.connect(self.clicked)
+        self.listwidget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.listwidget.itemClicked.connect(self.on_item_clicked)
+        # self.listwidget.clicked.connect(self.clicked)
         layout.addWidget(self.listwidget)
 
         self.reload_list()
@@ -254,13 +256,33 @@ class ActiveReferenceMarkersWindow(QWidget):
                 curr_string = ('RefMark[identifier: {0}]: (datetime: {1})'.format(anItem.identifier, str(curr_metadata_item)))
                 # curr_string = str(anItem) + str(self.activeMetadataList[anIndex])
 
-            self.listwidget.insertItem(anIndex, curr_string)
+            # Create the new table item            
+            curr_item = QtWidgets.QListWidgetItem(curr_string)
 
-    def clicked(self, qmodelindex):
-        itemIndex = self.listwidget.currentRow()
-        item = self.listwidget.currentItem()
-        print(item.text())
-        self.selection_changed.emit(self.activeMarkersList, itemIndex)
+            # Add it to the table
+            self.listwidget.insertItem(anIndex, curr_item)
+
+
+
+
+    def on_item_clicked(self):
+        selected_items = self.listwidget.selectedItems()
+        selected_indicies = []
+        for index in range(len(selected_items)):
+            aSelectedItem = selected_items[index]
+            currRow = self.listwidget.row(aSelectedItem)
+            selected_indicies.append(currRow)
+
+        print("Selected indicies: {0}".format(str(selected_indicies)))
+        self.selection_changed.emit(self.activeMarkersList, selected_indicies)
+        return
+
+
+    # def clicked(self, qmodelindex):
+    #     itemIndex = self.listwidget.currentRow()
+    #     item = self.listwidget.currentItem()
+    #     print(item.text())
+    #     self.selection_changed.emit(self.activeMarkersList, itemIndex)
 
     @pyqtSlot(list)
     def on_active_markers_list_updated(self, newList):

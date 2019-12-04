@@ -1220,10 +1220,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # Update the reference manager
         self.referenceManager.update_next_unused_marker(new_pos)
 
-
-        # self.timelineMasterTrackWidget.on_update_reference_marker_position(x_offset)
-        # self.extendedTracksContainer.on_update_reference_marker_position(x_offset)
-
         self.timelineMasterTrackWidget.update()
         self.extendedTracksContainer.update()
 
@@ -1258,10 +1254,54 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         #  self.referenceManager.
 
         
-    @pyqtSlot(list, int)
-    def on_reference_line_marker_list_selection_changed(self, referenceLineList, selected_index):
-        print("TimelineDrawingWindow.on_reference_line_marker_list_selection_changed(referenceLineList, selected_index: {0})".format(str(selected_index)))
+    # @pyqtSlot(list, int)
+    # def on_reference_line_marker_list_selection_changed(self, referenceLineList, selected_index):
+    #     print("TimelineDrawingWindow.on_reference_line_marker_list_selection_changed(referenceLineList, selected_index: {0})".format(str(selected_index)))
+    #      # on_reference_line_marker_list_selection_changed(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
+
+    @pyqtSlot(list, list)
+    def on_reference_line_marker_list_selection_changed(self, referenceLineList, selected_indicies):
+        print("TimelineDrawingWindow.on_reference_line_marker_list_selection_changed(referenceLineList, selected_indicies: {0})".format(str(selected_indicies)))
          # on_reference_line_marker_list_selection_changed(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
+
+
+
+    # try_get_selected_reference_lines(): Tries to get the currently selected reference items
+    def try_get_selected_reference_lines(self):
+        curr_markers = self.referenceManager.get_used_markers()
+        # Get selected markers from here
+        output_data = []
+        for aListItem in curr_markers:
+            curr_x = aListItem.pointerPos
+            curr_datetime = self.offset_to_datetime(curr_x)
+            output_data.append(curr_datetime, aListItem)
+
+        # Assuming there's two valid markers, return them in order
+        output_data.sort(key = lambda mark_tuple: mark_tuple[0])
+        return output_data
+    
+
+    # try_create_comment_from_selected_reference_lines(): tries to create a new annotation comment from the selected reference marks
+    def try_create_comment_from_selected_reference_lines(self):
+        print("try_create_comment_from_selected_reference_lines(...)")
+        selected_ref_lines = self.try_get_selected_reference_lines()
+        if len(selected_ref_lines)<2:
+            print("Couldn't get two selected reference items!!")
+            return
+        else:
+            first_item = selected_ref_lines[0]
+            second_item = selected_ref_lines[1]
+
+            start_time = first_item[0]
+            end_time = second_item[0]
+
+            print("trying to create annotation from {0} to {1}".format(str(start_time), str(end_time)))
+            # Since we don't know what the source for these global mark references are, we have to create a new annotation without any existing comment/config. This means the UI won't render it on a track by default.
+            # currTrackWidget.create_comment_datetime(start_time, end_time)
+            print("ERROR: UNIMPLMENTED: TODO: Create a generic annotation dialog (with a temporary config) and allow the user to add it even if the track isn't currently displayed)")
+            return
+
+
 
 
     ## Track Operations:
