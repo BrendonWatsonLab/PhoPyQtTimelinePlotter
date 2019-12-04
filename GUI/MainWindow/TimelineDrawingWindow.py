@@ -20,6 +20,7 @@ from GUI.HelpWindow.HelpWindowFinal import *
 from GUI.MainObjectListsWindow.MainObjectListsWindow import *
 from GUI.ExampleDatabaseTableWindow import ExampleDatabaseTableWindow
 
+from GUI.Model.ReferenceLineManager import TickProperties, ReferenceMarker, ReferenceMarkerManager
 # from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget import *
 from GUI.UI.qtimeline import *
 
@@ -98,6 +99,12 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         self.videoInfoObjects = []
 
+        # Reference Manager:
+        self.referenceManager = ReferenceMarkerManager(10, parent=self)
+        self.referenceManager.used_markers_updated.connect(self.on_reference_line_markers_updated)
+        self.referenceManager.wants_extended_data.connect(self.on_request_extended_reference_line_data)
+        self.referenceManager.selection_changed.connect(self.on_reference_line_marker_list_selection_changed)
+
         self.reloadModelFromDatabase()
         self.reload_timeline_display_bounds()
 
@@ -126,6 +133,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # for aTuple in overlappingVideoEvents:
         #     print(aTuple)
         # # print(overlappingVideoEvents)
+
+    def get_reference_manager(self):
+        return self.referenceManager
 
     def initUI(self):
 
@@ -190,7 +200,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         def initUI_timelineTracks(self):
             # Timeline Numberline track:
             masterTimelineDurationSeconds = self.totalDuration.total_seconds()
-            self.timelineMasterTrackWidget = QTimeLine(masterTimelineDurationSeconds, minimumWidgetWidth)
+            self.timelineMasterTrackWidget = QTimeLine(masterTimelineDurationSeconds, minimumWidgetWidth, parent=self)
             self.timelineMasterTrackWidget.setMouseTracking(True)
             self.timelineMasterTrackWidget.hoverChanged.connect(self.handle_timeline_hovered_position_update_event)
             self.timelineMasterTrackWidget.positionChanged.connect(self.handle_timeline_position_update_event)
@@ -325,7 +335,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
 
             # Build the bottomPanelWidget
-            self.extendedTracksContainer = ExtendedTracksContainerWidget(masterTimelineDurationSeconds, minimumWidgetWidth, self)
+            self.extendedTracksContainer = ExtendedTracksContainerWidget(masterTimelineDurationSeconds, minimumWidgetWidth, parent=self)
             self.extendedTracksContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
             self.extendedTracksContainer.setAutoFillBackground(True)
             self.extendedTracksContainer.setMouseTracking(True)
@@ -358,6 +368,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                 # Video track specific setup
                 currVideoTrackWidget.selection_changed.connect(self.handle_child_selection_event)
                 currVideoTrackWidget.hover_changed.connect(self.handle_child_hover_event)
+                currVideoTrackWidget.on_create_marker.connect(self.on_create_playhead_selection)
+                
                 currVideoTrackWidget.setMouseTracking(True)
                 currVideoTrackWidget.shouldDismissSelectionUponMouseButtonRelease = False
                 currVideoTrackWidget.itemSelectionMode = ItemSelectionOptions.SingleSelection
@@ -759,6 +771,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     def get_viewport_width(self):
         return self.timelineScroll.width()
 
+    # Get scale from length. Only used for ReferenceManager
+    def getScale(self):
+        return float(self.totalDuration.total_seconds())/float(self.get_minimum_track_width())
+
+
     # Returns the percent of the total duration that the active viewport is currently displaying
     def get_active_viewport_duration_percent_viewport_total(self):
         return (float(self.get_viewport_width()) / float(self.get_minimum_track_width()))
@@ -1064,7 +1081,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         
 
     # @pyqtSlot(int, int)
-    # Occurs when the user selects an object in the child video track with the mouse
+    # Occurs when the user selects an object (durationObject) in the child video track with the mouse
     def handle_child_selection_event(self, trackIndex, trackObjectIndex):
         text = "handle_child_selection_event(...): trackIndex: {0}, trackObjectIndex: {1}".format(trackIndex, trackObjectIndex)
         print(text)
@@ -1190,6 +1207,123 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # self.extendedTracksContainer.on_update_hover
 
 
+    ## Playhead Operations:
+    @pyqtSlot(datetime)
+    def on_create_playhead_selection(self, desired_datetime):
+        print("TimelineDrawingWindow.on_create_playhead_selection({0})".format(str(desired_datetime)))
+        x_offset = self.datetime_to_offset(desired_datetime)
+        new_pos = QPoint(x_offset, 0)
+
+        self.timelineMasterTrackWidget.blockSignals(True)
+        self.extendedTracksContainer.blockSignals(True)
+
+        # Update the reference manager
+        self.referenceManager.update_next_unused_marker(new_pos)
+
+        self.timelineMasterTrackWidget.update()
+        self.extendedTracksContainer.update()
+
+        self.extendedTracksContainer.blockSignals(False)
+        self.timelineMasterTrackWidget.blockSignals(False)
+
+    @pyqtSlot(list)
+    def on_request_extended_reference_line_data(self, referenceLineList):
+        print("TimelineDrawingWindow.request_extended_reference_line_data(...)")
+        # on_request_extended_reference_line_data(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
+        additional_data = []
+        for aListItem in referenceLineList:
+            curr_x = aListItem.pointerPos
+            curr_datetime = self.offset_to_datetime(curr_x)
+            additional_data.append(curr_datetime)
+
+        self.referenceManager.update_marker_metadata(additional_data)
+
+
+
+    @pyqtSlot(list)
+    def on_reference_line_markers_updated(self, referenceLineList):
+        print("TimelineDrawingWindow.on_reference_line_markers_updated(...)")
+         # on_reference_line_markers_updated(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
+        additional_data = []
+        for aListItem in referenceLineList:
+            curr_x = aListItem.pointerPos
+            curr_datetime = self.offset_to_datetime(curr_x)
+            additional_data.append(curr_datetime)
+
+        print(additional_data)
+        #  self.referenceManager.
+
+        
+    # @pyqtSlot(list, int)
+    # def on_reference_line_marker_list_selection_changed(self, referenceLineList, selected_index):
+    #     print("TimelineDrawingWindow.on_reference_line_marker_list_selection_changed(referenceLineList, selected_index: {0})".format(str(selected_index)))
+    #      # on_reference_line_marker_list_selection_changed(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
+
+    @pyqtSlot(list, list)
+    def on_reference_line_marker_list_selection_changed(self, referenceLineList, selected_indicies):
+        print("TimelineDrawingWindow.on_reference_line_marker_list_selection_changed(referenceLineList, selected_indicies: {0})".format(str(selected_indicies)))
+         # on_reference_line_marker_list_selection_changed(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
+
+
+    # try_get_reference_lines(): Tries to get all the reference items and their metadata
+    def try_get_reference_lines(self):
+        curr_markers = self.referenceManager.get_used_markers()
+        # Build the metadata
+        output_data = []
+        for aListItem in curr_markers:
+            curr_x = aListItem.pointerPos
+            curr_datetime = self.offset_to_datetime(curr_x)
+            # combine the datetime and the list item as a tuple
+            output_data.append(curr_datetime, aListItem)
+
+        # Assuming there's two valid markers, return them in order
+        output_data.sort(key = lambda mark_tuple: mark_tuple[0])
+        return output_data
+
+
+    # try_get_selected_reference_lines(): Tries to get the currently selected reference items
+    def try_get_selected_reference_lines(self):
+        curr_reference_line_data = self.try_get_reference_lines()
+        # Get selected markers from here
+        active_window = self.referenceManager.activeMarkersWindow
+        if (active_window is None):
+            print("ERROR: no active window! Can't get selection!")
+            return
+
+        curr_active_inidices = active_window.get_selected_item_indicies()
+
+        # Get the active items from the indicies
+        curr_complete_active_items = []
+        for anIndex in curr_active_inidices:
+            curr_complete_active_items.append(curr_reference_line_data[anIndex])
+
+        return curr_complete_active_items
+    
+
+
+    
+
+    # try_create_comment_from_selected_reference_lines(): tries to create a new annotation comment from the selected reference marks
+    def try_create_comment_from_selected_reference_lines(self):
+        print("try_create_comment_from_selected_reference_lines(...)")
+        selected_ref_lines = self.try_get_selected_reference_lines()
+        if len(selected_ref_lines)<2:
+            print("Couldn't get two selected reference items!!")
+            return
+        else:
+            first_item = selected_ref_lines[0]
+            second_item = selected_ref_lines[1]
+
+            start_time = first_item[0]
+            end_time = second_item[0]
+
+            print("trying to create annotation from {0} to {1}".format(str(start_time), str(end_time)))
+            # Since we don't know what the source for these global mark references are, we have to create a new annotation without any existing comment/config. This means the UI won't render it on a track by default.
+            # currTrackWidget.create_comment_datetime(start_time, end_time)
+            print("ERROR: UNIMPLMENTED: TODO: Create a generic annotation dialog (with a temporary config) and allow the user to add it even if the track isn't currently displayed)")
+            return
+
+
 
 
     ## Track Operations:
@@ -1262,8 +1396,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         else:
             print("WARNING: Couldn't find header with trackID: {0}".format(trackID))
 
-
-
     @pyqtSlot(int)
     def on_track_header_refresh_activated(self, trackID):
         print("on_track_header_refresh_activated({0})".format(trackID))
@@ -1294,8 +1426,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         else:
             print("Error: unknown track type!")
             return
-
-
     
     @pyqtSlot(int, object)
     def on_track_child_create_comment(self, trackID, commentObj):
@@ -1369,7 +1499,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             return
 
         return
-
 
     # Called when the partition edit dialog accept event is called.
     @pyqtSlot(int, str, int, int, int, int, bool, bool)
@@ -1490,7 +1619,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         self.activeTrackID_ConfigEditingIndex = None
 
-
+    @pyqtSlot()
     def track_config_dialog_canceled(self):
         print('track_config_dialog_canceled()')
         self.activeTrackID_ConfigEditingIndex = None

@@ -23,9 +23,32 @@ class PhoDurationEvent_Video(PhoDurationEvent):
     IsPlayingIndicatorBorderWidth = 2
     IsPlayingIndicatorFractionOfHeight = 0.08
 
+    on_annotate = pyqtSignal(int)
+
     def __init__(self, startTime, endTime, name='', color=QColor(51, 204, 255, PhoEvent.DefaultOpacity), extended_data=dict(), parent=None):
         super(PhoDurationEvent_Video, self).__init__(startTime, endTime, name, color, extended_data, parent=parent)
         self.isPlayingVideo = False
+
+    def buildMenu(self):
+        self.menu = super().buildMenu()
+        self.annotation_action = self.menu.addAction("Create annotation...")
+        return self.menu
+
+    def handleMenuAction(self, action):
+        resolved_action = super().handleMenuAction(action)
+        if resolved_action is None:
+            print("Action was resolved by the parent showMenu(...) function")
+            return None
+        else:
+            if action == self.annotation_action:
+                print("PhoDurationEvent_Video.Annotation action!")
+                self.on_annotate.emit(self.get_track_index())
+            else:
+                print("Unknown menu option!!")
+                return action
+
+        return None
+
 
     def set_is_playing(self, new_is_playing_state):
         self.isPlayingVideo = new_is_playing_state

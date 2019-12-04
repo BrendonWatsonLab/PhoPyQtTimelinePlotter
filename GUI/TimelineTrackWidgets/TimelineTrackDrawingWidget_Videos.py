@@ -18,7 +18,7 @@ from GUI.Model.TrackType import TrackType, TrackConfigMixin
 
 class TimelineTrackDrawingWidget_Videos(TrackConfigMixin, TimelineTrackDrawingWidget_EventsBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
-    default_shouldDismissSelectionUponMouseButtonRelease = True
+    default_shouldDismissSelectionUponMouseButtonRelease = False
     default_itemSelectionMode = ItemSelectionOptions.MultiSelection
 
     def __init__(self, trackConfig, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
@@ -53,7 +53,12 @@ class TimelineTrackDrawingWidget_Videos(TrackConfigMixin, TimelineTrackDrawingWi
 
         for aContainerObj in active_model_view_array:
             self.durationRecords.append(aContainerObj.get_record())
-            self.durationObjects.append(aContainerObj.get_view())            
+            newViewIndex = len(self.durationObjects)
+            newView = aContainerObj.get_view()
+            newView.setAccessibleName(str(newViewIndex))
+            newView.on_create_marker_at_start.connect(self.on_create_playhead_selection)
+            newView.on_create_marker_at_end.connect(self.on_create_playhead_selection)
+            self.durationObjects.append(newView)
 
         # Attach the signals to the new durationObjects:
         self.attach_child_duration_object_signals()
@@ -149,25 +154,19 @@ class TimelineTrackDrawingWidget_Videos(TrackConfigMixin, TimelineTrackDrawingWi
             if (animal_id < 1):
                 animal_id = None
                 
-            # print('Modifying partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(self.activeEditingVideoIndex, type_id, subtype_id))
-            
-            # # Get new color associated with the modified subtype_id
-            # if ((type_id is None) or (subtype_id is None)):
-            #     newColor = PhoDurationEvent_Partition.ColorBase
-            # else:
-            #     newColor = self.behaviors[subtype_id-1].primaryColor.get_QColor()
-            
-            # self.partitionManager.modify_partition(self.activeEditingVideoIndex, start_date, end_date, title, subtitle, body, type_id, subtype_id, newColor)
-            # print('Modified partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(self.activeEditingVideoIndex, type_id, subtype_id))
-            # self.reinitialize_from_partition_manager()
             self.update()
-            # Save to database
-            # TODO: currently all saved partitions must be of the same context and subcontext.
-            # self.partitionManager.save_partitions_to_database()
         else:
             print("Error: unsure what video to update!")
             return
 
+    @pyqtSlot()
     def video_dialog_canceled(self):
         print('video_dialog_canceled')
         self.activeEditingVideoIndex = None
+
+
+    @pyqtSlot(int, datetime)
+    def on_create_playhead_selection(self, trackID, desired_datetime):
+        print("TimelineTrackDrawingWidget_Videos.on_create_playhead_selection(trackID: {0}, desired_datetime: {1})".format(str(trackID), str(desired_datetime)))
+        self.on_create_marker.emit(desired_datetime)
+        # self.parent().on_create_playhead_selection(desired_datetime)

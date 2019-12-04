@@ -85,7 +85,6 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
         #     qp.setPen(oldPen)
         #     qp.setFont(oldFont)
 
-
         # Draw the duration objects
         for (index, obj) in enumerate(self.durationObjects):
             self.eventRect[index] = obj.paint( qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
@@ -119,6 +118,7 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
     #         if (obj.startTime > following_datetime):
     #             return (index, obj)
     #     return None # If there is no next event, return None
+
 
     # TODO: find_overlapping_events(...) doesn't yet work
     def find_overlapping_events(self):
@@ -180,16 +180,17 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
 
 
     # Menu Event Handlers:
-    def on_child_action_info(self):
-        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_info()")
+    def on_child_action_info(self, childIndex):
+        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_info({0})".format(str(childIndex)))
         pass
 
-    def on_child_action_modify(self):
-        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_modify()")
+    def on_child_action_modify(self, childIndex):
+        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_modify{0})".format(str(childIndex)))
         pass
 
-    def on_child_action_comment(self):
-        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_comment()")
+    def on_child_action_comment(self, childIndex):
+        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_comment({0})".format(str(childIndex)))
+        #TODO: shouldn't need to get_selected_duration_obj(). Should be able to use the childIndex.
         selected_obj = self.get_selected_duration_obj()
         if (selected_obj is None):
             print("ERROR: selected duration object is None! Can't perform action!")
@@ -202,6 +203,6 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
 
         return
 
-    def on_child_action_delete(self):
-        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_delete()")
+    def on_child_action_delete(self, childIndex):
+        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_delete({0})".format(str(childIndex)))
         pass

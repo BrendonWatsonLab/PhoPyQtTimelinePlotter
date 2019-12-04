@@ -38,13 +38,9 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     LeftNibPainter = TrianglePainter(TriangleDrawOption_Horizontal.LeftApex)
     RightNibPainter = TrianglePainter(TriangleDrawOption_Horizontal.RightApex)
 
-    # This defines a signal called 'on_edit' that takes no arguments.
-    on_info = pyqtSignal(int)
-    on_edit = pyqtSignal(int)
-    on_delete = pyqtSignal(int)
-
-    on_edit_by_dragging_handle_start = pyqtSignal(str, int)
-    on_edit_by_dragging_handle_end = pyqtSignal(str, int)
+    # This defines a signal called 'on_edit' that takes no arguments
+    on_edit_by_dragging_handle_start = pyqtSignal(int, int)
+    on_edit_by_dragging_handle_end = pyqtSignal(int, int)
 
     def __init__(self, startTime=datetime.now(), endTime=None, name='', title='', subtitle='', color=QColor(31, 200, 62, PhoEvent.DefaultOpacity), extended_data=dict(), parent=None):
         super(PhoDurationEvent_AnnotationComment, self).__init__(startTime, endTime, name, color, extended_data, parent=parent)
@@ -59,9 +55,25 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         self.end_poly_is_active = False
 
         self._drag_position = None
-
-        # Can I get a double click effect?
         
+        # Can I get a double click effect?
+
+    # overrides:
+    def set_state_selected(self):
+        super().set_state_selected()
+
+    def set_state_deselected(self):
+        super().set_state_deselected()
+        self.start_poly_is_active = False
+        self.end_poly_is_active = False
+        
+    def set_state_emphasized(self):
+        super().set_state_emphasized()
+
+    def set_state_deemphasized(self):
+        super().set_state_deemphasized()
+
+    # Direct override for menu items
     def buildMenu(self):
         self.menu = QMenu()
         self.info_action = self.menu.addAction("Get Info")
@@ -75,10 +87,6 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
 
         self.menu = self.buildMenu()
         action = self.menu.exec(self.mapToGlobal(pos))
-        # action = menu.popup(self.mapToGlobal(pos))
-        # action = menu.exec_(self.mapToGlobal(pos))
-        # action = menu.exec_(self.mapToParent(pos))
-        # action = menu.exec_(pos)
         if action == self.info_action:
             print("PhoDurationEvent_AnnotationComment: Get Info action!")
             self.on_info.emit(curr_child_index)
@@ -95,19 +103,9 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         # self.menu = None
         # self.menu.close()
 
-
-    # def showMenu(self, pos):
-    #     menu = QMenu()
-    #     clear_action = menu.addAction("Modify Comment")
-    #     action = menu.exec_(self.mapToGlobal(pos))
-    #     # action = menu.exec_(self.mapToParent(pos))
-    #     # action = menu.exec_(pos)
-    #     if action == clear_action:
-            
-
     def on_button_clicked(self, event):
         # self.set_state_selected()
-
+        print("PhoDurationEvent_AnnotationComment.on_button_clicked({0})".format(str(event)))
         if self.start_poly:
             currPoint = event.pos()
             self.start_poly_is_active = self.start_poly.containsPoint(currPoint, Qt.OddEvenFill)
@@ -124,18 +122,18 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         if self.start_poly_is_active:
             startPos = self.finalEventRect.x()
             self._drag_position = startPos
-            self.on_edit_by_dragging_handle_start.emit(self.accessibleName(), self._drag_position)
+            self.on_edit_by_dragging_handle_start.emit(self.get_track_index(), self._drag_position)
         elif self.end_poly_is_active:
             startPos = (self.finalEventRect.x() + self.finalEventRect.width()) - PhoDurationEvent_AnnotationComment.NibTriangleWidth
             self._drag_position = startPos
-            self.on_edit_by_dragging_handle_end.emit(self.accessibleName(), self._drag_position)
+            self.on_edit_by_dragging_handle_end.emit(self.get_track_index(), self._drag_position)
         else:
             self._drag_position = None
 
         self.update()
             
-
     def on_button_released(self, event):
+        print("PhoDurationEvent_AnnotationComment.on_button_released({0})".format(str(event)))
         self.set_state_deselected()
 
         if (not (self._drag_position is None)):
@@ -146,14 +144,14 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
                 startPos = self.finalEventRect.x()
                 changeInX =  startPos - self._drag_position
                 print("Change in X: {0}".format(changeInX))
-                self.on_edit_by_dragging_handle_start.emit(self.accessibleName(), self._drag_position)
+                self.on_edit_by_dragging_handle_start.emit(self.get_track_index(), self._drag_position)
                 self.start_poly_is_active = False
 
             elif self.end_poly_is_active:
                 startPos = (self.finalEventRect.x() + self.finalEventRect.width()) - PhoDurationEvent_AnnotationComment.NibTriangleWidth
                 changeInX = startPos - self._drag_position
                 print("Change in X: {0}".format(changeInX))
-                self.on_edit_by_dragging_handle_end.emit(self.accessibleName(), self._drag_position)
+                self.on_edit_by_dragging_handle_end.emit(self.get_track_index(), self._drag_position)
                 self.end_poly_is_active = False
             else:
                 pass
@@ -179,19 +177,28 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
         self.update()
 
     def mouseMoveEvent(self, e):
+        print("PhoDurationEvent_AnnotationComment.mouseMoveEvent({0})".format(str(e)))
+
+        # p = QPoint(e.x() + self.geometry().x(), e.y() + self.geometry().y())
+
+        p = QPoint(e.x() + self.geometry().x(), e.y() + self.geometry().y())
+
+        # self.updateEdgeAndCornerContainerActivePosition(e.pos(), True)
+        # self.updateEdgeAndCornerContainerActivePosition(e.globalPos(), True)
+        self.updateEdgeAndCornerContainerActivePosition(p, True)
+
         # If drag active, move the stop.
         if (not (self._drag_position is None)):
             self._drag_position = e.x()
             # Only allow one active at a time
             if self.start_poly_is_active:
-                self.on_edit_by_dragging_handle_start.emit(self.accessibleName(), self._drag_position)
+                self.on_edit_by_dragging_handle_start.emit(self.get_track_index(), self._drag_position)
             elif self.end_poly_is_active:
-                self.on_edit_by_dragging_handle_end.emit(self.accessibleName(), self._drag_position)
+                self.on_edit_by_dragging_handle_end.emit(self.get_track_index(), self._drag_position)
             else:
                 pass
             
             self.update()
-
 
     def on_key_pressed(self, event):
         gey = event.key()
@@ -203,7 +210,10 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
             # self.func = (self.drawFundBlock, {})
             self.mModified = True
 
-        
+    # def reset_triangles(self):
+    #     self.start_poly_is_active = False
+    #     self.end_poly_is_active = False
+    #     self.update()
 
 
 
@@ -309,9 +319,12 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
             painter.drawText(self.bodyTextLabelRect, Qt.AlignCenter, self.name)
 
             # Draw Nibs:
+            self.hoveredEdgeAndCorners = EdgeAndCornerContainerComponent.NONE
+
             if self.start_poly_is_active:
                 painter.setPen(QtGui.QPen(PhoDurationEvent_AnnotationComment.ColorBorderActive, 1.0, join=Qt.MiterJoin))
                 painter.setBrush(QBrush(PhoDurationEvent_AnnotationComment.ColorNibHandleActive, Qt.SolidPattern))
+                self.hoveredEdgeAndCorners = EdgeAndCornerContainerComponent.Edge_Left
             else:
                 painter.setPen(QtGui.QPen(PhoDurationEvent_AnnotationComment.ColorBorderBase, 0.8, join=Qt.MiterJoin))
                 painter.setBrush(QBrush(activeColor, Qt.SolidPattern))
@@ -321,11 +334,14 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
             if self.end_poly_is_active:
                 painter.setPen(QtGui.QPen(PhoDurationEvent_AnnotationComment.ColorBorderActive, 1.0, join=Qt.MiterJoin))
                 painter.setBrush(QBrush(PhoDurationEvent_AnnotationComment.ColorNibHandleActive, Qt.SolidPattern))
+                self.hoveredEdgeAndCorners = EdgeAndCornerContainerComponent.Edge_Right
             else:
                 painter.setPen(QtGui.QPen(PhoDurationEvent_AnnotationComment.ColorBorderBase, 0.8, join=Qt.MiterJoin))
                 painter.setBrush(QBrush(activeColor, Qt.SolidPattern))
 
             painter.drawPolygon(self.end_poly)
+
+        self.paintEvent_EdgeAndCornerContainerViewMixin(painter, self.finalEventRect)
 
         painter.restore()
 

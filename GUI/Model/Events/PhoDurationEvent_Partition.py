@@ -27,7 +27,7 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
     MainTextFont = QFont('SansSerif', 10)
 
     # This defines a signal called 'on_edit' that takes no arguments.
-    on_edit = pyqtSignal()
+    # on_edit = pyqtSignal()
     # on_edit = pyqtSignal(datetime, datetime, str, str, str)
     # on_edit = pyqtSignal(PhoDurationEvent_Partition)
 
@@ -44,11 +44,9 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
         menu = QMenu()
         clear_action = menu.addAction("Modify Partition")
         action = menu.exec_(self.mapToGlobal(pos))
-        # action = menu.exec_(self.mapToParent(pos))
-        # action = menu.exec_(pos)
         if action == clear_action:
             print("Modify Partition action!")
-            self.on_edit.emit()
+            self.on_edit.emit(self.get_track_index())
 
     def onActivated(self, text):
         self.name = text

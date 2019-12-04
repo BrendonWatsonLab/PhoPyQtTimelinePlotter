@@ -25,6 +25,9 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
     hover_changed = pyqtSignal(int, int, name='hover_changed')
     selection_changed = pyqtSignal(int, int, name='selection_changed')
 
+
+    on_create_marker = pyqtSignal(datetime)
+    
     static_TimeTrackObjectIndex_NoSelection = -1  # The integer value that indicates no object has been selected in the timeline
 
     def __init__(self, trackID, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=False, wantsMouseEvents=True):
@@ -77,7 +80,6 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
     def paintEvent( self, event ):
         pass
 
-
     def get_background_gradient(self, height):
         middleColor = QColor(40,40,40,64)
         edgeColor = QColor(38,38,38,255)
@@ -127,7 +129,6 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
     def deemphasize(self, emph_index):
         pass
 
- 
     def on_button_clicked(self, event):
         pass
 

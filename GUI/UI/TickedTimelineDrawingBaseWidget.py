@@ -4,45 +4,15 @@ import tempfile
 from base64 import b64encode
 
 from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import Qt, QPoint, QLine, QRect, QRectF, pyqtSignal, pyqtSlot, QObject
+from PyQt5.QtCore import Qt, QPoint, QLine, QRect, QRectF, pyqtSignal, pyqtSlot, QObject, QMargins
 from PyQt5.QtGui import QPainter, QColor, QFont, QBrush, QPalette, QPen, QPolygon, QPainterPath, QPixmap
 from PyQt5.QtWidgets import QWidget, QFrame, QScrollArea, QVBoxLayout
 import sys
 import os
 
-
 __backgroudColor__ = QColor(60, 63, 65)
 
-class TickProperties:
-    """
-    pen: QPen
-    """
-    def __init__(self, color, lineThickness=None, style=None):
-        self.pen = QPen(color, lineThickness, style)
-
-    def get_pen(self):
-        return self.pen
-
-
-class ReferenceMarker(QObject):
-
-    defaultProperties = TickProperties(QColor(250, 187, 187), 0.9, Qt.SolidLine)
-    
-    def __init__(self, is_enabled, properties=TickProperties(QColor(250, 187, 187), 0.9, Qt.SolidLine), parent=None):
-        super().__init__(parent=parent)
-        self.is_enabled = is_enabled
-        self.properties = properties
-        self.pos = None
-        self.pointerPos = None
-        self.pointerTimePos = None
-
-    def draw(self, painter):
-        if self.is_enabled:
-            if self.pos is not None:
-                painter.setPen(self.properties.get_pen())
-                painter.drawLine(self.pos.x(), 0, self.pos.x(), self.height())
-
-        
+from GUI.Model.ReferenceLineManager import TickProperties, ReferenceMarker, ReferenceMarkerManager
 
 class TickedTimelineDrawingBaseWidget(QWidget):
 
@@ -59,18 +29,24 @@ class TickedTimelineDrawingBaseWidget(QWidget):
     videoPlaybackLineProperties = TickProperties(Qt.red, 1.0, Qt.SolidLine)
     hoverLineProperties = TickProperties(Qt.cyan, 0.8, Qt.DashLine)
 
-
     def __init__(self, duration, length, parent=None):
         super(TickedTimelineDrawingBaseWidget, self).__init__(parent=parent)
         self.duration = duration
         self.length = length
+
+        self.referenceManager = parent.get_reference_manager()
+
+        # Reference Manager:
+        # self.referenceManager = ReferenceMarkerManager(10, parent=self)
+        # self.referenceManager.add_reference_marker("0", properties=TickProperties(QColor(250, 187, 187), 0.9, Qt.SolidLine), position=QPoint(100.0, 0.0))
+        # self.referenceManager.add_reference_marker("1", properties=TickProperties(QColor(187, 250, 187), 0.9, Qt.SolidLine), position=QPoint(200.0, 0.0))
+        # self.referenceManager.add_reference_marker("2", properties=TickProperties(QColor(187, 187, 250), 0.9, Qt.SolidLine), position=QPoint(300.0, 0.0))
 
         # Set variables
         self.backgroundColor = __backgroudColor__
         self.pos = None
         self.video_pos = None
         self.pointerPos = None
-        self.pointerTimePos = None
         self.clicking = False  # Check if mouse left button is being pressed
         self.is_in = False  # check if user is in the widget
         self.activeColor = TickedTimelineDrawingBaseWidget.defaultActiveColor
@@ -115,15 +91,28 @@ class TickedTimelineDrawingBaseWidget(QWidget):
                 painter.setPen(TickedTimelineDrawingBaseWidget.hoverLineProperties.get_pen())
                 painter.drawLine(self.pos.x(), 0, self.pos.x(), self.height())
 
-
-
-    def paintEvent(self, event):
+    def paintRect(self, event):
         qp = QPainter()
         qp.begin(self)
         qp.setRenderHint(QPainter.Antialiasing)
 
         self.draw_tick_lines(qp)
         self.draw_indicator_lines(qp)
+
+        # print("paintRect({0})".format(str(event)))
+        # curr_pos = QPoint((float(self.width()) * 0.10), 0.0)
+        # self.referenceManager.get_markers()["0"].update_position(curr_pos, self.getScale())
+
+        # curr_pos = QPoint((float(self.width()) * 0.20), 0.0)
+        # self.referenceManager.get_markers()["1"].update_position(curr_pos, self.getScale())
+
+        # curr_pos = QPoint((float(self.width()) * 0.30), 0.0)
+        # self.referenceManager.get_markers()["2"].update_position(curr_pos, self.getScale())
+
+        # self.referenceManager.draw(qp, event.rect(), self.getScale())
+
+        if self.parent():
+            self.parent().get_reference_manager().draw(qp, event.rect(), self.getScale())
 
         # # Clear clip path
         # path = QPainterPath()
@@ -133,7 +122,7 @@ class TickedTimelineDrawingBaseWidget(QWidget):
         qp.end()
 
     # Mouse movement
-    def mouseMoveEvent(self, e):
+    def mouseMoveRect(self, e):
         self.pos = e.pos()
         x = self.pos.x()
 
@@ -148,7 +137,7 @@ class TickedTimelineDrawingBaseWidget(QWidget):
         self.update()
 
     # Mouse pressed
-    def mousePressEvent(self, e):
+    def mousePressRect(self, e):
         if e.button() == Qt.LeftButton:
             x = e.pos().x()
             self.pointerPos = x
@@ -159,17 +148,17 @@ class TickedTimelineDrawingBaseWidget(QWidget):
             self.clicking = True  # Set clicking check to true
 
     # Mouse release
-    def mouseReleaseEvent(self, e):
+    def mouseReleaseRect(self, e):
         if e.button() == Qt.LeftButton:
             self.clicking = False  # Set clicking check to false
 
     # Enter
-    def enterEvent(self, e):
+    def enterRect(self, e):
         self.is_in = True
         self.is_driven_externally = False
 
     # Leave
-    def leaveEvent(self, e):
+    def leaveRect(self, e):
         self.is_in = False
         self.update()
 
@@ -191,6 +180,22 @@ class TickedTimelineDrawingBaseWidget(QWidget):
     # Set background color
     def setBackgroundColor(self, color):
         self.backgroundColor = color
+
+    @pyqtSlot(float)
+    def on_update_selected_position(self, pointer_desired_x):
+        self.pointerPos = pointer_desired_x
+        self.positionChanged.emit(pointer_desired_x)
+        self.pointerTimePos = self.pointerPos * self.getScale()
+        self.update()
+
+
+    @pyqtSlot(float)
+    def on_update_reference_marker_position(self, pointer_desired_x):
+        new_pos = QPoint(pointer_desired_x, 0)
+        self.referenceManager.update_next_unused_marker(new_pos)
+        self.update()
+
+
 
 
     @pyqtSlot(int)

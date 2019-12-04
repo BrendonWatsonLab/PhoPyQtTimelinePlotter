@@ -17,6 +17,13 @@ class PhoEvent(QWidget):
     ActiveOpacity = 220
     DeEmphOpacity = 160
 
+    on_info = pyqtSignal(int)
+    on_edit = pyqtSignal(int)
+    on_delete = pyqtSignal(int)
+
+    on_create_marker_at_start = pyqtSignal(int, datetime)
+    on_create_marker_at_end = pyqtSignal(int, datetime)
+
     def __init__(self, startTime=datetime.now(), name='', color=Qt.black, extended_data=dict(), parent=None):
         super(PhoEvent, self).__init__(parent)
         self.name = name
@@ -27,6 +34,12 @@ class PhoEvent(QWidget):
         self.is_active = False
         self.extended_data = extended_data
 
+    # gets the child index that's set by the parent with "newAnnotationView.setAccessibleName(str(newAnnotationIndex))"
+    def get_track_index(self):
+        curr_name = self.accessibleName()
+        return int(curr_name)
+
+        
     def __eq__(self, otherEvent):
         return self.name == otherEvent.name and self.startTime == otherEvent.startTime
 
@@ -67,7 +80,17 @@ class PhoEvent(QWidget):
 
     def get_fill_color(self):
         pass
-    
+
+    # Menu
+    def buildMenu(self):
+        pass
+
+    def handleMenuAction(self, action):
+        pass
+
+    def showMenu(self, pos):
+        pass
+
     # "pass": specifies that we're leaving this method "virtual" or intensionally empty to be overriden by a subclass.
     def paint(self, painter, totalDuration, totalParentCanvasRect):
         pass

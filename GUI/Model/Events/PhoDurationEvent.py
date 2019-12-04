@@ -12,8 +12,9 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QFontMetrics
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 from GUI.Model.Events.PhoEvent import *
+from GUI.UI.EdgeAndCornerSelectionViewHelpers import EdgeAndCornerContainerComponent, EdgeAndCornerContainerViewMixin
 
-class PhoDurationEvent(PhoEvent):
+class PhoDurationEvent(EdgeAndCornerContainerViewMixin, PhoEvent):
     InstantaneousEventDuration = timedelta(seconds=2)
     RectCornerRounding = 8
     ColorBase = QColor(51, 204, 255, PhoEvent.DefaultOpacity)  # Teal
@@ -23,31 +24,12 @@ class PhoDurationEvent(PhoEvent):
     ColorBorderBase = QColor('#e0e0e0')  # Whiteish
     ColorBorderActive = QColor(255, 222, 122)  # Yellowish
 
-
     MainTextFont = QFont('SansSerif', 10)
-
-    # This defines a signal called 'on_edit' that takes no arguments.
-    on_info = pyqtSignal()
-    on_edit = pyqtSignal()
-    on_annotate = pyqtSignal()
-    on_delete = pyqtSignal()
-
-    
 
     def __init__(self, startTime=datetime.now(), endTime=None, name='', color=QColor(51, 204, 255, PhoEvent.DefaultOpacity), extended_data=dict(), parent=None):
         super(PhoDurationEvent, self).__init__(startTime, name, color, extended_data, parent=parent)
         self.endTime = endTime
-
-    # gets the child index that's set by the parent with "newAnnotationView.setAccessibleName(str(newAnnotationIndex))"
-    def get_track_index(self):
-        curr_name = self.accessibleName()
-        return int(curr_name)
-        # try:
-        #     return int(curr_name)
-        # except expression as identifier:
-        #     return curr_name
-        
-
+        self.init_EdgeAndCornerContainerViewMixin()
 
     def __eq__(self, otherEvent):
         return self.name == otherEvent.name and self.startTime == otherEvent.startTime and self.endTime == otherEvent.endTime
@@ -110,31 +92,45 @@ class PhoDurationEvent(PhoEvent):
     def buildMenu(self):
         self.menu = QMenu()
         self.info_action = self.menu.addAction("Get Info")
+        sep1 = self.menu.addSeparator()
+        self.createMarkerAtStart = self.menu.addAction("Marker at Start")
+        self.createMarkerAtEnd = self.menu.addAction("Marker at End")
+        sep2 = self.menu.addSeparator()
         self.modify_action = self.menu.addAction("Modify...")
-        self.annotation_action = self.menu.addAction("Create annotation...")
         self.delete_action = self.menu.addAction("Delete...")
         return self.menu
 
+    # handleMenuAction(action): returns None if the action was resolved, or the action if it wasn't
+    def handleMenuAction(self, action):
+        if action == self.info_action:
+            print("PhoDurationEvent.Get Info action!")
+            self.on_info.emit(self.get_track_index())
+        elif action == self.modify_action:
+            print("PhoDurationEvent.Modify action!")
+            self.on_edit.emit(self.get_track_index())
+        elif action == self.delete_action:
+            print("PhoDurationEvent.Delete action!")
+            self.on_delete.emit(self.get_track_index())
+
+        elif action == self.createMarkerAtStart:
+            print("PhoDurationEvent.createMarkerAtStart action!")
+            self.on_create_marker_at_start.emit(self.get_track_index(), self.startTime)
+        elif action == self.createMarkerAtEnd:
+            print("PhoDurationEvent.createMarkerAtEnd action!")
+            self.on_create_marker_at_end.emit(self.get_track_index(), self.endTime)
+        else:
+            print("Unknown menu option! for track {0}".format(str(self.get_track_index())))
+            return action
+        
+        return None
+
+    # showMenu(pos): should NOT be overriden! Override buildMenu(...) and handleMenuAction(...) instead
     def showMenu(self, pos):
         print("PhoDurationEvent.showMenu(pos: {0})".format(str(pos)))
         menu = self.buildMenu()
         action = menu.exec_(self.mapToGlobal(pos))
-        # action = menu.exec_(self.mapToParent(pos))
-        # action = menu.exec_(pos)
-        if action == self.info_action:
-            print("PhoDurationEvent.Get Info action!")
-            self.on_info.emit()
-        elif action == self.modify_action:
-            print("PhoDurationEvent.Modify action!")
-            self.on_edit.emit()
-        elif action == self.annotation_action:
-            print("PhoDurationEvent.Annotation action!")
-            self.on_annotate.emit()
-        elif action == self.delete_action:
-            print("PhoDurationEvent.Delete action!")
-            self.on_delete.emit()
-        else:
-            print("Unknown menu option!!")
+        self.handleMenuAction(action)
+
 
     def on_button_clicked(self, event):
         self.set_state_selected()
@@ -187,6 +183,23 @@ class PhoDurationEvent(PhoEvent):
         height = totalParentHeight
         y = 0.0
         return QRect(x, y, width, height)
+
+
+    # overrides:
+    def set_state_selected(self):
+        super().set_state_selected()
+
+    def set_state_deselected(self):
+        super().set_state_deselected()
+        self.clearSelected_EdgeAndCornerContainerViewMixin()
+        
+    def set_state_emphasized(self):
+        super().set_state_emphasized()
+
+    def set_state_deemphasized(self):
+        super().set_state_deemphasized()
+        self.clearHovered_EdgeAndCornerContainerViewMixin()
+
 
     # Sets the painter's config based on the current object's state (active, emphasized, deemph, etc)
     def set_painter_config(self, aPainter):
@@ -268,6 +281,8 @@ class PhoDurationEvent(PhoEvent):
             # If it's not an instantaneous event, draw the label
             painter.drawText(self.finalEventRect, Qt.AlignCenter, self.name)
 
+        self.paintEvent_EdgeAndCornerContainerViewMixin(painter, self.finalEventRect)
+        
         painter.restore()
         return self.finalEventRect
 

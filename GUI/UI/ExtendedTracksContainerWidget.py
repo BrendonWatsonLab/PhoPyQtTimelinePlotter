@@ -27,8 +27,8 @@ class ExtendedTracksContainerWidget(TickedTimelineDrawingBaseWidget):
     staticTimeDelininationTickLineProperties = TickProperties(QColor(187, 187, 187, 100), 0.4, Qt.SolidLine)
 
 
-    def __init__(self, duration, length, *args, **kwargs):
-        super(ExtendedTracksContainerWidget, self).__init__(duration, length, *args, **kwargs)
+    def __init__(self, duration, length, parent=None, *args, **kwargs):
+        super(ExtendedTracksContainerWidget, self).__init__(duration, length, parent=parent, *args, **kwargs)
 
         self.backgroundColor = ExtendedTracksContainerWidget.defaultBackgroundColor
 
@@ -59,13 +59,28 @@ class ExtendedTracksContainerWidget(TickedTimelineDrawingBaseWidget):
 
 
 
-    def paintEvent(self, e):
+    def paintEvent(self, event):
         qp = QPainter()
         qp.begin(self)
         qp.setRenderHint(QPainter.Antialiasing)
 
         self.draw_tick_lines(qp)
         self.draw_indicator_lines(qp)
+
+        # print("paintEvent({0})".format(str(event)))
+        # curr_pos = QPoint((float(self.width()) * 0.10), 0.0)
+        # self.referenceManager.get_markers()["0"].update_position(curr_pos, self.getScale())
+
+        # curr_pos = QPoint((float(self.width()) * 0.20), 0.0)
+        # self.referenceManager.get_markers()["1"].update_position(curr_pos, self.getScale())
+
+        # curr_pos = QPoint((float(self.width()) * 0.30), 0.0)
+        # self.referenceManager.get_markers()["2"].update_position(curr_pos, self.getScale())
+
+        self.referenceManager.draw(qp, event.rect(), self.getScale())
+
+        # if self.parentWidget():
+        #     self.parentWidget().get_reference_manager().draw(qp, event.rect(), self.getScale())
 
         # Clear clip path
         path = QPainterPath()

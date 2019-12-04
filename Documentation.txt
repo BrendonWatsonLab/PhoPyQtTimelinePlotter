@@ -29,3 +29,9 @@ GENERAL TODO:
 
 Generate .py files from .ui files: (NOT NEEDED)
 /Users/pho/opt/anaconda3/envs/Py3Qt5/bin/pyuic5 -d /Users/pho/repo/PhoPyQtTimelinePlotter/GUI/SetupWindow/SetupWindow.ui -o /Users/pho/repo/PhoPyQtTimelinePlotter/GUI/SetupWindow/SetupWindow-AutoGen.py
+
+
+Running C:\Program Files\VideoLAN\VLC>vlc-cache-gen.exe "C:\Program Files\VideoLAN\VLC\plugins\"
+fixes the VLC cache errors that appear in the terminal that result in slow video opening.
+        See https://dev.getsol.us/T5893 for more info
+        https://www.reddit.com/r/VLC/comments/9y63by/fix_slow_starting_vlc_30x_on_windows_10_by/
