@@ -19,9 +19,6 @@
   <property name="windowTitle">
    <string>Video Player</string>
   </property>
-  <property name="styleSheet">
-   <string notr="true"/>
-  </property>
   <widget class="QWidget" name="widget_central">
    <layout class="QGridLayout" name="layout_main">
     <item row="1" column="1">

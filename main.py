@@ -86,6 +86,7 @@ class TimelineApplication(QApplication):
             self.sideListWindowGeometry.moveTopRight(self.mainWindowGeometry.topLeft())
             self.mainListWindow.move(self.sideListWindowGeometry.topLeft())
 
+    @pyqtSlot()
     def on_application_about_to_quit(self):
         print("aboutToQuit")
         self.database_connection.close()

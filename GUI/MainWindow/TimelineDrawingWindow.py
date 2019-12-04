@@ -1087,6 +1087,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         if (not (self.videoPlayerWindow is None)):
             print("Using existing Video Player Window...")
+            self.videoPlayerWindow.movieLink = None # Disable the movieLink
             self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
             self.videoPlayerWindow.set_video_filename(url)
 
