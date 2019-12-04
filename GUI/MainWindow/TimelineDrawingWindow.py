@@ -1375,6 +1375,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     
 
     # try_create_comment_from_selected_reference_lines(): tries to create a new annotation comment from the selected reference marks
+    @pyqtSlot()
     def try_create_comment_from_selected_reference_lines(self):
         print("try_create_comment_from_selected_reference_lines(...)")
         selected_ref_lines = self.try_get_selected_reference_lines()

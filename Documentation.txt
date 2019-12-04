@@ -35,3 +35,6 @@ Running C:\Program Files\VideoLAN\VLC>vlc-cache-gen.exe "C:\Program Files\VideoL
 fixes the VLC cache errors that appear in the terminal that result in slow video opening.
         See https://dev.getsol.us/T5893 for more info
         https://www.reddit.com/r/VLC/comments/9y63by/fix_slow_starting_vlc_30x_on_windows_10_by/
+
+
+Upon modifying the .qrc resource (containing icons and stuff), it will need to be re-build using "rcc -binary myresource.qrc -o myresource.rcc". This .rcc file is loaded in the main.py and without it icons would be broken.

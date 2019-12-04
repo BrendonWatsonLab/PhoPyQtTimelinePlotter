@@ -100,12 +100,6 @@ class ReferenceMarkViewer(ActiveReferenceMarkersMixin, QWidget):
                 self.ui.tableWidget.setItem(aDataRowIndex,2,QTableWidgetItem(curr_string))
 
 
-            # curr_item = QtWidgets.QListWidgetItem(curr_string)
-
-            # # Add it to the table
-            # self.ui.tableWidget.insertItem(anIndex, curr_item)
-
-
     def on_item_clicked(self):
         selected_items = self.ui.tableWidget.selectedItems()
         selected_indicies = []
@@ -137,6 +131,12 @@ class ReferenceMarkViewer(ActiveReferenceMarkersMixin, QWidget):
 
     def handle_create_comment_button_pressed(self):
         print("handle_create_comment_button_pressed()")
+        curr_selected_ref_indicies = self.get_selected_item_indicies()
+
+        # TODO: can call self.parent().on_track_child_create_comment(...)?
+
+        # TODO: can call self.parent().try_create_comment_from_selected_reference_lines(...)?
+        
         self.action_create_comment.emit()
 
 
