@@ -47,8 +47,10 @@ from GUI.UI.TimelineHeaderWidget.TimelineHeaderWidget import TimelineHeaderWidge
 from GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, TrackCache, TrackFilterBase
 from GUI.Model.TrackConfigs.VideoTrackConfig import VideoTrackFilter, VideoTrackConfiguration
 
-
 from GUI.Model.ModelViewContainer import ModelViewContainer
+
+from GUI.UI.TimelineFloatingHeaderWidget.TimelineFloatingHeaderWidget import TimelineFloatingHeaderWidget
+
 
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.
@@ -362,6 +364,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             currTrackConfigurationIndex = 0
 
             self.videoFileTrackWidgetHeaders = dict()
+            self.trackFloatingWidgetHeaders = dict()
+
             # Loop through the videoFileTrackWidgets and add them
             for i in range(0, len(self.videoFileTrackWidgets)):
                 currVideoTrackWidget = self.videoFileTrackWidgets[i]
@@ -392,11 +396,22 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                     currHeaderWidget.update_labels_dynamically()
                     self.videoFileTrackWidgetHeaders[currVideoTrackWidget.trackID] = currHeaderWidget
 
+                    # Make the floating label as well
+                    currFloatingHeader = TimelineFloatingHeaderWidget(currHeaderTrackConfig, parent=self)
+                    currFloatingHeader.setMinimumSize(25, (self.minimumVideoTrackHeight / 2.0))
+                    currFloatingHeader.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+                    currFloatingHeader.update_labels_dynamically()
+                    self.trackFloatingWidgetHeaders[currVideoTrackWidget.trackID] = currFloatingHeader
+
+
                     currHeaderIncludedTrackLayout.addWidget(currVideoTrackWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
                     currVideoTrackWidget.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
                     currVideoTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
                     currHeaderIncludedTrackLayout.addWidget(currHeaderWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
+
+                    currHeaderIncludedTrackLayout.addWidget(currFloatingHeader, 0, 0, Qt.AlignHCenter|Qt.AlignTop)
+
 
                     currHeaderIncludedContainer.setLayout(currHeaderIncludedTrackLayout)
 
