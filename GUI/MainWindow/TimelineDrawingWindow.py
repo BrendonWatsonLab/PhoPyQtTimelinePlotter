@@ -1265,20 +1265,42 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
          # on_reference_line_marker_list_selection_changed(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
 
 
-
-    # try_get_selected_reference_lines(): Tries to get the currently selected reference items
-    def try_get_selected_reference_lines(self):
+    # try_get_reference_lines(): Tries to get all the reference items and their metadata
+    def try_get_reference_lines(self):
         curr_markers = self.referenceManager.get_used_markers()
-        # Get selected markers from here
+        # Build the metadata
         output_data = []
         for aListItem in curr_markers:
             curr_x = aListItem.pointerPos
             curr_datetime = self.offset_to_datetime(curr_x)
+            # combine the datetime and the list item as a tuple
             output_data.append(curr_datetime, aListItem)
 
         # Assuming there's two valid markers, return them in order
         output_data.sort(key = lambda mark_tuple: mark_tuple[0])
         return output_data
+
+
+    # try_get_selected_reference_lines(): Tries to get the currently selected reference items
+    def try_get_selected_reference_lines(self):
+        curr_reference_line_data = self.try_get_reference_lines()
+        # Get selected markers from here
+        active_window = self.referenceManager.activeMarkersWindow
+        if (active_window is None):
+            print("ERROR: no active window! Can't get selection!")
+            return
+
+        curr_active_inidices = active_window.get_selected_item_indicies()
+
+        # Get the active items from the indicies
+        curr_complete_active_items = []
+        for anIndex in curr_active_inidices:
+            curr_complete_active_items.append(curr_reference_line_data[anIndex])
+
+        return curr_complete_active_items
+    
+
+
     
 
     # try_create_comment_from_selected_reference_lines(): tries to create a new annotation comment from the selected reference marks

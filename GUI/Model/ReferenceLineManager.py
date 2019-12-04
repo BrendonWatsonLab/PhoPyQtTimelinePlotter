@@ -234,7 +234,8 @@ class ActiveReferenceMarkersWindow(QWidget):
         QWidget.__init__(self)
         self.activeMarkersList = activeMarkersList
         self.activeMetadataList = np.repeat(None, len(activeMarkersList))
-
+        self.setWindowTitle("Active Reference Marks")
+        
         layout = QGridLayout()
         self.setLayout(layout)
         self.listwidget = QListWidget()
@@ -276,6 +277,21 @@ class ActiveReferenceMarkersWindow(QWidget):
         print("Selected indicies: {0}".format(str(selected_indicies)))
         self.selection_changed.emit(self.activeMarkersList, selected_indicies)
         return
+
+    def get_selected_items(self):
+        return self.listwidget.selectedItems()
+        
+
+    def get_selected_item_indicies(self):
+        selected_items = self.get_selected_items()
+        selected_indicies = []
+        for index in range(len(selected_items)):
+            aSelectedItem = selected_items[index]
+            currRow = self.listwidget.row(aSelectedItem)
+            selected_indicies.append(currRow)
+
+        return selected_indicies
+
 
 
     # def clicked(self, qmodelindex):
