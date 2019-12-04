@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import QWidget, QFrame, QScrollArea, QVBoxLayout, QGridLayo
 import sys
 import os
 
+from GUI.UI.ReferenceMarkViewer.ReferenceMarkViewer import ReferenceMarkViewer, ActiveReferenceMarkersMixin
 
 ## IMPORTS:
 # from GUI.Model.ReferenceLineManager import TickProperties, ReferenceMarker, ReferenceMarkerManager
@@ -108,8 +109,11 @@ class ReferenceMarker(QObject):
         self.pointerPos = x
         self.updateScale(scale)
 
+    def get_position_tuple_string(self):
+        return '(pos: {0}, pointerPos: {1}, get_pointerTimePos: {2})'.format(self.pos, self.pointerPos, self.get_pointerTimePos())
+
     def __str__(self):
-        return 'RefMark[identifier: {0}]: (pos: {1}, pointerPos: {2}, get_pointerTimePos: {3})'.format(self.identifier, self.pos, self.pointerPos, self.get_pointerTimePos())
+        return 'RefMark[identifier: {0}]: {1}'.format(self.identifier, self.get_position_tuple_string())
 
 
 class ReferenceMarkerManager(QObject):
@@ -218,7 +222,13 @@ class ReferenceMarkerManager(QObject):
         all_markers = self.get_used_markers()
         self.wants_extended_data.emit(all_markers)
 
-        self.activeMarkersWindow = ActiveReferenceMarkersWindow(all_markers)
+        # self.activeMarkersWindow = ActiveReferenceMarkersWindow(all_markers)
+        # self.used_markers_updated.connect(self.activeMarkersWindow.on_active_markers_list_updated)
+        # self.used_markers_extended_data_updated.connect(self.activeMarkersWindow.on_active_markers_metadata_updated)
+        # self.selection_changed.connect(self.activeMarkersWindow.selection_changed)
+        # self.activeMarkersWindow.show()
+
+        self.activeMarkersWindow = ReferenceMarkViewer(all_markers)
         self.used_markers_updated.connect(self.activeMarkersWindow.on_active_markers_list_updated)
         self.used_markers_extended_data_updated.connect(self.activeMarkersWindow.on_active_markers_metadata_updated)
         self.selection_changed.connect(self.activeMarkersWindow.selection_changed)
@@ -226,16 +236,15 @@ class ReferenceMarkerManager(QObject):
 
 
 
-class ActiveReferenceMarkersWindow(QWidget):
+class ActiveReferenceMarkersWindow(ActiveReferenceMarkersMixin, QWidget):
 
-    selection_changed = pyqtSignal(list, list)
 
     def __init__(self, activeMarkersList):
         QWidget.__init__(self)
         self.activeMarkersList = activeMarkersList
         self.activeMetadataList = np.repeat(None, len(activeMarkersList))
         self.setWindowTitle("Active Reference Marks")
-        
+
         layout = QGridLayout()
         self.setLayout(layout)
         self.listwidget = QListWidget()
@@ -262,8 +271,6 @@ class ActiveReferenceMarkersWindow(QWidget):
 
             # Add it to the table
             self.listwidget.insertItem(anIndex, curr_item)
-
-
 
 
     def on_item_clicked(self):
@@ -293,20 +300,19 @@ class ActiveReferenceMarkersWindow(QWidget):
         return selected_indicies
 
 
-
     # def clicked(self, qmodelindex):
     #     itemIndex = self.listwidget.currentRow()
     #     item = self.listwidget.currentItem()
     #     print(item.text())
     #     self.selection_changed.emit(self.activeMarkersList, itemIndex)
 
-    @pyqtSlot(list)
-    def on_active_markers_list_updated(self, newList):
-        self.activeMarkersList = newList
-        self.activeMetadataList = np.repeat(None, len(self.activeMarkersList)) # Clear the metadata
-        self.reload_list()
+    # @pyqtSlot(list)
+    # def on_active_markers_list_updated(self, newList):
+    #     self.activeMarkersList = newList
+    #     self.activeMetadataList = np.repeat(None, len(self.activeMarkersList)) # Clear the metadata
+    #     self.reload_list()
 
-    @pyqtSlot(list)
-    def on_active_markers_metadata_updated(self, newMetadata):
-        self.activeMetadataList = newMetadata
-        self.reload_list()
+    # @pyqtSlot(list)
+    # def on_active_markers_metadata_updated(self, newMetadata):
+    #     self.activeMetadataList = newMetadata
+    #     self.reload_list()
