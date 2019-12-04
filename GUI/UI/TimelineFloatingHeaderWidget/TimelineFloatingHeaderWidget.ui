@@ -20,8 +20,9 @@
    <string>Floating Track Header Widget</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(30, 30, 30, 200), stop:1 rgba(60, 66, 60, 200));
+   <string notr="true">background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(30, 30, 30, 40), stop:1 rgba(60, 66, 60, 40));
 color:rgb(243, 243, 243);
+hover { background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(30, 30, 30, 200), stop:1 rgba(60, 66, 60, 200)); backcolor:white };
 </string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -50,6 +51,9 @@ color:rgb(243, 243, 243);
      </property>
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
+     </property>
+     <property name="lineWidth">
+      <number>1</number>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_3">
       <property name="leftMargin">
@@ -102,7 +106,7 @@ color:rgb(243, 243, 243);
        </layout>
       </item>
       <item>
-       <widget class="QPushButton" name="btnToggleCollapse">
+       <widget class="QPushButton" name="btnFindNext">
         <property name="toolTip">
          <string>Collapse</string>
         </property>

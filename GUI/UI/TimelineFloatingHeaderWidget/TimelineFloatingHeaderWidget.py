@@ -20,6 +20,12 @@ from GUI.Model.TrackConfigs.VideoTrackConfig import *
 
 # TimelineFloatingHeaderWidget: A label that floats over each track in the viewport that scrolls with the user to prevent the user from getting confused as to which track is which
 class TimelineFloatingHeaderWidget(TrackConfigMixin, QWidget):
+    
+    findNext = pyqtSignal(int)
+    showOptions = pyqtSignal(int)
+    refresh = pyqtSignal(int)
+
+
     def __init__(self, track_config, parent=None):
         super(TimelineFloatingHeaderWidget, self).__init__(parent=parent) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/UI/TimelineFloatingHeaderWidget/TimelineFloatingHeaderWidget.ui", self) # Load the .ui file
@@ -47,17 +53,18 @@ class TimelineFloatingHeaderWidget(TrackConfigMixin, QWidget):
         
         self.ui.frame_TopButtons.setHidden(False)
 
-        self.ui.btnToggleCollapse.setIcon(self.style().standardIcon(QStyle.SP_TitleBarShadeButton))
-        self.ui.btnToggleCollapse.setText("")
-        # self.ui.btnToggleCollapse.clicked.connect(self.parent().on_collapse_pressed)
+        self.ui.btnFindNext.setIcon(self.style().standardIcon(QStyle.SP_MediaSeekForward))
+        self.ui.btnFindNext.setText("")
+        self.ui.btnFindNext.clicked.connect(self.on_find_next_pressed)
 
         self.ui.btnOptions.setIcon(self.style().standardIcon(QStyle.SP_FileDialogDetailedView))
         self.ui.btnOptions.setText("")
         # self.ui.btnOptions.clicked.connect(self.parent().on_options_pressed)
+        self.ui.btnOptions.clicked.connect(self.on_options_pressed)
 
         self.ui.btnRefresh.setIcon(self.style().standardIcon(QStyle.SP_BrowserReload))
         self.ui.btnRefresh.setText("")
-        # self.ui.btnRefresh.clicked.connect(self.parent().on_reload_pressed)
+        self.ui.btnRefresh.clicked.connect(self.on_reload_pressed)
 
     def get_title(self):
         return self.ui.lblTitle.text()
@@ -94,6 +101,18 @@ class TimelineFloatingHeaderWidget(TrackConfigMixin, QWidget):
         self.get_track_config().update_labels_dynamically()
         self.update_from_config()
         return
+
+    def on_find_next_pressed(self):
+        print("on_find_next_pressed(...)")
+        self.findNext.emit(self.track_id)
+
+    def on_options_pressed(self):
+        print("on_options_pressed(...)")
+        self.showOptions.emit(self.track_id)
+        
+    def on_reload_pressed(self):
+        print("on_reload_pressed(...)")
+        self.refresh.emit(self.track_id)
 
 
 # class TimelineHeaderWidget(TrackConfigMixin, QFrame):

@@ -411,6 +411,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                     currFloatingHeader.setMinimumSize(25, (self.minimumVideoTrackHeight / 2.0))
                     currFloatingHeader.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
                     currFloatingHeader.update_labels_dynamically()
+
+                    currFloatingHeader.findNext.connect(self.on_jump_next)
+                    currFloatingHeader.showOptions.connect(self.on_track_header_show_options_activated)
+                    currFloatingHeader.refresh.connect(self.on_track_header_refresh_activated)
+
                     self.trackFloatingWidgetHeaders[currVideoTrackWidget.trackID] = currFloatingHeader
 
                     # Set the minimum grid row height
@@ -472,6 +477,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                     currFloatingHeader.setMinimumSize(25, (self.minimumVideoTrackHeight / 2.0))
                     currFloatingHeader.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
                     currFloatingHeader.update_labels_dynamically()
+
+                    currFloatingHeader.findNext.connect(self.on_jump_next)
+                    currFloatingHeader.showOptions.connect(self.on_track_header_show_options_activated)
+                    currFloatingHeader.refresh.connect(self.on_track_header_refresh_activated)
+
                     self.trackFloatingWidgetHeaders[currWidget.trackID] = currFloatingHeader
 
                     # Set the minimum grid row height
