@@ -54,6 +54,9 @@ class ReferenceMarkViewer(ActiveReferenceMarkersMixin, QWidget):
 
 
     def initUI(self):
+
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+
         self.ui.tableWidget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.ui.tableWidget.itemClicked.connect(self.on_item_clicked)
         self.ui.tableWidget.setColumnCount(3)
@@ -101,19 +104,40 @@ class ReferenceMarkViewer(ActiveReferenceMarkersMixin, QWidget):
 
 
     def on_item_clicked(self):
-        selected_items = self.ui.tableWidget.selectedItems()
-        selected_indicies = []
-        for index in range(len(selected_items)):
-            aSelectedItem = selected_items[index]
-            currRow = self.ui.tableWidget.row(aSelectedItem)
-            selected_indicies.append(currRow)
+        # note selectedItems() returns a list of selected cells, not rows.
+        # selected_items = self.get_selected_items()
+        # selected_indicies = []
+        # for index in range(len(selected_items)):
+        #     aSelectedItem = selected_items[index]
+        #     currRow = self.ui.tableWidget.row(aSelectedItem)
+        #     selected_indicies.append(currRow)
 
+        selected_indicies = self.get_selected_item_indicies()
         print("Selected indicies: {0}".format(str(selected_indicies)))
+        # Do internal state updating on selection changed
+        self.update_internal_ui_on_selection_change()
         self.selection_changed.emit(self.activeMarkersList, selected_indicies)
         return
 
+    # update_internal_ui_on_selection_change(): updates the button enable and other properties when the user's selection changes
+    def update_internal_ui_on_selection_change(self):
+        num_selected_items = self.get_num_selected_items()
+        self.ui.toolButton_CreateAnnotation.setEnabled(num_selected_items==2) # enabled only if we have exactly two references selected
+        self.ui.toolButton_RemoveReferenceMark.setEnabled(num_selected_items>0)
+        self.ui.toolButton_AlignLeft.setEnabled(num_selected_items>0)
+        self.ui.toolButton_AlignRight.setEnabled(num_selected_items>0)
+        self.update()
+
+
     def get_selected_items(self):
         return self.ui.tableWidget.selectedItems()
+
+    def get_num_selected_items(self):
+        return len(self.get_selected_item_indicies())
+        # selected_items = self.get_selected_items()
+        # currRow = self.ui.tableWidget.row(aSelectedItem)
+
+        # list_set = set(list1)
         
 
     def get_selected_item_indicies(self):
@@ -123,8 +147,8 @@ class ReferenceMarkViewer(ActiveReferenceMarkersMixin, QWidget):
             aSelectedItem = selected_items[index]
             currRow = self.ui.tableWidget.row(aSelectedItem)
             selected_indicies.append(currRow)
-
-        return selected_indicies
+        # get the unique indicies to deal with the duplicates
+        return list(set(selected_indicies))
 
 
     # BUTTON HANDLERS:
@@ -133,11 +157,23 @@ class ReferenceMarkViewer(ActiveReferenceMarkersMixin, QWidget):
         print("handle_create_comment_button_pressed()")
         curr_selected_ref_indicies = self.get_selected_item_indicies()
 
+        # Get datetimes
+        first_item_index = curr_selected_ref_indicies[0]
+        second_item_index = curr_selected_ref_indicies[1]
+
+        # first_item = selected_ref_lines[0]
+        # second_item = selected_ref_lines[1]
+
+        start_time = self.activeMetadataList[first_item_index]
+        end_time = self.activeMetadataList[second_item_index]
+
+        # TODO: assumes they're in the right order!
+
         # TODO: can call self.parent().on_track_child_create_comment(...)?
 
         # TODO: can call self.parent().try_create_comment_from_selected_reference_lines(...)?
         
-        self.action_create_comment.emit()
+        self.action_create_comment.emit(start_time, end_time)
 
 
     def handle_remove_reference_button_pressed(self):

@@ -33,7 +33,7 @@
       <item>
        <widget class="QToolButton" name="toolButton_RemoveReferenceMark">
         <property name="enabled">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
         <property name="text">
          <string>...</string>
@@ -67,6 +67,9 @@
       </item>
       <item>
        <widget class="QToolButton" name="toolButton_CreateAnnotation">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="toolTip">
          <string>Create comment from selection</string>
         </property>
