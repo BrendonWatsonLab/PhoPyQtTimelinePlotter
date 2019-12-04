@@ -410,7 +410,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
                     currHeaderIncludedTrackLayout.addWidget(currHeaderWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
 
-                    currHeaderIncludedTrackLayout.addWidget(currFloatingHeader, 0, 0, Qt.AlignHCenter|Qt.AlignTop)
+                    # Floating header track
+                    # currHeaderIncludedTrackLayout.addWidget(currFloatingHeader, 0, 0, Qt.AlignHCenter|Qt.AlignTop)
 
 
                     currHeaderIncludedContainer.setLayout(currHeaderIncludedTrackLayout)
@@ -484,6 +485,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.timelineScroll.setMouseTracking(True)
             # self.timelineScroll.setFixedHeight(400)
             # self.timelineScroll.setFixedWidth(self.width())
+
+            # Add header tracks to self.timelineScroll (the viewport)
+            for (aTrackID, aFloatingHeader) in self.trackFloatingWidgetHeaders.items():
+                self.timelineScroll.layout().addWidget(aFloatingHeader, 0, 0, Qt.AlignHCenter|Qt.AlignTop)
+                
 
             # Main Vertical Splitter:
             self.verticalSplitter = QSplitter(Qt.Vertical)
