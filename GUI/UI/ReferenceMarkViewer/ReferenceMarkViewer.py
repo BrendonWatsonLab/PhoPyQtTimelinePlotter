@@ -35,6 +35,10 @@ class ActiveReferenceMarkersMixin(object):
 class ReferenceMarkViewer(ActiveReferenceMarkersMixin, QWidget):
 
     # selection_changed = pyqtSignal(list, list)
+    action_create_comment = pyqtSignal(datetime, datetime)
+
+    action_align_left = pyqtSignal(datetime)
+    action_align_right = pyqtSignal(datetime)
 
     def __init__(self, activeMarkersList, parent=None):
         super(ReferenceMarkViewer, self).__init__(parent=parent) # Call the inherited classes __init__ method
@@ -59,6 +63,15 @@ class ReferenceMarkViewer(ActiveReferenceMarkersMixin, QWidget):
         self.ui.tableWidget.setItem(0,2,QTableWidgetItem("Datetime"))
 
         self.ui.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+
+        ## Buttons
+        self.ui.toolButton_RemoveReferenceMark.clicked.connect(self.handle_remove_reference_button_pressed)
+        self.ui.toolButton_CreateReferenceMark.clicked.connect(self.handle_create_reference_button_pressed)
+
+        self.ui.toolButton_CreateAnnotation.clicked.connect(self.handle_create_comment_button_pressed)
+
+        self.ui.toolButton_AlignLeft.clicked.connect(self.handle_align_left_button_pressed)
+        self.ui.toolButton_AlignRight.clicked.connect(self.handle_align_right_button_pressed)
 
         pass
 
@@ -119,6 +132,30 @@ class ReferenceMarkViewer(ActiveReferenceMarkersMixin, QWidget):
 
         return selected_indicies
 
+
+    # BUTTON HANDLERS:
+
+    def handle_create_comment_button_pressed(self):
+        print("handle_create_comment_button_pressed()")
+        self.action_create_comment.emit()
+
+
+    def handle_remove_reference_button_pressed(self):
+        print("handle_remove_reference_button_pressed()")
+        # self.action_create_comment.emit()
+
+    def handle_create_reference_button_pressed(self):
+        print("handle_create_reference_button_pressed()")
+        # self.action_create_comment.emit()
+
+
+    def handle_align_left_button_pressed(self):
+        print("handle_align_left_button_pressed()")
+        self.action_align_left.emit()
+
+    def handle_align_right_button_pressed(self):
+        print("handle_align_right_button_pressed()")
+        self.action_align_right.emit()
 
 
 

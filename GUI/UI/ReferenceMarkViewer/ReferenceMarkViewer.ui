@@ -31,14 +31,107 @@
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="toolButton">
+       <widget class="QToolButton" name="toolButton_RemoveReferenceMark">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>...</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../../../data/PhoPyQtTimelinePlotterResourceFile.qrc">
+          <normaloff>:/fugue/fugue/icons-shadowless/bookmark--minus.png</normaloff>:/fugue/fugue/icons-shadowless/bookmark--minus.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="toolButton_CreateReferenceMark">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>...</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../../../data/PhoPyQtTimelinePlotterResourceFile.qrc">
+          <normaloff>:/fugue/fugue/icons-shadowless/bookmark--plus.png</normaloff>:/fugue/fugue/icons-shadowless/bookmark--plus.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="toolButton_CreateAnnotation">
+        <property name="toolTip">
+         <string>Create comment from selection</string>
+        </property>
+        <property name="statusTip">
+         <string>Create comment from selection</string>
+        </property>
+        <property name="text">
+         <string>...</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../../../data/PhoPyQtTimelinePlotterResourceFile.qrc">
+          <normaloff>:/diagona/diagona/icons/16/027.png</normaloff>:/diagona/diagona/icons/16/027.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="Line" name="line_2">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="toolButton_AlignLeft">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>...</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../../../data/PhoPyQtTimelinePlotterResourceFile.qrc">
+          <normaloff>:/fugue/fugue/icons-shadowless/application-dock-180.png</normaloff>:/fugue/fugue/icons-shadowless/application-dock-180.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="toolButton_AlignRight">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>...</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../../../data/PhoPyQtTimelinePlotterResourceFile.qrc">
+          <normaloff>:/fugue/fugue/icons-shadowless/application-dock.png</normaloff>:/fugue/fugue/icons-shadowless/application-dock.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="toolButton_3">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
          <string>...</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="toolButton_2">
+       <widget class="QToolButton" name="toolButton_4">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
          <string>...</string>
         </property>
@@ -89,6 +182,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../../../data/PhoPyQtTimelinePlotterResourceFile.qrc"/>
+ </resources>
  <connections/>
 </ui>
