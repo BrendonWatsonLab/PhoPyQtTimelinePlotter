@@ -453,6 +453,14 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                     currHeaderWidget.update_labels_dynamically()
                     self.eventTrackWidgetHeaders[currWidget.trackID] = currHeaderWidget
 
+                    # Make the floating label as well
+                    currFloatingHeader = TimelineFloatingHeaderWidget(currHeaderTrackConfig, parent=self)
+                    currFloatingHeader.setMinimumSize(25, (self.minimumVideoTrackHeight / 2.0))
+                    currFloatingHeader.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+                    currFloatingHeader.update_labels_dynamically()
+                    self.trackFloatingWidgetHeaders[currVideoTrackWidget.trackID] = currFloatingHeader
+
+
                     currHeaderIncludedTrackLayout.addWidget(currWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
                     currWidget.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
                     currWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -486,9 +494,24 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             # self.timelineScroll.setFixedHeight(400)
             # self.timelineScroll.setFixedWidth(self.width())
 
+            # Create the layout for the timeline viewport:
+            self.timelineViewportLayout = QGridLayout(self)
+            self.timelineViewportLayout.setSpacing(0)
+            self.timelineViewportLayout.setContentsMargins(0,0,0,0)
+            self.timelineViewportContainer = QWidget(self)
+
+            # Add the timeline scroll to the layout
+            self.timelineViewportLayout.addWidget(self.timelineScroll,0,0,-1,-1) # Set the timeline to span all rows/columns of the layout
+
             # Add header tracks to self.timelineScroll (the viewport)
             for (aTrackID, aFloatingHeader) in self.trackFloatingWidgetHeaders.items():
-                self.timelineScroll.layout().addWidget(aFloatingHeader, 0, 0, Qt.AlignHCenter|Qt.AlignTop)
+                self.timelineViewportLayout.addWidget(aFloatingHeader, 0, 0, Qt.AlignHCenter|Qt.AlignTop)
+
+
+            # Set the timelineViewportContainer's layout to the timeline viewport layout
+            self.timelineViewportContainer.setLayout(self.timelineViewportLayout)
+            # timelineViewportContainer.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
+            self.timelineViewportContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
                 
 
             # Main Vertical Splitter:
@@ -496,7 +519,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.verticalSplitter.setHandleWidth(8)
             self.verticalSplitter.setMouseTracking(True)
             self.verticalSplitter.addWidget(self.videoPlayerContainer)
-            self.verticalSplitter.addWidget(self.timelineScroll)
+            self.verticalSplitter.addWidget(self.timelineViewportContainer)
+            # self.verticalSplitter.addWidget(self.timelineScroll)
             self.verticalSplitter.setMouseTracking(True)
 
             # Size the widgets
