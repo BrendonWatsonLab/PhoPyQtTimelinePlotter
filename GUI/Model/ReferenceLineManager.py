@@ -101,7 +101,7 @@ class ReferenceMarker(QObject):
 
     def get_x_offset_position(self):
         return self.x_offset_position
-        
+
     def get_pointerTimePos(self):
         return (self.x_offset_position * self.getScale())
 
@@ -131,8 +131,6 @@ class ReferenceMarkerManager(QObject):
     used_markers_extended_data_updated = pyqtSignal(list)
 
     selection_changed = pyqtSignal(list, list)
-
-    
 
     # L = queue.Queue(maxsize=20)
 
