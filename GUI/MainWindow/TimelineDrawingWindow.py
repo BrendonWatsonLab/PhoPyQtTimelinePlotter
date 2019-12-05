@@ -1086,6 +1086,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         else:
             # Create a new videoPlayerWindow window
             self.videoPlayerWindow = MainVideoPlayerWindow(parent=self)
+            self.videoPlayerWindow.close_signal.connect(self.on_video_player_window_closed)
             self.videoPlayerWindow.show()
 
     def try_set_video_player_window_url(self, url):
@@ -1105,6 +1106,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             print("Creating new Video Player Window...")
             try:
                 self.videoPlayerWindow = MainVideoPlayerWindow(parent=self)
+                self.videoPlayerWindow.close_signal.connect(self.on_video_player_window_closed)
             except Exception as e:
                 print("Error Spawning Video Window:", e)
                 return False
@@ -1124,6 +1126,14 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                 return False
 
             return True
+
+
+    @pyqtSlot()
+    def on_video_player_window_closed(self):
+        """ Cleanup the popup widget here """
+        print("TimelineDrawingWindow.on_video_player_window_closed()...")
+        print("Popup closed.")
+        # self.videoPlayerWindow = None
 
 
     # Shows the Video File Tree window:
