@@ -51,6 +51,7 @@ from GUI.Model.ModelViewContainer import ModelViewContainer
 
 from GUI.UI.TimelineFloatingHeaderWidget.TimelineFloatingHeaderWidget import TimelineFloatingHeaderWidget
 
+from GUI.Model.DataMovieLinkInfo import DataMovieLinkInfo
 
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.
@@ -84,6 +85,13 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     ZoomDelta = 1.0
     MinZoomLevel = 0.1
     MaxZoomLevel = 2600.0
+
+
+    # Signals:
+    activeZoomChanged = pyqtSignal()
+
+    # activeGlobalTimelineTimesChanged(startTime: datetime, endTime: datetime, duration: timedelta)
+    activeGlobalTimelineTimesChanged = pyqtSignal(datetime, datetime, timedelta) # Called when the timeline's global displayed start/end times are updated
     
 
     def __init__(self, database_connection, totalStartTime, totalEndTime):
@@ -118,12 +126,10 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.activeVideoTrackConfigEditDialog = None
         self.activeTrackID_ConfigEditingIndex = None
     
-
         self.setMouseTracking(True)
 
         self.minimumVideoTrackHeight = 50
         # self.minimumVideoTrackHeight = 25
-
 
         self.initUI()
         self.reload_videos_from_track_configs()
@@ -640,6 +646,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
+        # Emit events
+        self.activeGlobalTimelineTimesChanged.emit(self.totalStartTime, self.totalEndTime, self.totalDuration)
 
     # Required to initialize the viewport to fit the video events
     def reload_timeline_display_bounds(self):

@@ -81,8 +81,10 @@ class MainVideoPlayerWindow(QMainWindow):
 
     SpeedBurstPlaybackRate = 16.0
 
+    video_loaded = pyqtSignal() # Called when the loaded video is changed
     video_playback_position_updated = pyqtSignal(float) # video_playback_position_updated:  called when the playback position of the video changes. Either due to playing, or after a user event
     video_playback_state_changed = pyqtSignal() # video_playback_state_changed: called when play/pause state changes
+    video_window_closing = pyqtSignal() # Called when the window is closing. 
 
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
@@ -872,7 +874,7 @@ class MainVideoPlayerWindow(QMainWindow):
         Set the video filename
         """
         if not os.path.isfile(filename):
-            self._show_error("Cannot access video file " + filename)
+            self._show_error("ERROR: Cannot access video file " + filename)
             return
 
         # Close the previous file:
@@ -908,6 +910,8 @@ class MainVideoPlayerWindow(QMainWindow):
             # self.set_volume(self.ui.slider_volume.value())
             self.play_pause_model.setState(True)
             self.update_preview_frame()
+
+        self.video_loaded.emit()
 
     def browse_video_handler(self):
         """
