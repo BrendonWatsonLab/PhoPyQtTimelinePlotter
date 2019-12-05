@@ -127,7 +127,8 @@ class MainVideoPlayerWindow(QMainWindow):
         # TODO: bind the signals and such to self.ui.timestampSidebarWidget
         # self.ui.timestampSidebarWidget.
 
-        self.timer = QTimer()
+        self.timer = QTimer(self)
+        self.timer.setInterval(self.timer_period)
         self.timer.timeout.connect(self.update_ui)
         self.timer.timeout.connect(self.timer_handler)
 
@@ -260,7 +261,7 @@ class MainVideoPlayerWindow(QMainWindow):
         self.media_player.video_set_mouse_input(False)
         self.media_player.video_set_key_input(False)
 
-        self.timer.start(self.timer_period)
+        self.timer.start()
 
         self.update_video_frame_overlay_text()
 
