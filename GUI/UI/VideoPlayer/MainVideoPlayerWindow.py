@@ -267,6 +267,16 @@ class MainVideoPlayerWindow(QMainWindow):
 
         self.ui.show()
 
+    # Called to close the video player window
+    def closeEvent(self, event):
+        print("MainVideoPlayerWindow.closeEvent({0})".format(str(event)))
+        self.timer.stop() # Stop the timer
+        self.mediaplayer.stop() # Stop the playing media
+        self.movieLink = None
+        # self.close()
+        event.accept()
+
+
     # Movie Link:
     def get_movie_link(self):
         return self.movieLink
