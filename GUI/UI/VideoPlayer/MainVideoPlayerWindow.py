@@ -81,10 +81,11 @@ class MainVideoPlayerWindow(QMainWindow):
 
     SpeedBurstPlaybackRate = 16.0
 
-    video_loaded = pyqtSignal() # Called when the loaded video is changed
+
+    loaded_media_changed = pyqtSignal() # Called when the loaded video is changed
     video_playback_position_updated = pyqtSignal(float) # video_playback_position_updated:  called when the playback position of the video changes. Either due to playing, or after a user event
     video_playback_state_changed = pyqtSignal() # video_playback_state_changed: called when play/pause state changes
-    video_window_closing = pyqtSignal() # Called when the window is closing. 
+    close_signal = pyqtSignal() # Called when the window is closing. 
 
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
@@ -269,14 +270,19 @@ class MainVideoPlayerWindow(QMainWindow):
 
         self.ui.show()
 
-    # Called to close the video player window
+    # Called when the window is closing.
     def closeEvent(self, event):
         print("MainVideoPlayerWindow.closeEvent({0})".format(str(event)))
-        self.timer.stop() # Stop the timer
-        self.media_player.stop() # Stop the playing media
-        self.movieLink = None
+        self.on_close()
         # self.close()
         event.accept()
+
+    def on_close(self):
+        """ Perform on close stuff here """
+        # self.timer.stop() # Stop the timer
+        # self.media_player.stop() # Stop the playing media
+        # self.movieLink = None
+        self.close_signal.emit()
 
 
     # Movie Link:
@@ -911,7 +917,7 @@ class MainVideoPlayerWindow(QMainWindow):
             self.play_pause_model.setState(True)
             self.update_preview_frame()
 
-        self.video_loaded.emit()
+        self.loaded_media_changed.emit()
 
     def browse_video_handler(self):
         """
