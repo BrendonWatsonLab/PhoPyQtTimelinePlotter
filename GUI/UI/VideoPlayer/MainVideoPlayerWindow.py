@@ -127,7 +127,6 @@ class MainVideoPlayerWindow(QMainWindow):
         # TODO: bind the signals and such to self.ui.timestampSidebarWidget
         # self.ui.timestampSidebarWidget.
 
-
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_ui)
         self.timer.timeout.connect(self.timer_handler)
@@ -263,7 +262,6 @@ class MainVideoPlayerWindow(QMainWindow):
 
         self.timer.start(self.timer_period)
 
-        
         self.update_video_frame_overlay_text()
 
         self.ui.show()
@@ -416,6 +414,7 @@ class MainVideoPlayerWindow(QMainWindow):
         print(newProposedFrame)
 
     # media_time_change_handler(...) is called on VLC's MediaPlayerTimeChanged event
+    @vlc.callbackmethod
     def media_time_change_handler(self, _):
         # print('Time changed!')
 
