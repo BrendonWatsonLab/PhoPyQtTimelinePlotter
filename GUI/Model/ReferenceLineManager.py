@@ -222,97 +222,9 @@ class ReferenceMarkerManager(QObject):
         all_markers = self.get_used_markers()
         self.wants_extended_data.emit(all_markers)
 
-        # self.activeMarkersWindow = ActiveReferenceMarkersWindow(all_markers)
-        # self.used_markers_updated.connect(self.activeMarkersWindow.on_active_markers_list_updated)
-        # self.used_markers_extended_data_updated.connect(self.activeMarkersWindow.on_active_markers_metadata_updated)
-        # self.selection_changed.connect(self.activeMarkersWindow.selection_changed)
-        # self.activeMarkersWindow.show()
-
         self.activeMarkersWindow = ReferenceMarkViewer(all_markers)
         self.used_markers_updated.connect(self.activeMarkersWindow.on_active_markers_list_updated)
         self.used_markers_extended_data_updated.connect(self.activeMarkersWindow.on_active_markers_metadata_updated)
         self.selection_changed.connect(self.activeMarkersWindow.selection_changed)
         self.activeMarkersWindow.show()
 
-
-
-class ActiveReferenceMarkersWindow(ActiveReferenceMarkersMixin, QWidget):
-
-
-    def __init__(self, activeMarkersList):
-        QWidget.__init__(self)
-        self.activeMarkersList = activeMarkersList
-        self.activeMetadataList = np.repeat(None, len(activeMarkersList))
-        self.setWindowTitle("Active Reference Marks")
-
-        layout = QGridLayout()
-        self.setLayout(layout)
-        self.listwidget = QListWidget()
-        self.listwidget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.listwidget.itemClicked.connect(self.on_item_clicked)
-        # self.listwidget.clicked.connect(self.clicked)
-        layout.addWidget(self.listwidget)
-
-        self.reload_list()
-
-    def reload_list(self):
-        self.listwidget.clear()
-        for (anIndex, anItem) in enumerate(self.activeMarkersList):
-            curr_string = ""
-            if self.activeMetadataList[anIndex] is None:
-                curr_string = str(anItem)
-            else:
-                curr_metadata_item = self.activeMetadataList[anIndex]
-                curr_string = ('RefMark[identifier: {0}]: (datetime: {1})'.format(anItem.identifier, str(curr_metadata_item)))
-                # curr_string = str(anItem) + str(self.activeMetadataList[anIndex])
-
-            # Create the new table item            
-            curr_item = QtWidgets.QListWidgetItem(curr_string)
-
-            # Add it to the table
-            self.listwidget.insertItem(anIndex, curr_item)
-
-
-    def on_item_clicked(self):
-        selected_items = self.listwidget.selectedItems()
-        selected_indicies = []
-        for index in range(len(selected_items)):
-            aSelectedItem = selected_items[index]
-            currRow = self.listwidget.row(aSelectedItem)
-            selected_indicies.append(currRow)
-
-        print("Selected indicies: {0}".format(str(selected_indicies)))
-        self.selection_changed.emit(self.activeMarkersList, selected_indicies)
-        return
-
-    def get_selected_items(self):
-        return self.listwidget.selectedItems()
-        
-
-    def get_selected_item_indicies(self):
-        selected_items = self.get_selected_items()
-        selected_indicies = []
-        for index in range(len(selected_items)):
-            aSelectedItem = selected_items[index]
-            currRow = self.listwidget.row(aSelectedItem)
-            selected_indicies.append(currRow)
-
-        return selected_indicies
-
-
-    # def clicked(self, qmodelindex):
-    #     itemIndex = self.listwidget.currentRow()
-    #     item = self.listwidget.currentItem()
-    #     print(item.text())
-    #     self.selection_changed.emit(self.activeMarkersList, itemIndex)
-
-    # @pyqtSlot(list)
-    # def on_active_markers_list_updated(self, newList):
-    #     self.activeMarkersList = newList
-    #     self.activeMetadataList = np.repeat(None, len(self.activeMarkersList)) # Clear the metadata
-    #     self.reload_list()
-
-    # @pyqtSlot(list)
-    # def on_active_markers_metadata_updated(self, newMetadata):
-    #     self.activeMetadataList = newMetadata
-    #     self.reload_list()
