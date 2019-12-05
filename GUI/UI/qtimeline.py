@@ -124,20 +124,8 @@ class QTimeLine(TickedTimelineDrawingBaseWidget):
         qp.drawPolygon(poly)
         qp.drawLine(line)
 
-        # print("paintEvent({0})".format(str(event)))
-        # curr_pos = QPoint((float(self.width()) * 0.10), 0.0)
-        # self.referenceManager.get_markers()["0"].update_position(curr_pos, self.getScale())
-
-        # curr_pos = QPoint((float(self.width()) * 0.20), 0.0)
-        # self.referenceManager.get_markers()["1"].update_position(curr_pos, self.getScale())
-
-        # curr_pos = QPoint((float(self.width()) * 0.30), 0.0)
-        # self.referenceManager.get_markers()["2"].update_position(curr_pos, self.getScale())
-
-        self.referenceManager.draw(qp, event.rect(), self.getScale())
-
-        # if self.parent():
-        #     self.parent().get_reference_manager().draw(qp, event.rect(), self.getScale())
+        if self.parent():
+            self.parent().get_reference_manager().draw(qp, event.rect(), self.getScale())
 
         qp.end()
 

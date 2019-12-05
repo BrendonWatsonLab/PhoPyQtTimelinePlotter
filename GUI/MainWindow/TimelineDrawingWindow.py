@@ -1302,13 +1302,12 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     def on_create_playhead_selection(self, desired_datetime):
         print("TimelineDrawingWindow.on_create_playhead_selection({0})".format(str(desired_datetime)))
         x_offset = self.datetime_to_offset(desired_datetime)
-        new_pos = QPoint(x_offset, 0)
 
         self.timelineMasterTrackWidget.blockSignals(True)
         self.extendedTracksContainer.blockSignals(True)
 
         # Update the reference manager
-        self.referenceManager.update_next_unused_marker(new_pos)
+        self.referenceManager.update_next_unused_marker(x_offset)
 
         self.timelineMasterTrackWidget.update()
         self.extendedTracksContainer.update()
@@ -1322,7 +1321,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # on_request_extended_reference_line_data(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
         additional_data = []
         for aListItem in referenceLineList:
-            curr_x = aListItem.pointerPos
+            curr_x = aListItem.get_x_offset_position()
             curr_datetime = self.offset_to_datetime(curr_x)
             additional_data.append(curr_datetime)
 
@@ -1336,7 +1335,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
          # on_reference_line_markers_updated(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
         additional_data = []
         for aListItem in referenceLineList:
-            curr_x = aListItem.pointerPos
+            curr_x = aListItem.get_x_offset_position()
             curr_datetime = self.offset_to_datetime(curr_x)
             additional_data.append(curr_datetime)
 
@@ -1361,7 +1360,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # Build the metadata
         output_data = []
         for aListItem in curr_markers:
-            curr_x = aListItem.pointerPos
+            curr_x = aListItem.get_x_offset_position()
             curr_datetime = self.offset_to_datetime(curr_x)
             # combine the datetime and the list item as a tuple
             output_data.append(curr_datetime, aListItem)
