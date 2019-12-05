@@ -28,6 +28,11 @@ class DurationRepresentationMixin(object):
     def get_active_scale_multiplier(self):
         return self.activeScaleMultiplier
 
+    # Get scale from length
+    def getScale(self):
+        return float(self.get_total_duration())/float(self.width())
+
+
     # Timeline position/time converion functions:
     def offset_to_percent(self, event_x, event_y):
         percent_x = event_x / (self.width() * self.get_active_scale_multiplier())

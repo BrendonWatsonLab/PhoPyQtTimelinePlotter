@@ -152,10 +152,6 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
     def getScale(self):
         return float(self.totalDuration)/float(self.width())
 
-    # Get duration
-    def getDuration(self):
-        return self.duration
-
     def offset_to_percent(self, event_x, event_y):
         percent_x = event_x / self.width()
         percent_y = event_y / self.height()
