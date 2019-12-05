@@ -9,6 +9,12 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 """
 The DataMovieLinkInfo class serves as an intermediate between the data window and the video window. It controls the signals between the two.
 Inspired by the C++ DataMoveLinkInfo written by Pho Hale used in neuroscope.
+
+Scope: There can only be one DataMovieLink connected to the main timeline window at a time (as it drives the single video playback red line).
+    Also, the video playback timeline in the timeline will only typically intersect a single video at a time (although this isn't strictly true, as one might want to watch the original and the labeled video at the same time)
+
+Ownership:
+    This object should then be owned by the timeline?
 """
 
 class DataMovieLink_SyncOption(Enum):
