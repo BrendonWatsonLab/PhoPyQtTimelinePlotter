@@ -86,7 +86,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     MinZoomLevel = 0.1
     MaxZoomLevel = 2600.0
 
-
     # Signals:
     activeZoomChanged = pyqtSignal()
 
@@ -731,6 +730,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         duration_offset = self.offset_to_duration(event_x)
         return (self.totalStartTime + duration_offset)
 
+    # Want the offset into the timeline, so it should be self.minimumTimelineWidth * percent_offset.
+    # When I resize the window, the viewport gets larger but the minimumTrackWidth should be unchanged. (as it depends only on the scale)
+    #   That's not quite right, as it's set initially by the window's initial width isn't it?
+        # The minimum_track_width is self.activeScaleMultiplier * the current window width, meaning it DOES change when the window is resized.
+        # I assume minimum track width isn't being updated when the window is resized.
 
     def percent_to_offset(self, percent_offset):
         event_x = percent_offset * (self.width() * self.activeScaleMultiplier)
@@ -1305,9 +1309,14 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     ## Playhead Operations:
     @pyqtSlot(datetime)
     def on_create_playhead_selection(self, desired_datetime):
+        # Tries to create a reference marker at the desired_datetime
         print("TimelineDrawingWindow.on_create_playhead_selection({0})".format(str(desired_datetime)))
-        x_offset = self.datetime_to_offset(desired_datetime)
+        # x_offset = self.datetime_to_offset(desired_datetime)
 
+        percent_offset = self.datetime_to_percent(desired_datetime)
+        x_offset = self.percent_offset_to_track_offset(percent_offset)
+
+        print("\nDEBUG: TimelineDrawingWindow.on_create_playhead_selection({0}): x-offset: {1}".format(str(desired_datetime), str(x_offset)))
         self.timelineMasterTrackWidget.blockSignals(True)
         self.extendedTracksContainer.blockSignals(True)
 
@@ -1337,7 +1346,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     @pyqtSlot(list)
     def on_reference_line_markers_updated(self, referenceLineList):
         print("TimelineDrawingWindow.on_reference_line_markers_updated(...)")
-         # on_reference_line_markers_updated(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
         additional_data = []
         for aListItem in referenceLineList:
             curr_x = aListItem.get_x_offset_position()
