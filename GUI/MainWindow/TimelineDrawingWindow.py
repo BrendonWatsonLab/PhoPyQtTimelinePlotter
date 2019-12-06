@@ -986,16 +986,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.ui.lblActiveViewportDuration.setText(str(self.get_active_viewport_duration()))
         self.ui.lblActiveViewportOffsetAbsolute.setText(str(self.get_viewport_percent_scrolled()))
 
-    # Called after self.activeScaleMultiplier is changed to update everything else
-    def on_active_zoom_changed(self):
-        self.refreshUI_viewport_zoom_controls()
-        self.on_active_viewport_changed()
-        self.resize_children_on_zoom()
-        # self.refresh_child_widget_display()
-
-    def on_active_viewport_changed(self):
-        self.refreshUI_viewport_info_labels()
-
     def resize_children_on_zoom(self):
         newMinWidth = self.get_minimum_track_width()
         self.extendedTracksContainer.setFixedWidth(newMinWidth)
@@ -1796,5 +1786,28 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     @pyqtSlot()
     def on_window_resized(self):
         print("window resized! newSize: {0}".format(str(self.width())))
+        self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
+        return
+
+    # Called after self.activeScaleMultiplier is changed to update everything else
+    @pyqtSlot()
+    def on_active_zoom_changed(self):
+        print("TimelineDrawingWindow.on_active_zoom_changed(...)")
+        self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
+        self.refreshUI_viewport_zoom_controls()
+        self.on_active_viewport_changed()
+        self.resize_children_on_zoom()
+        # self.refresh_child_widget_display()
+
+    @pyqtSlot()
+    def on_active_viewport_changed(self):
+        print("TimelineDrawingWindow.on_active_viewport_changed(...)")
+        self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
+        self.refreshUI_viewport_info_labels()
+
+
+    @pyqtSlot(datetime, datetime, timedelta)
+    def on_active_global_timeline_times_changed(self, totalStartTime, totalEndTime, totalDuration):
+        print("TimelineDrawingWindow.on_active_global_timeline_times_changed(...)")
         self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
         return
