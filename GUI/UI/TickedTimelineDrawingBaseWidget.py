@@ -29,18 +29,12 @@ class TickedTimelineDrawingBaseWidget(QWidget):
     videoPlaybackLineProperties = TickProperties(Qt.red, 1.0, Qt.SolidLine)
     hoverLineProperties = TickProperties(Qt.cyan, 0.8, Qt.DashLine)
 
-    def __init__(self, duration, length, parent=None):
+    def __init__(self, duration, parent=None):
         super(TickedTimelineDrawingBaseWidget, self).__init__(parent=parent)
         self.duration = duration
-        self.length = length
-
-        self.referenceManager = parent.get_reference_manager()
 
         # Reference Manager:
-        # self.referenceManager = ReferenceMarkerManager(10, parent=self)
-        # self.referenceManager.add_reference_marker("0", properties=TickProperties(QColor(250, 187, 187), 0.9, Qt.SolidLine), position=QPoint(100.0, 0.0))
-        # self.referenceManager.add_reference_marker("1", properties=TickProperties(QColor(187, 250, 187), 0.9, Qt.SolidLine), position=QPoint(200.0, 0.0))
-        # self.referenceManager.add_reference_marker("2", properties=TickProperties(QColor(187, 187, 250), 0.9, Qt.SolidLine), position=QPoint(300.0, 0.0))
+        self.referenceManager = parent.get_reference_manager()
 
         # Set variables
         self.backgroundColor = __backgroudColor__
@@ -61,6 +55,13 @@ class TickedTimelineDrawingBaseWidget(QWidget):
         pal = QPalette()
         pal.setColor(QPalette.Background, self.backgroundColor)
         self.setPalette(pal)
+
+    def get_reference_manager(self):
+        return self.referenceManager
+        # if self.parent():
+        #     return self.parent().get_reference_manager()
+        # else:
+        #     return None
 
 
     def draw_tick_lines(self, painter):
@@ -99,20 +100,7 @@ class TickedTimelineDrawingBaseWidget(QWidget):
         self.draw_tick_lines(qp)
         self.draw_indicator_lines(qp)
 
-        # print("paintRect({0})".format(str(event)))
-        # curr_pos = QPoint((float(self.width()) * 0.10), 0.0)
-        # self.referenceManager.get_markers()["0"].update_position(curr_pos, self.getScale())
-
-        # curr_pos = QPoint((float(self.width()) * 0.20), 0.0)
-        # self.referenceManager.get_markers()["1"].update_position(curr_pos, self.getScale())
-
-        # curr_pos = QPoint((float(self.width()) * 0.30), 0.0)
-        # self.referenceManager.get_markers()["2"].update_position(curr_pos, self.getScale())
-
-        # self.referenceManager.draw(qp, event.rect(), self.getScale())
-
-        if self.parent():
-            self.parent().get_reference_manager().draw(qp, event.rect(), self.getScale())
+        self.get_reference_manager().draw(qp, event.rect(), self.getScale())
 
         # # Clear clip path
         # path = QPainterPath()
@@ -168,7 +156,6 @@ class TickedTimelineDrawingBaseWidget(QWidget):
         h, m = divmod(m, 60)
         return "%02d:%02d:%02d" % (h, m, s)
 
-
     # Get scale from length
     def getScale(self):
         return float(self.duration)/float(self.width())
@@ -191,11 +178,8 @@ class TickedTimelineDrawingBaseWidget(QWidget):
 
     @pyqtSlot(float)
     def on_update_reference_marker_position(self, pointer_desired_x):
-        new_pos = QPoint(pointer_desired_x, 0)
-        self.referenceManager.update_next_unused_marker(new_pos)
+        self.get_reference_manager().update_next_unused_marker(pointer_desired_x)
         self.update()
-
-
 
 
     @pyqtSlot(int)

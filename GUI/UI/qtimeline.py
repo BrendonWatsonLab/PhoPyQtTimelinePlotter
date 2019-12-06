@@ -35,8 +35,8 @@ class VideoSample:
 
 class QTimeLine(TickedTimelineDrawingBaseWidget):
 
-    def __init__(self, duration, length, parent=None):
-        super(QTimeLine, self).__init__(duration, length, parent=parent)
+    def __init__(self, duration, parent=None):
+        super(QTimeLine, self).__init__(duration, parent=parent)
 
         # Set variables
         self.textColor = __textColor__
@@ -44,10 +44,10 @@ class QTimeLine(TickedTimelineDrawingBaseWidget):
         self.selectedSample = None
         self.videoSamples = []  # List of videos samples
 
-        self.initUI()
-
-    def initUI(self):
-        self.setGeometry(300, 300, self.length, 200)
+    #     self.initUI()
+    #
+    # def initUI(self):
+    #     self.setGeometry(300, 300, self.length, 200)
 
 
     def paintEvent(self, event):
@@ -124,20 +124,8 @@ class QTimeLine(TickedTimelineDrawingBaseWidget):
         qp.drawPolygon(poly)
         qp.drawLine(line)
 
-        # print("paintEvent({0})".format(str(event)))
-        # curr_pos = QPoint((float(self.width()) * 0.10), 0.0)
-        # self.referenceManager.get_markers()["0"].update_position(curr_pos, self.getScale())
-
-        # curr_pos = QPoint((float(self.width()) * 0.20), 0.0)
-        # self.referenceManager.get_markers()["1"].update_position(curr_pos, self.getScale())
-
-        # curr_pos = QPoint((float(self.width()) * 0.30), 0.0)
-        # self.referenceManager.get_markers()["2"].update_position(curr_pos, self.getScale())
-
-        self.referenceManager.draw(qp, event.rect(), self.getScale())
-
-        # if self.parent():
-        #     self.parent().get_reference_manager().draw(qp, event.rect(), self.getScale())
+        if self.parent():
+            self.parent().get_reference_manager().draw(qp, event.rect(), self.getScale())
 
         qp.end()
 

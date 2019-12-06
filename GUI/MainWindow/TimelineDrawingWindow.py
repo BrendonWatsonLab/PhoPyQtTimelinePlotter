@@ -51,6 +51,7 @@ from GUI.Model.ModelViewContainer import ModelViewContainer
 
 from GUI.UI.TimelineFloatingHeaderWidget.TimelineFloatingHeaderWidget import TimelineFloatingHeaderWidget
 
+from GUI.Model.DataMovieLinkInfo import DataMovieLinkInfo
 
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.
@@ -84,7 +85,22 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     ZoomDelta = 1.0
     MinZoomLevel = 0.1
     MaxZoomLevel = 2600.0
+
+    # Signals:
     
+    # window_resized: Signal that fires when the window is resized.
+    window_resized = QtCore.pyqtSignal()
+
+    activeZoomChanged = pyqtSignal()
+
+    # activeGlobalTimelineTimesChanged(startTime: datetime, endTime: datetime, duration: timedelta)
+    activeGlobalTimelineTimesChanged = pyqtSignal(datetime, datetime, timedelta) # Called when the timeline's global displayed start/end times are updated
+    
+    debug_IncludeTaggedVideoTracks = False
+    debug_IncludeEarlyTracks = False
+
+    debug_desiredVideoTracks = [0, 1, 5, 6, 8, 9]
+    # debug_desiredVideoTracks = [5, 6, 8, 9]
 
     def __init__(self, database_connection, totalStartTime, totalEndTime):
         super(TimelineDrawingWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
@@ -98,8 +114,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.partitionTrackContextsArray = [TrackContextConfig('Behavior'), TrackContextConfig('Unknown')]
 
         self.trackConfigurations = []
-
         self.videoInfoObjects = []
+
+        # Track Options:
+        # loadedVideoTrackIndicies: the video tracks to initially add to the track list
+        self.loadedVideoTrackIndicies = TimelineDrawingWindow.debug_desiredVideoTracks
 
         # Reference Manager:
         self.referenceManager = ReferenceMarkerManager(10, parent=self)
@@ -118,12 +137,13 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.activeVideoTrackConfigEditDialog = None
         self.activeTrackID_ConfigEditingIndex = None
     
-
         self.setMouseTracking(True)
 
         self.minimumVideoTrackHeight = 50
         # self.minimumVideoTrackHeight = 25
 
+        # A special event that should report when the window is resized.
+        self.window_resized.connect(self.on_window_resized)
 
         self.initUI()
         self.reload_videos_from_track_configs()
@@ -202,7 +222,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         def initUI_timelineTracks(self):
             # Timeline Numberline track:
             masterTimelineDurationSeconds = self.totalDuration.total_seconds()
-            self.timelineMasterTrackWidget = QTimeLine(masterTimelineDurationSeconds, minimumWidgetWidth, parent=self)
+            self.timelineMasterTrackWidget = QTimeLine(masterTimelineDurationSeconds, parent=self)
             self.timelineMasterTrackWidget.setMouseTracking(True)
             self.timelineMasterTrackWidget.hoverChanged.connect(self.handle_timeline_hovered_position_update_event)
             self.timelineMasterTrackWidget.positionChanged.connect(self.handle_timeline_position_update_event)
@@ -214,100 +234,24 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
             # B00
             currTrackIndex = 0
-            currTrackBBID = 0
-            currTrackConfig = VideoTrackConfiguration(currTrackIndex, "B{0:02}".format(currTrackBBID), "Originals", True, False, [currTrackBBID+1], None, None, None, self)
-            self.trackConfigurations.append(currTrackConfig)
-            self.mainVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
-            self.mainVideoTrack.set_track_title_label('BBID: {0}, originals'.format(currTrackBBID))
-            self.videoFileTrackWidgets.append(self.mainVideoTrack)
 
-            # currTrackIndex = currTrackIndex + 1
-            # currTrackConfig = VideoTrackConfiguration(currTrackIndex, "B{0:02}Labeled".format(currTrackBBID), "Labeled", False, True, [currTrackBBID+1], None, None, None, self)
-            # self.trackConfigurations.append(currTrackConfig)
-            # self.labeledVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
-            # self.labeledVideoTrack.set_track_title_label('BBID: {0}, labeled'.format(currTrackBBID))
-            # self.videoFileTrackWidgets.append(self.labeledVideoTrack)
+            # Loop through and add all the tracks
+            for currTrackBBID in self.loadedVideoTrackIndicies:
+                currTrackConfig = VideoTrackConfiguration(currTrackIndex, "B{0:02}".format(currTrackBBID), "Originals", True, False, [currTrackBBID+1], None, None, None, self)
+                self.trackConfigurations.append(currTrackConfig)
+                self.mainVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+                self.mainVideoTrack.set_track_title_label('BBID: {0}, originals'.format(currTrackBBID))
+                self.videoFileTrackWidgets.append(self.mainVideoTrack)
+                currTrackIndex = currTrackIndex + 1
 
-            # B01
-            currTrackIndex = currTrackIndex + 1
-            currTrackBBID = currTrackBBID + 1
-            currTrackConfig = VideoTrackConfiguration(currTrackIndex, "B{0:02}".format(currTrackBBID), "Originals", True, False, [currTrackBBID+1], None, None, None, self)
-            self.trackConfigurations.append(currTrackConfig)
-            self.mainVideoTrack1 = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
-            self.mainVideoTrack1.set_track_title_label('BBID: {0}, originals'.format(currTrackBBID))
-            self.videoFileTrackWidgets.append(self.mainVideoTrack1)
-
-            # currTrackIndex = currTrackIndex + 1
-            # currTrackConfig = VideoTrackConfiguration(currTrackIndex, "B{0:02}Labeled".format(currTrackBBID), "Labeled", False, True, [currTrackBBID+1], None, None, None, self)
-            # self.trackConfigurations.append(currTrackConfig)
-            # self.labeledVideoTrack1 = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
-            # self.labeledVideoTrack1.set_track_title_label('BBID: {0}, labeled'.format(currTrackBBID))
-            # self.videoFileTrackWidgets.append(self.labeledVideoTrack1)
-
-            # B05
-            currTrackIndex = currTrackIndex + 1
-            currTrackBBID = 5
-            currTrackConfig = VideoTrackConfiguration(currTrackIndex, "B{0:02}".format(currTrackBBID), "Originals", True, False, [currTrackBBID+1], None, None, None, self)
-            self.trackConfigurations.append(currTrackConfig)
-            self.mainVideoTrack1 = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
-            self.mainVideoTrack1.set_track_title_label('BBID: {0}, originals'.format(currTrackBBID))
-            self.videoFileTrackWidgets.append(self.mainVideoTrack1)
-
-            # currTrackIndex = currTrackIndex + 1
-            # currTrackConfig = VideoTrackConfiguration(currTrackIndex, "B{0:02}Labeled".format(currTrackBBID), "Labeled", False, True, [currTrackBBID+1], None, None, None, self)
-            # self.trackConfigurations.append(currTrackConfig)
-            # self.labeledVideoTrack1 = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
-            # self.labeledVideoTrack1.set_track_title_label('BBID: {0}, labeled'.format(currTrackBBID))
-            # self.videoFileTrackWidgets.append(self.labeledVideoTrack1)
-
-            # B06
-            currTrackIndex = currTrackIndex + 1
-            currTrackBBID = currTrackBBID + 1
-            currTrackConfig = VideoTrackConfiguration(currTrackIndex, "B{0:02}".format(currTrackBBID), "Originals", True, False, [currTrackBBID+1], None, None, None, self)
-            self.trackConfigurations.append(currTrackConfig)
-            self.mainVideoTrack1 = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
-            self.mainVideoTrack1.set_track_title_label('BBID: {0}, originals'.format(currTrackBBID))
-            self.videoFileTrackWidgets.append(self.mainVideoTrack1)
-
-            # currTrackIndex = currTrackIndex + 1
-            # currTrackConfig = VideoTrackConfiguration(currTrackIndex, "B{0:02}Labeled".format(currTrackBBID), "Labeled", False, True, [currTrackBBID+1], None, None, None, self)
-            # self.trackConfigurations.append(currTrackConfig)
-            # self.labeledVideoTrack1 = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
-            # self.labeledVideoTrack1.set_track_title_label('BBID: {0}, labeled'.format(currTrackBBID))
-            # self.videoFileTrackWidgets.append(self.labeledVideoTrack1)
-
-            # B08
-            currTrackIndex = currTrackIndex + 1
-            currTrackBBID = 8
-            currTrackConfig = VideoTrackConfiguration(currTrackIndex, "B{0:02}".format(currTrackBBID), "Originals", True, False, [currTrackBBID+1], None, None, None, self)
-            self.trackConfigurations.append(currTrackConfig)
-            self.mainVideoTrack1 = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
-            self.mainVideoTrack1.set_track_title_label('BBID: {0}, originals'.format(currTrackBBID))
-            self.videoFileTrackWidgets.append(self.mainVideoTrack1)
-
-            # currTrackIndex = currTrackIndex + 1
-            # currTrackConfig = VideoTrackConfiguration(currTrackIndex, "B{0:02}Labeled".format(currTrackBBID), "Labeled", False, True, [currTrackBBID+1], None, None, None, self)
-            # self.trackConfigurations.append(currTrackConfig)
-            # self.labeledVideoTrack1 = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
-            # self.labeledVideoTrack1.set_track_title_label('BBID: {0}, labeled'.format(currTrackBBID))
-            # self.videoFileTrackWidgets.append(self.labeledVideoTrack1)
-
-            # B09
-            currTrackIndex = currTrackIndex + 1
-            currTrackBBID = currTrackBBID + 1
-            currTrackConfig = VideoTrackConfiguration(currTrackIndex, "B{0:02}".format(currTrackBBID), "Originals", True, False, [currTrackBBID+1], None, None, None, self)
-            self.trackConfigurations.append(currTrackConfig)
-            self.mainVideoTrack1 = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
-            self.mainVideoTrack1.set_track_title_label('BBID: {0}, originals'.format(currTrackBBID))
-            self.videoFileTrackWidgets.append(self.mainVideoTrack1)
-
-            # currTrackIndex = currTrackIndex + 1
-            # currTrackConfig = VideoTrackConfiguration(currTrackIndex, "B{0:02}Labeled".format(currTrackBBID), "Labeled", False, True, [currTrackBBID+1], None, None, None, self)
-            # self.trackConfigurations.append(currTrackConfig)
-            # self.labeledVideoTrack1 = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
-            # self.labeledVideoTrack1.set_track_title_label('BBID: {0}, labeled'.format(currTrackBBID))
-            # self.videoFileTrackWidgets.append(self.labeledVideoTrack1)
-
+                # Add the tagged video track for the same box
+                if TimelineDrawingWindow.debug_IncludeTaggedVideoTracks:
+                    currTrackConfig = VideoTrackConfiguration(currTrackIndex, "B{0:02}Labeled".format(currTrackBBID), "Labeled", False, True, [currTrackBBID+1], None, None, None, self)
+                    self.trackConfigurations.append(currTrackConfig)
+                    self.labeledVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+                    self.labeledVideoTrack.set_track_title_label('BBID: {0}, labeled'.format(currTrackBBID))
+                    self.videoFileTrackWidgets.append(self.labeledVideoTrack)
+                    currTrackIndex = currTrackIndex + 1
 
 
             # Other Tracks:
@@ -317,27 +261,27 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             currTrackBBID = 1
 
             # Annotation Comments track:
-            currTrackIndex = currTrackIndex + 1
             currTrackConfig = TrackConfigurationBase(currTrackIndex, "A_B{0:02}Notes".format(currTrackBBID), "Notes", TimestampedAnnotation, [currTrackBBID+1], None, None, None, self)
             self.trackConfigurations.append(currTrackConfig)
             self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
             self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
+            currTrackIndex = currTrackIndex + 1
 
             # Partition tracks:
-            currTrackIndex = currTrackIndex + 1
             currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", CategoricalDurationLabel, [currTrackBBID+1], None, None, None, self)
             self.trackConfigurations.append(currTrackConfig)
             self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[0])
             self.eventTrackWidgets.append(self.partitionsTrackWidget)
-
             currTrackIndex = currTrackIndex + 1
+
             currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", CategoricalDurationLabel, [currTrackBBID+1], None, None, None, self)
             self.trackConfigurations.append(currTrackConfig)
             self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[1])
             self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
+            currTrackIndex = currTrackIndex + 1
 
             # Build the bottomPanelWidget
-            self.extendedTracksContainer = ExtendedTracksContainerWidget(masterTimelineDurationSeconds, minimumWidgetWidth, parent=self)
+            self.extendedTracksContainer = ExtendedTracksContainerWidget(masterTimelineDurationSeconds, parent=self)
             self.extendedTracksContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
             self.extendedTracksContainer.setAutoFillBackground(True)
             self.extendedTracksContainer.setMouseTracking(True)
@@ -357,8 +301,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.timelineMasterTrackWidget.setMinimumSize(minimumWidgetWidth, 50)
             self.timelineMasterTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
-            
-            
         def initUI_layout(self):
 
             currTrackConfigurationIndex = 0
@@ -581,7 +523,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         ## Timeline Tracks:
         initUI_timelineTracks(self)
         
-
         #Layout of Main Window:
         initUI_layout(self)
 
@@ -640,6 +581,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
+        # Emit events
+        self.activeGlobalTimelineTimesChanged.emit(self.totalStartTime, self.totalEndTime, self.totalDuration)
 
     # Required to initialize the viewport to fit the video events
     def reload_timeline_display_bounds(self):
@@ -723,6 +666,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         duration_offset = self.offset_to_duration(event_x)
         return (self.totalStartTime + duration_offset)
 
+    # Want the offset into the timeline, so it should be self.minimumTimelineWidth * percent_offset.
+    # When I resize the window, the viewport gets larger but the minimumTrackWidth should be unchanged. (as it depends only on the scale)
+    #   That's not quite right, as it's set initially by the window's initial width isn't it?
+        # The minimum_track_width is self.activeScaleMultiplier * the current window width, meaning it DOES change when the window is resized.
+        # I assume minimum track width isn't being updated when the window is resized.
 
     def percent_to_offset(self, percent_offset):
         event_x = percent_offset * (self.width() * self.activeScaleMultiplier)
@@ -737,6 +685,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         duration_offset = newDatetime - self.totalStartTime
         event_x = self.duration_to_offset(duration_offset)
         return event_x
+
+    def datetime_to_percent(self, newDatetime):
+        duration_offset = newDatetime - self.totalStartTime
+        percent_x = duration_offset / self.totalDuration
+        return percent_x
 
 
     # Returns the index of the child object that the (x, y) point falls within, or None if it doesn't fall within an event.
@@ -1078,6 +1031,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         else:
             # Create a new videoPlayerWindow window
             self.videoPlayerWindow = MainVideoPlayerWindow(parent=self)
+            self.videoPlayerWindow.close_signal.connect(self.on_video_player_window_closed)
             self.videoPlayerWindow.show()
 
     def try_set_video_player_window_url(self, url):
@@ -1097,6 +1051,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             print("Creating new Video Player Window...")
             try:
                 self.videoPlayerWindow = MainVideoPlayerWindow(parent=self)
+                self.videoPlayerWindow.close_signal.connect(self.on_video_player_window_closed)
             except Exception as e:
                 print("Error Spawning Video Window:", e)
                 return False
@@ -1116,6 +1071,14 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                 return False
 
             return True
+
+
+    @pyqtSlot()
+    def on_video_player_window_closed(self):
+        """ Cleanup the popup widget here """
+        print("TimelineDrawingWindow.on_video_player_window_closed()...")
+        print("Popup closed.")
+        # self.videoPlayerWindow = None
 
 
     # Shows the Video File Tree window:
@@ -1282,15 +1245,19 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     ## Playhead Operations:
     @pyqtSlot(datetime)
     def on_create_playhead_selection(self, desired_datetime):
+        # Tries to create a reference marker at the desired_datetime
         print("TimelineDrawingWindow.on_create_playhead_selection({0})".format(str(desired_datetime)))
-        x_offset = self.datetime_to_offset(desired_datetime)
-        new_pos = QPoint(x_offset, 0)
+        # x_offset = self.datetime_to_offset(desired_datetime)
 
+        percent_offset = self.datetime_to_percent(desired_datetime)
+        x_offset = self.percent_offset_to_track_offset(percent_offset)
+
+        print("\nDEBUG: TimelineDrawingWindow.on_create_playhead_selection({0}): x-offset: {1}".format(str(desired_datetime), str(x_offset)))
         self.timelineMasterTrackWidget.blockSignals(True)
         self.extendedTracksContainer.blockSignals(True)
 
         # Update the reference manager
-        self.referenceManager.update_next_unused_marker(new_pos)
+        self.referenceManager.update_next_unused_marker(x_offset)
 
         self.timelineMasterTrackWidget.update()
         self.extendedTracksContainer.update()
@@ -1304,7 +1271,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # on_request_extended_reference_line_data(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
         additional_data = []
         for aListItem in referenceLineList:
-            curr_x = aListItem.pointerPos
+            curr_x = aListItem.get_x_offset_position()
             curr_datetime = self.offset_to_datetime(curr_x)
             additional_data.append(curr_datetime)
 
@@ -1315,10 +1282,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     @pyqtSlot(list)
     def on_reference_line_markers_updated(self, referenceLineList):
         print("TimelineDrawingWindow.on_reference_line_markers_updated(...)")
-         # on_reference_line_markers_updated(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
         additional_data = []
         for aListItem in referenceLineList:
-            curr_x = aListItem.pointerPos
+            curr_x = aListItem.get_x_offset_position()
             curr_datetime = self.offset_to_datetime(curr_x)
             additional_data.append(curr_datetime)
 
@@ -1343,7 +1309,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # Build the metadata
         output_data = []
         for aListItem in curr_markers:
-            curr_x = aListItem.pointerPos
+            curr_x = aListItem.get_x_offset_position()
             curr_datetime = self.offset_to_datetime(curr_x)
             # combine the datetime and the list item as a tuple
             output_data.append(curr_datetime, aListItem)
@@ -1696,3 +1662,14 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     def track_config_dialog_canceled(self):
         print('track_config_dialog_canceled()')
         self.activeTrackID_ConfigEditingIndex = None
+
+
+    # The native PyQt5 Window resize event function that's called when the window is resized.
+    def resizeEvent(self, event):
+        self.window_resized.emit()
+        return super().resizeEvent(event)
+
+    @pyqtSlot()
+    def on_window_resized(self):
+        print("window resized! newSize: {0}".format(str(self.width())))
+        return

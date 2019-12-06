@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 # ReferenceLineManager.py
+import sys
+from datetime import datetime, timezone, timedelta
 import queue
 import numpy as np
 
@@ -8,7 +10,6 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import Qt, QPoint, QLine, QRect, QRectF, pyqtSignal, pyqtSlot, QObject, QMargins
 from PyQt5.QtGui import QPainter, QColor, QFont, QBrush, QPalette, QPen, QPolygon, QPainterPath, QPixmap
 from PyQt5.QtWidgets import QWidget, QFrame, QScrollArea, QVBoxLayout, QGridLayout, QListWidget
-import sys
 import os
 
 from GUI.UI.ReferenceMarkViewer.ReferenceMarkViewer import ReferenceMarkViewer, ActiveReferenceMarkersMixin
@@ -33,6 +34,9 @@ class TickProperties:
         return self.get_pen().color()
 
 
+"""
+ReferenceMarker: a QObject that draws a vertical line that denotes a specific timestamp on a timeline with an optional triangular header with a ID Label
+"""
 class ReferenceMarker(QObject):
 
     defaultProperties = TickProperties(QColor(250, 187, 187), 0.9, Qt.SolidLine)
@@ -43,15 +47,14 @@ class ReferenceMarker(QObject):
         self.is_enabled = is_enabled
         self.properties = properties
         self.scale = 1.0
-        self.pos = None
-        self.pointerPos = None
+        self.x_offset_position = None
         self.textColor = __textColor__
         self.font = __font__
 
         self.is_driven_externally = False
 
     def draw_pointer(self, painter, drawRect, scale):
-        if self.pointerPos is not None:
+        if self.x_offset_position is not None:
             currOffset = (self.get_pointerTimePos()/scale)
             line = QLine(QPoint(currOffset, 40),
                          QPoint(currOffset, drawRect.height()))
@@ -81,41 +84,46 @@ class ReferenceMarker(QObject):
         # painter.drawText(currOffset - 10, 20, 20, 20, Qt.AlignCenter, self.identifier)
         painter.drawText(textRect, Qt.AlignCenter, self.identifier)
 
+    # Called to draw the line and optionally the triangular pointer
     def draw(self, painter, drawRect, scale):
         self.updateScale(scale)
         if self.is_enabled:
-            if self.pos is not None:
+            if self.x_offset_position is not None:
                 painter.setRenderHint(QPainter.Antialiasing)
 
+                # Draws the single vertical line across the entire height of the drawRect
                 painter.setPen(self.properties.get_pen())
-                painter.drawLine(self.pos.x(), 0, self.pos.x(), drawRect.height())
+                painter.drawLine(self.x_offset_position, 0, self.x_offset_position, drawRect.height())
 
                 self.draw_pointer(painter, drawRect, scale)
 
     def getScale(self):
         return self.scale
 
+    def get_x_offset_position(self):
+        return self.x_offset_position
+
     def get_pointerTimePos(self):
-        return (self.pointerPos * self.getScale())
+        return (self.x_offset_position * self.getScale())
 
     def updateScale(self, newScale):
         if (self.scale != newScale):
             self.scale = newScale
 
     # Updates the position and scale of the reference marker
-    def update_position(self, pos, scale):
-        self.pos = pos
-        x = self.pos.x()
-        self.pointerPos = x
+    def update_position(self, x_offset_position, scale):
+        self.x_offset_position = x_offset_position
         self.updateScale(scale)
 
     def get_position_tuple_string(self):
-        return '(pos: {0}, pointerPos: {1}, get_pointerTimePos: {2})'.format(self.pos, self.pointerPos, self.get_pointerTimePos())
+        return '(pos: {0}, get_pointerTimePos: {1})'.format(self.x_offset_position, self.get_pointerTimePos())
 
     def __str__(self):
         return 'RefMark[identifier: {0}]: {1}'.format(self.identifier, self.get_position_tuple_string())
 
-
+"""
+ReferenceMarkerManager is a shared singleton that defines the positions of "reference lines" that are drawn throughout the main timeline.
+"""
 class ReferenceMarkerManager(QObject):
 
     used_markers_updated = pyqtSignal(list)
@@ -124,8 +132,6 @@ class ReferenceMarkerManager(QObject):
     used_markers_extended_data_updated = pyqtSignal(list)
 
     selection_changed = pyqtSignal(list, list)
-
-    
 
     # L = queue.Queue(maxsize=20)
 
@@ -152,8 +158,7 @@ class ReferenceMarkerManager(QObject):
             curr_color = QColor.fromHslF((float(a_marker_index)/float(num_markers)), 0.9, 0.9, 1.0)
             curr_properties = TickProperties(curr_color, 0.9, Qt.SolidLine)
             new_obj = ReferenceMarker(str(a_marker_index), False, properties=curr_properties, parent=self)
-            curr_pos = QPoint(0.0, 0.0)
-            new_obj.update_position(curr_pos, self.get_scale())
+            new_obj.update_position(0.0, self.get_scale())
             self.markers[str(a_marker_index)] = new_obj
 
         self.used_markers_updated.emit(self.get_used_markers())
@@ -222,97 +227,9 @@ class ReferenceMarkerManager(QObject):
         all_markers = self.get_used_markers()
         self.wants_extended_data.emit(all_markers)
 
-        # self.activeMarkersWindow = ActiveReferenceMarkersWindow(all_markers)
-        # self.used_markers_updated.connect(self.activeMarkersWindow.on_active_markers_list_updated)
-        # self.used_markers_extended_data_updated.connect(self.activeMarkersWindow.on_active_markers_metadata_updated)
-        # self.selection_changed.connect(self.activeMarkersWindow.selection_changed)
-        # self.activeMarkersWindow.show()
-
         self.activeMarkersWindow = ReferenceMarkViewer(all_markers)
         self.used_markers_updated.connect(self.activeMarkersWindow.on_active_markers_list_updated)
         self.used_markers_extended_data_updated.connect(self.activeMarkersWindow.on_active_markers_metadata_updated)
         self.selection_changed.connect(self.activeMarkersWindow.selection_changed)
         self.activeMarkersWindow.show()
 
-
-
-class ActiveReferenceMarkersWindow(ActiveReferenceMarkersMixin, QWidget):
-
-
-    def __init__(self, activeMarkersList):
-        QWidget.__init__(self)
-        self.activeMarkersList = activeMarkersList
-        self.activeMetadataList = np.repeat(None, len(activeMarkersList))
-        self.setWindowTitle("Active Reference Marks")
-
-        layout = QGridLayout()
-        self.setLayout(layout)
-        self.listwidget = QListWidget()
-        self.listwidget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.listwidget.itemClicked.connect(self.on_item_clicked)
-        # self.listwidget.clicked.connect(self.clicked)
-        layout.addWidget(self.listwidget)
-
-        self.reload_list()
-
-    def reload_list(self):
-        self.listwidget.clear()
-        for (anIndex, anItem) in enumerate(self.activeMarkersList):
-            curr_string = ""
-            if self.activeMetadataList[anIndex] is None:
-                curr_string = str(anItem)
-            else:
-                curr_metadata_item = self.activeMetadataList[anIndex]
-                curr_string = ('RefMark[identifier: {0}]: (datetime: {1})'.format(anItem.identifier, str(curr_metadata_item)))
-                # curr_string = str(anItem) + str(self.activeMetadataList[anIndex])
-
-            # Create the new table item            
-            curr_item = QtWidgets.QListWidgetItem(curr_string)
-
-            # Add it to the table
-            self.listwidget.insertItem(anIndex, curr_item)
-
-
-    def on_item_clicked(self):
-        selected_items = self.listwidget.selectedItems()
-        selected_indicies = []
-        for index in range(len(selected_items)):
-            aSelectedItem = selected_items[index]
-            currRow = self.listwidget.row(aSelectedItem)
-            selected_indicies.append(currRow)
-
-        print("Selected indicies: {0}".format(str(selected_indicies)))
-        self.selection_changed.emit(self.activeMarkersList, selected_indicies)
-        return
-
-    def get_selected_items(self):
-        return self.listwidget.selectedItems()
-        
-
-    def get_selected_item_indicies(self):
-        selected_items = self.get_selected_items()
-        selected_indicies = []
-        for index in range(len(selected_items)):
-            aSelectedItem = selected_items[index]
-            currRow = self.listwidget.row(aSelectedItem)
-            selected_indicies.append(currRow)
-
-        return selected_indicies
-
-
-    # def clicked(self, qmodelindex):
-    #     itemIndex = self.listwidget.currentRow()
-    #     item = self.listwidget.currentItem()
-    #     print(item.text())
-    #     self.selection_changed.emit(self.activeMarkersList, itemIndex)
-
-    # @pyqtSlot(list)
-    # def on_active_markers_list_updated(self, newList):
-    #     self.activeMarkersList = newList
-    #     self.activeMetadataList = np.repeat(None, len(self.activeMarkersList)) # Clear the metadata
-    #     self.reload_list()
-
-    # @pyqtSlot(list)
-    # def on_active_markers_metadata_updated(self, newMetadata):
-    #     self.activeMetadataList = newMetadata
-    #     self.reload_list()
