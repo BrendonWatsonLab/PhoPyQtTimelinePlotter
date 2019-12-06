@@ -131,14 +131,14 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             # Compute the correct activeViewportDuration from the activeScaleMultiplier
             self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
             # self.update_global_start_end_times(totalStartTime, totalEndTime)
-            self.activeViewportDuration = self.compute_desiredViewportDuration_from_activeScaleMultiplier(self.activeScaleMultiplier)
+            self.activeViewportDuration = TimelineDrawingWindow.compute_desiredViewportDuration_from_activeScaleMultiplier(self.width(), self.totalDuration, self.activeScaleMultiplier)            
             pass
         elif self.viewportAdjustmentMode is ViewportScaleAdjustmentOptions.MaintainDesiredViewportDisplayDuration:
             # Compute the correct activeScaleMultiplier from the activeViewportDuration
             # activeViewportDuration: the desired duration of time to display in the viewport. When adjusted, updates the activeScaleMultiplier (zoom factor)
             self.activeViewportDuration = TimelineDrawingWindow.DefaultViewportDisplayDuration
-            self.activeScaleMultiplier = self.compute_activeScaleMultiplier_from_desiredViewportDuration(self.activeViewportDuration)
-
+            self.activeScaleMultiplier = TimelineDrawingWindow.compute_activeScaleMultiplier_from_desiredViewportDuration(self.width(), self.totalDuration, self.activeViewportDuration)
+            pass
         else:
             print("FATAL ERROR: Invalid viewportAdjustmentMode!")
             return
@@ -853,30 +853,51 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         desiredPercent = desiredDuration / self.totalDuration
         return self.set_active_viewport_duration_percent_viewport_total(desiredPercent)
 
-
-    """ compute_activeScaleMultiplier_from_desiredViewportDuration(desiredDuration)
+    """ STATICMETHOD: compute_activeScaleMultiplier_from_desiredViewportDuration(currentViewportWidth, totalTimelineDuration, desiredViewportDisplayDuration)
     Given: a desired duration to display in the viewport
     Return: the correct activeScaleMultiplier (zoom factor) that would need to be set at the current window width.
     Invalidated:    1. when window width is updated
                     2. total duration changes.
     """
-    def compute_activeScaleMultiplier_from_desiredViewportDuration(self, desiredDuration):
-        desiredPercent = desiredDuration / self.totalDuration
-        desiredMinimumWidth = (float(self.get_viewport_width()) / float(desiredPercent))
-        newActiveScaleMultiplier = desiredMinimumWidth / self.width()
+    @staticmethod
+    def compute_activeScaleMultiplier_from_desiredViewportDuration(currentViewportWidth, totalTimelineDuration, desiredViewportDisplayDuration):
+        desiredPercent = desiredViewportDisplayDuration / totalTimelineDuration
+        desiredMinimumWidth = (float(currentViewportWidth) / float(desiredPercent))
+        newActiveScaleMultiplier = desiredMinimumWidth / float(currentViewportWidth)
         return newActiveScaleMultiplier
 
-    """ compute_desiredViewportDuration_from_activeScaleMultiplier(desiredActiveScaleMultiplier)
+    """ STATICMETHOD: compute_desiredViewportDuration_from_activeScaleMultiplier(currentViewportWidth, totalTimelineDuration, desiredActiveScaleMultiplier)
     Given: a desired active scale multiplier (zoom factor) for the viewport
     Return: the correct desiredViewportDuration that would need to be set at the current window width.
     Invalidated:    1. when window width is updated
                     2. total duration changes.
     """
-    def compute_desiredViewportDuration_from_activeScaleMultiplier(self, desiredActiveScaleMultiplier):
-        desiredMinimumWidth = desiredActiveScaleMultiplier * self.width()
-        desiredPercent = float(self.get_viewport_width()) / float(desiredMinimumWidth)
-        newActiveViewportDuration = desiredPercent * self.totalDuration
+    @staticmethod
+    def compute_desiredViewportDuration_from_activeScaleMultiplier(currentViewportWidth, totalTimelineDuration, desiredActiveScaleMultiplier):
+        desiredMinimumWidth = desiredActiveScaleMultiplier * float(currentViewportWidth)
+        desiredPercent = float(currentViewportWidth) / float(desiredMinimumWidth)
+        newActiveViewportDuration = desiredPercent * totalTimelineDuration
         return newActiveViewportDuration
+
+
+
+    """ compute_current_activeScaleMultiplier_from_desiredViewportDuration(desiredViewportDisplayDuration)
+    Given: a desired duration to display in the viewport
+    Return: the correct activeScaleMultiplier (zoom factor) that would need to be set at the current window width.
+    Invalidated:    1. when window width is updated
+                    2. total duration changes.
+    """
+    def compute_current_activeScaleMultiplier_from_desiredViewportDuration(self, desiredViewportDisplayDuration):
+        return TimelineDrawingWindow.compute_activeScaleMultiplier_from_desiredViewportDuration(self.get_viewport_width(), self.totalDuration, desiredViewportDisplayDuration)
+
+    """ compute_current_desiredViewportDuration_from_activeScaleMultiplier(desiredActiveScaleMultiplier)
+    Given: a desired active scale multiplier (zoom factor) for the viewport
+    Return: the correct desiredViewportDuration that would need to be set at the current window width.
+    Invalidated:    1. when window width is updated
+                    2. total duration changes.
+    """
+    def compute_current_desiredViewportDuration_from_activeScaleMultiplier(self, desiredActiveScaleMultiplier):
+        return TimelineDrawingWindow.compute_desiredViewportDuration_from_activeScaleMultiplier(self.get_viewport_width(), self.totalDuration, desiredActiveScaleMultiplier)
 
 
     # Given the percent offset of the total duration, gets the x-offset for the timeline tracks (not the viewport, its contents)
@@ -1723,6 +1744,23 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         print('track_config_dialog_canceled()')
         self.activeTrackID_ConfigEditingIndex = None
 
+
+    """ updateViewportZoomFactorsUsingCurrentAdjustmentMode()
+        Called to ensure that the corect activeViewportDuration and activeScaleMultiplier are set, given the current viewportAdjustmentMode.
+        For example when the window is resized, the totalDuration changes, or the user specifies a different factor manually
+    """
+    def updateViewportZoomFactorsUsingCurrentAdjustmentMode(self):
+        if self.viewportAdjustmentMode is ViewportScaleAdjustmentOptions.MaintainDesiredViewportZoomFactor:
+            # Compute the correct activeViewportDuration from the activeScaleMultiplier
+            self.activeViewportDuration = self.compute_current_desiredViewportDuration_from_activeScaleMultiplier(self.activeScaleMultiplier)            
+            pass
+        elif self.viewportAdjustmentMode is ViewportScaleAdjustmentOptions.MaintainDesiredViewportDisplayDuration:
+            # Compute the correct activeScaleMultiplier from the activeViewportDuration
+            self.activeScaleMultiplier = self.compute_current_activeScaleMultiplier_from_desiredViewportDuration(self.activeViewportDuration)
+            pass
+        else:
+            print("FATAL ERROR: Invalid viewportAdjustmentMode!")
+            return
 
     # The native PyQt5 Window resize event function that's called when the window is resized.
     def resizeEvent(self, event):
