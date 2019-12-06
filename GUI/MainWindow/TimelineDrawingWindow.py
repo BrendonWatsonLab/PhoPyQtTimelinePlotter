@@ -620,8 +620,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
-        # this invalidates the current viewport bounds
-        self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
 
         # Emit events
         self.activeGlobalTimelineTimesChanged.emit(self.totalStartTime, self.totalEndTime, self.totalDuration)
@@ -1286,6 +1284,10 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         pass
 
     def refresh_child_widget_display(self):
+        for i in range(0, len(self.videoFileTrackWidgets)):
+            currWidget = self.videoFileTrackWidgets[i]
+            currWidget.update()
+
         for i in range(0, len(self.eventTrackWidgets)):
             currWidget = self.eventTrackWidgets[i]
             currWidget.update()
@@ -1774,10 +1776,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             print("FATAL ERROR: Invalid viewportAdjustmentMode!")
             return
 
-        # Update the UI to reflect the changes
-        self.refreshUI_viewport_zoom_controls()
-        self.refreshUI_viewport_info_labels()
-
     # The native PyQt5 Window resize event function that's called when the window is resized.
     def resizeEvent(self, event):
         self.window_resized.emit()
@@ -1794,15 +1792,18 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     def on_active_zoom_changed(self):
         print("TimelineDrawingWindow.on_active_zoom_changed(...)")
         self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
+        # Update the UI to reflect the changes
         self.refreshUI_viewport_zoom_controls()
         self.on_active_viewport_changed()
         self.resize_children_on_zoom()
-        # self.refresh_child_widget_display()
+        self.refresh_child_widget_display()
 
     @pyqtSlot()
     def on_active_viewport_changed(self):
         print("TimelineDrawingWindow.on_active_viewport_changed(...)")
         self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
+        # Update the UI to reflect the changes
+        self.refreshUI_viewport_zoom_controls()
         self.refreshUI_viewport_info_labels()
 
 
