@@ -35,8 +35,8 @@ class VideoSample:
 
 class QTimeLine(TickedTimelineDrawingBaseWidget):
 
-    def __init__(self, duration, length, parent=None):
-        super(QTimeLine, self).__init__(duration, length, parent=parent)
+    def __init__(self, duration, parent=None):
+        super(QTimeLine, self).__init__(duration, parent=parent)
 
         # Set variables
         self.textColor = __textColor__
@@ -44,10 +44,10 @@ class QTimeLine(TickedTimelineDrawingBaseWidget):
         self.selectedSample = None
         self.videoSamples = []  # List of videos samples
 
-        self.initUI()
-
-    def initUI(self):
-        self.setGeometry(300, 300, self.length, 200)
+    #     self.initUI()
+    #
+    # def initUI(self):
+    #     self.setGeometry(300, 300, self.length, 200)
 
 
     def paintEvent(self, event):

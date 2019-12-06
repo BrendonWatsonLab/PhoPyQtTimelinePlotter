@@ -29,16 +29,12 @@ class TickedTimelineDrawingBaseWidget(QWidget):
     videoPlaybackLineProperties = TickProperties(Qt.red, 1.0, Qt.SolidLine)
     hoverLineProperties = TickProperties(Qt.cyan, 0.8, Qt.DashLine)
 
-    def __init__(self, duration, length, parent=None):
+    def __init__(self, duration, parent=None):
         super(TickedTimelineDrawingBaseWidget, self).__init__(parent=parent)
         self.duration = duration
-        self.length = length
-
-        self.referenceManager = parent.get_reference_manager()
-        
 
         # Reference Manager:
-
+        self.referenceManager = parent.get_reference_manager()
 
         # Set variables
         self.backgroundColor = __backgroudColor__

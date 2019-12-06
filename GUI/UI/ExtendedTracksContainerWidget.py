@@ -27,20 +27,25 @@ class ExtendedTracksContainerWidget(TickedTimelineDrawingBaseWidget):
     staticTimeDelininationTickLineProperties = TickProperties(QColor(187, 187, 187, 100), 0.4, Qt.SolidLine)
 
 
-    def __init__(self, duration, length, parent=None, *args, **kwargs):
-        super(ExtendedTracksContainerWidget, self).__init__(duration, length, parent=parent, *args, **kwargs)
+    def __init__(self, duration, parent=None, *args, **kwargs):
+        super(ExtendedTracksContainerWidget, self).__init__(duration, parent=parent, *args, **kwargs)
 
         self.backgroundColor = ExtendedTracksContainerWidget.defaultBackgroundColor
 
-        self.initUI()
-
-    def initUI(self):
-        self.setGeometry(300, 300, self.length, 200)
-        
-        self.setSizePolicy(
-            QtWidgets.QSizePolicy.MinimumExpanding,
-            QtWidgets.QSizePolicy.MinimumExpanding
-        )
+    #     self.initUI()
+    #
+    # def initUI(self):
+    #     # self.setGeometry(300, 300, self.length, 200)
+    #
+    #     # self.setSizePolicy(
+    #     #     QtWidgets.QSizePolicy.MinimumExpanding,
+    #     #     QtWidgets.QSizePolicy.MinimumExpanding
+    #     # )
+    #
+    #     self.setSizePolicy(
+    #         QtWidgets.QSizePolicy.Expanding,
+    #         QtWidgets.QSizePolicy.Expanding
+    #     )
 
         
 
