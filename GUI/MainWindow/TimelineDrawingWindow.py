@@ -737,6 +737,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         percent_x = duration_offset / self.totalDuration
         return percent_x
 
+    # Computes the position in the scroll view's contents (the timeline track offset position) from the viewport's/window's viewport_x_offset
+    def viewport_offset_to_contents_offset(self, viewport_x_offset):
+        print("TimelineDrawingWindow.viewport_offset_to_contents_offset(viewport_x_offset: {0})...".format(str(viewport_x_offset)))
+        hsb=self.timelineScroll.horizontalScrollBar()
+        return (hsb.value() + viewport_x_offset)
 
     # Returns the index of the child object that the (x, y) point falls within, or None if it doesn't fall within an event.
     def find_hovered_timeline_track(self, event_x, event_y):
@@ -799,9 +804,19 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     def mouseMoveEvent(self, event):
         self.cursorX = event.x()
         self.cursorY = event.y()
-        duration_offset = self.offset_to_duration(self.cursorX)
-        datetime = self.offset_to_datetime(self.cursorX)
-        text = "window x: {0},  duration: {1}, datetime: {2}".format(self.cursorX, duration_offset, datetime)
+        
+        # Get scrollview x_offset from window x_offset
+
+        timeline_contents_x_offset = self.viewport_offset_to_contents_offset(self.cursorX)
+        # track_offset_x = self.percent_offset_to_track_offset(self.get_viewport_percent_scrolled())
+
+        # duration_offset = self.offset_to_duration(self.cursorX)
+        # datetime = self.offset_to_datetime(self.cursorX)
+
+        duration_offset = self.offset_to_duration(timeline_contents_x_offset)
+        datetime = self.offset_to_datetime(timeline_contents_x_offset)
+
+        text = "window x: {0}, contents_x: {1},  duration: {2}, datetime: {3}".format(self.cursorX, timeline_contents_x_offset, duration_offset, datetime)
         # Call the on_mouse_moved handler for the video track which will update its .hovered_object property, which is then read and used for relative offsets
 
         for (anIndex, aTimelineVideoTrack) in enumerate(self.videoFileTrackWidgets):
