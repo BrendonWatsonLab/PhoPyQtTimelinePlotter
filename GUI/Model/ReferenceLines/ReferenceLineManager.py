@@ -77,6 +77,9 @@ class ReferenceMarkerManager(QObject):
             self.staticMarkerData.append(newObj)
 
 
+    def get_static_marker_data(self):
+        return self.staticMarkerData
+
         # for single_date in (start_date_day + timedelta(n) for n in range(day_count)):
         #     print(single_date.strftime("%Y-%m-%d"))
         

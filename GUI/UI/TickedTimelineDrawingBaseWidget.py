@@ -166,9 +166,12 @@ class TickedTimelineDrawingBaseWidget(QWidget):
 
     # Get time string from seconds
     def get_time_string(self, seconds):
-        m, s = divmod(seconds, 60)
-        h, m = divmod(m, 60)
-        return "%02d:%02d:%02d" % (h, m, s)
+        drawTime = self.totalStartTime + timedelta(seconds=seconds)
+        # return drawTime.strftime("%d-%m-%Y %I %p")
+        return drawTime.strftime("%m/%d \n%I%p")
+        # m, s = divmod(seconds, 60)
+        # h, m = divmod(m, 60)
+        # return "%02d:%02d:%02d" % (h, m, s)
 
     # Get scale from length
     def getScale(self):
