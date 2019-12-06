@@ -921,10 +921,13 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
     ## Timeline ZOOMING:
     def on_zoom_in(self):
+        self.viewportAdjustmentMode = ViewportScaleAdjustmentOptions.MaintainDesiredViewportZoomFactor
         self.activeScaleMultiplier = min(TimelineDrawingWindow.MaxZoomLevel, (self.activeScaleMultiplier + TimelineDrawingWindow.ZoomDelta))
+        self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
         self.on_active_zoom_changed()
 
     def on_zoom_home(self):
+        self.viewportAdjustmentMode = ViewportScaleAdjustmentOptions.MaintainDesiredViewportZoomFactor
         self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
         self.on_active_zoom_changed()
 
@@ -951,14 +954,18 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         return
 
     def on_zoom_out(self):
+        self.viewportAdjustmentMode = ViewportScaleAdjustmentOptions.MaintainDesiredViewportZoomFactor
         self.activeScaleMultiplier = max(TimelineDrawingWindow.MinZoomLevel, (self.activeScaleMultiplier - TimelineDrawingWindow.ZoomDelta))
+        self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
         self.on_active_zoom_changed()
         
     def on_finish_editing_zoom_custom(self):
         print("on_finish_editing_zoom_custom()")
         double_newZoom = self.ui.doubleSpinBox_currentZoom.value()
         print("new_zoom: {0}".format(double_newZoom))
+        self.viewportAdjustmentMode = ViewportScaleAdjustmentOptions.MaintainDesiredViewportZoomFactor
         self.activeScaleMultiplier = double_newZoom
+        self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
         self.on_active_zoom_changed()
 
     # Called after self.activeScaleMultiplier is changed to update everything else
@@ -1770,4 +1777,5 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     @pyqtSlot()
     def on_window_resized(self):
         print("window resized! newSize: {0}".format(str(self.width())))
+        self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
         return
