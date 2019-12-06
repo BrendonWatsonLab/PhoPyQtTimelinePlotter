@@ -89,9 +89,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     # ViewportAdjustmentMode = ViewportScaleAdjustmentOptions.MaintainDesiredViewportZoomFactor
     ViewportAdjustmentMode = ViewportScaleAdjustmentOptions.MaintainDesiredViewportDisplayDuration
     # Default viewport width is 1 day
-    DefaultViewportDisplayDuration = timedelta(1)
+    DefaultViewportDisplayDuration = timedelta(days=1.0)
     # DefaultZoom = 16.0
-    DefaultZoom = 4.0
+    DefaultZoom = 8.0
 
     ZoomDelta = 1.0
     MinZoomLevel = 0.1
@@ -104,11 +104,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     
     # window_resized: Signal that fires when the window is resized.
     window_resized = QtCore.pyqtSignal()
-
     activeZoomChanged = pyqtSignal()
 
     # activeGlobalTimelineTimesChanged(startTime: datetime, endTime: datetime, duration: timedelta)
     activeGlobalTimelineTimesChanged = pyqtSignal(datetime, datetime, timedelta) # Called when the timeline's global displayed start/end times are updated
+    activeViewportChanged = pyqtSignal() # Indicates that the active displayed viewport has changed
     
     debug_IncludeTaggedVideoTracks = False
     debug_IncludeEarlyTracks = False
@@ -176,12 +176,17 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.minimumVideoTrackHeight = 50
         # self.minimumVideoTrackHeight = 25
 
-        # A special event that should report when the window is resized.
-        self.window_resized.connect(self.on_window_resized)
+
 
         self.initUI()
         self.reload_videos_from_track_configs()
         self.reload_events_from_track_configs()
+
+        # Connect Internal Slots to signals:
+        self.window_resized.connect(self.on_window_resized) # A special event that should report when the window is resized.
+        self.activeZoomChanged.connect(self.on_active_zoom_changed)
+        self.activeViewportChanged.connect(self.on_active_viewport_changed)
+        self.activeGlobalTimelineTimesChanged.connect(self.on_active_global_timeline_times_changed)
 
         # self.show() # Show the GUI
 
@@ -615,8 +620,13 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
+        # this invalidates the current viewport bounds
+        self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
+
         # Emit events
         self.activeGlobalTimelineTimesChanged.emit(self.totalStartTime, self.totalEndTime, self.totalDuration)
+
+
 
     # Required to initialize the viewport to fit the video events
     def reload_timeline_display_bounds(self):
