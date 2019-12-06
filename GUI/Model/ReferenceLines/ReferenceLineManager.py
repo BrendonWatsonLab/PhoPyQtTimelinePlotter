@@ -128,6 +128,13 @@ class ReferenceMarkerManager(QObject):
         self.used_mark_extended_metadata_stack = marker_metadata_list
         self.used_markers_extended_data_updated.emit(self.used_mark_extended_metadata_stack)
 
+
+    # Called when the timeline changes its global represented start and end times. This will change how the reference marker data objects are mapped to positions.
+    @pyqtSlot(datetime, datetime, timedelta)
+    def on_global_timeline_timespan_changed(self, totalStartTime, totalEndTime, totalDuration):
+        print("Reference manager: on_global_timeline_timespan_changed({0}, {1}, {2})".format(str(totalStartTime), str(totalEndTime), str(totalDuration)))
+
+
     # show_active_markers_list(): creates a list window that displays the current markers
     def show_active_markers_list(self):
         if self.activeMarkersWindow is not None:

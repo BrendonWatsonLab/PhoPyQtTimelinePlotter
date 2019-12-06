@@ -125,6 +125,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.referenceManager.used_markers_updated.connect(self.on_reference_line_markers_updated)
         self.referenceManager.wants_extended_data.connect(self.on_request_extended_reference_line_data)
         self.referenceManager.selection_changed.connect(self.on_reference_line_marker_list_selection_changed)
+        self.activeGlobalTimelineTimesChanged.connect(self.referenceManager.on_global_timeline_timespan_changed)
 
         self.reloadModelFromDatabase()
         self.reload_timeline_display_bounds()

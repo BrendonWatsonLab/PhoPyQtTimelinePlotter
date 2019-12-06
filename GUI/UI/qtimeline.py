@@ -90,7 +90,6 @@ class QTimeLine(TickedTimelineDrawingBaseWidget):
         if self.clicking:
             x = e.pos().x()
             
-
         super().mouseMoveEvent(e)
 
 
