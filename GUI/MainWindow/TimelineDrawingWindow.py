@@ -84,20 +84,21 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     # Only used if GlobalTimelineConstraintOptions is .ConstantOffsetFromMostRecentVideo. Specifies the offset prior to the end of the last video which to start the global timeline.
     ConstantOffsetFromMostRecentVideoDuration = timedelta(days=7)
 
-    # DefaultZoom = 4.0
-    # DefaultZoom = 16.0
     
-
+    # ViewportAdjustmentMode: Determines how activeScaleMultiplier and activeViewportDuration are set from each other when one is adjusted 
+    # ViewportAdjustmentMode = ViewportScaleAdjustmentOptions.MaintainDesiredViewportZoomFactor
+    ViewportAdjustmentMode = ViewportScaleAdjustmentOptions.MaintainDesiredViewportDisplayDuration
     # Default viewport width is 1 day
     DefaultViewportDisplayDuration = timedelta(1)
+    # DefaultZoom = 16.0
+    DefaultZoom = 4.0
 
-    DefaultZoom = 16.0
-
-
-    
     ZoomDelta = 1.0
     MinZoomLevel = 0.1
     MaxZoomLevel = 2600.0
+
+    DesiredInitialWindowWidth = 1008
+    DesiredInitialWindowHeight = 800
 
     # Signals:
     
@@ -119,10 +120,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         super(TimelineDrawingWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/MainWindow/MainWindow.ui", self) # Load the .ui file
 
-        # self.viewportAdjustmentMode = ViewportScaleAdjustmentOptions.MaintainDesiredViewportZoomFactor
-        self.viewportAdjustmentMode = ViewportScaleAdjustmentOptions.MaintainDesiredViewportDisplayDuration
-        
-        
+        self.viewportAdjustmentMode = TimelineDrawingWindow.ViewportAdjustmentMode        
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
@@ -499,8 +497,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             # self.timelineScroll.setFixedHeight(400)
             # self.timelineScroll.setFixedWidth(self.width())
 
- 
-
             # Add the timeline scroll to the layout
             self.timelineViewportLayout.addWidget(self.timelineScroll,0,0,-1,-1) # Set the timeline to span all rows/columns of the layout
 
@@ -528,10 +524,12 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.verticalSplitter.setMouseTracking(True)
 
             # Size the widgets
-            self.verticalSplitter.setSizes([30, 670])
+            desiredInitialTopVideoPlayerContainerHeight = 30
+            desiredInitialTimelineViewportContainerHeight = TimelineDrawingWindow.DesiredInitialWindowHeight - desiredInitialTopVideoPlayerContainerHeight
+            self.verticalSplitter.setSizes([desiredInitialTopVideoPlayerContainerHeight, desiredInitialTimelineViewportContainerHeight])
 
-        desiredWindowWidth = 900
-        self.resize( desiredWindowWidth, 800 )
+        # Set the initial window size
+        self.resize(TimelineDrawingWindow.DesiredInitialWindowWidth, TimelineDrawingWindow.DesiredInitialWindowHeight)
         
         self.setWindowFilePath(self.database_connection.get_path())
 
@@ -968,19 +966,25 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
         self.on_active_zoom_changed()
 
-    # Called after self.activeScaleMultiplier is changed to update everything else
-    def on_active_zoom_changed(self):
+    def refreshUI_viewport_zoom_controls(self):
         self.ui.doubleSpinBox_currentZoom.blockSignals(True)
         self.ui.doubleSpinBox_currentZoom.setValue(self.activeScaleMultiplier)
         self.ui.doubleSpinBox_currentZoom.blockSignals(False)
         self.ui.lblActiveTotalTimelineDuration.setText(str(self.totalDuration))
+
+    def refreshUI_viewport_info_labels(self):
+        self.ui.lblActiveViewportDuration.setText(str(self.get_active_viewport_duration()))
+        self.ui.lblActiveViewportOffsetAbsolute.setText(str(self.get_viewport_percent_scrolled()))
+
+    # Called after self.activeScaleMultiplier is changed to update everything else
+    def on_active_zoom_changed(self):
+        self.refreshUI_viewport_zoom_controls()
         self.on_active_viewport_changed()
         self.resize_children_on_zoom()
         # self.refresh_child_widget_display()
 
     def on_active_viewport_changed(self):
-        self.ui.lblActiveViewportDuration.setText(str(self.get_active_viewport_duration()))
-        self.ui.lblActiveViewportOffsetAbsolute.setText(str(self.get_viewport_percent_scrolled()))
+        self.refreshUI_viewport_info_labels()
 
     def resize_children_on_zoom(self):
         newMinWidth = self.get_minimum_track_width()
@@ -1757,6 +1761,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         For example when the window is resized, the totalDuration changes, or the user specifies a different factor manually
     """
     def updateViewportZoomFactorsUsingCurrentAdjustmentMode(self):
+
         if self.viewportAdjustmentMode is ViewportScaleAdjustmentOptions.MaintainDesiredViewportZoomFactor:
             # Compute the correct activeViewportDuration from the activeScaleMultiplier
             self.activeViewportDuration = self.compute_current_desiredViewportDuration_from_activeScaleMultiplier(self.activeScaleMultiplier)            
@@ -1768,6 +1773,10 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         else:
             print("FATAL ERROR: Invalid viewportAdjustmentMode!")
             return
+
+        # Update the UI to reflect the changes
+        self.refreshUI_viewport_zoom_controls()
+        self.refreshUI_viewport_info_labels()
 
     # The native PyQt5 Window resize event function that's called when the window is resized.
     def resizeEvent(self, event):
