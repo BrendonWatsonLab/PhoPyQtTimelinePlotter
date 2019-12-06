@@ -1091,8 +1091,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # Jump to the next available video in the video track
         # TODO: could highlight the video that's being jumped to.
         print("on_jump_next()")
-        offset_x = self.percent_offset_to_track_offset(self.get_viewport_percent_scrolled())
-        offset_datetime = self.offset_to_datetime(offset_x)
+        track_offset_x = self.percent_offset_to_track_offset(self.get_viewport_percent_scrolled())
+        offset_datetime = self.offset_to_datetime(track_offset_x)
         # next_video_tuple: (index, videoObj) pair
         next_video_tuple = self.videoFileTrackWidgets[0].find_next_event(offset_datetime)
         if next_video_tuple is None:
