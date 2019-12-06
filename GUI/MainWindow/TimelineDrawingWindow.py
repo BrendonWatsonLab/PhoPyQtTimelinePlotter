@@ -131,7 +131,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # loadedVideoTrackIndicies: the video tracks to initially add to the track list
         self.loadedVideoTrackIndicies = TimelineDrawingWindow.debug_desiredVideoTracks
 
-
         self.viewportAdjustmentMode = TimelineDrawingWindow.ViewportAdjustmentMode        
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
@@ -162,7 +161,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.referenceManager.used_markers_updated.connect(self.on_reference_line_markers_updated)
         self.referenceManager.wants_extended_data.connect(self.on_request_extended_reference_line_data)
         self.referenceManager.selection_changed.connect(self.on_reference_line_marker_list_selection_changed)
-        self.activeGlobalTimelineTimesChanged.connect(self.referenceManager.on_global_timeline_timespan_changed)
+        self.activeZoomChanged.connect(self.referenceManager.on_active_zoom_changed)
+        self.activeViewportChanged.connect(self.referenceManager.on_active_viewport_changed)
+        self.activeGlobalTimelineTimesChanged.connect(self.referenceManager.on_active_global_timeline_times_changed)
 
         self.videoPlayerWindow = None
         self.helpWindow = None
@@ -261,11 +262,13 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         def initUI_timelineTracks(self):
             # Timeline Numberline track:
             masterTimelineDurationSeconds = self.totalDuration.total_seconds()
-            self.timelineMasterTrackWidget = QTimeLine(masterTimelineDurationSeconds, parent=self)
+            self.timelineMasterTrackWidget = QTimeLine(self.totalStartTime, self.totalEndTime, self.totalDuration, masterTimelineDurationSeconds, parent=self)
             self.timelineMasterTrackWidget.setMouseTracking(True)
             self.timelineMasterTrackWidget.hoverChanged.connect(self.handle_timeline_hovered_position_update_event)
             self.timelineMasterTrackWidget.positionChanged.connect(self.handle_timeline_position_update_event)
-
+            self.activeZoomChanged.connect(self.timelineMasterTrackWidget.on_active_zoom_changed)
+            self.activeViewportChanged.connect(self.timelineMasterTrackWidget.on_active_viewport_changed)
+            self.activeGlobalTimelineTimesChanged.connect(self.timelineMasterTrackWidget.on_active_global_timeline_times_changed)
         
             # Video Tracks
             ## TODO: The video tracks must set:
@@ -320,11 +323,14 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             currTrackIndex = currTrackIndex + 1
 
             # Build the bottomPanelWidget
-            self.extendedTracksContainer = ExtendedTracksContainerWidget(masterTimelineDurationSeconds, parent=self)
+            self.extendedTracksContainer = ExtendedTracksContainerWidget(self.totalStartTime, self.totalEndTime, self.totalDuration, masterTimelineDurationSeconds, parent=self)
             self.extendedTracksContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
             self.extendedTracksContainer.setAutoFillBackground(True)
             self.extendedTracksContainer.setMouseTracking(True)
             self.extendedTracksContainer.hoverChanged.connect(self.handle_timeline_hovered_position_update_event)
+            self.activeZoomChanged.connect(self.extendedTracksContainer.on_active_zoom_changed)
+            self.activeViewportChanged.connect(self.extendedTracksContainer.on_active_viewport_changed)
+            self.activeGlobalTimelineTimesChanged.connect(self.extendedTracksContainer.on_active_global_timeline_times_changed)
 
             # bind to self to detect changes in either child
             self.timelineMasterTrackWidget.hoverChanged.connect(self.on_playhead_hover_position_updated)
@@ -1789,19 +1795,34 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         Called to ensure that the corect activeViewportDuration and activeScaleMultiplier are set, given the current viewportAdjustmentMode.
         For example when the window is resized, the totalDuration changes, or the user specifies a different factor manually
     """
-    def updateViewportZoomFactorsUsingCurrentAdjustmentMode(self):
+    def updateViewportZoomFactorsUsingCurrentAdjustmentMode(self, force_update=True):
+        didUpdateZoomFactor = False
+
+        oldViewportDuration = self.activeViewportDuration
+        oldScaleMultiplier = self.activeScaleMultiplier
 
         if self.viewportAdjustmentMode is ViewportScaleAdjustmentOptions.MaintainDesiredViewportZoomFactor:
             # Compute the correct activeViewportDuration from the activeScaleMultiplier
-            self.activeViewportDuration = self.compute_current_desiredViewportDuration_from_activeScaleMultiplier(self.activeScaleMultiplier)            
+            proposedViewportDuration = self.compute_current_desiredViewportDuration_from_activeScaleMultiplier(self.activeScaleMultiplier)
+            if (force_update or (proposedViewportDuration != oldViewportDuration)):
+                self.activeViewportDuration = proposedViewportDuration
+                print("TimelineDrawingWindow.updateViewportZoomFactorsUsingCurrentAdjustmentMode(): new value of activeScaleMultiplier {0} -- updated activeViewportDuration from {1} to {2}.".format(str(self.activeScaleMultiplier), str(oldViewportDuration), str(self.activeViewportDuration) ))
+                didUpdateZoomFactor = True
+
             pass
         elif self.viewportAdjustmentMode is ViewportScaleAdjustmentOptions.MaintainDesiredViewportDisplayDuration:
             # Compute the correct activeScaleMultiplier from the activeViewportDuration
-            self.activeScaleMultiplier = self.compute_current_activeScaleMultiplier_from_desiredViewportDuration(self.activeViewportDuration)
+            proposedScaleMultiplier = self.compute_current_activeScaleMultiplier_from_desiredViewportDuration(self.activeViewportDuration)
+            if (force_update or (proposedScaleMultiplier != oldScaleMultiplier)):
+                self.activeScaleMultiplier = proposedScaleMultiplier
+                print("TimelineDrawingWindow.updateViewportZoomFactorsUsingCurrentAdjustmentMode(): new value of activeViewportDuration {0} -- updated activeScaleMultiplier from {1} to {2}.".format(str(self.activeViewportDuration), str(oldScaleMultiplier), str(self.activeScaleMultiplier) ))
+                didUpdateZoomFactor = True
             pass
         else:
             print("FATAL ERROR: Invalid viewportAdjustmentMode!")
             return
+
+        return didUpdateZoomFactor
 
     # The native PyQt5 Window resize event function that's called when the window is resized.
     def resizeEvent(self, event):
@@ -1812,6 +1833,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     def on_window_resized(self):
         print("window resized! newSize: {0}".format(str(self.width())))
         self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
+        self.activeZoomChanged.emit()
+        self.activeViewportChanged.emit()
+        self.update()
         return
 
     # Called after self.activeScaleMultiplier is changed to update everything else
@@ -1836,7 +1860,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
     @pyqtSlot(datetime, datetime, timedelta)
     def on_active_global_timeline_times_changed(self, totalStartTime, totalEndTime, totalDuration):
-        print("TimelineDrawingWindow.on_active_global_timeline_times_changed(...)")
+        print("TimelineDrawingWindow.on_active_global_timeline_times_changed({0}, {1}, {2})".format(str(totalStartTime), str(totalEndTime), str(totalDuration)))
         self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
         self.reload_tracks_from_track_configs()
         return

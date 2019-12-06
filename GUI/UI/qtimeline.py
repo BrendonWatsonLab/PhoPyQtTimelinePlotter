@@ -19,8 +19,8 @@ __font__ = QFont('Decorative', 10)
 
 class QTimeLine(TickedTimelineDrawingBaseWidget):
 
-    def __init__(self, duration, parent=None):
-        super(QTimeLine, self).__init__(duration, parent=parent)
+    def __init__(self, totalStartTime, totalEndTime, totalDuration, duration, parent=None):
+        super(QTimeLine, self).__init__(totalStartTime, totalEndTime, totalDuration, duration, parent=parent)
 
         # Set variables
         self.textColor = __textColor__

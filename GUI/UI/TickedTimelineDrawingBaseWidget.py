@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import tempfile
 from base64 import b64encode
+from datetime import datetime, timezone, timedelta
 
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import Qt, QPoint, QLine, QRect, QRectF, pyqtSignal, pyqtSlot, QObject, QMargins
@@ -36,8 +37,13 @@ class TickedTimelineDrawingBaseWidget(QWidget):
     videoPlaybackLineProperties = TickProperties(Qt.red, 1.0, Qt.SolidLine)
     hoverLineProperties = TickProperties(Qt.cyan, 0.8, Qt.DashLine)
 
-    def __init__(self, duration, parent=None):
+
+    def __init__(self, totalStartTime, totalEndTime, totalDuration, duration, parent=None):
         super(TickedTimelineDrawingBaseWidget, self).__init__(parent=parent)
+        self.totalStartTime = totalStartTime
+        self.totalEndTime = totalEndTime
+        self.totalDuration = totalDuration
+
         self.duration = duration
 
         # Reference Manager:
@@ -206,3 +212,24 @@ class TickedTimelineDrawingBaseWidget(QWidget):
             self.video_pos = QPoint(x, 0)
         
         self.update()
+
+
+    # Main Window Slots:
+    @pyqtSlot()
+    def on_active_zoom_changed(self):
+        print("TickedTimelineDrawingBaseWidget.on_active_zoom_changed(...)")
+        self.update()
+
+    @pyqtSlot()
+    def on_active_viewport_changed(self):
+        print("TickedTimelineDrawingBaseWidget.on_active_viewport_changed(...)")
+        self.update()
+
+    @pyqtSlot(datetime, datetime, timedelta)
+    def on_active_global_timeline_times_changed(self, totalStartTime, totalEndTime, totalDuration):
+        print("TickedTimelineDrawingBaseWidget.on_active_global_timeline_times_changed({0}, {1}, {2})".format(str(totalStartTime), str(totalEndTime), str(totalDuration)))
+        self.totalStartTime = totalStartTime
+        self.totalEndTime = totalEndTime
+        self.totalDuration = totalDuration
+        self.update()
+        return
