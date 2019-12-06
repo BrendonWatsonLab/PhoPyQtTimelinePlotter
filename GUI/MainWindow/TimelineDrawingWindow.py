@@ -424,7 +424,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
                 else:
                     self.extendedTracksContainerVboxLayout.addWidget(currVideoTrackWidget)
-                    currVideoTrackWidget.setMinimumSize(minimumWidgetWidth,self.minimumVideoTrackHeight)
+                    currVideoTrackWidget.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
                     currVideoTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
                 # General Layout:
@@ -485,7 +485,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
                 else:
                     self.extendedTracksContainerVboxLayout.addWidget(currWidget)
-                    currWidget.setMinimumSize(minimumWidgetWidth,50)
+                    currWidget.setMinimumSize(minimumWidgetWidth, 50)
                     currWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
 
@@ -997,6 +997,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     
     # Returns the current perent scrolled the viewport is through the entire timeline.
     def get_viewport_percent_scrolled(self):
+        # TODO: check that this is correct. I think it is.
         return (self.timelineScroll.horizontalScrollBar().value() / (self.timelineScroll.horizontalScrollBar().maximum() - self.timelineScroll.horizontalScrollBar().minimum()))
 
 
