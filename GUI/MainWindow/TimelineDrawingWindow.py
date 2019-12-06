@@ -498,6 +498,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.timelineScroll = QScrollArea()
             self.timelineScroll.setWidget(self.extendedTracksContainer)
             self.timelineScroll.setWidgetResizable(True)
+            # self.timelineScroll.setWidgetResizable(False)
             self.timelineScroll.setMouseTracking(True)
             # self.timelineScroll.setFixedHeight(400)
             # self.timelineScroll.setFixedWidth(self.width())
