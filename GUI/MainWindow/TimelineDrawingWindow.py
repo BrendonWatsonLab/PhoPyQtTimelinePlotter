@@ -741,8 +741,12 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     # Computes the position in the scroll view's contents (the timeline track offset position) from the viewport's/window's viewport_x_offset
     def viewport_offset_to_contents_offset(self, viewport_x_offset):
         print("TimelineDrawingWindow.viewport_offset_to_contents_offset(viewport_x_offset: {0})...".format(str(viewport_x_offset)))
-        hsb=self.timelineScroll.horizontalScrollBar()
-        return (hsb.value() + viewport_x_offset)
+        contentWidget = self.timelineScroll.widget()
+        contentWidgetRelativePoint = contentWidget.mapFromParent(QPoint(viewport_x_offset, 0))
+        return contentWidgetRelativePoint.x()
+
+        # hsb=self.timelineScroll.horizontalScrollBar()
+        # return (hsb.value() + viewport_x_offset)
 
     # Returns the index of the child object that the (x, y) point falls within, or None if it doesn't fall within an event.
     def find_hovered_timeline_track(self, event_x, event_y):
