@@ -1050,6 +1050,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
          # Compute appropriate offset:
         found_x_offset = self.datetime_to_offset(end_time)
+        print("TimelineDrawingWindow.sync_active_viewport_end_to_datetime(endTime: {0}): found_x_offset: {1}".format(str(end_time), str(found_x_offset)))
         self.timelineScroll.ensureVisible(found_x_offset, 0, 0, 0)
         self.on_active_zoom_changed()
         return True
