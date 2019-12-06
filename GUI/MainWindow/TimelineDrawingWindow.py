@@ -120,11 +120,26 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         super(TimelineDrawingWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/MainWindow/MainWindow.ui", self) # Load the .ui file
 
+        self.shouldUseTrackHeaders = True
+
+        self.partitionTrackContextsArray = [TrackContextConfig('Behavior'), TrackContextConfig('Unknown')]
+
+        self.trackConfigurations = []
+        self.videoInfoObjects = []
+
+        # Track Options:
+        # loadedVideoTrackIndicies: the video tracks to initially add to the track list
+        self.loadedVideoTrackIndicies = TimelineDrawingWindow.debug_desiredVideoTracks
+
+
         self.viewportAdjustmentMode = TimelineDrawingWindow.ViewportAdjustmentMode        
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
 
+        self.reloadModelFromDatabase()
+        self.reload_timeline_display_bounds()
+        
         if self.viewportAdjustmentMode is ViewportScaleAdjustmentOptions.MaintainDesiredViewportZoomFactor:
             # Compute the correct activeViewportDuration from the activeScaleMultiplier
             self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
@@ -141,27 +156,13 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             print("FATAL ERROR: Invalid viewportAdjustmentMode!")
             return
 
-
-        self.shouldUseTrackHeaders = True
-
-        self.partitionTrackContextsArray = [TrackContextConfig('Behavior'), TrackContextConfig('Unknown')]
-
-        self.trackConfigurations = []
-        self.videoInfoObjects = []
-
-        # Track Options:
-        # loadedVideoTrackIndicies: the video tracks to initially add to the track list
-        self.loadedVideoTrackIndicies = TimelineDrawingWindow.debug_desiredVideoTracks
-
+            
         # Reference Manager:
         self.referenceManager = ReferenceMarkerManager(10, parent=self)
         self.referenceManager.used_markers_updated.connect(self.on_reference_line_markers_updated)
         self.referenceManager.wants_extended_data.connect(self.on_request_extended_reference_line_data)
         self.referenceManager.selection_changed.connect(self.on_reference_line_marker_list_selection_changed)
         self.activeGlobalTimelineTimesChanged.connect(self.referenceManager.on_global_timeline_timespan_changed)
-
-        self.reloadModelFromDatabase()
-        self.reload_timeline_display_bounds()
 
         self.videoPlayerWindow = None
         self.helpWindow = None
