@@ -87,6 +87,10 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     MaxZoomLevel = 2600.0
 
     # Signals:
+    
+    # window_resized: Signal that fires when the window is resized.
+    window_resized = QtCore.pyqtSignal()
+
     activeZoomChanged = pyqtSignal()
 
     # activeGlobalTimelineTimesChanged(startTime: datetime, endTime: datetime, duration: timedelta)
@@ -129,6 +133,9 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
         self.minimumVideoTrackHeight = 50
         # self.minimumVideoTrackHeight = 25
+
+        # A special event that should report when the window is resized.
+        self.window_resized.connect(self.on_window_resized)
 
         self.initUI()
         self.reload_videos_from_track_configs()
@@ -362,8 +369,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.timelineMasterTrackWidget.setMinimumSize(minimumWidgetWidth, 50)
             self.timelineMasterTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
-            
-            
         def initUI_layout(self):
 
             currTrackConfigurationIndex = 0
@@ -586,7 +591,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         ## Timeline Tracks:
         initUI_timelineTracks(self)
         
-
         #Layout of Main Window:
         initUI_layout(self)
 
@@ -1726,3 +1730,13 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     def track_config_dialog_canceled(self):
         print('track_config_dialog_canceled()')
         self.activeTrackID_ConfigEditingIndex = None
+
+
+    # The native PyQt5 Window resize event function that's called when the window is resized.
+    def resizeEvent(self, event):
+        self.window_resized.emit()
+        return super(Window, self).resizeEvent(event)
+
+    @pyqtSlot()
+    def on_window_resized(self):
+        print("window resized! newSize: {0}".format(str(self.width()))
