@@ -160,7 +160,6 @@ class TickedTimelineDrawingBaseWidget(QWidget):
         h, m = divmod(m, 60)
         return "%02d:%02d:%02d" % (h, m, s)
 
-
     # Get scale from length
     def getScale(self):
         return float(self.duration)/float(self.width())
@@ -185,8 +184,6 @@ class TickedTimelineDrawingBaseWidget(QWidget):
     def on_update_reference_marker_position(self, pointer_desired_x):
         self.get_reference_manager().update_next_unused_marker(pointer_desired_x)
         self.update()
-
-
 
 
     @pyqtSlot(int)
