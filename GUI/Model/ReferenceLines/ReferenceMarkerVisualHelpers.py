@@ -52,6 +52,8 @@ class ReferenceMarker(QObject):
         self.textColor = __textColor__
         self.font = __font__
 
+        self.drawsPointer = True
+
         self.is_driven_externally = False
 
     def draw_pointer(self, painter, drawRect, scale):
@@ -81,8 +83,6 @@ class ReferenceMarker(QObject):
         textRect = poly.boundingRect()
         textRect = textRect.marginsRemoved(QMargins(0, 0, 0, 4))
 
-        # painter.drawText(currOffset - 10, 0, 20, 20, Qt.AlignHCenter, self.identifier)
-        # painter.drawText(currOffset - 10, 20, 20, 20, Qt.AlignCenter, self.identifier)
         painter.drawText(textRect, Qt.AlignCenter, self.identifier)
 
     # Called to draw the line and optionally the triangular pointer
@@ -96,7 +96,8 @@ class ReferenceMarker(QObject):
                 painter.setPen(self.properties.get_pen())
                 painter.drawLine(self.x_offset_position, 0, self.x_offset_position, drawRect.height())
 
-                self.draw_pointer(painter, drawRect, scale)
+                if (self.drawsPointer):
+                    self.draw_pointer(painter, drawRect, scale)
 
     def getScale(self):
         return self.scale

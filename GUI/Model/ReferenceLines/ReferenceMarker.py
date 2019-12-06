@@ -21,6 +21,10 @@ class RepresentedMarkerTime(QObject):
     def time(self):
         return self._representedDatetime
 
+    @property
+    def time_string(self):
+        return self.time.strftime("%Y-%m-%d")
+
     # Setters:
     @time.setter
     def time(self, new_value):

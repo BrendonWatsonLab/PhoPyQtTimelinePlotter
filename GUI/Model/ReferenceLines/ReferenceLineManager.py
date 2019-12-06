@@ -59,6 +59,26 @@ class ReferenceMarkerManager(QObject):
 
     def get_used_markers(self):
         return [self.get_markers()[aKey] for aKey in self.used_mark_stack]
+
+    @staticmethod
+    def daterange(start_date, end_date):
+        for n in range(int ((end_date - start_date).days)):
+            yield start_date + timedelta(n)
+            
+
+    def bulk_add_static_marker_data(self):
+        self.staticMarkerData = []
+        start_date = self.totalStartTime
+        end_date = self.totalEndTime
+        for single_date in ReferenceMarkerManager.daterange(start_date, end_date):
+            # print(single_date.strftime("%Y-%m-%d"))
+            newObj = RepresentedMarkerTime(single_date, self)
+            print(newObj.time_string)
+            self.staticMarkerData.append(newObj)
+
+
+        # for single_date in (start_date_day + timedelta(n) for n in range(day_count)):
+        #     print(single_date.strftime("%Y-%m-%d"))
         
 
     def bulk_add_reference_makers(self, num_markers):
@@ -151,3 +171,24 @@ class ReferenceMarkerManager(QObject):
         self.selection_changed.connect(self.activeMarkersWindow.selection_changed)
         self.activeMarkersWindow.show()
 
+
+    # Main Window Slots:
+    @pyqtSlot()
+    def on_active_zoom_changed(self):
+        print("ReferenceMarkerManager.on_active_zoom_changed(...)")
+        # self.update()
+
+    @pyqtSlot()
+    def on_active_viewport_changed(self):
+        print("ReferenceMarkerManager.on_active_viewport_changed(...)")
+        # self.update()
+
+    @pyqtSlot(datetime, datetime, timedelta)
+    def on_active_global_timeline_times_changed(self, totalStartTime, totalEndTime, totalDuration):
+        print("ReferenceMarkerManager.on_active_global_timeline_times_changed({0}, {1}, {2})".format(str(totalStartTime), str(totalEndTime), str(totalDuration)))
+        self.totalStartTime = totalStartTime
+        self.totalEndTime = totalEndTime
+        self.totalDuration = totalDuration
+        self.bulk_add_static_marker_data()
+        # self.update()
+        return
