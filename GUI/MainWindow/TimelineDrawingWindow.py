@@ -746,6 +746,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         event_x = self.duration_to_offset(duration_offset)
         return event_x
 
+    def datetime_to_percent(self, newDatetime):
+        duration_offset = newDatetime - self.totalStartTime
+        percent_x = duration_offset / self.totalDuration
+        return percent_x
+
 
     # Returns the index of the child object that the (x, y) point falls within, or None if it doesn't fall within an event.
     def find_hovered_timeline_track(self, event_x, event_y):
