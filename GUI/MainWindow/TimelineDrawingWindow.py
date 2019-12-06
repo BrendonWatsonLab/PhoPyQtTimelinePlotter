@@ -137,13 +137,13 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
 
+        # Update the data model, and set up the timeline totalStartTime, totalEndTime, totalDuration from the loaded videos if we're in that enum mode.
         self.reloadModelFromDatabase()
         self.reload_timeline_display_bounds()
         
         if self.viewportAdjustmentMode is ViewportScaleAdjustmentOptions.MaintainDesiredViewportZoomFactor:
             # Compute the correct activeViewportDuration from the activeScaleMultiplier
             self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
-            # self.update_global_start_end_times(totalStartTime, totalEndTime)
             self.activeViewportDuration = TimelineDrawingWindow.compute_desiredViewportDuration_from_activeScaleMultiplier(self.width(), self.totalDuration, self.activeScaleMultiplier)            
             pass
         elif self.viewportAdjustmentMode is ViewportScaleAdjustmentOptions.MaintainDesiredViewportDisplayDuration:
@@ -156,7 +156,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             print("FATAL ERROR: Invalid viewportAdjustmentMode!")
             return
 
-            
+
         # Reference Manager:
         self.referenceManager = ReferenceMarkerManager(10, parent=self)
         self.referenceManager.used_markers_updated.connect(self.on_reference_line_markers_updated)
@@ -180,8 +180,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
 
         self.initUI()
-        self.reload_videos_from_track_configs()
-        self.reload_events_from_track_configs()
+        self.reload_tracks_from_track_configs()
 
         # Connect Internal Slots to signals:
         self.window_resized.connect(self.on_window_resized) # A special event that should report when the window is resized.
@@ -666,6 +665,10 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             # Set an "isInViewport" option or something
         else:
             print('INVALID ENUM VALUE!!!')
+
+    def reload_tracks_from_track_configs(self):
+        self.reload_videos_from_track_configs()
+        self.reload_events_from_track_configs()
 
     # Reloads the video records from the current track configs
     def reload_videos_from_track_configs(self):
@@ -1285,6 +1288,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         pass
 
     def refresh_child_widget_display(self):
+    
         for i in range(0, len(self.videoFileTrackWidgets)):
             currWidget = self.videoFileTrackWidgets[i]
             currWidget.update()
@@ -1812,4 +1816,5 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     def on_active_global_timeline_times_changed(self, totalStartTime, totalEndTime, totalDuration):
         print("TimelineDrawingWindow.on_active_global_timeline_times_changed(...)")
         self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
+        self.reload_tracks_from_track_configs()
         return
