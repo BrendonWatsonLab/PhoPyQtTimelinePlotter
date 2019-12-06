@@ -12,8 +12,15 @@ import os
 
 __backgroudColor__ = QColor(60, 63, 65)
 
-from GUI.Model.ReferenceLineManager import TickProperties, ReferenceMarker, ReferenceMarkerManager
+from GUI.Model.ReferenceLines.ReferenceMarkerVisualHelpers import TickProperties, ReferenceMarker
+from GUI.Model.ReferenceLines.ReferenceLineManager import ReferenceMarkerManager
 
+"""
+A class that draws "ticks" which are evenly spaced lines along its entire width.
+Used by qtimeline.py and ExtendedTrackContainerWidget.py
+
+
+"""
 class TickedTimelineDrawingBaseWidget(QWidget):
 
     hoverChanged = pyqtSignal(int)
@@ -68,7 +75,8 @@ class TickedTimelineDrawingBaseWidget(QWidget):
         # Draw dash lines
         point = 0
         painter.setPen(TickedTimelineDrawingBaseWidget.staticTimeDelininationTickLineProperties.get_pen())
-        # draw a horizontal line
+        # draw a horizontal line (Currently draws the line a fixed distance in pixels apart. The labels are only added in qtimeline)
+        
         painter.drawLine(0, 40, self.width(), 40)
         while point <= self.width():
             if point % 30 != 0:

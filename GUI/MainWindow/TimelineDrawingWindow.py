@@ -20,7 +20,7 @@ from GUI.HelpWindow.HelpWindowFinal import *
 from GUI.MainObjectListsWindow.MainObjectListsWindow import *
 from GUI.ExampleDatabaseTableWindow import ExampleDatabaseTableWindow
 
-from GUI.Model.ReferenceLineManager import TickProperties, ReferenceMarker, ReferenceMarkerManager
+from GUI.Model.ReferenceLines.ReferenceLineManager import ReferenceMarkerManager
 # from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget import *
 from GUI.UI.qtimeline import *
 
