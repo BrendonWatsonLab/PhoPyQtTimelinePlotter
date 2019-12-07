@@ -249,9 +249,4 @@ class TrackConfigurationBase(QObject):
     def update_labels_dynamically(self):
         self.trackTitle = self.get_filter().get_selection_string()
         self.trackExtendedDescription = self.get_filter().get_selection_string()
-        
-        # self.trackExtendedDescription = str(self.get_filter())
-        # 'BBID: {0}, originals'.format(currTrackBBID)
-        # 
-        # "B{0:02}".format(currTrackBBID)
         return
