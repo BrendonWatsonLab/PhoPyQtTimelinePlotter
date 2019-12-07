@@ -5,7 +5,7 @@ from base64 import b64encode
 from datetime import datetime, timezone, timedelta
 
 from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import Qt, QPoint, QLine, QRect, QRectF, pyqtSignal, pyqtSlot, QObject, QMargins
+from PyQt5.QtCore import Qt, QPoint, QLine, QRect, QRectF, pyqtSignal, pyqtSlot, QObject, QMargins, QSize
 from PyQt5.QtGui import QPainter, QColor, QFont, QBrush, QPalette, QPen, QPolygon, QPainterPath, QPixmap
 from PyQt5.QtWidgets import QWidget, QFrame, QScrollArea, QVBoxLayout
 import sys
@@ -16,13 +16,15 @@ __backgroudColor__ = QColor(60, 63, 65)
 from GUI.Model.ReferenceLines.ReferenceMarkerVisualHelpers import TickProperties, ReferenceMarker
 from GUI.Model.ReferenceLines.ReferenceLineManager import ReferenceMarkerManager
 
+from GUI.Helpers.FixedTimelineContentsWidthMixin import FixedTimelineContentsWidthMixin
+
+
 """
 A class that draws "ticks" which are evenly spaced lines along its entire width.
 Used by qtimeline.py and ExtendedTrackContainerWidget.py
 
-
 """
-class TickedTimelineDrawingBaseWidget(QWidget):
+class TickedTimelineDrawingBaseWidget(FixedTimelineContentsWidthMixin, QWidget):
 
     hoverChanged = pyqtSignal(int)
     positionChanged = pyqtSignal(int)
@@ -50,6 +52,7 @@ class TickedTimelineDrawingBaseWidget(QWidget):
         self.referenceManager = parent.get_reference_manager()
 
         # Set variables
+        self.fixedWidth = 800.0
         self.backgroundColor = __backgroudColor__
         self.pos = None
         self.video_pos = None
@@ -68,6 +71,7 @@ class TickedTimelineDrawingBaseWidget(QWidget):
         pal = QPalette()
         pal.setColor(QPalette.Background, self.backgroundColor)
         self.setPalette(pal)
+
 
     def get_reference_manager(self):
         return self.referenceManager

@@ -110,6 +110,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
     activeGlobalTimelineTimesChanged = pyqtSignal(datetime, datetime, timedelta) # Called when the timeline's global displayed start/end times are updated
     activeViewportChanged = pyqtSignal() # Indicates that the active displayed viewport has changed
     
+    minimumTimelineTrackWidthChanged = pyqtSignal(float)
+
     debug_IncludeTaggedVideoTracks = False
     debug_IncludeEarlyTracks = False
 
@@ -269,6 +271,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.activeZoomChanged.connect(self.timelineMasterTrackWidget.on_active_zoom_changed)
             self.activeViewportChanged.connect(self.timelineMasterTrackWidget.on_active_viewport_changed)
             self.activeGlobalTimelineTimesChanged.connect(self.timelineMasterTrackWidget.on_active_global_timeline_times_changed)
+            self.minimumTimelineTrackWidthChanged.connect(self.timelineMasterTrackWidget.set_fixed_width)
         
             # Video Tracks
             ## TODO: The video tracks must set:
@@ -331,6 +334,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             self.activeZoomChanged.connect(self.extendedTracksContainer.on_active_zoom_changed)
             self.activeViewportChanged.connect(self.extendedTracksContainer.on_active_viewport_changed)
             self.activeGlobalTimelineTimesChanged.connect(self.extendedTracksContainer.on_active_global_timeline_times_changed)
+            self.minimumTimelineTrackWidthChanged.connect(self.extendedTracksContainer.set_fixed_width)
 
             # bind to self to detect changes in either child
             self.timelineMasterTrackWidget.hoverChanged.connect(self.on_playhead_hover_position_updated)
@@ -375,6 +379,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                 currVideoTrackWidget.shouldDismissSelectionUponMouseButtonRelease = False
                 currVideoTrackWidget.itemSelectionMode = ItemSelectionOptions.SingleSelection
 
+                self.minimumTimelineTrackWidthChanged.connect(currVideoTrackWidget.set_fixed_width)
                 if self.shouldUseTrackHeaders:
                     currHeaderIncludedTrackLayout = QGridLayout(self)
                     currHeaderIncludedTrackLayout.setSpacing(0)
@@ -440,6 +445,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             # Loop through the eventTrackWidgets and add them
             for i in range(0, len(self.eventTrackWidgets)):
                 currWidget = self.eventTrackWidgets[i]
+                self.minimumTimelineTrackWidthChanged.connect(currWidget.set_fixed_width)
 
                 if self.shouldUseTrackHeaders:
                     currHeaderIncludedTrackLayout = QGridLayout(self)
@@ -1835,6 +1841,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
         self.activeZoomChanged.emit()
         self.activeViewportChanged.emit()
+        self.minimumTimelineTrackWidthChanged.emit(self.get_minimum_track_width())
         self.update()
         return
 
