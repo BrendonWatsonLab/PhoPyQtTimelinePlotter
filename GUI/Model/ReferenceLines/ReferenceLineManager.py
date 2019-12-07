@@ -20,6 +20,8 @@ from GUI.UI.ReferenceMarkViewer.ReferenceMarkViewer import ReferenceMarkViewer, 
 from GUI.Model.ModelViewContainer import ModelViewContainer
 from GUI.Model.ReferenceLines.ReferenceMarkerVisualHelpers import TickProperties, ReferenceMarker
 from GUI.Model.ReferenceLines.ReferenceMarker import RepresentedTimeRange, RepresentedMarkerTime, RepresentedMarkerRecord, ReferenceMarkerManagerConfiguration
+from GUI.Helpers.DurationRepresentationHelpers import DurationRepresentationMixin
+
 
 __textColor__ = QColor(20, 20, 20)
 __font__ = QFont('Decorative', 12)
@@ -32,7 +34,7 @@ ReferenceMarkerManager is a shared singleton that defines the positions of "refe
 Want to have an array of datetimes at which to plot tick lines.
 The widget's current size is used, along with the totalStartTime and totalEndTime, to compute the positions at which to draw the tick lines and labels.
 """
-class ReferenceMarkerManager(QObject):
+class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
 
     used_markers_updated = pyqtSignal(list)
     
@@ -43,14 +45,18 @@ class ReferenceMarkerManager(QObject):
 
     # L = queue.Queue(maxsize=20)
 
-    def __init__(self, num_markers, parent=None):
+    def __init__(self, totalStartTime, totalEndTime, num_markers, parent=None):
         super().__init__(parent=parent)
-        self.config = ReferenceMarkerManagerConfiguration(parent=self)
-        self.trackConfig.cacheUpdated.connect(self.on_reloadModelFromConfigCache)
+        self.totalStartTime = totalStartTime
+        self.totalEndTime = totalEndTime
+        self.totalDuration = self.get_total_duration()
+
+        # self.config = ReferenceMarkerManagerConfiguration(parent=self)
+        # self.trackConfig.cacheUpdated.connect(self.on_reloadModelFromConfigCache)
         # self.markerRecordsDict = dict()
         # self.markerViewsDict = dict()
         self.markersDict = dict()
-
+        self.needs_positions_update = True
         self.staticMarkerData = []
         # RepresentedMarkerTime
         self.activeMarkersWindow = None
@@ -60,29 +66,27 @@ class ReferenceMarkerManager(QObject):
         self.bulk_add_reference_makers(num_markers)
 
 
-    # on_reloadModelFromConfigCache(...): called when the config cache updates to reload the manager
-    @pyqtSlot()
-    def on_reloadModelFromConfigCache(self):
-        print("ReferenceMarkerManager.reloadModelFromConfigCache()")
-        # TODO: close any open dialogs, etc, etc
-        self.reset_on_reload()
-        active_cache = self.trackConfig.get_cache()
-        active_model_view_array = active_cache.get_model_view_array()
-        # self.markerRecordsDict = dict()
-        # self.markerViewsDict = dict()
-        self.markersDict = dict()
+    # # on_reloadModelFromConfigCache(...): called when the config cache updates to reload the manager
+    # @pyqtSlot()
+    # def on_reloadModelFromConfigCache(self):
+    #     print("ReferenceMarkerManager.reloadModelFromConfigCache()")
+    #     # active_cache = self.trackConfig.get_cache()
+    #     # active_model_view_array = active_cache.get_model_view_array()
+    #     # # self.markerRecordsDict = dict()
+    #     # # self.markerViewsDict = dict()
+    #     # self.markersDict = dict()
 
-        for aContainerObj in active_model_view_array:
-            self.durationRecords.append(aContainerObj.get_record())
-            newAnnotationIndex = len(self.durationObjects)
-            newAnnotationView = aContainerObj.get_view()
-            newAnnotationView.setAccessibleName(str(newAnnotationIndex))
-            # newAnnotation.on_edit.connect(self.on_annotation_modify_event)
-            # newAnnotation.on_edit_by_dragging_handle_start.connect(self.handleStartSliderValueChange)
-            # newAnnotation.on_edit_by_dragging_handle_end.connect(self.handleEndSliderValueChange)
-            self.durationObjects.append(newAnnotationView)          
+    #     # for aContainerObj in active_model_view_array:
+    #     #     self.durationRecords.append(aContainerObj.get_record())
+    #     #     newAnnotationIndex = len(self.durationObjects)
+    #     #     newAnnotationView = aContainerObj.get_view()
+    #     #     newAnnotationView.setAccessibleName(str(newAnnotationIndex))
+    #     #     # newAnnotation.on_edit.connect(self.on_annotation_modify_event)
+    #     #     # newAnnotation.on_edit_by_dragging_handle_start.connect(self.handleStartSliderValueChange)
+    #     #     # newAnnotation.on_edit_by_dragging_handle_end.connect(self.handleEndSliderValueChange)
+    #     #     self.durationObjects.append(newAnnotationView)          
 
-        self.update()
+    #     self.update()
         
 
     def get_scale(self):
@@ -118,6 +122,7 @@ class ReferenceMarkerManager(QObject):
     def bulk_add_reference_makers(self, num_markers):
         self.used_mark_stack = []
         self.used_mark_extended_metadata_stack = []
+        self.needs_positions_update = True
         # self.markerRecordsDict = dict()
         # self.markerViewsDict = dict()
         self.markersDict = dict()
@@ -175,10 +180,13 @@ class ReferenceMarkerManager(QObject):
             self.get_markers()[potential_unused_marker_key].get_record().time = new_datetime
 
             # Get the x_offset position from the datetime provided
-            new_position = RepresentedMarkerRecord(new_datetime, parent=self)
+            # item_x_offset = self.compute_x_offset_from_datetime(new_datetime)
 
-            self.get_markers()[potential_unused_marker_key].get_view().update_position(new_position, self.get_scale())
+            self.get_markers()[potential_unused_marker_key].get_view().update_position(0.0, self.get_scale())
             self.get_markers()[potential_unused_marker_key].get_view().is_enabled = True
+            
+            self.needs_positions_update = False
+
             # Add the key of the now used item to the used_stack
             self.used_mark_stack.append(potential_unused_marker_key)
 
@@ -199,7 +207,7 @@ class ReferenceMarkerManager(QObject):
         return out_objs
 
     def get_markers(self):
-        return self.markerViewsDict
+        return self.markersDict
 
     # def get_marker_views(self):
     #     return self.markerViewsDict
@@ -207,17 +215,38 @@ class ReferenceMarkerManager(QObject):
     # def get_marker_records(self):
     #     return self.markerRecordsDict
 
+    # Given the percent offset of the total duration, gets the x-offset for the timeline tracks (not the viewport, its contents)
+    @staticmethod
+    def percent_offset_to_track_offset(drawWidth, track_percent):
+        return float(drawWidth) * float(track_percent)
 
+
+    # def percent_offset_to_track_offset(self, track_percent):
+    #     return float(self.width()) * float(track_percent)
+
+    # compute_x_offset_from_datetime(aDatetime): depends on current duration and width
+    def compute_x_offset_from_datetime(self, drawWidth, aDatetime):
+        item_percent_offset = self.datetime_to_percent(aDatetime)
+        item_x_offset = ReferenceMarkerManager.percent_offset_to_track_offset(drawWidth, item_percent_offset)
+        return item_x_offset
 
 
 
     def draw(self, painter, event, scale):
-        for (id_key, value) in self.markerViewsDict.items():
+        drawWidth = event.width()
+        for (id_key, value) in self.markersDict.items():
             # Get the datetime from the record:
-            currRecord = value.get_record()
-            currDatetime = currRecord.time
-
+            if self.needs_positions_update:
+                currRecord = value.get_record()
+                itemDatetime = currRecord.time
+                item_x_offset = self.compute_x_offset_from_datetime(drawWidth, itemDatetime)
+                value.get_view().update_position(item_x_offset, self.get_scale())
+            # Draw the correctly updated record
             value.get_view().draw(painter, event, scale)
+
+        if self.needs_positions_update:
+            # we've done the positions update at this point, so turn off the flag
+            self.needs_positions_update = False
 
     @pyqtSlot(list)
     def update_marker_metadata(self, marker_metadata_list):
@@ -225,10 +254,10 @@ class ReferenceMarkerManager(QObject):
         self.used_markers_extended_data_updated.emit(self.used_mark_extended_metadata_stack)
 
 
-    # Called when the timeline changes its global represented start and end times. This will change how the reference marker data objects are mapped to positions.
-    @pyqtSlot(datetime, datetime, timedelta)
-    def on_global_timeline_timespan_changed(self, totalStartTime, totalEndTime, totalDuration):
-        print("Reference manager: on_global_timeline_timespan_changed({0}, {1}, {2})".format(str(totalStartTime), str(totalEndTime), str(totalDuration)))
+    # # Called when the timeline changes its global represented start and end times. This will change how the reference marker data objects are mapped to positions.
+    # @pyqtSlot(datetime, datetime, timedelta)
+    # def on_global_timeline_timespan_changed(self, totalStartTime, totalEndTime, totalDuration):
+    #     print("Reference manager: on_global_timeline_timespan_changed({0}, {1}, {2})".format(str(totalStartTime), str(totalEndTime), str(totalDuration)))
 
 
     # show_active_markers_list(): creates a list window that displays the current markers
@@ -253,10 +282,12 @@ class ReferenceMarkerManager(QObject):
     def on_active_zoom_changed(self):
         print("ReferenceMarkerManager.on_active_zoom_changed(...)")
         # self.update()
+        self.needs_positions_update = True
 
     @pyqtSlot()
     def on_active_viewport_changed(self):
         print("ReferenceMarkerManager.on_active_viewport_changed(...)")
+        self.needs_positions_update = True
         # self.update()
 
     @pyqtSlot(datetime, datetime, timedelta)
@@ -266,5 +297,6 @@ class ReferenceMarkerManager(QObject):
         self.totalEndTime = totalEndTime
         self.totalDuration = totalDuration
         self.bulk_add_static_marker_data()
+        self.needs_positions_update = True
         # self.update()
         return

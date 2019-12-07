@@ -53,6 +53,8 @@ from GUI.UI.TimelineFloatingHeaderWidget.TimelineFloatingHeaderWidget import Tim
 
 from GUI.Model.DataMovieLinkInfo import DataMovieLinkInfo
 
+from GUI.Helpers.DurationRepresentationHelpers import DurationRepresentationMixin, OffsetRepresentationMixin
+
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.
         ConstrainVideosShownToGlobal = 2 #  keeps the global the same, and only shows the videos within the global start and end range
@@ -68,7 +70,7 @@ class ViewportScaleAdjustmentOptions(Enum):
 self.activeScaleMultiplier: this multipler determines how many times longer the contents of the scrollable viewport are than the viewport width itself.
 
 """
-class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
+class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessingWindow):
     
     static_VideoTrackTrackID = -1 # The integer ID of the main video track
     
@@ -159,7 +161,7 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
 
         # Reference Manager:
-        self.referenceManager = ReferenceMarkerManager(10, parent=self)
+        self.referenceManager = ReferenceMarkerManager(self.totalStartTime, self.totalEndTime, 10, parent=self)
         self.referenceManager.used_markers_updated.connect(self.on_reference_line_markers_updated)
         self.referenceManager.wants_extended_data.connect(self.on_request_extended_reference_line_data)
         self.referenceManager.selection_changed.connect(self.on_reference_line_marker_list_selection_changed)
@@ -744,11 +746,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         duration_offset = newDatetime - self.totalStartTime
         event_x = self.duration_to_offset(duration_offset)
         return event_x
-
-    def datetime_to_percent(self, newDatetime):
-        duration_offset = newDatetime - self.totalStartTime
-        percent_x = duration_offset / self.totalDuration
-        return percent_x
 
     # Computes the position in the scroll view's contents (the timeline track offset position) from the viewport's/window's viewport_x_offset
     def viewport_offset_to_contents_offset(self, viewport_x_offset):
@@ -1390,7 +1387,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.extendedTracksContainer.blockSignals(True)
 
         # Update the reference manager
-        self.referenceManager.update_next_unused_marker(x_offset)
+        # self.referenceManager.update_next_unused_marker(x_offset)
+        self.referenceManager.update_next_unused_marker(desired_datetime)
 
         self.timelineMasterTrackWidget.update()
         self.extendedTracksContainer.update()
@@ -1404,7 +1402,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # on_request_extended_reference_line_data(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
         additional_data = []
         for aListItem in referenceLineList:
-            curr_x = aListItem.get_x_offset_position()
+            curr_view = aListItem.get_view()
+            curr_x = curr_view.get_x_offset_position()
             curr_datetime = self.offset_to_datetime(curr_x)
             additional_data.append(curr_datetime)
 
@@ -1417,7 +1416,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         print("TimelineDrawingWindow.on_reference_line_markers_updated(...)")
         additional_data = []
         for aListItem in referenceLineList:
-            curr_x = aListItem.get_x_offset_position()
+            curr_view = aListItem.get_view()
+            curr_x = curr_view.get_x_offset_position()
             curr_datetime = self.offset_to_datetime(curr_x)
             additional_data.append(curr_datetime)
 
@@ -1442,13 +1442,23 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # Build the metadata
         output_data = []
         for aListItem in curr_markers:
-            curr_x = aListItem.get_x_offset_position()
-            curr_datetime = self.offset_to_datetime(curr_x)
             # combine the datetime and the list item as a tuple
-            output_data.append(curr_datetime, aListItem)
+            output_data.append(aListItem)
 
         # Assuming there's two valid markers, return them in order
-        output_data.sort(key = lambda mark_tuple: mark_tuple[0])
+        output_data.sort(key = lambda combined_entry: combined_entry.get_record().time)
+
+
+        # for aListItem in curr_markers:
+        #     curr_view = aListItem.get_view()
+        #     curr_x = curr_view.get_x_offset_position()
+        #     curr_datetime = self.offset_to_datetime(curr_x)
+        #     # combine the datetime and the list item as a tuple
+        #     output_data.append(curr_datetime, aListItem)
+
+        # # Assuming there's two valid markers, return them in order
+        # output_data.sort(key = lambda mark_tuple: mark_tuple[0])
+
         return output_data
 
 
@@ -1486,8 +1496,10 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             first_item = selected_ref_lines[0]
             second_item = selected_ref_lines[1]
 
-            start_time = first_item[0]
-            end_time = second_item[0]
+            # start_time = first_item[0]
+            # end_time = second_item[0]
+            start_time = first_item.get_record().time
+            end_time = second_item.get_record().time
 
             print("trying to create annotation from {0} to {1}".format(str(start_time), str(end_time)))
             # Since we don't know what the source for these global mark references are, we have to create a new annotation without any existing comment/config. This means the UI won't render it on a track by default.
