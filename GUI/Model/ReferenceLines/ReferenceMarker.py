@@ -7,6 +7,10 @@ from PyQt5.QtWidgets import QWidget, QFrame, QScrollArea, QVBoxLayout, QGridLayo
 import os
 
 # ReferenceMarker.py
+from GUI.Model.ModelViewContainer import ModelViewContainer
+from GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackCache
+
+
 
 # from GUI.Model.ReferenceLines.ReferenceMarker import RepresentedTimeRange
 """
@@ -36,6 +40,44 @@ class RepresentedMarkerTime(QObject):
 
 
 
+class RepresentedMarkerRecord(RepresentedMarkerTime):
+    def __init__(self, markerDatetime, parent=None):
+        super(RepresentedMarkerRecord, self).__init__(markerDatetime, parent=parent)
+        
+
+# ReferenceMarkerManagerConfiguration: a class that holds the settings for a timeline track
+class ReferenceMarkerManagerConfiguration(QObject):
+
+    cacheUpdated = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super(ReferenceMarkerManagerConfiguration, self).__init__(parent=parent)
+        self.cache = TrackCache([], parent=parent)
+
+    def filter_records(self, session):
+        return self.get_filter().build_filter(session)
+
+    # reload(...): called when the filter is changed to update the cache (reloading the records from the database) as needed
+    def reload(self, session, owning_parent_track):
+        found_records = self.filter_records(session)
+        print("track[{0}]: {1} records found".format(self.get_track_id(), len(found_records)))
+
+        # Build the corresponding GUI objects
+        built_model_view_container_array = []
+        for (index, aRecord) in enumerate(found_records):
+            aGuiView = self.get_filter().trackRecordClass.get_gui_view(aRecord, parent=owning_parent_track)
+            aModelViewContainer = ModelViewContainer(aRecord, aGuiView)
+            built_model_view_container_array.append(aModelViewContainer)
+
+        self.update_cache(built_model_view_container_array)
+
+    # called to update the cache from an external source. Also called internally in self.reload(...)
+    def update_cache(self, newCachedModelViewArray):
+        self.cache.set_model_view_array(newCachedModelViewArray)
+        self.cacheUpdated.emit()
+
+    def get_cache(self):
+        return self.cache
 
 
 """

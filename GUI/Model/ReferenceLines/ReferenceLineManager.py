@@ -17,13 +17,12 @@ from GUI.UI.ReferenceMarkViewer.ReferenceMarkViewer import ReferenceMarkViewer, 
 ## IMPORTS:
 # from GUI.Model.ReferenceLines.ReferenceLineManager import ReferenceMarkerManager
 
+from GUI.Model.ModelViewContainer import ModelViewContainer
 from GUI.Model.ReferenceLines.ReferenceMarkerVisualHelpers import TickProperties, ReferenceMarker
-from GUI.Model.ReferenceLines.ReferenceMarker import RepresentedTimeRange, RepresentedMarkerTime
+from GUI.Model.ReferenceLines.ReferenceMarker import RepresentedTimeRange, RepresentedMarkerTime, RepresentedMarkerRecord, ReferenceMarkerManagerConfiguration
 
 __textColor__ = QColor(20, 20, 20)
 __font__ = QFont('Decorative', 12)
-
-
 
 
 """
@@ -46,13 +45,45 @@ class ReferenceMarkerManager(QObject):
 
     def __init__(self, num_markers, parent=None):
         super().__init__(parent=parent)
+        self.config = ReferenceMarkerManagerConfiguration(parent=self)
+        self.trackConfig.cacheUpdated.connect(self.on_reloadModelFromConfigCache)
+        # self.markerRecordsDict = dict()
+        # self.markerViewsDict = dict()
+        self.markersDict = dict()
+
         self.staticMarkerData = []
         # RepresentedMarkerTime
         self.activeMarkersWindow = None
         self.used_mark_stack = []
         self.used_mark_extended_metadata_stack = []
-        self.markers = dict()
+
         self.bulk_add_reference_makers(num_markers)
+
+
+    # on_reloadModelFromConfigCache(...): called when the config cache updates to reload the manager
+    @pyqtSlot()
+    def on_reloadModelFromConfigCache(self):
+        print("ReferenceMarkerManager.reloadModelFromConfigCache()")
+        # TODO: close any open dialogs, etc, etc
+        self.reset_on_reload()
+        active_cache = self.trackConfig.get_cache()
+        active_model_view_array = active_cache.get_model_view_array()
+        # self.markerRecordsDict = dict()
+        # self.markerViewsDict = dict()
+        self.markersDict = dict()
+
+        for aContainerObj in active_model_view_array:
+            self.durationRecords.append(aContainerObj.get_record())
+            newAnnotationIndex = len(self.durationObjects)
+            newAnnotationView = aContainerObj.get_view()
+            newAnnotationView.setAccessibleName(str(newAnnotationIndex))
+            # newAnnotation.on_edit.connect(self.on_annotation_modify_event)
+            # newAnnotation.on_edit_by_dragging_handle_start.connect(self.handleStartSliderValueChange)
+            # newAnnotation.on_edit_by_dragging_handle_end.connect(self.handleEndSliderValueChange)
+            self.durationObjects.append(newAnnotationView)          
+
+        self.update()
+        
 
     def get_scale(self):
         return self.parent().getScale()
@@ -87,13 +118,20 @@ class ReferenceMarkerManager(QObject):
     def bulk_add_reference_makers(self, num_markers):
         self.used_mark_stack = []
         self.used_mark_extended_metadata_stack = []
-        self.markers = dict()
+        # self.markerRecordsDict = dict()
+        # self.markerViewsDict = dict()
+        self.markersDict = dict()
+
         for a_marker_index in range(num_markers):
             curr_color = QColor.fromHslF((float(a_marker_index)/float(num_markers)), 0.9, 0.9, 1.0)
             curr_properties = TickProperties(curr_color, 0.9, Qt.SolidLine)
-            new_obj = ReferenceMarker(str(a_marker_index), False, properties=curr_properties, parent=self)
-            new_obj.update_position(0.0, self.get_scale())
-            self.markers[str(a_marker_index)] = new_obj
+            new_view_obj = ReferenceMarker(str(a_marker_index), False, properties=curr_properties, parent=self)
+            new_view_obj.update_position(0.0, self.get_scale())
+
+            new_record_obj = RepresentedMarkerRecord(datetime.now(), parent=self)
+            aModelViewContainer = ModelViewContainer(new_record_obj, new_view_obj)
+
+            self.markersDict[str(a_marker_index)] = aModelViewContainer
 
         self.used_markers_updated.emit(self.get_used_markers())
 
@@ -103,23 +141,44 @@ class ReferenceMarkerManager(QObject):
     #     self.markers[with_identifier] = new_obj
 
     # Returns the next unused marker so it can be used
-    def get_next_unused_marker(self):
+    def get_next_unused_marker_key(self):
         for (aKey, aValue) in self.get_markers().items():
-            if (not aValue.is_enabled):
+            if (not aValue.get_view().is_enabled):
                 return aKey
             else:
                 continue
         return None
 
     # Called to update the position of the next unused marker (making it used)
-    def update_next_unused_marker(self, new_position):
-        potential_unused_marker_key = self.get_next_unused_marker()
+    # def update_next_unused_marker(self, new_position):
+    #     potential_unused_marker_key = self.get_next_unused_marker()
+    #     if (potential_unused_marker_key is None):
+    #         print("ERROR: no unused markers available. Need to implement reuse")
+    #         return
+    #     else:
+    #         self.get_markers()[potential_unused_marker_key].update_position(new_position, self.get_scale())
+    #         self.get_markers()[potential_unused_marker_key].is_enabled = True
+    #         # Add the key of the now used item to the used_stack
+    #         self.used_mark_stack.append(potential_unused_marker_key)
+
+    #         self.show_active_markers_list()
+    #         self.used_markers_updated.emit(self.get_used_markers())
+    #         self.wants_extended_data.emit(self.get_used_markers())
+
+    def update_next_unused_marker(self, new_datetime):
+        potential_unused_marker_key = self.get_next_unused_marker_key()
         if (potential_unused_marker_key is None):
             print("ERROR: no unused markers available. Need to implement reuse")
             return
         else:
-            self.get_markers()[potential_unused_marker_key].update_position(new_position, self.get_scale())
-            self.get_markers()[potential_unused_marker_key].is_enabled = True
+            # Create a new record objecct
+            self.get_markers()[potential_unused_marker_key].get_record().time = new_datetime
+
+            # Get the x_offset position from the datetime provided
+            new_position = RepresentedMarkerRecord(new_datetime, parent=self)
+
+            self.get_markers()[potential_unused_marker_key].get_view().update_position(new_position, self.get_scale())
+            self.get_markers()[potential_unused_marker_key].get_view().is_enabled = True
             # Add the key of the now used item to the used_stack
             self.used_mark_stack.append(potential_unused_marker_key)
 
@@ -140,11 +199,25 @@ class ReferenceMarkerManager(QObject):
         return out_objs
 
     def get_markers(self):
-        return self.markers
+        return self.markerViewsDict
+
+    # def get_marker_views(self):
+    #     return self.markerViewsDict
+
+    # def get_marker_records(self):
+    #     return self.markerRecordsDict
+
+
+
+
 
     def draw(self, painter, event, scale):
-        for (id_key, value) in self.markers.items():
-            value.draw(painter, event, scale)
+        for (id_key, value) in self.markerViewsDict.items():
+            # Get the datetime from the record:
+            currRecord = value.get_record()
+            currDatetime = currRecord.time
+
+            value.get_view().draw(painter, event, scale)
 
     @pyqtSlot(list)
     def update_marker_metadata(self, marker_metadata_list):
