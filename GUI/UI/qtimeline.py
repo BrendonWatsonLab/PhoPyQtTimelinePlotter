@@ -17,32 +17,14 @@ from GUI.UI.TickedTimelineDrawingBaseWidget import TickProperties, TickedTimelin
 __textColor__ = QColor(187, 187, 187)
 __font__ = QFont('Decorative', 10)
 
-class VideoSample:
-
-    def __init__(self, duration, color=Qt.darkYellow, picture=None, audio=None):
-        self.duration = duration
-        self.color = color  # Floating color
-        self.defColor = color  # DefaultColor
-        if picture is not None:
-            self.picture = picture.scaledToHeight(45)
-        else:
-            self.picture = None
-        self.startPos = 0  # Inicial position
-        self.endPos = self.duration  # End position
-
-
-
-
 class QTimeLine(TickedTimelineDrawingBaseWidget):
 
-    def __init__(self, duration, parent=None):
-        super(QTimeLine, self).__init__(duration, parent=parent)
+    def __init__(self, totalStartTime, totalEndTime, totalDuration, duration, parent=None):
+        super(QTimeLine, self).__init__(totalStartTime, totalEndTime, totalDuration, duration, parent=parent)
 
         # Set variables
         self.textColor = __textColor__
         self.font = __font__
-        self.selectedSample = None
-        self.videoSamples = []  # List of videos samples
 
     #     self.initUI()
     #
@@ -59,6 +41,8 @@ class QTimeLine(TickedTimelineDrawingBaseWidget):
         w = 0
         # Draw time
         scale = self.getScale()
+
+        # Draws text every fixed number of pixels
         while w <= self.width():
             qp.drawText(w - 50, 0, 100, 100, Qt.AlignHCenter, self.get_time_string(w * scale))
             w += 100
@@ -82,36 +66,7 @@ class QTimeLine(TickedTimelineDrawingBaseWidget):
 
         # Draw samples
         t = 0
-        for sample in self.videoSamples:
-            # Clear clip path
-            path = QPainterPath()
-            path.addRoundedRect(QRectF(t / scale, 50, sample.duration / scale, 200), 10, 10)
-            qp.setClipPath(path)
-
-            # Draw sample
-            path = QPainterPath()
-            qp.setPen(sample.color)
-            path.addRoundedRect(QRectF(t/scale, 50, sample.duration/scale, 50), 10, 10)
-            sample.startPos = t/scale
-            sample.endPos = t/scale + sample.duration/scale
-            qp.fillPath(path, sample.color)
-            qp.drawPath(path)
-
-            # Draw preview pictures
-            if sample.picture is not None:
-                if sample.picture.size().width() < sample.duration/scale:
-                    path = QPainterPath()
-                    path.addRoundedRect(QRectF(t/scale, 52.5, sample.picture.size().width(), 45), 10, 10)
-                    qp.setClipPath(path)
-                    qp.drawPixmap(QRect(t/scale, 52.5, sample.picture.size().width(), 45), sample.picture)
-                else:
-                    path = QPainterPath()
-                    path.addRoundedRect(QRectF(t / scale, 52.5, sample.duration/scale, 45), 10, 10)
-                    qp.setClipPath(path)
-                    pic = sample.picture.copy(0, 0, sample.duration/scale, 45)
-                    qp.drawPixmap(QRect(t / scale, 52.5, sample.duration/scale, 45), pic)
-            t += sample.duration
-
+        
         # Clear clip path
         path = QPainterPath()
         path.addRect(self.rect().x(), self.rect().y(), self.rect().width(), self.rect().height())
@@ -134,8 +89,7 @@ class QTimeLine(TickedTimelineDrawingBaseWidget):
         # if mouse is being pressed, update pointer
         if self.clicking:
             x = e.pos().x()
-            self.checkSelection(x)
-
+            
         super().mouseMoveEvent(e)
 
 
@@ -144,28 +98,12 @@ class QTimeLine(TickedTimelineDrawingBaseWidget):
         super().mousePressEvent(e)
         if e.button() == Qt.LeftButton:
             x = e.pos().x()
-            self.checkSelection(x)
             self.update()
             
     # Mouse release
     def mouseReleaseEvent(self, e):
         super().mouseReleaseEvent(e)
 
-    # check selection
-    def checkSelection(self, x):
-        # Check if user clicked in video sample
-        for sample in self.videoSamples:
-            if sample.startPos < x < sample.endPos:
-                sample.color = self.activeColor
-                if self.selectedSample is not sample:
-                    self.selectedSample = sample
-                    self.selectionChanged.emit(sample)
-            else:
-                sample.color = sample.defColor
-
-    # Get selected sample
-    def getSelectedSample(self):
-        return self.selectedSample
 
     # Set text color
     def setTextColor(self, color):

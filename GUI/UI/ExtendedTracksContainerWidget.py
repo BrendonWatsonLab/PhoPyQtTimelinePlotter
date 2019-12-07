@@ -27,8 +27,8 @@ class ExtendedTracksContainerWidget(TickedTimelineDrawingBaseWidget):
     staticTimeDelininationTickLineProperties = TickProperties(QColor(187, 187, 187, 100), 0.4, Qt.SolidLine)
 
 
-    def __init__(self, duration, parent=None, *args, **kwargs):
-        super(ExtendedTracksContainerWidget, self).__init__(duration, parent=parent, *args, **kwargs)
+    def __init__(self, totalStartTime, totalEndTime, totalDuration, duration, parent=None, *args, **kwargs):
+        super(ExtendedTracksContainerWidget, self).__init__(totalStartTime, totalEndTime, totalDuration, duration, parent=parent, *args, **kwargs)
 
         self.backgroundColor = ExtendedTracksContainerWidget.defaultBackgroundColor
 

@@ -15,114 +15,23 @@ import os
 from GUI.UI.ReferenceMarkViewer.ReferenceMarkViewer import ReferenceMarkViewer, ActiveReferenceMarkersMixin
 
 ## IMPORTS:
-# from GUI.Model.ReferenceLineManager import TickProperties, ReferenceMarker, ReferenceMarkerManager
+# from GUI.Model.ReferenceLines.ReferenceLineManager import ReferenceMarkerManager
+
+from GUI.Model.ReferenceLines.ReferenceMarkerVisualHelpers import TickProperties, ReferenceMarker
+from GUI.Model.ReferenceLines.ReferenceMarker import RepresentedTimeRange, RepresentedMarkerTime
 
 __textColor__ = QColor(20, 20, 20)
 __font__ = QFont('Decorative', 12)
 
-class TickProperties:
-    """
-    pen: QPen
-    """
-    def __init__(self, color, lineThickness=None, style=None):
-        self.pen = QPen(color, lineThickness, style)
-
-    def get_pen(self):
-        return self.pen
-
-    def get_color(self):
-        return self.get_pen().color()
 
 
-"""
-ReferenceMarker: a QObject that draws a vertical line that denotes a specific timestamp on a timeline with an optional triangular header with a ID Label
-"""
-class ReferenceMarker(QObject):
-
-    defaultProperties = TickProperties(QColor(250, 187, 187), 0.9, Qt.SolidLine)
-    
-    def __init__(self, identifier, is_enabled, properties=TickProperties(QColor(250, 187, 187), 0.9, Qt.SolidLine), parent=None):
-        super().__init__(parent=parent)
-        self.identifier = identifier
-        self.is_enabled = is_enabled
-        self.properties = properties
-        self.scale = 1.0
-        self.x_offset_position = None
-        self.textColor = __textColor__
-        self.font = __font__
-
-        self.is_driven_externally = False
-
-    def draw_pointer(self, painter, drawRect, scale):
-        if self.x_offset_position is not None:
-            currOffset = (self.get_pointerTimePos()/scale)
-            line = QLine(QPoint(currOffset, 40),
-                         QPoint(currOffset, drawRect.height()))
-            poly = QPolygon([QPoint(currOffset - 10, 20),
-                             QPoint(currOffset + 10, 20),
-                             QPoint(currOffset, 40)])
-
-            
-        else:
-            line = QLine(QPoint(0, 0), QPoint(0, self.height()))
-            poly = QPolygon([QPoint(-10, 20), QPoint(10, 20), QPoint(0, 40)])
-
-        # Draw pointer
-        painter.setPen(self.properties.get_pen())
-        painter.setBrush(QBrush(self.properties.get_color()))
-
-        painter.drawPolygon(poly)
-        painter.drawLine(line)
-
-        # Draw text
-        painter.setPen(self.textColor)
-        painter.setFont(self.font)
-        textRect = poly.boundingRect()
-        textRect = textRect.marginsRemoved(QMargins(0, 0, 0, 4))
-
-        # painter.drawText(currOffset - 10, 0, 20, 20, Qt.AlignHCenter, self.identifier)
-        # painter.drawText(currOffset - 10, 20, 20, 20, Qt.AlignCenter, self.identifier)
-        painter.drawText(textRect, Qt.AlignCenter, self.identifier)
-
-    # Called to draw the line and optionally the triangular pointer
-    def draw(self, painter, drawRect, scale):
-        self.updateScale(scale)
-        if self.is_enabled:
-            if self.x_offset_position is not None:
-                painter.setRenderHint(QPainter.Antialiasing)
-
-                # Draws the single vertical line across the entire height of the drawRect
-                painter.setPen(self.properties.get_pen())
-                painter.drawLine(self.x_offset_position, 0, self.x_offset_position, drawRect.height())
-
-                self.draw_pointer(painter, drawRect, scale)
-
-    def getScale(self):
-        return self.scale
-
-    def get_x_offset_position(self):
-        return self.x_offset_position
-
-    def get_pointerTimePos(self):
-        return (self.x_offset_position * self.getScale())
-
-    def updateScale(self, newScale):
-        if (self.scale != newScale):
-            self.scale = newScale
-
-    # Updates the position and scale of the reference marker
-    def update_position(self, x_offset_position, scale):
-        self.x_offset_position = x_offset_position
-        self.updateScale(scale)
-
-    def get_position_tuple_string(self):
-        return '(pos: {0}, get_pointerTimePos: {1})'.format(self.x_offset_position, self.get_pointerTimePos())
-
-    def __str__(self):
-        return 'RefMark[identifier: {0}]: {1}'.format(self.identifier, self.get_position_tuple_string())
 
 """
 ReferenceMarkerManager is a shared singleton that defines the positions of "reference lines" that are drawn throughout the main timeline.
+"""
+"""
+Want to have an array of datetimes at which to plot tick lines.
+The widget's current size is used, along with the totalStartTime and totalEndTime, to compute the positions at which to draw the tick lines and labels.
 """
 class ReferenceMarkerManager(QObject):
 
@@ -137,6 +46,8 @@ class ReferenceMarkerManager(QObject):
 
     def __init__(self, num_markers, parent=None):
         super().__init__(parent=parent)
+        self.staticMarkerData = []
+        # RepresentedMarkerTime
         self.activeMarkersWindow = None
         self.used_mark_stack = []
         self.used_mark_extended_metadata_stack = []
@@ -148,6 +59,29 @@ class ReferenceMarkerManager(QObject):
 
     def get_used_markers(self):
         return [self.get_markers()[aKey] for aKey in self.used_mark_stack]
+
+    @staticmethod
+    def daterange(start_date, end_date):
+        for n in range(int ((end_date - start_date).days)):
+            yield start_date + timedelta(n)
+            
+
+    def bulk_add_static_marker_data(self):
+        self.staticMarkerData = []
+        start_date = self.totalStartTime
+        end_date = self.totalEndTime
+        for single_date in ReferenceMarkerManager.daterange(start_date, end_date):
+            # print(single_date.strftime("%Y-%m-%d"))
+            newObj = RepresentedMarkerTime(single_date, self)
+            print(newObj.time_string)
+            self.staticMarkerData.append(newObj)
+
+
+    def get_static_marker_data(self):
+        return self.staticMarkerData
+
+        # for single_date in (start_date_day + timedelta(n) for n in range(day_count)):
+        #     print(single_date.strftime("%Y-%m-%d"))
         
 
     def bulk_add_reference_makers(self, num_markers):
@@ -217,6 +151,13 @@ class ReferenceMarkerManager(QObject):
         self.used_mark_extended_metadata_stack = marker_metadata_list
         self.used_markers_extended_data_updated.emit(self.used_mark_extended_metadata_stack)
 
+
+    # Called when the timeline changes its global represented start and end times. This will change how the reference marker data objects are mapped to positions.
+    @pyqtSlot(datetime, datetime, timedelta)
+    def on_global_timeline_timespan_changed(self, totalStartTime, totalEndTime, totalDuration):
+        print("Reference manager: on_global_timeline_timespan_changed({0}, {1}, {2})".format(str(totalStartTime), str(totalEndTime), str(totalDuration)))
+
+
     # show_active_markers_list(): creates a list window that displays the current markers
     def show_active_markers_list(self):
         if self.activeMarkersWindow is not None:
@@ -233,3 +174,24 @@ class ReferenceMarkerManager(QObject):
         self.selection_changed.connect(self.activeMarkersWindow.selection_changed)
         self.activeMarkersWindow.show()
 
+
+    # Main Window Slots:
+    @pyqtSlot()
+    def on_active_zoom_changed(self):
+        print("ReferenceMarkerManager.on_active_zoom_changed(...)")
+        # self.update()
+
+    @pyqtSlot()
+    def on_active_viewport_changed(self):
+        print("ReferenceMarkerManager.on_active_viewport_changed(...)")
+        # self.update()
+
+    @pyqtSlot(datetime, datetime, timedelta)
+    def on_active_global_timeline_times_changed(self, totalStartTime, totalEndTime, totalDuration):
+        print("ReferenceMarkerManager.on_active_global_timeline_times_changed({0}, {1}, {2})".format(str(totalStartTime), str(totalEndTime), str(totalDuration)))
+        self.totalStartTime = totalStartTime
+        self.totalEndTime = totalEndTime
+        self.totalDuration = totalDuration
+        self.bulk_add_static_marker_data()
+        # self.update()
+        return

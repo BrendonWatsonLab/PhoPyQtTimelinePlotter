@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 import tempfile
 from base64 import b64encode
+from datetime import datetime, timezone, timedelta
 
 from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import Qt, QPoint, QLine, QRect, QRectF, pyqtSignal, pyqtSlot, QObject, QMargins
+from PyQt5.QtCore import Qt, QPoint, QLine, QRect, QRectF, pyqtSignal, pyqtSlot, QObject, QMargins, QSize
 from PyQt5.QtGui import QPainter, QColor, QFont, QBrush, QPalette, QPen, QPolygon, QPainterPath, QPixmap
 from PyQt5.QtWidgets import QWidget, QFrame, QScrollArea, QVBoxLayout
 import sys
@@ -12,9 +13,18 @@ import os
 
 __backgroudColor__ = QColor(60, 63, 65)
 
-from GUI.Model.ReferenceLineManager import TickProperties, ReferenceMarker, ReferenceMarkerManager
+from GUI.Model.ReferenceLines.ReferenceMarkerVisualHelpers import TickProperties, ReferenceMarker
+from GUI.Model.ReferenceLines.ReferenceLineManager import ReferenceMarkerManager
 
-class TickedTimelineDrawingBaseWidget(QWidget):
+from GUI.Helpers.FixedTimelineContentsWidthMixin import FixedTimelineContentsWidthMixin
+
+
+"""
+A class that draws "ticks" which are evenly spaced lines along its entire width.
+Used by qtimeline.py and ExtendedTrackContainerWidget.py
+
+"""
+class TickedTimelineDrawingBaseWidget(FixedTimelineContentsWidthMixin, QWidget):
 
     hoverChanged = pyqtSignal(int)
     positionChanged = pyqtSignal(int)
@@ -29,14 +39,20 @@ class TickedTimelineDrawingBaseWidget(QWidget):
     videoPlaybackLineProperties = TickProperties(Qt.red, 1.0, Qt.SolidLine)
     hoverLineProperties = TickProperties(Qt.cyan, 0.8, Qt.DashLine)
 
-    def __init__(self, duration, parent=None):
+
+    def __init__(self, totalStartTime, totalEndTime, totalDuration, duration, parent=None):
         super(TickedTimelineDrawingBaseWidget, self).__init__(parent=parent)
+        self.totalStartTime = totalStartTime
+        self.totalEndTime = totalEndTime
+        self.totalDuration = totalDuration
+
         self.duration = duration
 
         # Reference Manager:
         self.referenceManager = parent.get_reference_manager()
 
         # Set variables
+        self.fixedWidth = 800.0
         self.backgroundColor = __backgroudColor__
         self.pos = None
         self.video_pos = None
@@ -56,6 +72,7 @@ class TickedTimelineDrawingBaseWidget(QWidget):
         pal.setColor(QPalette.Background, self.backgroundColor)
         self.setPalette(pal)
 
+
     def get_reference_manager(self):
         return self.referenceManager
         # if self.parent():
@@ -68,7 +85,8 @@ class TickedTimelineDrawingBaseWidget(QWidget):
         # Draw dash lines
         point = 0
         painter.setPen(TickedTimelineDrawingBaseWidget.staticTimeDelininationTickLineProperties.get_pen())
-        # draw a horizontal line
+        # draw a horizontal line (Currently draws the line a fixed distance in pixels apart. The labels are only added in qtimeline)
+        
         painter.drawLine(0, 40, self.width(), 40)
         while point <= self.width():
             if point % 30 != 0:
@@ -152,9 +170,12 @@ class TickedTimelineDrawingBaseWidget(QWidget):
 
     # Get time string from seconds
     def get_time_string(self, seconds):
-        m, s = divmod(seconds, 60)
-        h, m = divmod(m, 60)
-        return "%02d:%02d:%02d" % (h, m, s)
+        drawTime = self.totalStartTime + timedelta(seconds=seconds)
+        # return drawTime.strftime("%d-%m-%Y %I %p")
+        return drawTime.strftime("%m/%d \n%I%p")
+        # m, s = divmod(seconds, 60)
+        # h, m = divmod(m, 60)
+        # return "%02d:%02d:%02d" % (h, m, s)
 
     # Get scale from length
     def getScale(self):
@@ -198,3 +219,24 @@ class TickedTimelineDrawingBaseWidget(QWidget):
             self.video_pos = QPoint(x, 0)
         
         self.update()
+
+
+    # Main Window Slots:
+    @pyqtSlot()
+    def on_active_zoom_changed(self):
+        print("TickedTimelineDrawingBaseWidget.on_active_zoom_changed(...)")
+        self.update()
+
+    @pyqtSlot()
+    def on_active_viewport_changed(self):
+        print("TickedTimelineDrawingBaseWidget.on_active_viewport_changed(...)")
+        self.update()
+
+    @pyqtSlot(datetime, datetime, timedelta)
+    def on_active_global_timeline_times_changed(self, totalStartTime, totalEndTime, totalDuration):
+        print("TickedTimelineDrawingBaseWidget.on_active_global_timeline_times_changed({0}, {1}, {2})".format(str(totalStartTime), str(totalEndTime), str(totalDuration)))
+        self.totalStartTime = totalStartTime
+        self.totalEndTime = totalEndTime
+        self.totalDuration = totalDuration
+        self.update()
+        return

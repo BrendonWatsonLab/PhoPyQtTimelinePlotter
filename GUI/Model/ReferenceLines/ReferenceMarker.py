@@ -8,6 +8,36 @@ import os
 
 # ReferenceMarker.py
 
+# from GUI.Model.ReferenceLines.ReferenceMarker import RepresentedTimeRange
+"""
+RepresentedMarkerTime: a simple model object that wraps a datetime. To be used by ReferenceMarkerManager
+"""
+class RepresentedMarkerTime(QObject):
+    def __init__(self, markerDatetime, parent=None):
+        super(RepresentedMarkerTime, self).__init__(parent=parent)
+        self._representedDatetime = markerDatetime
+
+    @property
+    def time(self):
+        return self._representedDatetime
+
+    @property
+    def time_string(self):
+        return self.time.strftime("%Y-%m-%d")
+
+    # Setters:
+    @time.setter
+    def time(self, new_value):
+        if self._representedDatetime != new_value:
+            self._representedDatetime = new_value
+        else:
+            # Otherwise nothing has changed
+            pass
+
+
+
+
+
 """
 RepresentedTimeRange: on object that holds a reference to the current global start and end times
 """

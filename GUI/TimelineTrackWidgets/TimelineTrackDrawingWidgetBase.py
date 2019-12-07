@@ -12,6 +12,7 @@ from enum import Enum
 
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWidget
 from GUI.UI.UIState import ItemInteractionState, ItemHoverState, ItemSelectionState
+from GUI.Helpers.FixedTimelineContentsWidthMixin import FixedTimelineContentsWidthMixin
 
 class ItemSelectionOptions(Enum):
         DisableSelection = 1 # disallows selection
@@ -20,11 +21,10 @@ class ItemSelectionOptions(Enum):
         MultiSelection = 3  # allows multiple selection
 
 # The base timeline track widget which all others should inherit from
-class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
+class TimelineTrackDrawingWidgetBase(FixedTimelineContentsWidthMixin, AbstractDatabaseAccessingWidget):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
     hover_changed = pyqtSignal(int, int, name='hover_changed')
     selection_changed = pyqtSignal(int, int, name='selection_changed')
-
 
     on_create_marker = pyqtSignal(datetime)
     
@@ -36,6 +36,7 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
+        self.fixedWidth = 800.0
         
         self.wantsKeyboardEvents = wantsKeyboardEvents
         self.wantsMouseEvents = wantsMouseEvents
@@ -64,12 +65,6 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
             self.mousePressEvent = self.on_button_clicked
             self.mouseReleaseEvent = self.on_button_released
             self.mouseMoveEvent = self.on_mouse_moved
-
-    def minimumSizeHint(self) -> QSize:
-        return QSize(500, 50)
-
-    def sizeHint(self) -> QSize:
-        return QSize(800, 100)
 
     def set_track_title_label(self, title):
         self.trackLabelText = title
@@ -149,35 +144,35 @@ class TimelineTrackDrawingWidgetBase(AbstractDatabaseAccessingWidget):
 
     # Timeline position/time converion functions:
     # Get scale from length
-    def getScale(self):
-        return float(self.totalDuration)/float(self.width())
+    # def getScale(self):
+    #     return float(self.totalDuration)/float(self.width())
 
-    def offset_to_percent(self, event_x, event_y):
-        percent_x = event_x / self.width()
-        percent_y = event_y / self.height()
-        return (percent_x, percent_y)
+    # def offset_to_percent(self, event_x, event_y):
+    #     percent_x = event_x / self.width()
+    #     percent_y = event_y / self.height()
+    #     return (percent_x, percent_y)
 
-    def offset_to_duration(self, event_x):
-        (percent_x, percent_y) = self.offset_to_percent(event_x, 0.0)
-        return (self.totalDuration * percent_x)
+    # def offset_to_duration(self, event_x):
+    #     (percent_x, percent_y) = self.offset_to_percent(event_x, 0.0)
+    #     return (self.totalDuration * percent_x)
 
-    def offset_to_datetime(self, event_x):
-        duration_offset = self.offset_to_duration(event_x)
-        return (self.totalStartTime + duration_offset)
+    # def offset_to_datetime(self, event_x):
+    #     duration_offset = self.offset_to_duration(event_x)
+    #     return (self.totalStartTime + duration_offset)
 
-    def percent_to_offset(self, percent_offset):
-        event_x = percent_offset * self.width()
-        return event_x
+    # def percent_to_offset(self, percent_offset):
+    #     event_x = percent_offset * self.width()
+    #     return event_x
 
-    def duration_to_offset(self, duration_offset):
-        percent_x = duration_offset / self.totalDuration
-        event_x = self.percent_to_offset(percent_x)
-        return event_x
+    # def duration_to_offset(self, duration_offset):
+    #     percent_x = duration_offset / self.totalDuration
+    #     event_x = self.percent_to_offset(percent_x)
+    #     return event_x
 
-    def datetime_to_offset(self, newDatetime):
-        duration_offset = newDatetime - self.totalStartTime
-        event_x = self.duration_to_offset(duration_offset)
-        return event_x
+    # def datetime_to_offset(self, newDatetime):
+    #     duration_offset = newDatetime - self.totalStartTime
+    #     event_x = self.duration_to_offset(duration_offset)
+    #     return event_x
 
     def enterEvent(self, QEvent):
         # print("TimelineTrackDrawingWidgetBase.enterEvent(...): track_id: {0}".format(self.trackID))
