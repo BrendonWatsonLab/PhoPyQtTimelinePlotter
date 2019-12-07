@@ -161,13 +161,14 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
 
         # Reference Manager:
-        self.referenceManager = ReferenceMarkerManager(self.totalStartTime, self.totalEndTime, 10, parent=self)
+        self.referenceManager = ReferenceMarkerManager(self.totalStartTime, self.totalEndTime, self.width(), 10, parent=self)
         self.referenceManager.used_markers_updated.connect(self.on_reference_line_markers_updated)
         self.referenceManager.wants_extended_data.connect(self.on_request_extended_reference_line_data)
         self.referenceManager.selection_changed.connect(self.on_reference_line_marker_list_selection_changed)
         self.activeZoomChanged.connect(self.referenceManager.on_active_zoom_changed)
         self.activeViewportChanged.connect(self.referenceManager.on_active_viewport_changed)
         self.activeGlobalTimelineTimesChanged.connect(self.referenceManager.on_active_global_timeline_times_changed)
+        self.minimumTimelineTrackWidthChanged.connect(self.referenceManager.set_fixed_width)
 
         self.videoPlayerWindow = None
         self.helpWindow = None
@@ -1388,7 +1389,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
         # Update the reference manager
         # self.referenceManager.update_next_unused_marker(x_offset)
-        self.referenceManager.update_next_unused_marker(desired_datetime)
+        self.referenceManager.update_next_unused_marker(desired_datetime, self.get_minimum_track_width())
 
         self.timelineMasterTrackWidget.update()
         self.extendedTracksContainer.update()

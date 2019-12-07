@@ -45,11 +45,12 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
 
     # L = queue.Queue(maxsize=20)
 
-    def __init__(self, totalStartTime, totalEndTime, num_markers, parent=None):
+    def __init__(self, totalStartTime, totalEndTime, drawWidth, num_markers, parent=None):
         super().__init__(parent=parent)
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
         self.totalDuration = self.get_total_duration()
+        self.drawWidth = drawWidth
 
         # self.config = ReferenceMarkerManagerConfiguration(parent=self)
         # self.trackConfig.cacheUpdated.connect(self.on_reloadModelFromConfigCache)
@@ -65,30 +66,7 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
 
         self.bulk_add_reference_makers(num_markers)
 
-
-    # # on_reloadModelFromConfigCache(...): called when the config cache updates to reload the manager
-    # @pyqtSlot()
-    # def on_reloadModelFromConfigCache(self):
-    #     print("ReferenceMarkerManager.reloadModelFromConfigCache()")
-    #     # active_cache = self.trackConfig.get_cache()
-    #     # active_model_view_array = active_cache.get_model_view_array()
-    #     # # self.markerRecordsDict = dict()
-    #     # # self.markerViewsDict = dict()
-    #     # self.markersDict = dict()
-
-    #     # for aContainerObj in active_model_view_array:
-    #     #     self.durationRecords.append(aContainerObj.get_record())
-    #     #     newAnnotationIndex = len(self.durationObjects)
-    #     #     newAnnotationView = aContainerObj.get_view()
-    #     #     newAnnotationView.setAccessibleName(str(newAnnotationIndex))
-    #     #     # newAnnotation.on_edit.connect(self.on_annotation_modify_event)
-    #     #     # newAnnotation.on_edit_by_dragging_handle_start.connect(self.handleStartSliderValueChange)
-    #     #     # newAnnotation.on_edit_by_dragging_handle_end.connect(self.handleEndSliderValueChange)
-    #     #     self.durationObjects.append(newAnnotationView)          
-
-    #     self.update()
         
-
     def get_scale(self):
         return self.parent().getScale()
 
@@ -114,9 +92,6 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
 
     def get_static_marker_data(self):
         return self.staticMarkerData
-
-        # for single_date in (start_date_day + timedelta(n) for n in range(day_count)):
-        #     print(single_date.strftime("%Y-%m-%d"))
         
 
     def bulk_add_reference_makers(self, num_markers):
@@ -170,7 +145,8 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
     #         self.used_markers_updated.emit(self.get_used_markers())
     #         self.wants_extended_data.emit(self.get_used_markers())
 
-    def update_next_unused_marker(self, new_datetime):
+    def update_next_unused_marker(self, new_datetime, currDrawWidth):
+        self.drawWidth = currDrawWidth
         potential_unused_marker_key = self.get_next_unused_marker_key()
         if (potential_unused_marker_key is None):
             print("ERROR: no unused markers available. Need to implement reuse")
@@ -185,7 +161,7 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
             self.get_markers()[potential_unused_marker_key].get_view().update_position(0.0, self.get_scale())
             self.get_markers()[potential_unused_marker_key].get_view().is_enabled = True
             
-            self.needs_positions_update = False
+            self.needs_positions_update = True
 
             # Add the key of the now used item to the used_stack
             self.used_mark_stack.append(potential_unused_marker_key)
@@ -222,7 +198,7 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
 
 
     # def percent_offset_to_track_offset(self, track_percent):
-    #     return float(self.width()) * float(track_percent)
+    #     return float(self.drawWidth) * float(track_percent)
 
     # compute_x_offset_from_datetime(aDatetime): depends on current duration and width
     def compute_x_offset_from_datetime(self, drawWidth, aDatetime):
@@ -233,7 +209,9 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
 
 
     def draw(self, painter, event, scale):
-        drawWidth = event.width()
+        # drawWidth = event.width()
+        drawWidth = self.drawWidth
+        # self.drawWidth = event.width()
         for (id_key, value) in self.markersDict.items():
             # Get the datetime from the record:
             if self.needs_positions_update:
@@ -252,12 +230,6 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
     def update_marker_metadata(self, marker_metadata_list):
         self.used_mark_extended_metadata_stack = marker_metadata_list
         self.used_markers_extended_data_updated.emit(self.used_mark_extended_metadata_stack)
-
-
-    # # Called when the timeline changes its global represented start and end times. This will change how the reference marker data objects are mapped to positions.
-    # @pyqtSlot(datetime, datetime, timedelta)
-    # def on_global_timeline_timespan_changed(self, totalStartTime, totalEndTime, totalDuration):
-    #     print("Reference manager: on_global_timeline_timespan_changed({0}, {1}, {2})".format(str(totalStartTime), str(totalEndTime), str(totalDuration)))
 
 
     # show_active_markers_list(): creates a list window that displays the current markers
@@ -300,3 +272,11 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
         self.needs_positions_update = True
         # self.update()
         return
+
+
+    # Called on the width changing
+    @pyqtSlot(float) 
+    def set_fixed_width(self, newWidth):
+        self.drawWidth = newWidth
+        # todo: rebuild the item?
+        self.needs_positions_update = True
