@@ -1207,16 +1207,6 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         print("TimelineDrawingWindow.on_video_player_window_closed()...")
         print("Popup closed.")
 
-        # Remove the red playback line:
-        self.timelineMasterTrackWidget.blockSignals(True)
-        self.extendedTracksContainer.blockSignals(True)
-
-        self.timelineMasterTrackWidget.on_update_video_line(None)
-        self.extendedTracksContainer.on_update_video_line(None)
-        
-        self.extendedTracksContainer.blockSignals(False)
-        self.timelineMasterTrackWidget.blockSignals(False)
-
         # Deselect the video in the timeline:
         for aVideoTrackIndex in range(0, len(self.videoFileTrackWidgets)):
             currVideoTrackWidget = self.videoFileTrackWidgets[aVideoTrackIndex]
@@ -1224,6 +1214,18 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             currVideoTrackWidget.deselect_all()
             currVideoTrackWidget.update()
 
+        # Remove the red playback line:
+        self.timelineMasterTrackWidget.blockSignals(True)
+        self.extendedTracksContainer.blockSignals(True)
+
+        self.timelineMasterTrackWidget.on_update_video_line(None)
+        self.extendedTracksContainer.on_update_video_line(None)
+
+        self.timelineMasterTrackWidget.update()
+        self.extendedTracksContainer.update()
+        
+        self.extendedTracksContainer.blockSignals(False)
+        self.timelineMasterTrackWidget.blockSignals(False)
 
         # self.videoPlayerWindow = None
 
