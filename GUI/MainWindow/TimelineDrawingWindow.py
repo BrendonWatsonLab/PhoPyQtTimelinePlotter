@@ -1200,11 +1200,31 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             return True
 
 
+    # Called when the video player window closes.
     @pyqtSlot()
     def on_video_player_window_closed(self):
         """ Cleanup the popup widget here """
         print("TimelineDrawingWindow.on_video_player_window_closed()...")
         print("Popup closed.")
+
+        # Remove the red playback line:
+        self.timelineMasterTrackWidget.blockSignals(True)
+        self.extendedTracksContainer.blockSignals(True)
+
+        self.timelineMasterTrackWidget.on_update_video_line(None)
+        self.extendedTracksContainer.on_update_video_line(None)
+        
+        self.extendedTracksContainer.blockSignals(False)
+        self.timelineMasterTrackWidget.blockSignals(False)
+
+        # Deselect the video in the timeline:
+        for aVideoTrackIndex in range(0, len(self.videoFileTrackWidgets)):
+            currVideoTrackWidget = self.videoFileTrackWidgets[aVideoTrackIndex]
+            # currVideoTrackWidget.set_active_filter(self.totalStartTime, self.totalEndTime)
+            currVideoTrackWidget.deselect_all()
+            currVideoTrackWidget.update()
+
+
         # self.videoPlayerWindow = None
 
 
@@ -1238,9 +1258,6 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             # Create a new setup window
             self.databaseBrowserUtilityWindow = ExampleDatabaseTableWindow(self.database_connection)
             self.databaseBrowserUtilityWindow.show()
-
-        
-        
 
     # @pyqtSlot(int, int)
     # Occurs when the user selects an object (durationObject) in the child video track with the mouse
@@ -1510,6 +1527,22 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             return
 
 
+    # Tries to create a comment between the two provided dates
+
+    @pyqtSlot(datetime, datetime)
+    def try_create_comment_between_dates(self, startDate, endDate):
+        print("try_create_comment_between_dates(...)")
+        start_time = startDate
+        end_time = endDate
+
+        print("trying to create annotation from {0} to {1}".format(str(start_time), str(end_time)))
+        # Since we don't know what the source for these global mark references are, we have to create a new annotation without any existing comment/config. This means the UI won't render it on a track by default.
+        # currTrackWidget.create_comment_datetime(start_time, end_time)
+        print("ERROR: UNIMPLMENTED: TODO: Create a generic annotation dialog (with a temporary config) and allow the user to add it even if the track isn't currently displayed)")
+        return
+
+
+
 
 
     ## Track Operations:
@@ -1674,11 +1707,6 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             else:
                 print("creating annotation....")
                 currTrackWidget.create_comment_datetime(sel_start, sel_endtime)
-
-
-            
-
-
 
         else:
             print("WARNING: Couldn't find matching annotation track for filter {0}".format(str(currTrackFilter)))
