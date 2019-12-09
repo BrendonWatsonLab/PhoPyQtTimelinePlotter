@@ -308,6 +308,7 @@ class MainVideoPlayerWindow(QMainWindow):
             return
         self.proxy_model.removeRow(selected[0].row()) and self.mapper.submit()
 
+    # Called when the UI slider position is updated via user-click
     def set_media_position(self, position):
         percentage = position / 10000.0
         self.media_player.set_position(percentage)
@@ -357,14 +358,14 @@ class MainVideoPlayerWindow(QMainWindow):
         if self.media_player is None:
             return
 
+        # Update the UI Slider to match the current video playback value
         self.ui.slider_progress.blockSignals(True)
         self.ui.slider_progress.setValue(
-            self.media_player.get_position() * 10000
+            self.media_player.get_position() * 10000.0
         )
         #print(self.media_player.get_position() * 10000)
 
         self.update_video_file_play_labels()
-
 
         self.ui.slider_progress.blockSignals(False)
 
@@ -372,6 +373,9 @@ class MainVideoPlayerWindow(QMainWindow):
         self.ui.doubleSpinBoxPlaybackSpeed.setValue(self.media_player.get_rate())
         self.ui.doubleSpinBoxPlaybackSpeed.blockSignals(False)
 
+        currPos = self.media_player.get_position()
+        self.video_playback_position_updated.emit(currPos)
+        
         # When the video finishes
         if self.media_started_playing and \
            self.media_player.get_media().get_state() == vlc.State.Ended:
