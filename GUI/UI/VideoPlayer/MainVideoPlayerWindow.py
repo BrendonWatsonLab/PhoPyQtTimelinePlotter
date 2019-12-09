@@ -88,8 +88,9 @@ class MainVideoPlayerWindow(QMainWindow):
     close_signal = pyqtSignal() # Called when the window is closing. 
 
     def __init__(self, parent=None):
-        QMainWindow.__init__(self, parent)
-        self.ui = uic.loadUi("GUI/UI/VideoPlayer/MainVideoPlayerWindow.ui")
+        # QMainWindow.__init__(self, parent)
+        super().__init__(parent=parent)
+        self.ui = uic.loadUi("GUI/UI/VideoPlayer/MainVideoPlayerWindow.ui", self)
 
         self.timestamp_filename = None
         self.video_filename = None
@@ -279,6 +280,7 @@ class MainVideoPlayerWindow(QMainWindow):
 
     def on_close(self):
         """ Perform on close stuff here """
+        print("MainVideoPlayerWindow.on_close()!")
         # self.timer.stop() # Stop the timer
         # self.media_player.stop() # Stop the playing media
         # self.movieLink = None
