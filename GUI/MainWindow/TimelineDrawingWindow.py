@@ -32,6 +32,7 @@ from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_AnnotationComments impo
 # from app.database.SqliteEventsDatabase import load_video_events_from_database
 from app.database.SqlAlchemyDatabase import load_annotation_events_from_database, save_annotation_events_to_database, create_TimestampedAnnotation
 
+from GUI.UI.VideoPlayer.VideoPlayerWidget import VideoPlayerWidget
 from GUI.UI.VideoPlayer.MainVideoPlayerWindow import *
 from GUI.SetupWindow.SetupWindow import *
 

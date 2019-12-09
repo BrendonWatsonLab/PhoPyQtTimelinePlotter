@@ -5,6 +5,7 @@ from datetime import datetime, timezone, timedelta
 from PyQt5.QtWidgets import QFrame
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize
 
+from GUI.UI.VideoPlayer.VideoPlayerWidget import VideoPlayerWidget
 
 """
 The DataMovieLinkInfo class serves as an intermediate between the data window and the video window. It controls the signals between the two.
