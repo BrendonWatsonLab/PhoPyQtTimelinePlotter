@@ -1220,7 +1220,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         # Deselect the video in the timeline:
         for aVideoTrackIndex in range(0, len(self.videoFileTrackWidgets)):
             currVideoTrackWidget = self.videoFileTrackWidgets[aVideoTrackIndex]
-            # currVideoTrackWidget.set_active_filter(self.totalStartTime, self.totalEndTime)
+            currVideoTrackWidget.clear_now_playing() 
             currVideoTrackWidget.deselect_all()
             currVideoTrackWidget.update()
 
