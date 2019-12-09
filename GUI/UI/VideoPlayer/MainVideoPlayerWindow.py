@@ -281,9 +281,9 @@ class MainVideoPlayerWindow(QMainWindow):
     def on_close(self):
         """ Perform on close stuff here """
         print("MainVideoPlayerWindow.on_close()!")
-        # self.timer.stop() # Stop the timer
-        # self.media_player.stop() # Stop the playing media
-        # self.movieLink = None
+        self.timer.stop() # Stop the timer
+        self.media_player.stop() # Stop the playing media
+        self.movieLink = None
         self.close_signal.emit()
 
 
