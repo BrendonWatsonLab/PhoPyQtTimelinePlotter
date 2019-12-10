@@ -57,7 +57,17 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
         self.reset_selected()
         
 
-    
+    # Returns the currently selected partition index or None if none are selected
+    def get_selected_event_indicies(self):
+        return self.selected_duration_object_indicies
+        
+    # Returns the currently selected partition object or None if none are selected
+    def get_selected_duration_objects(self):
+        prevSelectedItemIndicies = self.get_selected_event_indicies()
+        return [self.durationObjects[anObjIndex] for anObjIndex in prevSelectedItemIndicies]
+
+
+
     # Returns the currently selected partition index or None if none are selected
     def get_selected_event_index(self):
         if (len(self.selected_duration_object_indicies) > 0):
