@@ -15,7 +15,8 @@ from numpy import load
 from GUI.UI.TickedTimelineDrawingBaseWidget import TickProperties, TickedTimelineDrawingBaseWidget
 
 __textColor__ = QColor(187, 187, 187)
-__font__ = QFont('Decorative', 10)
+__font__ = QFont('Decorative', 11)
+__minor_font__ = QFont('Decorative', 8)
 
 class QTimeLine(TickedTimelineDrawingBaseWidget):
 
@@ -23,33 +24,56 @@ class QTimeLine(TickedTimelineDrawingBaseWidget):
         super(QTimeLine, self).__init__(totalStartTime, totalEndTime, totalDuration, duration, parent=parent)
 
         # Set variables
+
+
+        # Text Label Options:
         self.textColor = __textColor__
         self.font = __font__
+        self.minor_font = __minor_font__
+
+        self.textLabelWidth = 100.0
+        self.halfTextLabelWidth = float(self.textLabelWidth) / 2.0
+
+        self.majorTextVerticalOffset = 0.0
+        self.minorTextVerticalOffset = 10.0
 
     #     self.initUI()
     #
     # def initUI(self):
     #     self.setGeometry(300, 300, self.length, 200)
 
+    # Draw the date labels:
+    def drawTextLabels(self, painter):
+
+        # Major markers (day markers)
+        painter.setPen(self.textColor)
+        painter.setFont(self.font)
+        for aStaticMarkerData in self.referenceManager.get_static_major_marker_data():
+            item_x_offset = self.referenceManager.compute_x_offset_from_datetime(self.width(), aStaticMarkerData.time)
+            painter.drawText(item_x_offset - self.halfTextLabelWidth, self.majorTextVerticalOffset, self.textLabelWidth, 100, Qt.AlignHCenter, self.get_start_of_day_time_string(aStaticMarkerData.time))
+
+        # Minor markers (hour markers)
+        painter.setFont(self.minor_font)
+        for aStaticMarkerData in self.referenceManager.get_static_minor_marker_data():
+            item_x_offset = self.referenceManager.compute_x_offset_from_datetime(self.width(), aStaticMarkerData.time)
+            painter.drawText(item_x_offset - self.halfTextLabelWidth, self.minorTextVerticalOffset, self.textLabelWidth, 100, Qt.AlignHCenter, self.get_hours_of_day_only_time_string(aStaticMarkerData.time))
+
+
+    # Draw bottom horizontal baseline line
+    def drawHorizontalBaseLine(self, painter):
+        painter.setPen(QPen(self.activeColor, 5, Qt.SolidLine))
+        painter.drawLine(0, 40, self.width(), 40)
 
     def paintEvent(self, event):
         qp = QPainter()
         qp.begin(self)
-        qp.setPen(self.textColor)
-        qp.setFont(self.font)
         qp.setRenderHint(QPainter.Antialiasing)
-        w = 0
-        # Draw time
-        scale = self.getScale()
 
-        # Draws text every fixed number of pixels
-        while w <= self.width():
-            qp.drawText(w - 50, 0, 100, 100, Qt.AlignHCenter, self.get_time_string(w * scale))
-            w += 100
+        # Draw the date labels:
+        self.drawTextLabels(qp)
 
         # Draw bottom horizontal baseline line
-        qp.setPen(QPen(self.activeColor, 5, Qt.SolidLine))
-        qp.drawLine(0, 40, self.width(), 40)
+        self.drawHorizontalBaseLine(qp)
 
         self.draw_tick_lines(qp)
         self.draw_indicator_lines(qp)
@@ -64,8 +88,6 @@ class QTimeLine(TickedTimelineDrawingBaseWidget):
             line = QLine(QPoint(0, 0), QPoint(0, self.height()))
             poly = QPolygon([QPoint(-10, 20), QPoint(10, 20), QPoint(0, 40)])
 
-        # Draw samples
-        t = 0
         
         # Clear clip path
         path = QPainterPath()

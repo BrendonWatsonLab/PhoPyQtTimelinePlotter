@@ -24,7 +24,9 @@ class ExtendedTracksContainerWidget(TickedTimelineDrawingBaseWidget):
     defaultNowColor = Qt.red
 
     # static lines
-    staticTimeDelininationTickLineProperties = TickProperties(QColor(187, 187, 187, 100), 0.4, Qt.SolidLine)
+    # staticTimeDelininationTickLineProperties = TickProperties(QColor(187, 187, 187, 100), 0.4, Qt.SolidLine)
+    staticTimeDelininationTickLineProperties = TickProperties(QColor(187, 187, 187, 100), 0.8, Qt.SolidLine)
+    staticTimeDelininationMinorTickLineProperties = TickProperties(QColor(187, 187, 187, 80), 0.4, Qt.SolidLine)
 
 
     def __init__(self, totalStartTime, totalEndTime, totalDuration, duration, parent=None, *args, **kwargs):
@@ -47,21 +49,23 @@ class ExtendedTracksContainerWidget(TickedTimelineDrawingBaseWidget):
     #         QtWidgets.QSizePolicy.Expanding
     #     )
 
-        
-
+    
     def draw_tick_lines(self, painter):
         ## Overrides parent's implementation for the larger background view
         # y-positions are offset from the top of the frame
-        point = 0
         painter.setPen(ExtendedTracksContainerWidget.staticTimeDelininationTickLineProperties.get_pen())
-        # painter.drawLine(0, 40, self.width(), self.height())
-        while point <= self.width():
-            if point % 30 != 0:
-                painter.drawLine(3 * point, 40, 3 * point, self.height())
-            else:
-                painter.drawLine(3 * point, 40, 3 * point, self.height())
-            point += 10
 
+        # Major markers (day markers)
+        for aStaticMarkerData in self.referenceManager.get_static_major_marker_data():
+            item_x_offset = self.referenceManager.compute_x_offset_from_datetime(self.width(), aStaticMarkerData.time)
+            painter.drawLine(item_x_offset, 0, item_x_offset, self.height())
+
+        painter.setPen(ExtendedTracksContainerWidget.staticTimeDelininationMinorTickLineProperties.get_pen())
+
+        # Minor Markers
+        for aStaticMarkerData in self.referenceManager.get_static_minor_marker_data():
+            item_x_offset = self.referenceManager.compute_x_offset_from_datetime(self.width(), aStaticMarkerData.time)
+            painter.drawLine(item_x_offset, 0, item_x_offset, self.height())
 
 
     def paintEvent(self, event):

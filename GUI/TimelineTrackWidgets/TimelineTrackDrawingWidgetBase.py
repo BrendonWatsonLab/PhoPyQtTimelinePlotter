@@ -7,7 +7,7 @@ import numpy as np
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget,QTableWidgetItem, QWidget
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPalette, QLinearGradient
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
+from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
 from enum import Enum
 
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWidget
@@ -66,6 +66,10 @@ class TimelineTrackDrawingWidgetBase(FixedTimelineContentsWidthMixin, AbstractDa
             self.mouseReleaseEvent = self.on_button_released
             self.mouseMoveEvent = self.on_mouse_moved
 
+
+    def get_trackID(self):
+        return self.trackID
+        
     def set_track_title_label(self, title):
         self.trackLabelText = title
 
@@ -98,7 +102,6 @@ class TimelineTrackDrawingWidgetBase(FixedTimelineContentsWidthMixin, AbstractDa
             out_gradient.setColorAt(stop, QColor(color))
 
         return out_gradient
-
 
     def is_track_emphasized(self):
         return self.trackInteractionState.is_emphasized()

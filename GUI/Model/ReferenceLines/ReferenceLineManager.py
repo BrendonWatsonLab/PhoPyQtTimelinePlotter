@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 # ReferenceLineManager.py
 import sys
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, time
+import time as timen
 import queue
 import numpy as np
 
@@ -52,19 +53,26 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
         self.totalDuration = self.get_total_duration()
         self.drawWidth = drawWidth
 
+
+        self.minorMarkersHoursSpacing = 4
+
         # self.config = ReferenceMarkerManagerConfiguration(parent=self)
         # self.trackConfig.cacheUpdated.connect(self.on_reloadModelFromConfigCache)
         # self.markerRecordsDict = dict()
         # self.markerViewsDict = dict()
         self.markersDict = dict()
         self.needs_positions_update = True
-        self.staticMarkerData = []
+
+        self.staticDaysMarkerData = []
+        self.staticMinorMarkerData = []
+
         # RepresentedMarkerTime
         self.activeMarkersWindow = None
         self.used_mark_stack = []
         self.used_mark_extended_metadata_stack = []
 
         self.bulk_add_reference_makers(num_markers)
+        self.bulk_add_static_marker_data()
 
         
     def get_scale(self):
@@ -73,26 +81,100 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
     def get_used_markers(self):
         return [self.get_markers()[aKey] for aKey in self.used_mark_stack]
 
+
+
+    # Returns the start of the day
+    @staticmethod
+    def start_of_day(aDate):
+        return datetime.combine(aDate, time())
+
+    # Returns 1 microsecond before the end of the day
+    @staticmethod
+    def end_of_day(aDate):
+        tomorrow = aDate + timedelta(days=1)
+        start_of_tomorrow = ReferenceMarkerManager.start_of_day(tomorrow)
+        return (start_of_tomorrow - timedelta(microseconds=1))
+
+
+    # Returns true if the date is the start of the day
+    @staticmethod
+    def is_start_of_day(aDate):
+        start_of_day = ReferenceMarkerManager.start_of_day(aDate)
+        return (aDate == start_of_day)
+
+    # Returns true if the date is 1 microsecond before the end of the day
+    @staticmethod
+    def is_end_of_day(aDate):
+        end_of_day = ReferenceMarkerManager.end_of_day(aDate)
+        return (aDate == end_of_day)
+
     @staticmethod
     def daterange(start_date, end_date):
         for n in range(int ((end_date - start_date).days)):
-            yield start_date + timedelta(n)
-            
+            yield ReferenceMarkerManager.start_of_day(start_date + timedelta(n))
+
+    # secondsBetween(start_date, end_date): returns the total number of seconds between two datetimes
+    @staticmethod
+    def secondsBetween(start_date, end_date):
+        return timen.mktime(end_date.timetuple()) - timen.mktime(start_date.timetuple()) 
+
+    @staticmethod
+    def minor_markers_daterange(start_date, end_date, hoursBetween):
+        # TODO: Zero seconds
+        hours_only_start_date = datetime(year=start_date.year, month=start_date.month, day=start_date.day, hour=start_date.hour, minute=0, second=0, tzinfo=start_date.tzinfo)
+        hoursDelta = timedelta(hours=hoursBetween)
+
+
+        numSecondsBetween = int(ReferenceMarkerManager.secondsBetween(start_date, end_date))
+        numHoursBetween = int(float(numSecondsBetween)/3600.0)
+
+
+        for n in range(numHoursBetween):
+            potential_marker = hours_only_start_date + timedelta(hours=n)
+            # Only every hoursBetween hours
+            if (potential_marker.hour % hoursBetween == 0):
+                # make sure the potential marker is between the two dates.
+                if (start_date <= potential_marker <= end_date):
+                    # If it's not the start of the day, return it
+                    if (not ReferenceMarkerManager.is_start_of_day(potential_marker)):
+                        yield potential_marker
+
+
+
+        # Need to do proper date math to get hours since .hours doesn't work.
+        # for n in range(int (((end_date - hours_only_start_date).days*24))):
+        #     potential_marker = start_date + (n* hoursDelta)
+        #     # If it's not the start of the day, return it
+        #     if (not ReferenceMarkerManager.is_start_of_day(potential_marker)):
+        #         yield potential_marker  
+
 
     def bulk_add_static_marker_data(self):
-        self.staticMarkerData = []
+        self.staticDaysMarkerData = []
+        self.staticMinorMarkerData = []
         start_date = self.totalStartTime
         end_date = self.totalEndTime
+        # builds major (day) markers
         for single_date in ReferenceMarkerManager.daterange(start_date, end_date):
-            # print(single_date.strftime("%Y-%m-%d"))
             newObj = RepresentedMarkerTime(single_date, self)
             print(newObj.time_string)
-            self.staticMarkerData.append(newObj)
+            self.staticDaysMarkerData.append(newObj)
+
+        # builds minor markers separated by self.minorMarkersHoursSpacing hours
+        for single_date in ReferenceMarkerManager.minor_markers_daterange(start_date, end_date, self.minorMarkersHoursSpacing):
+            newObj = RepresentedMarkerTime(single_date, self)
+            print(newObj.time_string)
+            self.staticMinorMarkerData.append(newObj)
 
 
-    def get_static_marker_data(self):
-        return self.staticMarkerData
         
+
+
+    def get_static_major_marker_data(self):
+        return self.staticDaysMarkerData
+        
+    def get_static_minor_marker_data(self):
+        return self.staticMinorMarkerData
 
     def bulk_add_reference_makers(self, num_markers):
         self.used_mark_stack = []

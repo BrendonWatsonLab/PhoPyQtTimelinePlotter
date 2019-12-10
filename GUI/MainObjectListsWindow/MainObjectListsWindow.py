@@ -64,17 +64,7 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     def initUI(self):
 
         """ View Hierarchy:
-            self.verticalSplitter
-                self.videoPlayerContainer
-                self.timelineScroll: QScrollArea
-                    .widget = self.extendedTracksContainer
-                        extendedTracksContainer -> extendedTracksContainerVboxLayout
-                        self.timelineMasterTrackWidget
-                        self.mainVideoTrack
-                        () All in self.eventTrackWidgets:
-                            self.annotationCommentsTrackWidget
-                            self.partitionsTrackWidget
-                            self.partitionsTwoTrackWidget
+        ...TODO
         """
 
         # Nested helper function to initialize the menu bar
