@@ -1143,6 +1143,12 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         return self.sync_active_viewport_start_to_datetime(start_time)
 
 
+    # Gets the start datetime aligned with the left edge of the viewport
+    def get_viewport_active_start_time(self):
+        track_offset_x = self.percent_offset_to_track_offset(self.get_viewport_percent_scrolled())
+        offset_datetime = self.offset_to_datetime(track_offset_x)
+        return offset_datetime
+
     # Moves the current viewport's position such that it's start position is aligned with a specific start_time
     def sync_active_viewport_start_to_datetime(self, start_time):
         # get the viewport's end time
@@ -1200,8 +1206,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         # Jump to the next available video in the video track
         # TODO: could highlight the video that's being jumped to.
         print("on_jump_next()")
-        track_offset_x = self.percent_offset_to_track_offset(self.get_viewport_percent_scrolled())
-        offset_datetime = self.offset_to_datetime(track_offset_x)
+        offset_datetime = self.get_viewport_active_start_time()
         # next_video_tuple: (index, videoObj) pair
         next_video_tuple = self.videoFileTrackWidgets[0].find_next_event(offset_datetime)
         if next_video_tuple is None:
