@@ -33,7 +33,9 @@ class TickedTimelineDrawingBaseWidget(FixedTimelineContentsWidthMixin, QWidget):
     defaultNowColor = Qt.red
 
     # static lines
-    staticTimeDelininationTickLineProperties = TickProperties(QColor(187, 187, 187), 0.6, Qt.SolidLine)
+    staticTimeDelininationTickLineProperties = TickProperties(QColor(187, 187, 187), 2.6, Qt.SolidLine)
+    staticTimeDelininationMinorTickLineProperties = TickProperties(QColor(187, 187, 187), 0.6, Qt.SolidLine)
+
 
     # dynamic (moving) lines
     videoPlaybackLineProperties = TickProperties(Qt.red, 1.0, Qt.SolidLine)
@@ -79,17 +81,31 @@ class TickedTimelineDrawingBaseWidget(FixedTimelineContentsWidthMixin, QWidget):
 
     def draw_tick_lines(self, painter):
         # Draw dash lines
-        point = 0
+        # point = 0
         painter.setPen(TickedTimelineDrawingBaseWidget.staticTimeDelininationTickLineProperties.get_pen())
         # draw a horizontal line (Currently draws the line a fixed distance in pixels apart. The labels are only added in qtimeline)
         
         painter.drawLine(0, 40, self.width(), 40)
-        while point <= self.width():
-            if point % 30 != 0:
-                painter.drawLine(3 * point, 40, 3 * point, 30)
-            else:
-                painter.drawLine(3 * point, 40, 3 * point, 20)
-            point += 10
+
+        # Major markers (day markers)
+        for aStaticMarkerData in self.referenceManager.get_static_major_marker_data():
+            item_x_offset = self.referenceManager.compute_x_offset_from_datetime(self.width(), aStaticMarkerData.time)
+            painter.drawLine(item_x_offset, 40, item_x_offset, 20)
+
+        painter.setPen(TickedTimelineDrawingBaseWidget.staticTimeDelininationMinorTickLineProperties.get_pen())
+
+        # Minor Markers
+        for aStaticMarkerData in self.referenceManager.get_static_minor_marker_data():
+            item_x_offset = self.referenceManager.compute_x_offset_from_datetime(self.width(), aStaticMarkerData.time)
+            painter.drawLine(item_x_offset, 40, item_x_offset, 30)
+
+
+        # while point <= self.width():
+        #     if point % 30 != 0:
+        #         painter.drawLine(3 * point, 40, 3 * point, 30)
+        #     else:
+        #         painter.drawLine(3 * point, 40, 3 * point, 20)
+        #     point += 10
 
     # Draws the tick marks and the indicator lines
     def draw_indicator_lines(self, painter):
