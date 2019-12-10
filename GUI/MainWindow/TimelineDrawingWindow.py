@@ -983,8 +983,6 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
     def set_active_viewport_duration(self, desiredDuration):
         self.set_new_desired_viewport_duration(desiredDuration)
         return self.activeScaleMultiplier
-        # desiredPercent = desiredDuration / self.totalDuration
-        # return self.set_active_viewport_duration_percent_viewport_total(desiredPercent)
 
     """ STATICMETHOD: compute_activeScaleMultiplier_from_desiredViewportDuration(currentViewportWidth, totalTimelineDuration, desiredViewportDisplayDuration)
     Given: a desired duration to display in the viewport
