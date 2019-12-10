@@ -131,11 +131,13 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
 
         for n in range(numHoursBetween):
             potential_marker = hours_only_start_date + timedelta(hours=n)
-            # make sure the potential marker is between the two dates.
-            if (start_date <= potential_marker <= end_date):
-                # If it's not the start of the day, return it
-                if (not ReferenceMarkerManager.is_start_of_day(potential_marker)):
-                    yield potential_marker
+            # Only every hoursBetween hours
+            if (potential_marker.hour % hoursBetween == 0):
+                # make sure the potential marker is between the two dates.
+                if (start_date <= potential_marker <= end_date):
+                    # If it's not the start of the day, return it
+                    if (not ReferenceMarkerManager.is_start_of_day(potential_marker)):
+                        yield potential_marker
 
 
 
