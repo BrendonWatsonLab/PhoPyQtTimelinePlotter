@@ -8,7 +8,7 @@ from enum import Enum
 
 from PyQt5 import QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QGridLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea
-from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QAction, qApp, QApplication
+from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QAction, qApp, QApplication, QAbstractSlider
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
@@ -250,7 +250,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         self.minimumVideoTrackHeight = 50
         # self.minimumVideoTrackHeight = 25
 
-        self.minimumEventTrackHeight = 25
+        self.minimumEventTrackHeight = 50
 
 
         self.initUI()
@@ -604,6 +604,8 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             self.timelineScroll.setWidgetResizable(True)
             # self.timelineScroll.setWidgetResizable(False)
             self.timelineScroll.setMouseTracking(True)
+            self.timelineScroll.horizontalScrollBar().valueChanged.connect(self.on_viewport_slider_changd)
+            # self.timelineScroll.setBackgroundRole(QPalette.Dark)
             # self.timelineScroll.setFixedHeight(400)
             # self.timelineScroll.setFixedWidth(self.width())
 
@@ -634,7 +636,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             self.verticalSplitter.setMouseTracking(True)
 
             # Size the widgets
-            desiredInitialTopVideoPlayerContainerHeight = 30
+            desiredInitialTopVideoPlayerContainerHeight = 0
             desiredInitialTimelineViewportContainerHeight = TimelineDrawingWindow.DesiredInitialWindowHeight - desiredInitialTopVideoPlayerContainerHeight
             self.verticalSplitter.setSizes([desiredInitialTopVideoPlayerContainerHeight, desiredInitialTimelineViewportContainerHeight])
 
@@ -657,7 +659,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
         # Video Player Container: the container that holds the video player
         self.videoPlayerContainer = QtWidgets.QWidget()
-        # self.videoPlayerContainer.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
+        self.videoPlayerContainer.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
         self.videoPlayerContainer.setMouseTracking(True)
         ## TODO: Add the video player to the container.
         ## TODO: Needs a layout
@@ -1105,7 +1107,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
     def refreshUI_viewport_info_labels(self):
         self.ui.lblActiveViewportDuration.setText(str(self.get_active_viewport_duration()))
-        self.ui.lblActiveViewportOffsetAbsolute.setText(str(self.get_viewport_percent_scrolled()))
+        self.ui.lblActiveViewportOffsetAbsolute.setText(str("{0:.6f}".format(round(self.get_viewport_percent_scrolled(),6))))
 
     def resize_children_on_zoom(self):
         newMinWidth = self.get_minimum_track_width()
@@ -1965,7 +1967,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             proposedViewportDuration = self.compute_current_desiredViewportDuration_from_activeScaleMultiplier(self.activeScaleMultiplier)
             if (force_update or (proposedViewportDuration != oldViewportDuration)):
                 self.activeViewportDuration = proposedViewportDuration
-                print("TimelineDrawingWindow.updateViewportZoomFactorsUsingCurrentAdjustmentMode(): new value of activeScaleMultiplier {0} -- updated activeViewportDuration from {1} to {2}.".format(str(self.activeScaleMultiplier), str(oldViewportDuration), str(self.activeViewportDuration) ))
+                # print("TimelineDrawingWindow.updateViewportZoomFactorsUsingCurrentAdjustmentMode(): new value of activeScaleMultiplier {0} -- updated activeViewportDuration from {1} to {2}.".format(str(self.activeScaleMultiplier), str(oldViewportDuration), str(self.activeViewportDuration) ))
                 didUpdateZoomFactor = True
 
             pass
@@ -1974,7 +1976,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             proposedScaleMultiplier = self.compute_current_activeScaleMultiplier_from_desiredViewportDuration(self.activeViewportDuration)
             if (force_update or (proposedScaleMultiplier != oldScaleMultiplier)):
                 self.activeScaleMultiplier = proposedScaleMultiplier
-                print("TimelineDrawingWindow.updateViewportZoomFactorsUsingCurrentAdjustmentMode(): new value of activeViewportDuration {0} -- updated activeScaleMultiplier from {1} to {2}.".format(str(self.activeViewportDuration), str(oldScaleMultiplier), str(self.activeScaleMultiplier) ))
+                # print("TimelineDrawingWindow.updateViewportZoomFactorsUsingCurrentAdjustmentMode(): new value of activeViewportDuration {0} -- updated activeScaleMultiplier from {1} to {2}.".format(str(self.activeViewportDuration), str(oldScaleMultiplier), str(self.activeScaleMultiplier) ))
                 didUpdateZoomFactor = True
             pass
         else:
@@ -2004,7 +2006,6 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         print("TimelineDrawingWindow.on_active_zoom_changed(...)")
         self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
         # Update the UI to reflect the changes
-        self.refreshUI_viewport_zoom_controls()
         self.on_active_viewport_changed()
         self.resize_children_on_zoom()
         self.refresh_child_widget_display()
@@ -2017,6 +2018,11 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         self.refreshUI_viewport_zoom_controls()
         self.refreshUI_viewport_info_labels()
 
+    @pyqtSlot(int)
+    def on_viewport_slider_changd(self, newValue):
+        print("TimelineDrawingWindow.on_viewport_slider_changd({0})".format(str(newValue)))
+        self.refreshUI_viewport_info_labels()
+        return
 
     @pyqtSlot(datetime, datetime, timedelta)
     def on_active_global_timeline_times_changed(self, totalStartTime, totalEndTime, totalDuration):
