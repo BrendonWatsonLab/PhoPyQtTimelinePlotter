@@ -360,10 +360,10 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
                 currTrackConfig = VideoTrackConfiguration(currTrackIndex, "B{0:02}".format(currTrackBBID), "Originals", True, False, [currTrackBBID+1], None, None, None, self)
                 self.trackConfigurationsDict[currTrackIndex] = currTrackConfig
-                self.mainVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
-                self.mainVideoTrack.set_track_title_label('BBID: {0}, originals'.format(currTrackBBID))
+                mainVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+                mainVideoTrack.set_track_title_label('BBID: {0}, originals'.format(currTrackBBID))
                 currGroup.set_videoTrackIndex(len(self.videoFileTrackWidgets))
-                self.videoFileTrackWidgets.append(self.mainVideoTrack)
+                self.videoFileTrackWidgets.append(mainVideoTrack)
                 self.trackID_to_GroupIndexMap[currTrackIndex] = index
                 currTrackIndex = currTrackIndex + 1
 
@@ -1293,12 +1293,12 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
                 return False
 
             self.videoPlayerWindow.movieLink = DataMovieLinkInfo(self.pendingCreateVideoPlayerSelectedItem, self.videoPlayerWindow, self, parent=self)
-
-            if self.wantsCreateNewVideoPlayerWindowOnClose:
-                # Set the property false after the window has been created
-                self.wantsCreateNewVideoPlayerWindowOnClose = False
-                self.pendingCreateVideoPlayerSelectedItem = None
-                self.pendingCreateVideoPlayerURL = None
+            
+            # if self.wantsCreateNewVideoPlayerWindowOnClose:
+            # Set the property false after the window has been created
+            self.wantsCreateNewVideoPlayerWindowOnClose = False
+            self.pendingCreateVideoPlayerSelectedItem = None
+            self.pendingCreateVideoPlayerURL = None
 
 
             return True
@@ -1370,6 +1370,21 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             self.databaseBrowserUtilityWindow = ExampleDatabaseTableWindow(self.database_connection)
             self.databaseBrowserUtilityWindow.show()
 
+
+
+    # Selection and such:
+    def get_selected_video_items(self):
+        outEventsDict = dict()
+
+        for aVideoTrack in self.videoFileTrackWidgets:
+            currTrackID = aVideoTrack.get_trackID()
+            # currSelectedVideoEventIndicies = aVideoTrack.get_selected_event_indicies()
+            currSelectedVideoEventObjects = aVideoTrack.get_selected_duration_objects()
+            outEventsDict[currTrackID] = currSelectedVideoEventObjects
+        
+        return outEventsDict
+
+
     # @pyqtSlot(int, int)
     # Occurs when the user selects an object (durationObject) in the child video track with the mouse
     def handle_child_selection_event(self, trackIndex, trackObjectIndex):
@@ -1410,12 +1425,12 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
                     currVideoTrackWidget.deselect_all()
                     currVideoTrackWidget.update()
 
-            if currSelectedObject:
+            if currSelectedObject is not None:
                 selected_video_path = currSelectedObject.get_video_url()
-                print(selected_video_path)
-                currActiveVideoTrack.set_now_playing(trackObjectIndex)
-
+                # print(selected_video_path)
+                
                 if currSelectedObject.is_video_url_accessible():
+                    currActiveVideoTrack.set_now_playing(trackObjectIndex)
                     self.pendingCreateVideoPlayerSelectedItem = currSelectedObject
                     self.try_set_video_player_window_url(str(selected_video_path))
                     
