@@ -37,10 +37,14 @@ class QTimeLine(TickedTimelineDrawingBaseWidget):
         # Draw time
         scale = self.getScale()
 
-        # Draws text every fixed number of pixels
-        while w <= self.width():
-            painter.drawText(w - 50, 0, 100, 100, Qt.AlignHCenter, self.get_time_string(w * scale))
-            w += 100
+        textLabelWidth = 100.0
+        halfTextLabelWidth = float(textLabelWidth) / 2.0
+
+        # Major markers (day markers)
+        for aStaticMarkerData in self.referenceManager.get_static_major_marker_data():
+            item_x_offset = self.referenceManager.compute_x_offset_from_datetime(self.width(), aStaticMarkerData.time)
+            painter.drawText(item_x_offset - halfTextLabelWidth, 0, textLabelWidth, 100, Qt.AlignHCenter, self.get_time_string(item_x_offset * scale))
+
 
     # Draw bottom horizontal baseline line
     def drawHorizontalBaseLine(self, painter):
