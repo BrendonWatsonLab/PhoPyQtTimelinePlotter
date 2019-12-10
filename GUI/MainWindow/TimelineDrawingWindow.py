@@ -67,6 +67,17 @@ class ViewportScaleAdjustmentOptions(Enum):
         MaintainDesiredViewportDisplayDuration = 2 #  keeps the self.activeViewportDuration the same, and adjusts the self.activeScaleMultiplier to match upon window resize
 
 
+class VideoTrackGroupSettings:
+    def __init__(self, wantsLabeledVideoTrack=False, wantsAnnotationsTrack=True, wantsPartitionTrack=False):
+        self.wantsLabeledVideoTrack = wantsLabeledVideoTrack
+        self.wantsAnnotationsTrack = wantsAnnotationsTrack
+        self.wantsPartitionTrack = wantsPartitionTrack
+
+    # wantsLabeledVideoTrack, wantsAnnotationsTrack, wantsPartitionTrack = self.get_helper_track_preferences()
+    def get_helper_track_preferences(self):
+        return (self.wantsLabeledVideoTrack, self.wantsAnnotationsTrack, self.wantsPartitionTrack)
+
+
 """
 self.activeScaleMultiplier: this multipler determines how many times longer the contents of the scrollable viewport are than the viewport width itself.
 
@@ -115,10 +126,11 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
     
     minimumTimelineTrackWidthChanged = pyqtSignal(float)
 
-    debug_IncludeTaggedVideoTracks = False
+    # debug_IncludeTaggedVideoTracks = False
     debug_IncludeEarlyTracks = False
 
     debug_desiredVideoTracks = [0, 1, 5, 6, 8, 9]
+    debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(False, True, False), VideoTrackGroupSettings(False, True, False), VideoTrackGroupSettings(False, True, False), VideoTrackGroupSettings(False, True, False), VideoTrackGroupSettings(False, True, False), VideoTrackGroupSettings(False, True, False)]
     # debug_desiredVideoTracks = [5, 6, 8, 9]
 
     def __init__(self, database_connection, totalStartTime, totalEndTime):
@@ -129,12 +141,15 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
         self.partitionTrackContextsArray = [TrackContextConfig('Behavior'), TrackContextConfig('Unknown')]
 
-        self.trackConfigurations = []
+        # self.trackConfigurations = []
+        self.trackConfigurationsDict = dict()
+        # self.trackID_ConfigurationsMap = dict() # a map from trackID to a specific configuration
         self.videoInfoObjects = []
 
         # Track Options:
         # loadedVideoTrackIndicies: the video tracks to initially add to the track list
         self.loadedVideoTrackIndicies = TimelineDrawingWindow.debug_desiredVideoTracks
+        self.loadedVideoHelperTrackPreferences = TimelineDrawingWindow.debug_desiredVideoTrackGroupSettings
 
         self.viewportAdjustmentMode = TimelineDrawingWindow.ViewportAdjustmentMode        
         self.totalStartTime = totalStartTime
@@ -287,54 +302,71 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             # Video Tracks
             ## TODO: The video tracks must set:
             self.videoFileTrackWidgets = []
+            self.eventTrackWidgets = []
 
             # B00
             currTrackIndex = 0
 
             # Loop through and add all the tracks
-            for currTrackBBID in self.loadedVideoTrackIndicies:
+            for (index, currTrackBBID) in enumerate(self.loadedVideoTrackIndicies):
                 currTrackConfig = VideoTrackConfiguration(currTrackIndex, "B{0:02}".format(currTrackBBID), "Originals", True, False, [currTrackBBID+1], None, None, None, self)
-                self.trackConfigurations.append(currTrackConfig)
+                self.trackConfigurationsDict[currTrackIndex] = currTrackConfig
                 self.mainVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
                 self.mainVideoTrack.set_track_title_label('BBID: {0}, originals'.format(currTrackBBID))
                 self.videoFileTrackWidgets.append(self.mainVideoTrack)
                 currTrackIndex = currTrackIndex + 1
 
+                currHelperTracksOptions = self.loadedVideoHelperTrackPreferences[index]
+                wantsLabeledVideoTrack, wantsAnnotationsTrack, wantsPartitionTrack = currHelperTracksOptions.get_helper_track_preferences()
                 # Add the tagged video track for the same box
-                if TimelineDrawingWindow.debug_IncludeTaggedVideoTracks:
+                if wantsLabeledVideoTrack:
                     currTrackConfig = VideoTrackConfiguration(currTrackIndex, "B{0:02}Labeled".format(currTrackBBID), "Labeled", False, True, [currTrackBBID+1], None, None, None, self)
-                    self.trackConfigurations.append(currTrackConfig)
+                    self.trackConfigurationsDict[currTrackIndex] = currTrackConfig
                     self.labeledVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
                     self.labeledVideoTrack.set_track_title_label('BBID: {0}, labeled'.format(currTrackBBID))
                     self.videoFileTrackWidgets.append(self.labeledVideoTrack)
                     currTrackIndex = currTrackIndex + 1
 
+                if wantsAnnotationsTrack:
+                    # Annotation Comments track:
+                    currTrackConfig = TrackConfigurationBase(currTrackIndex, "A_B{0:02}Notes".format(currTrackBBID), "Notes", TimestampedAnnotation, [currTrackBBID+1], None, None, None, self)
+                    self.trackConfigurationsDict[currTrackIndex] = currTrackConfig
+                    self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+                    self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
+                    currTrackIndex = currTrackIndex + 1
+
+                if wantsPartitionTrack:
+                    # Partition tracks:
+                    currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", CategoricalDurationLabel, [currTrackBBID+1], None, None, None, self)
+                    self.trackConfigurationsDict[currTrackIndex] = currTrackConfig
+                    self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[0])
+                    self.eventTrackWidgets.append(self.partitionsTrackWidget)
+                    currTrackIndex = currTrackIndex + 1
 
             # Other Tracks:
-            self.eventTrackWidgets = []
 
             # Set the ID for the configs that will be used to annotate/partition the timeline (the active box)
-            currTrackBBID = 1
+            # currTrackBBID = 1
 
-            # Annotation Comments track:
-            currTrackConfig = TrackConfigurationBase(currTrackIndex, "A_B{0:02}Notes".format(currTrackBBID), "Notes", TimestampedAnnotation, [currTrackBBID+1], None, None, None, self)
-            self.trackConfigurations.append(currTrackConfig)
-            self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
-            self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
-            currTrackIndex = currTrackIndex + 1
+            # # Annotation Comments track:
+            # currTrackConfig = TrackConfigurationBase(currTrackIndex, "A_B{0:02}Notes".format(currTrackBBID), "Notes", TimestampedAnnotation, [currTrackBBID+1], None, None, None, self)
+            # self.trackConfigurations.append(currTrackConfig)
+            # self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+            # self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
+            # currTrackIndex = currTrackIndex + 1
 
-            # Partition tracks:
-            currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", CategoricalDurationLabel, [currTrackBBID+1], None, None, None, self)
-            self.trackConfigurations.append(currTrackConfig)
-            self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[0])
-            self.eventTrackWidgets.append(self.partitionsTrackWidget)
-            currTrackIndex = currTrackIndex + 1
+            # # Partition tracks:
+            # currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", CategoricalDurationLabel, [currTrackBBID+1], None, None, None, self)
+            # self.trackConfigurations.append(currTrackConfig)
+            # self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[0])
+            # self.eventTrackWidgets.append(self.partitionsTrackWidget)
+            # currTrackIndex = currTrackIndex + 1
 
-            currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", CategoricalDurationLabel, [currTrackBBID+1], None, None, None, self)
-            self.trackConfigurations.append(currTrackConfig)
-            self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[1])
-            self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
-            currTrackIndex = currTrackIndex + 1
+            # currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", CategoricalDurationLabel, [currTrackBBID+1], None, None, None, self)
+            # self.trackConfigurations.append(currTrackConfig)
+            # self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[1])
+            # self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
+            # currTrackIndex = currTrackIndex + 1
 
             # Build the bottomPanelWidget
             self.extendedTracksContainer = ExtendedTracksContainerWidget(self.totalStartTime, self.totalEndTime, self.totalDuration, masterTimelineDurationSeconds, parent=self)
@@ -397,7 +429,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
                     currHeaderIncludedTrackLayout.setContentsMargins(0,0,0,0)
                     currHeaderIncludedContainer = QWidget(self)
 
-                    currHeaderTrackConfig = self.trackConfigurations[i]
+                    currHeaderTrackConfig = self.trackConfigurationsDict[currVideoTrackWidget.get_trackID()]
                     currHeaderWidget = TimelineHeaderWidget(currHeaderTrackConfig, parent=self)
                     currHeaderWidget.setMinimumSize(50, self.minimumVideoTrackHeight)
                     currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -464,7 +496,8 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
                     currHeaderIncludedTrackLayout.setContentsMargins(0,0,0,0)
                     currHeaderIncludedContainer = QWidget(self)
 
-                    currHeaderTrackConfig = self.trackConfigurations[currTrackConfigurationIndex] # use the absolute index into this config array
+                    currHeaderTrackConfig = self.trackConfigurationsDict[currWidget.get_trackID()]
+                    
                     currHeaderWidget = TimelineHeaderWidget(currHeaderTrackConfig, parent=self)
                     currHeaderWidget.setMinimumSize(50, self.minimumVideoTrackHeight)
                     currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)

@@ -66,6 +66,10 @@ class TimelineTrackDrawingWidgetBase(FixedTimelineContentsWidthMixin, AbstractDa
             self.mouseReleaseEvent = self.on_button_released
             self.mouseMoveEvent = self.on_mouse_moved
 
+
+    def get_trackID(self):
+        return self.trackID
+        
     def set_track_title_label(self, title):
         self.trackLabelText = title
 
