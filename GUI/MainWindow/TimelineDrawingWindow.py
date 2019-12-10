@@ -78,6 +78,46 @@ class VideoTrackGroupSettings:
         return (self.wantsLabeledVideoTrack, self.wantsAnnotationsTrack, self.wantsPartitionTrack)
 
 
+class VideoTrackGroup:
+    def __init__(self, groupID, videoTrackIndex=None, labeledVideoTrackIndex=None, annotationsTrackIndex=None, partitionsTrackIndex=None):
+        self.groupID = groupID
+        self.videoTrackIndex = videoTrackIndex
+        self.labeledVideoTrackIndex = labeledVideoTrackIndex
+        self.annotationsTrackIndex = annotationsTrackIndex
+        self.partitionsTrackIndex = partitionsTrackIndex
+
+    def get_group_id(self):
+        return self.groupID
+
+    def get_videoTrackIndex(self):
+        return self.videoTrackIndex
+
+    def get_labeledVideoTrackIndex(self):
+        return self.labeledVideoTrackIndex
+
+    def get_annotationsTrackIndex(self):
+        return self.annotationsTrackIndex
+
+    def get_partitionsTrackIndex(self):
+        return self.partitionsTrackIndex
+
+    def set_videoTrackIndex(self, newValue):
+        self.videoTrackIndex = newValue
+
+    def set_labeledVideoTrackIndex(self, newValue):
+        self.labeledVideoTrackIndex = newValue
+
+    def set_annotationsTrackIndex(self, newValue):
+        self.annotationsTrackIndex = newValue
+
+    def set_partitionsTrackIndex(self, newValue):
+        self.partitionsTrackIndex = newValue
+
+
+
+
+
+
 """
 self.activeScaleMultiplier: this multipler determines how many times longer the contents of the scrollable viewport are than the viewport width itself.
 
@@ -150,6 +190,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         # loadedVideoTrackIndicies: the video tracks to initially add to the track list
         self.loadedVideoTrackIndicies = TimelineDrawingWindow.debug_desiredVideoTracks
         self.loadedVideoHelperTrackPreferences = TimelineDrawingWindow.debug_desiredVideoTrackGroupSettings
+        self.trackGroups = []
 
         self.viewportAdjustmentMode = TimelineDrawingWindow.ViewportAdjustmentMode        
         self.totalStartTime = totalStartTime
@@ -303,16 +344,20 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             ## TODO: The video tracks must set:
             self.videoFileTrackWidgets = []
             self.eventTrackWidgets = []
+            self.trackGroups = []
 
             # B00
             currTrackIndex = 0
 
             # Loop through and add all the tracks
             for (index, currTrackBBID) in enumerate(self.loadedVideoTrackIndicies):
+                currGroup = VideoTrackGroup(index)
+
                 currTrackConfig = VideoTrackConfiguration(currTrackIndex, "B{0:02}".format(currTrackBBID), "Originals", True, False, [currTrackBBID+1], None, None, None, self)
                 self.trackConfigurationsDict[currTrackIndex] = currTrackConfig
                 self.mainVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
                 self.mainVideoTrack.set_track_title_label('BBID: {0}, originals'.format(currTrackBBID))
+                currGroup.set_videoTrackIndex(len(self.videoFileTrackWidgets))
                 self.videoFileTrackWidgets.append(self.mainVideoTrack)
                 currTrackIndex = currTrackIndex + 1
 
@@ -324,6 +369,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
                     self.trackConfigurationsDict[currTrackIndex] = currTrackConfig
                     self.labeledVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
                     self.labeledVideoTrack.set_track_title_label('BBID: {0}, labeled'.format(currTrackBBID))
+                    currGroup.set_labeledVideoTrackIndex(len(self.videoFileTrackWidgets))
                     self.videoFileTrackWidgets.append(self.labeledVideoTrack)
                     currTrackIndex = currTrackIndex + 1
 
@@ -332,6 +378,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
                     currTrackConfig = TrackConfigurationBase(currTrackIndex, "A_B{0:02}Notes".format(currTrackBBID), "Notes", TimestampedAnnotation, [currTrackBBID+1], None, None, None, self)
                     self.trackConfigurationsDict[currTrackIndex] = currTrackConfig
                     self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
+                    currGroup.set_annotationsTrackIndex(len(self.eventTrackWidgets))
                     self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
                     currTrackIndex = currTrackIndex + 1
 
@@ -340,33 +387,13 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
                     currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", CategoricalDurationLabel, [currTrackBBID+1], None, None, None, self)
                     self.trackConfigurationsDict[currTrackIndex] = currTrackConfig
                     self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[0])
+                    currGroup.set_partitionsTrackIndex(len(self.eventTrackWidgets))
                     self.eventTrackWidgets.append(self.partitionsTrackWidget)
                     currTrackIndex = currTrackIndex + 1
 
+                self.trackGroups.append(currTrackIndex)
+
             # Other Tracks:
-
-            # Set the ID for the configs that will be used to annotate/partition the timeline (the active box)
-            # currTrackBBID = 1
-
-            # # Annotation Comments track:
-            # currTrackConfig = TrackConfigurationBase(currTrackIndex, "A_B{0:02}Notes".format(currTrackBBID), "Notes", TimestampedAnnotation, [currTrackBBID+1], None, None, None, self)
-            # self.trackConfigurations.append(currTrackConfig)
-            # self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
-            # self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
-            # currTrackIndex = currTrackIndex + 1
-
-            # # Partition tracks:
-            # currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", CategoricalDurationLabel, [currTrackBBID+1], None, None, None, self)
-            # self.trackConfigurations.append(currTrackConfig)
-            # self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[0])
-            # self.eventTrackWidgets.append(self.partitionsTrackWidget)
-            # currTrackIndex = currTrackIndex + 1
-
-            # currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", CategoricalDurationLabel, [currTrackBBID+1], None, None, None, self)
-            # self.trackConfigurations.append(currTrackConfig)
-            # self.partitionsTwoTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[1])
-            # self.eventTrackWidgets.append(self.partitionsTwoTrackWidget)
-            # currTrackIndex = currTrackIndex + 1
 
             # Build the bottomPanelWidget
             self.extendedTracksContainer = ExtendedTracksContainerWidget(self.totalStartTime, self.totalEndTime, self.totalDuration, masterTimelineDurationSeconds, parent=self)
@@ -393,6 +420,132 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             self.timelineMasterTrackWidget.setMinimumSize(minimumWidgetWidth, 50)
             self.timelineMasterTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
+        def initUI_setupVideoTrackWidget(self, currVideoTrackWidget, currTrackConfigurationIndex):
+             # Video track specific setup
+            currVideoTrackWidget.selection_changed.connect(self.handle_child_selection_event)
+            currVideoTrackWidget.hover_changed.connect(self.handle_child_hover_event)
+            currVideoTrackWidget.on_create_marker.connect(self.on_create_playhead_selection)
+            
+            currVideoTrackWidget.setMouseTracking(True)
+            currVideoTrackWidget.shouldDismissSelectionUponMouseButtonRelease = False
+            currVideoTrackWidget.itemSelectionMode = ItemSelectionOptions.SingleSelection
+
+            self.minimumTimelineTrackWidthChanged.connect(currVideoTrackWidget.set_fixed_width)
+            if self.shouldUseTrackHeaders:
+                currHeaderIncludedTrackLayout = QGridLayout(self)
+                currHeaderIncludedTrackLayout.setSpacing(0)
+                currHeaderIncludedTrackLayout.setContentsMargins(0,0,0,0)
+                currHeaderIncludedContainer = QWidget(self)
+
+                currHeaderTrackConfig = self.trackConfigurationsDict[currVideoTrackWidget.get_trackID()]
+                currHeaderWidget = TimelineHeaderWidget(currHeaderTrackConfig, parent=self)
+                currHeaderWidget.setMinimumSize(50, self.minimumVideoTrackHeight)
+                currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+                currHeaderWidget.toggleCollapsed.connect(self.on_track_header_toggle_collapse_activated)
+                currHeaderWidget.showOptions.connect(self.on_track_header_show_options_activated)
+                currHeaderWidget.refresh.connect(self.on_track_header_refresh_activated)
+
+                currHeaderWidget.update_labels_dynamically()
+                self.videoFileTrackWidgetHeaders[currVideoTrackWidget.get_trackID()] = currHeaderWidget
+
+                # Make the floating label as well
+                currFloatingHeader = TimelineFloatingHeaderWidget(currHeaderTrackConfig, parent=self)
+                currFloatingHeader.setMinimumSize(25, (self.minimumVideoTrackHeight / 2.0))
+                currFloatingHeader.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+                currFloatingHeader.update_labels_dynamically()
+
+                currFloatingHeader.findNext.connect(self.on_jump_next)
+                currFloatingHeader.showOptions.connect(self.on_track_header_show_options_activated)
+                currFloatingHeader.refresh.connect(self.on_track_header_refresh_activated)
+
+                self.trackFloatingWidgetHeaders[currVideoTrackWidget.get_trackID()] = currFloatingHeader
+
+                # Set the minimum grid row height
+                currFloatingHeaderGridRowID = currTrackConfigurationIndex + 1
+                self.timelineViewportLayout.setRowMinimumHeight(currFloatingHeaderGridRowID, self.minimumVideoTrackHeight)
+
+
+                currHeaderIncludedTrackLayout.addWidget(currVideoTrackWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
+                currVideoTrackWidget.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
+                currVideoTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+                currHeaderIncludedTrackLayout.addWidget(currHeaderWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
+
+                # Floating header track
+                # currHeaderIncludedTrackLayout.addWidget(currFloatingHeader, 0, 0, Qt.AlignHCenter|Qt.AlignTop)
+
+
+                currHeaderIncludedContainer.setLayout(currHeaderIncludedTrackLayout)
+
+                currHeaderIncludedContainer.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
+                currHeaderIncludedContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+                self.extendedTracksContainerVboxLayout.addWidget(currHeaderIncludedContainer)
+                
+            else:
+                self.extendedTracksContainerVboxLayout.addWidget(currVideoTrackWidget)
+                currVideoTrackWidget.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
+                currVideoTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+
+        def initUI_setupEventTrackWidget(self, currWidget, currTrackConfigurationIndex):
+            self.minimumTimelineTrackWidthChanged.connect(currWidget.set_fixed_width)
+
+            if self.shouldUseTrackHeaders:
+                currHeaderIncludedTrackLayout = QGridLayout(self)
+                currHeaderIncludedTrackLayout.setSpacing(0)
+                currHeaderIncludedTrackLayout.setContentsMargins(0,0,0,0)
+                currHeaderIncludedContainer = QWidget(self)
+
+                currHeaderTrackConfig = self.trackConfigurationsDict[currWidget.get_trackID()]
+                
+                currHeaderWidget = TimelineHeaderWidget(currHeaderTrackConfig, parent=self)
+                currHeaderWidget.setMinimumSize(50, self.minimumVideoTrackHeight)
+                currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+                currHeaderWidget.toggleCollapsed.connect(self.on_track_header_toggle_collapse_activated)
+                currHeaderWidget.showOptions.connect(self.on_track_header_show_options_activated)
+                currHeaderWidget.refresh.connect(self.on_track_header_refresh_activated)
+
+                currHeaderWidget.update_labels_dynamically()
+                self.eventTrackWidgetHeaders[currWidget.get_trackID()] = currHeaderWidget
+
+                # Make the floating label as well
+                currFloatingHeader = TimelineFloatingHeaderWidget(currHeaderTrackConfig, parent=self)
+                currFloatingHeader.setMinimumSize(25, (self.minimumVideoTrackHeight / 2.0))
+                currFloatingHeader.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+                currFloatingHeader.update_labels_dynamically()
+
+                currFloatingHeader.findNext.connect(self.on_jump_next)
+                currFloatingHeader.showOptions.connect(self.on_track_header_show_options_activated)
+                currFloatingHeader.refresh.connect(self.on_track_header_refresh_activated)
+
+                self.trackFloatingWidgetHeaders[currWidget.get_trackID()] = currFloatingHeader
+
+                # Set the minimum grid row height
+                currFloatingHeaderGridRowID = currTrackConfigurationIndex + 1
+                self.timelineViewportLayout.setRowMinimumHeight(currFloatingHeaderGridRowID, self.minimumVideoTrackHeight)
+
+                currHeaderIncludedTrackLayout.addWidget(currWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
+                currWidget.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
+                currWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+                currHeaderIncludedTrackLayout.addWidget(currHeaderWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
+
+                currHeaderIncludedContainer.setLayout(currHeaderIncludedTrackLayout)
+
+                currHeaderIncludedContainer.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
+                currHeaderIncludedContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+                self.extendedTracksContainerVboxLayout.addWidget(currHeaderIncludedContainer)
+
+            else:
+                self.extendedTracksContainerVboxLayout.addWidget(currWidget)
+                currWidget.setMinimumSize(minimumWidgetWidth, 50)
+                currWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+
         def initUI_layout(self):
 
             currTrackConfigurationIndex = 0
@@ -414,73 +567,9 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             for i in range(0, len(self.videoFileTrackWidgets)):
                 currVideoTrackWidget = self.videoFileTrackWidgets[i]
                 # Video track specific setup
-                currVideoTrackWidget.selection_changed.connect(self.handle_child_selection_event)
-                currVideoTrackWidget.hover_changed.connect(self.handle_child_hover_event)
-                currVideoTrackWidget.on_create_marker.connect(self.on_create_playhead_selection)
-                
-                currVideoTrackWidget.setMouseTracking(True)
-                currVideoTrackWidget.shouldDismissSelectionUponMouseButtonRelease = False
-                currVideoTrackWidget.itemSelectionMode = ItemSelectionOptions.SingleSelection
+                initUI_setupVideoTrackWidget(self, currVideoTrackWidget, currTrackConfigurationIndex)
 
-                self.minimumTimelineTrackWidthChanged.connect(currVideoTrackWidget.set_fixed_width)
-                if self.shouldUseTrackHeaders:
-                    currHeaderIncludedTrackLayout = QGridLayout(self)
-                    currHeaderIncludedTrackLayout.setSpacing(0)
-                    currHeaderIncludedTrackLayout.setContentsMargins(0,0,0,0)
-                    currHeaderIncludedContainer = QWidget(self)
-
-                    currHeaderTrackConfig = self.trackConfigurationsDict[currVideoTrackWidget.get_trackID()]
-                    currHeaderWidget = TimelineHeaderWidget(currHeaderTrackConfig, parent=self)
-                    currHeaderWidget.setMinimumSize(50, self.minimumVideoTrackHeight)
-                    currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
-                    currHeaderWidget.toggleCollapsed.connect(self.on_track_header_toggle_collapse_activated)
-                    currHeaderWidget.showOptions.connect(self.on_track_header_show_options_activated)
-                    currHeaderWidget.refresh.connect(self.on_track_header_refresh_activated)
-
-                    currHeaderWidget.update_labels_dynamically()
-                    self.videoFileTrackWidgetHeaders[currVideoTrackWidget.trackID] = currHeaderWidget
-
-                    # Make the floating label as well
-                    currFloatingHeader = TimelineFloatingHeaderWidget(currHeaderTrackConfig, parent=self)
-                    currFloatingHeader.setMinimumSize(25, (self.minimumVideoTrackHeight / 2.0))
-                    currFloatingHeader.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-                    currFloatingHeader.update_labels_dynamically()
-
-                    currFloatingHeader.findNext.connect(self.on_jump_next)
-                    currFloatingHeader.showOptions.connect(self.on_track_header_show_options_activated)
-                    currFloatingHeader.refresh.connect(self.on_track_header_refresh_activated)
-
-                    self.trackFloatingWidgetHeaders[currVideoTrackWidget.trackID] = currFloatingHeader
-
-                    # Set the minimum grid row height
-                    currFloatingHeaderGridRowID = currTrackConfigurationIndex + 1
-                    self.timelineViewportLayout.setRowMinimumHeight(currFloatingHeaderGridRowID, self.minimumVideoTrackHeight)
-
-
-                    currHeaderIncludedTrackLayout.addWidget(currVideoTrackWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
-                    currVideoTrackWidget.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
-                    currVideoTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
-                    currHeaderIncludedTrackLayout.addWidget(currHeaderWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
-
-                    # Floating header track
-                    # currHeaderIncludedTrackLayout.addWidget(currFloatingHeader, 0, 0, Qt.AlignHCenter|Qt.AlignTop)
-
-
-                    currHeaderIncludedContainer.setLayout(currHeaderIncludedTrackLayout)
-
-                    currHeaderIncludedContainer.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
-                    currHeaderIncludedContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
-                    self.extendedTracksContainerVboxLayout.addWidget(currHeaderIncludedContainer)
-                    currTrackConfigurationIndex = currTrackConfigurationIndex + 1
-
-                else:
-                    self.extendedTracksContainerVboxLayout.addWidget(currVideoTrackWidget)
-                    currVideoTrackWidget.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
-                    currVideoTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
+                currTrackConfigurationIndex = currTrackConfigurationIndex + 1
                 # General Layout:
 
             self.eventTrackWidgetHeaders = dict()
@@ -488,62 +577,9 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             # Loop through the eventTrackWidgets and add them
             for i in range(0, len(self.eventTrackWidgets)):
                 currWidget = self.eventTrackWidgets[i]
-                self.minimumTimelineTrackWidthChanged.connect(currWidget.set_fixed_width)
-
-                if self.shouldUseTrackHeaders:
-                    currHeaderIncludedTrackLayout = QGridLayout(self)
-                    currHeaderIncludedTrackLayout.setSpacing(0)
-                    currHeaderIncludedTrackLayout.setContentsMargins(0,0,0,0)
-                    currHeaderIncludedContainer = QWidget(self)
-
-                    currHeaderTrackConfig = self.trackConfigurationsDict[currWidget.get_trackID()]
-                    
-                    currHeaderWidget = TimelineHeaderWidget(currHeaderTrackConfig, parent=self)
-                    currHeaderWidget.setMinimumSize(50, self.minimumVideoTrackHeight)
-                    currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
-                    currHeaderWidget.toggleCollapsed.connect(self.on_track_header_toggle_collapse_activated)
-                    currHeaderWidget.showOptions.connect(self.on_track_header_show_options_activated)
-                    currHeaderWidget.refresh.connect(self.on_track_header_refresh_activated)
-
-                    currHeaderWidget.update_labels_dynamically()
-                    self.eventTrackWidgetHeaders[currWidget.trackID] = currHeaderWidget
-
-                    # Make the floating label as well
-                    currFloatingHeader = TimelineFloatingHeaderWidget(currHeaderTrackConfig, parent=self)
-                    currFloatingHeader.setMinimumSize(25, (self.minimumVideoTrackHeight / 2.0))
-                    currFloatingHeader.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-                    currFloatingHeader.update_labels_dynamically()
-
-                    currFloatingHeader.findNext.connect(self.on_jump_next)
-                    currFloatingHeader.showOptions.connect(self.on_track_header_show_options_activated)
-                    currFloatingHeader.refresh.connect(self.on_track_header_refresh_activated)
-
-                    self.trackFloatingWidgetHeaders[currWidget.trackID] = currFloatingHeader
-
-                    # Set the minimum grid row height
-                    currFloatingHeaderGridRowID = currTrackConfigurationIndex + 1
-                    self.timelineViewportLayout.setRowMinimumHeight(currFloatingHeaderGridRowID, self.minimumVideoTrackHeight)
-
-                    currHeaderIncludedTrackLayout.addWidget(currWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
-                    currWidget.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
-                    currWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
-                    currHeaderIncludedTrackLayout.addWidget(currHeaderWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
-
-                    currHeaderIncludedContainer.setLayout(currHeaderIncludedTrackLayout)
-
-                    currHeaderIncludedContainer.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
-                    currHeaderIncludedContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
-                    self.extendedTracksContainerVboxLayout.addWidget(currHeaderIncludedContainer)
-                    currTrackConfigurationIndex = currTrackConfigurationIndex + 1
-
-                else:
-                    self.extendedTracksContainerVboxLayout.addWidget(currWidget)
-                    currWidget.setMinimumSize(minimumWidgetWidth, 50)
-                    currWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
+                # Event track specific setup
+                initUI_setupEventTrackWidget(self, currWidget, currTrackConfigurationIndex)
+                currTrackConfigurationIndex = currTrackConfigurationIndex + 1
 
 
 
