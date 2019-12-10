@@ -31,6 +31,21 @@ class QTimeLine(TickedTimelineDrawingBaseWidget):
     # def initUI(self):
     #     self.setGeometry(300, 300, self.length, 200)
 
+    # Draw the date labels:
+    def drawTextLabels(self, painter):
+        w = 0
+        # Draw time
+        scale = self.getScale()
+
+        # Draws text every fixed number of pixels
+        while w <= self.width():
+            painter.drawText(w - 50, 0, 100, 100, Qt.AlignHCenter, self.get_time_string(w * scale))
+            w += 100
+
+    # Draw bottom horizontal baseline line
+    def drawHorizontalBaseLine(self, painter):
+        painter.setPen(QPen(self.activeColor, 5, Qt.SolidLine))
+        painter.drawLine(0, 40, self.width(), 40)
 
     def paintEvent(self, event):
         qp = QPainter()
@@ -38,18 +53,12 @@ class QTimeLine(TickedTimelineDrawingBaseWidget):
         qp.setPen(self.textColor)
         qp.setFont(self.font)
         qp.setRenderHint(QPainter.Antialiasing)
-        w = 0
-        # Draw time
-        scale = self.getScale()
 
-        # Draws text every fixed number of pixels
-        while w <= self.width():
-            qp.drawText(w - 50, 0, 100, 100, Qt.AlignHCenter, self.get_time_string(w * scale))
-            w += 100
+        # Draw the date labels:
+        self.drawTextLabels(qp)
 
         # Draw bottom horizontal baseline line
-        qp.setPen(QPen(self.activeColor, 5, Qt.SolidLine))
-        qp.drawLine(0, 40, self.width(), 40)
+        self.drawHorizontalBaseLine(qp)
 
         self.draw_tick_lines(qp)
         self.draw_indicator_lines(qp)
@@ -64,8 +73,6 @@ class QTimeLine(TickedTimelineDrawingBaseWidget):
             line = QLine(QPoint(0, 0), QPoint(0, self.height()))
             poly = QPolygon([QPoint(-10, 20), QPoint(10, 20), QPoint(0, 40)])
 
-        # Draw samples
-        t = 0
         
         # Clear clip path
         path = QPainterPath()
