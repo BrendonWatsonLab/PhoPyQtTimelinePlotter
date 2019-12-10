@@ -176,10 +176,20 @@ class TickedTimelineDrawingBaseWidget(FixedTimelineContentsWidthMixin, QWidget):
     def get_time_string(self, seconds):
         drawTime = self.totalStartTime + timedelta(seconds=seconds)
         # return drawTime.strftime("%d-%m-%Y %I %p")
-        return drawTime.strftime("%m/%d \n%I%p")
+        return drawTime.strftime("%#m/%#d \n%#I%p")
         # m, s = divmod(seconds, 60)
         # h, m = divmod(m, 60)
         # return "%02d:%02d:%02d" % (h, m, s)
+
+
+    # Get "7/27" style timestring for the start of each day
+    def get_start_of_day_time_string(self, start_of_day_date):
+        return start_of_day_date.strftime("%#m/%#d")
+
+    # Get time string from seconds
+    def get_hours_of_day_only_time_string(self, drawTime):
+        return drawTime.strftime("%#I%p")
+
 
     # Get scale from length
     def getScale(self):
