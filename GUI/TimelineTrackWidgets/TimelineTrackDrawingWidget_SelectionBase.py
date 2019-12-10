@@ -155,6 +155,7 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
 
     def clear_hover(self):
         QToolTip.hideText()
+        self.hovered_object_index = None
         self.hovered_object = None
         self.hovered_object_rect = None
         self.deemphasize_all()
