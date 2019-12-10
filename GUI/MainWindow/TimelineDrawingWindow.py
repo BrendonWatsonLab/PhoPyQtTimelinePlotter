@@ -171,6 +171,13 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         self.activeGlobalTimelineTimesChanged.connect(self.referenceManager.on_active_global_timeline_times_changed)
         self.minimumTimelineTrackWidthChanged.connect(self.referenceManager.set_fixed_width)
 
+
+        self.wantsCreateNewVideoPlayerWindowOnClose = False
+        # self.pendingCreateVideoPlayerURL = None # self.pendingCreateVideoPlayerURL: holds the URL of the video file that we currently want to load. Used to enable waiting for the previous video player to close before a new one is opened with this URL.
+        self.pendingCreateVideoPlayerSelectedItem = None # self.pendingCreateVideoPlayerSelectedItem: holds the URL of the video file that we currently want to load. Used to enable waiting for the previous video player to close before a new one is opened with this URL.
+
+
+
         self.videoPlayerWindow = None
         self.helpWindow = None
         self.setupWindow = None
@@ -1163,14 +1170,20 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
     def try_set_video_player_window_url(self, url):
         #TODO: temp: set the videoPlayerWindow to None to ensure that a new one is created. Note that setting it to None doesn't actually close the old one.
-        self.videoPlayerWindow = None
-
-
+        # self.videoPlayerWindow = None
+        
         if (not (self.videoPlayerWindow is None)):
-            print("Using existing Video Player Window...")
-            self.videoPlayerWindow.movieLink = None # Disable the movieLink
-            self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
-            self.videoPlayerWindow.set_video_filename(url)
+            # print("Using existing Video Player Window...")
+            print("Closing existing Video Player Window...")
+            self.videoPlayerWindow.close()
+            self.wantsCreateNewVideoPlayerWindowOnClose = True
+            self.pendingCreateVideoPlayerURL = url
+
+            # Close the previous window and wait for it to be done closing before creating a new one.
+
+            # self.videoPlayerWindow.movieLink = None # Disable the movieLink
+            # self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
+            # self.videoPlayerWindow.set_video_filename(url)
 
             # self.videoPlayerWindow.show()
         else:
@@ -1182,7 +1195,6 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             except Exception as e:
                 print("Error Spawning Video Window:", e)
                 return False
-
             
             try:
                 self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
@@ -1196,6 +1208,15 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             except Exception as e:
                 print("Error Setting video filename for Video Window:", e)
                 return False
+
+            self.videoPlayerWindow.movieLink = DataMovieLinkInfo(self.pendingCreateVideoPlayerSelectedItem, self.videoPlayerWindow, self, parent=self)
+
+            if self.wantsCreateNewVideoPlayerWindowOnClose:
+                # Set the property false after the window has been created
+                self.wantsCreateNewVideoPlayerWindowOnClose = False
+                self.pendingCreateVideoPlayerSelectedItem = None
+                self.pendingCreateVideoPlayerURL = None
+
 
             return True
 
@@ -1227,7 +1248,12 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         self.extendedTracksContainer.blockSignals(False)
         self.timelineMasterTrackWidget.blockSignals(False)
 
-        # self.videoPlayerWindow = None
+        self.videoPlayerWindow = None
+
+        if self.wantsCreateNewVideoPlayerWindowOnClose:
+            # open the pending URL in a new video player window after the previous one was successfully closed.
+            self.try_set_video_player_window_url(self.pendingCreateVideoPlayerURL)
+
 
 
     # Shows the Video File Tree window:
@@ -1307,9 +1333,11 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
                 currActiveVideoTrack.set_now_playing(trackObjectIndex)
 
                 if currSelectedObject.is_video_url_accessible():
+                    self.pendingCreateVideoPlayerSelectedItem = currSelectedObject
                     self.try_set_video_player_window_url(str(selected_video_path))
-                    self.videoPlayerWindow.movieLink = DataMovieLinkInfo(currSelectedObject, self.videoPlayerWindow, self, parent=self)
+                    
                 else:
+                    self.pendingCreateVideoPlayerSelectedItem = None
                     print("video file is inaccessible. Not opening the video player window")
                     if self.videoPlayerWindow is not None:
                         self.videoPlayerWindow.try_set_video_player_window_url(None)
