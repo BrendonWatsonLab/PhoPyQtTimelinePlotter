@@ -546,7 +546,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
         def initUI_layout(self):
 
-            # currTrackConfigurationIndex = 0
+            currTrackConfigurationIndex = 0
 
             self.videoFileTrackWidgetHeaders = dict()
             self.trackFloatingWidgetHeaders = dict()
@@ -563,37 +563,65 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             self.timelineViewportLayout.setRowMinimumHeight(0, 50)
 
             self.totalTrackCount = len(self.videoFileTrackWidgets) + len(self.eventTrackWidgets)
-            
+            self.totalNumGroups = len(self.trackGroups)
 
-            # Loop through the trackIDs and add them
-            for currTrackID in range(0, self.totalTrackCount):
-                currGroupIndex = self.trackID_to_GroupIndexMap[currTrackID]
+            for currGroupIndex in range(0, self.totalNumGroups):
                 currGroup = self.trackGroups[currGroupIndex]
-                currTrackConfigurationIndex = currTrackID
-
                 if currGroup.get_videoTrackIndex() is not None:
                     currVideoTrackWidget = self.videoFileTrackWidgets[currGroup.get_videoTrackIndex()]
+                    # currTrackConfigurationIndex = currVideoTrackWidget.get_trackID()
                     # Video track specific setup
                     initUI_setupVideoTrackWidget(self, currVideoTrackWidget, currTrackConfigurationIndex)
-                    # currTrackConfigurationIndex = currTrackConfigurationIndex + 1
+                    currTrackConfigurationIndex = currTrackConfigurationIndex + 1
 
                 if currGroup.get_labeledVideoTrackIndex() is not None:
                     currVideoTrackWidget = self.videoFileTrackWidgets[currGroup.get_labeledVideoTrackIndex()]
                     # Video track specific setup
                     initUI_setupVideoTrackWidget(self, currVideoTrackWidget, currTrackConfigurationIndex)
-                    # currTrackConfigurationIndex = currTrackConfigurationIndex + 1
+                    currTrackConfigurationIndex = currTrackConfigurationIndex + 1
 
                 if currGroup.get_annotationsTrackIndex() is not None:
                     currWidget = self.eventTrackWidgets[currGroup.get_annotationsTrackIndex()]
                     # Event track specific setup
                     initUI_setupEventTrackWidget(self, currWidget, currTrackConfigurationIndex)
-                    # currTrackConfigurationIndex = currTrackConfigurationIndex + 1
+                    currTrackConfigurationIndex = currTrackConfigurationIndex + 1
                     
                 if currGroup.get_partitionsTrackIndex() is not None:
                     currWidget = self.eventTrackWidgets[currGroup.get_partitionsTrackIndex()]
                     # Event track specific setup
                     initUI_setupEventTrackWidget(self, currWidget, currTrackConfigurationIndex)
-                    # currTrackConfigurationIndex = currTrackConfigurationIndex + 1
+                    currTrackConfigurationIndex = currTrackConfigurationIndex + 1
+
+
+            # Loop through the trackIDs and add them
+            # for currTrackID in range(0, self.totalTrackCount):
+            #     currGroupIndex = self.trackID_to_GroupIndexMap[currTrackID]
+            #     currGroup = self.trackGroups[currGroupIndex]
+            #     currTrackConfigurationIndex = currTrackID
+
+            #     if currGroup.get_videoTrackIndex() is not None:
+            #         currVideoTrackWidget = self.videoFileTrackWidgets[currGroup.get_videoTrackIndex()]
+            #         # Video track specific setup
+            #         initUI_setupVideoTrackWidget(self, currVideoTrackWidget, currTrackConfigurationIndex)
+            #         # currTrackConfigurationIndex = currTrackConfigurationIndex + 1
+
+            #     if currGroup.get_labeledVideoTrackIndex() is not None:
+            #         currVideoTrackWidget = self.videoFileTrackWidgets[currGroup.get_labeledVideoTrackIndex()]
+            #         # Video track specific setup
+            #         initUI_setupVideoTrackWidget(self, currVideoTrackWidget, currTrackConfigurationIndex)
+            #         # currTrackConfigurationIndex = currTrackConfigurationIndex + 1
+
+            #     if currGroup.get_annotationsTrackIndex() is not None:
+            #         currWidget = self.eventTrackWidgets[currGroup.get_annotationsTrackIndex()]
+            #         # Event track specific setup
+            #         initUI_setupEventTrackWidget(self, currWidget, currTrackConfigurationIndex)
+            #         # currTrackConfigurationIndex = currTrackConfigurationIndex + 1
+                    
+            #     if currGroup.get_partitionsTrackIndex() is not None:
+            #         currWidget = self.eventTrackWidgets[currGroup.get_partitionsTrackIndex()]
+            #         # Event track specific setup
+            #         initUI_setupEventTrackWidget(self, currWidget, currTrackConfigurationIndex)
+            #         # currTrackConfigurationIndex = currTrackConfigurationIndex + 1
 
 
             # # Loop through the videoFileTrackWidgets and add them
