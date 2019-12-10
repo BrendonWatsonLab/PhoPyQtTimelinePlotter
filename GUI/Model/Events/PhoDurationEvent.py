@@ -136,15 +136,17 @@ class PhoDurationEvent(EdgeAndCornerContainerViewMixin, PhoEvent):
         self.set_state_selected()
 
     def on_button_released(self, event):
-        self.set_state_deselected()
+
         if event.button() == Qt.LeftButton:
             print("PhoDurationEvent.on_button_released(...): Left click")
+            self.set_state_deselected()
         elif event.button() == Qt.RightButton:
             print("PhoDurationEvent.on_button_released(...): Right click")
             currPos = self.finalEventRect.topLeft()
             self.showMenu(currPos)
         elif event.button() == Qt.MiddleButton:
             print("PhoDurationEvent.on_button_released(...): Middle click")
+            self.set_state_deselected()
         else:
             print("PhoDurationEvent.on_button_released(...): Unknown click event!")
 
