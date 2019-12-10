@@ -1067,22 +1067,30 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         print("on_zoom_current_video()")
         # Gets the current video
 
-        selected_video_event_obj = self.mainVideoTrack.get_selected_duration_obj()
-        if selected_video_event_obj is None:
-            print("no video selected!")
-            return
-        
-        newViewportStartTime = selected_video_event_obj.startTime
-        newViewportEndTime = selected_video_event_obj.endTime
-        newViewportDuration = selected_video_event_obj.computeDuration()
-
-        if newViewportDuration is None:
-            print("selected video has a None duration!")
+        selected_video_event_objects_flat_array, outEventsDict = self.get_selected_video_items()
+        if (len(selected_video_event_objects_flat_array) <= 0):
+            print("WARNING: no selected videos!")
             return
         else:
-            self.set_viewport_to_range(newViewportStartTime, newViewportEndTime)
+            # Get the first selected video item
+            selected_video_event_tuple = selected_video_event_objects_flat_array[0]
+            selected_video_event_obj = selected_video_event_tuple[1] # get the event item from the second element of the tuple
 
-        return
+            if selected_video_event_obj is None:
+                print("ERROR: invalid video selected!")
+                return
+            
+            newViewportStartTime = selected_video_event_obj.startTime
+            newViewportEndTime = selected_video_event_obj.endTime
+            newViewportDuration = selected_video_event_obj.computeDuration()
+
+            if newViewportDuration is None:
+                print("ERROR: selected video has a None duration!")
+                return
+            else:
+                self.set_viewport_to_range(newViewportStartTime, newViewportEndTime)
+
+            return
 
     def on_zoom_out(self):
         self.viewportAdjustmentMode = ViewportScaleAdjustmentOptions.MaintainDesiredViewportZoomFactor
@@ -1374,15 +1382,19 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
     # Selection and such:
     def get_selected_video_items(self):
-        outEventsDict = dict()
+        outEventsFlatArray = [] # a flattened array of (trackID: int, eventsList: PhoDurationEvent) tuples
+        outEventsDict = dict() # a [trackID: int, eventsList: list] dictionary
 
         for aVideoTrack in self.videoFileTrackWidgets:
             currTrackID = aVideoTrack.get_trackID()
             # currSelectedVideoEventIndicies = aVideoTrack.get_selected_event_indicies()
             currSelectedVideoEventObjects = aVideoTrack.get_selected_duration_objects()
             outEventsDict[currTrackID] = currSelectedVideoEventObjects
+
+            for aVideoEventObj in currSelectedVideoEventObjects:
+                outEventsFlatArray.append((currTrackID, aVideoEventObj))
         
-        return outEventsDict
+        return (outEventsFlatArray, outEventsDict)
 
 
     # @pyqtSlot(int, int)
