@@ -84,7 +84,6 @@ class TickedTimelineDrawingBaseWidget(FixedTimelineContentsWidthMixin, QWidget):
         # point = 0
         painter.setPen(TickedTimelineDrawingBaseWidget.staticTimeDelininationTickLineProperties.get_pen())
         # draw a horizontal line (Currently draws the line a fixed distance in pixels apart. The labels are only added in qtimeline)
-        
         painter.drawLine(0, 40, self.width(), 40)
 
         # Major markers (day markers)
@@ -99,13 +98,6 @@ class TickedTimelineDrawingBaseWidget(FixedTimelineContentsWidthMixin, QWidget):
             item_x_offset = self.referenceManager.compute_x_offset_from_datetime(self.width(), aStaticMarkerData.time)
             painter.drawLine(item_x_offset, 40, item_x_offset, 30)
 
-
-        # while point <= self.width():
-        #     if point % 30 != 0:
-        #         painter.drawLine(3 * point, 40, 3 * point, 30)
-        #     else:
-        #         painter.drawLine(3 * point, 40, 3 * point, 20)
-        #     point += 10
 
     # Draws the tick marks and the indicator lines
     def draw_indicator_lines(self, painter):
