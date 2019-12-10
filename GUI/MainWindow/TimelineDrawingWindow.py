@@ -191,6 +191,9 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         self.loadedVideoTrackIndicies = TimelineDrawingWindow.debug_desiredVideoTracks
         self.loadedVideoHelperTrackPreferences = TimelineDrawingWindow.debug_desiredVideoTrackGroupSettings
         self.trackGroups = []
+        self.trackID_to_GroupIndexMap = dict() #Maps a track's trackID to the index of its group in self.trackGroups
+        # self.trackGroupDict_VideoTracks = dict()
+        # self.trackGroupDict_
 
         self.viewportAdjustmentMode = TimelineDrawingWindow.ViewportAdjustmentMode        
         self.totalStartTime = totalStartTime
@@ -345,6 +348,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             self.videoFileTrackWidgets = []
             self.eventTrackWidgets = []
             self.trackGroups = []
+            self.trackID_to_GroupIndexMap = dict() #Maps a track's trackID to the index of its group in self.trackGroups
 
             # B00
             currTrackIndex = 0
@@ -359,6 +363,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
                 self.mainVideoTrack.set_track_title_label('BBID: {0}, originals'.format(currTrackBBID))
                 currGroup.set_videoTrackIndex(len(self.videoFileTrackWidgets))
                 self.videoFileTrackWidgets.append(self.mainVideoTrack)
+                self.trackID_to_GroupIndexMap[currTrackIndex] = index
                 currTrackIndex = currTrackIndex + 1
 
                 currHelperTracksOptions = self.loadedVideoHelperTrackPreferences[index]
@@ -371,6 +376,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
                     self.labeledVideoTrack.set_track_title_label('BBID: {0}, labeled'.format(currTrackBBID))
                     currGroup.set_labeledVideoTrackIndex(len(self.videoFileTrackWidgets))
                     self.videoFileTrackWidgets.append(self.labeledVideoTrack)
+                    self.trackID_to_GroupIndexMap[currTrackIndex] = index
                     currTrackIndex = currTrackIndex + 1
 
                 if wantsAnnotationsTrack:
@@ -380,6 +386,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
                     self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
                     currGroup.set_annotationsTrackIndex(len(self.eventTrackWidgets))
                     self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
+                    self.trackID_to_GroupIndexMap[currTrackIndex] = index
                     currTrackIndex = currTrackIndex + 1
 
                 if wantsPartitionTrack:
@@ -389,9 +396,10 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
                     self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[0])
                     currGroup.set_partitionsTrackIndex(len(self.eventTrackWidgets))
                     self.eventTrackWidgets.append(self.partitionsTrackWidget)
+                    self.trackID_to_GroupIndexMap[currTrackIndex] = index
                     currTrackIndex = currTrackIndex + 1
 
-                self.trackGroups.append(currTrackIndex)
+                self.trackGroups.append(currGroup)
 
             # Other Tracks:
 
@@ -552,6 +560,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
             self.videoFileTrackWidgetHeaders = dict()
             self.trackFloatingWidgetHeaders = dict()
+            self.eventTrackWidgetHeaders = dict()
 
             # Create the layout for the timeline viewport:
             self.timelineViewportLayout = QGridLayout(self)
@@ -563,23 +572,56 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             # Set the minimum grid row height
             self.timelineViewportLayout.setRowMinimumHeight(0, 50)
 
-            # Loop through the videoFileTrackWidgets and add them
-            for i in range(0, len(self.videoFileTrackWidgets)):
-                currVideoTrackWidget = self.videoFileTrackWidgets[i]
-                # Video track specific setup
-                initUI_setupVideoTrackWidget(self, currVideoTrackWidget, currTrackConfigurationIndex)
+            self.totalTrackCount = len(self.videoFileTrackWidgets) + len(self.eventTrackWidgets)
+            
 
-                currTrackConfigurationIndex = currTrackConfigurationIndex + 1
-                # General Layout:
+            # Loop through the trackIDs and add them
+            for currTrackID in range(0, self.totalTrackCount):
+                currGroupIndex = self.trackID_to_GroupIndexMap[currTrackID]
+                currGroup = self.trackGroups[currGroupIndex]
 
-            self.eventTrackWidgetHeaders = dict()
+                if currGroup.get_videoTrackIndex() is not None:
+                    currVideoTrackWidget = self.videoFileTrackWidgets[currGroup.get_videoTrackIndex()]
+                    # Video track specific setup
+                    initUI_setupVideoTrackWidget(self, currVideoTrackWidget, currTrackConfigurationIndex)
+                    currTrackConfigurationIndex = currTrackConfigurationIndex + 1
 
-            # Loop through the eventTrackWidgets and add them
-            for i in range(0, len(self.eventTrackWidgets)):
-                currWidget = self.eventTrackWidgets[i]
-                # Event track specific setup
-                initUI_setupEventTrackWidget(self, currWidget, currTrackConfigurationIndex)
-                currTrackConfigurationIndex = currTrackConfigurationIndex + 1
+                if currGroup.get_labeledVideoTrackIndex() is not None:
+                    currVideoTrackWidget = self.videoFileTrackWidgets[currGroup.get_labeledVideoTrackIndex()]
+                    # Video track specific setup
+                    initUI_setupVideoTrackWidget(self, currVideoTrackWidget, currTrackConfigurationIndex)
+                    currTrackConfigurationIndex = currTrackConfigurationIndex + 1
+
+                if currGroup.get_annotationsTrackIndex() is not None:
+                    currWidget = self.eventTrackWidgets[currGroup.get_annotationsTrackIndex()]
+                    # Event track specific setup
+                    initUI_setupEventTrackWidget(self, currWidget, currTrackConfigurationIndex)
+                    currTrackConfigurationIndex = currTrackConfigurationIndex + 1
+                    
+                if currGroup.get_partitionsTrackIndex() is not None:
+                    currWidget = self.eventTrackWidgets[currGroup.get_partitionsTrackIndex()]
+                    # Event track specific setup
+                    initUI_setupEventTrackWidget(self, currWidget, currTrackConfigurationIndex)
+                    currTrackConfigurationIndex = currTrackConfigurationIndex + 1
+
+
+            # # Loop through the videoFileTrackWidgets and add them
+            # for i in range(0, len(self.videoFileTrackWidgets)):
+            #     currVideoTrackWidget = self.videoFileTrackWidgets[i]
+            #     # Video track specific setup
+            #     initUI_setupVideoTrackWidget(self, currVideoTrackWidget, currTrackConfigurationIndex)
+
+            #     currTrackConfigurationIndex = currTrackConfigurationIndex + 1
+            #     # General Layout:
+
+            
+
+            # # Loop through the eventTrackWidgets and add them
+            # for i in range(0, len(self.eventTrackWidgets)):
+            #     currWidget = self.eventTrackWidgets[i]
+            #     # Event track specific setup
+            #     initUI_setupEventTrackWidget(self, currWidget, currTrackConfigurationIndex)
+            #     currTrackConfigurationIndex = currTrackConfigurationIndex + 1
 
 
 
