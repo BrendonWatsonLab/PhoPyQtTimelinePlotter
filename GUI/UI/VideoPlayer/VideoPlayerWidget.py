@@ -7,13 +7,12 @@ import traceback
 
 import qtawesome as qta
 from PyQt5 import uic
-from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, \
-    QMessageBox, QDataWidgetMapper
+from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QWidget, QMessageBox, QDataWidgetMapper
 from PyQt5.QtGui import QCursor
 from PyQt5.QtCore import QDir, QTimer, Qt, QModelIndex, QSortFilterProxyModel
 
 from lib import vlc
-from app.model import TimestampModel, ToggleButtonModel, TimestampDelta
+from app.model import ToggleButtonModel
 
 from GUI.Model.DataMovieLinkInfo import *
 
@@ -74,7 +73,7 @@ play_pause_model
 """
 
 
-class MainVideoPlayerWindow(QMainWindow):
+class VideoPlayerWidget(QWidget):
     """
     The main window class
     """
@@ -88,11 +87,11 @@ class MainVideoPlayerWindow(QMainWindow):
     close_signal = pyqtSignal() # Called when the window is closing. 
 
     def __init__(self, parent=None):
-        # QMainWindow.__init__(self, parent)
+        # super().__init__(self, parent)
         super().__init__(parent=parent)
-        self.ui = uic.loadUi("GUI/UI/VideoPlayer/MainVideoPlayerWindow.ui", self)
+        self.ui = uic.loadUi("GUI/UI/VideoPlayer/VideoPlayerWidget.ui", self)
 
-        self.timestamp_filename = None
+        # self.timestamp_filename = None
         self.video_filename = None
         self.media_start_time = None
         self.media_end_time = None
@@ -105,24 +104,18 @@ class MainVideoPlayerWindow(QMainWindow):
 
         self.startDirectory = None
 
-        self.timestamp_model = TimestampModel(None, self)
-        self.proxy_model = QSortFilterProxyModel(self)
-        self.ui.list_timestamp.setModel(self.timestamp_model)
-        self.ui.list_timestamp.doubleClicked.connect(
-            lambda event: self.ui.list_timestamp.indexAt(event.pos()).isValid()
-            and self.run()
-        )
-
         self.vlc_instance = vlc.Instance()
         self.media_player = self.vlc_instance.media_player_new()
         self.is_display_initial_frame_playback = False
 
         self.is_speed_burst_mode_active = False
-        self.speedBurstPlaybackRate = MainVideoPlayerWindow.SpeedBurstPlaybackRate
+        self.speedBurstPlaybackRate = VideoPlayerWidget.SpeedBurstPlaybackRate
         # if sys.platform == "darwin":  # for MacOS
         #     self.ui.frame_video = QMacCocoaViewContainer(0)
 
         self.movieLink = None
+
+        # self.closeEvent.connect(self.closeEvent)
 
         self.initUI()
 
@@ -165,18 +158,7 @@ class MainVideoPlayerWindow(QMainWindow):
         self.ui.spinBoxFrameJumpMultiplier.value = 1
 
         # Set up buttons
-        self.ui.button_run.clicked.connect(self.run)
-        self.ui.button_timestamp_browse.clicked.connect(
-            self.browse_timestamp_handler
-        )
-        self.ui.button_timestamp_create.clicked.connect(
-            self.create_timestamp_file_handler
-        )
-        self.ui.button_video_browse.clicked.connect(
-            self.browse_video_handler
-        )
-
-
+  
         # Set up directional buttons
         self.ui.btnSkipLeft.clicked.connect(self.skip_left_handler)
         self.ui.btnSkipRight.clicked.connect(self.skip_right_handler)
@@ -220,38 +202,38 @@ class MainVideoPlayerWindow(QMainWindow):
         )
         self.ui.button_slow_down.setText("")
 
-        self.ui.button_mark_start.setIcon(
-            qta.icon("fa.quote-left", scale_factor=0.7)
-        )
-        self.ui.button_mark_start.setText("")
-        self.ui.button_mark_end.setIcon(
-            qta.icon("fa.quote-right", scale_factor=0.7)
-        )
-        self.ui.button_mark_end.setText("")
-        self.ui.button_add_entry.clicked.connect(self.add_entry)
-        self.ui.button_remove_entry.clicked.connect(self.remove_entry)
+        # self.ui.button_mark_start.setIcon(
+        #     qta.icon("fa.quote-left", scale_factor=0.7)
+        # )
+        # self.ui.button_mark_start.setText("")
+        # self.ui.button_mark_end.setIcon(
+        #     qta.icon("fa.quote-right", scale_factor=0.7)
+        # )
+        # self.ui.button_mark_end.setText("")
+        # self.ui.button_add_entry.clicked.connect(self.add_entry)
+        # self.ui.button_remove_entry.clicked.connect(self.remove_entry)
 
-        self.ui.button_mark_start.clicked.connect(
-            lambda: self.set_mark(start_time=int(
-                self.media_player.get_position() *
-                self.media_player.get_media().get_duration()))
-        )
-        self.ui.button_mark_end.clicked.connect(
-            lambda: self.set_mark(end_time=int(
-                self.media_player.get_position() *
-                self.media_player.get_media().get_duration()))
-        )
+        # self.ui.button_mark_start.clicked.connect(
+        #     lambda: self.set_mark(start_time=int(
+        #         self.media_player.get_position() *
+        #         self.media_player.get_media().get_duration()))
+        # )
+        # self.ui.button_mark_end.clicked.connect(
+        #     lambda: self.set_mark(end_time=int(
+        #         self.media_player.get_position() *
+        #         self.media_player.get_media().get_duration()))
+        # )
 
         self.ui.slider_progress.setTracking(False)
         self.ui.slider_progress.valueChanged.connect(self.set_media_position)
 
         # self.ui.slider_volume.valueChanged.connect(self.set_volume)
-        self.ui.entry_description.setReadOnly(True)
+        # self.ui.entry_description.setReadOnly(True)
 
         # Mapper between the table and the entry detail
-        self.mapper = QDataWidgetMapper()
-        self.mapper.setSubmitPolicy(QDataWidgetMapper.ManualSubmit)
-        self.ui.button_save.clicked.connect(self.mapper.submit)
+        # self.mapper = QDataWidgetMapper()
+        # self.mapper.setSubmitPolicy(QDataWidgetMapper.ManualSubmit)
+        # self.ui.button_save.clicked.connect(self.mapper.submit)
 
         # Set up default volume
         # self.set_volume(self.ui.slider_volume.value())
@@ -272,43 +254,25 @@ class MainVideoPlayerWindow(QMainWindow):
         self.ui.show()
 
     # Called when the window is closing.
-    def closeEvent(self, event):
-        print("MainVideoPlayerWindow.closeEvent({0})".format(str(event)))
-        self.on_close()
-        # self.close()
-        event.accept()
+    # def closeEvent(self, event):
+    #     print("VideoPlayerWidget.closeEvent(...)")
+    #     # print("VideoPlayerWidget.closeEvent({0})".format(str(event)))
+    #     # self.on_close()
+    #     # self.close()
+    #     # event.accept()
 
-    def on_close(self):
-        """ Perform on close stuff here """
-        print("MainVideoPlayerWindow.on_close()!")
-        self.timer.stop() # Stop the timer
-        self.media_player.stop() # Stop the playing media
-        self.movieLink = None
-        self.close_signal.emit()
+    # def on_close(self):
+    #     """ Perform on close stuff here """
+    #     print("VideoPlayerWidget.on_close()!")
+    #     # self.timer.stop() # Stop the timer
+    #     # self.media_player.stop() # Stop the playing media
+    #     # self.movieLink = None
+    #     self.close_signal.emit()
 
 
     # Movie Link:
     def get_movie_link(self):
         return self.movieLink
-
-    # Timestamp entries:
-    def add_entry(self):
-        if not self.timestamp_filename:
-            self._show_error("You haven't chosen a timestamp file yet")
-        row_num = self.timestamp_model.rowCount()
-        self.timestamp_model.insertRow(row_num)
-        start_cell = self.timestamp_model.index(row_num, 0)
-        end_cell = self.timestamp_model.index(row_num, 1)
-        self.timestamp_model.setData(start_cell, TimestampDelta.from_string(""))
-        self.timestamp_model.setData(end_cell, TimestampDelta.from_string(""))
-
-    def remove_entry(self):
-        if not self.timestamp_filename:
-            self._show_error("You haven't chosen a timestamp file yet")
-        selected = self.ui.list_timestamp.selectionModel().selectedIndexes()
-        if len(selected) == 0:
-            return
-        self.proxy_model.removeRow(selected[0].row()) and self.mapper.submit()
 
     # Called when the UI slider position is updated via user-click
     def set_media_position(self, position):
@@ -336,24 +300,6 @@ class MainVideoPlayerWindow(QMainWindow):
         self.ui.slider_progress.setValue(aPosition)
         self.ui.slider_progress.blockSignals(False)
 
-
-    def set_mark(self, start_time=None, end_time=None):
-        if len(self.ui.list_timestamp.selectedIndexes()) == 0:
-            blankRowIndex = self.timestamp_model.blankRowIndex()
-            if not blankRowIndex.isValid():
-                self.add_entry()
-            else:
-                index = self.proxy_model.mapFromSource(blankRowIndex)
-                self.ui.list_timestamp.selectRow(index.row())
-        selectedIndexes = self.ui.list_timestamp.selectedIndexes()
-        if start_time:
-            self.proxy_model.setData(selectedIndexes[0],
-                                     TimestampDelta.string_from_int(
-                                         start_time))
-        if end_time:
-            self.proxy_model.setData(selectedIndexes[1],
-                                     TimestampDelta.string_from_int(
-                                         end_time))
 
     # self.update_ui(): called when the timer fires
     def update_ui(self):
@@ -406,7 +352,7 @@ class MainVideoPlayerWindow(QMainWindow):
 
     # Input Handelers:
     def key_handler(self, event):
-        print("MainVideoPlayerWindow key handler: {0}".format(str(event.key())))
+        print("VideoPlayerWidget key handler: {0}".format(str(event.key())))
         if event.key() == Qt.Key_Escape and self.is_full_screen:
             self.toggle_full_screen()
         if event.key() == Qt.Key_F:
@@ -460,53 +406,50 @@ class MainVideoPlayerWindow(QMainWindow):
 
         
 
-    def update_slider_highlight(self):
-        if self.ui.list_timestamp.selectionModel().hasSelection():
-            selected_row = self.ui.list_timestamp.selectionModel(). \
-                selectedRows()[0]
-            self.media_start_time = self.ui.list_timestamp.model().data(
-                selected_row.model().index(selected_row.row(), 0),
-                Qt.UserRole
-            )
-            self.media_end_time = self.ui.list_timestamp.model().data(
-                selected_row.model().index(selected_row.row(), 1),
-                Qt.UserRole
-            )
-            duration = self.media_player.get_media().get_duration()
-            self.media_end_time = self.media_end_time \
-                if self.media_end_time != 0 else duration
-            if self.media_start_time > self.media_end_time:
-                raise ValueError("Start time cannot be later than end time")
-            if self.media_start_time > duration:
-                raise ValueError("Start time not within video duration")
-            if self.media_end_time > duration:
-                raise ValueError("End time not within video duration")
-            slider_start_pos = (self.media_start_time / duration) * \
-                               (self.ui.slider_progress.maximum() -
-                                self.ui.slider_progress.minimum())
-            slider_end_pos = (self.media_end_time / duration) * \
-                             (self.ui.slider_progress.maximum() -
-                              self.ui.slider_progress.minimum())
-            self.ui.slider_progress.setHighlight(
-                int(slider_start_pos), int(slider_end_pos)
-            )
+    # def update_slider_highlight(self):
+    #     if self.ui.list_timestamp.selectionModel().hasSelection():
+    #         selected_row = self.ui.list_timestamp.selectionModel(). \
+    #             selectedRows()[0]
+    #         self.media_start_time = self.ui.list_timestamp.model().data(
+    #             selected_row.model().index(selected_row.row(), 0),
+    #             Qt.UserRole
+    #         )
+    #         self.media_end_time = self.ui.list_timestamp.model().data(
+    #             selected_row.model().index(selected_row.row(), 1),
+    #             Qt.UserRole
+    #         )
+    #         duration = self.media_player.get_media().get_duration()
+    #         self.media_end_time = self.media_end_time \
+    #             if self.media_end_time != 0 else duration
+    #         if self.media_start_time > self.media_end_time:
+    #             raise ValueError("Start time cannot be later than end time")
+    #         if self.media_start_time > duration:
+    #             raise ValueError("Start time not within video duration")
+    #         if self.media_end_time > duration:
+    #             raise ValueError("End time not within video duration")
+    #         slider_start_pos = (self.media_start_time / duration) * \
+    #                            (self.ui.slider_progress.maximum() -
+    #                             self.ui.slider_progress.minimum())
+    #         slider_end_pos = (self.media_end_time / duration) * \
+    #                          (self.ui.slider_progress.maximum() -
+    #                           self.ui.slider_progress.minimum())
+    #         self.ui.slider_progress.setHighlight(
+    #             int(slider_start_pos), int(slider_end_pos)
+    #         )
 
-        else:
-            self.media_start_time = 0
-            self.media_end_time = -1
+    #     else:
+    #         self.media_start_time = 0
+    #         self.media_end_time = -1
 
     def run(self):
         """
         Execute the loop
         """
-        if self.timestamp_filename is None:
-            self._show_error("No timestamp file chosen")
-            return
         if self.video_filename is None:
             self._show_error("No video file chosen")
             return
         try:
-            self.update_slider_highlight()
+            # self.update_slider_highlight()
             self.media_player.play()
             self.media_player.set_time(self.media_start_time) # Looks like the media playback time is actually being set from the slider.
             self.media_started_playing = True
@@ -761,125 +704,6 @@ class MainVideoPlayerWindow(QMainWindow):
 
 
     # File Loading:
-    def browse_timestamp_handler(self):
-        """
-        Handler when the timestamp browser button is clicked
-        """
-        tmp_name, _ = QFileDialog.getOpenFileName(
-            self, "Choose Timestamp file", None,
-            "Timestamp File (*.tmsp);;All Files (*)"
-        )
-        if not tmp_name:
-            return
-        self.set_timestamp_filename(QDir.toNativeSeparators(tmp_name))
-
-    def create_timestamp_file_handler(self):
-        """
-        Handler when the timestamp file create button is clicked
-        """
-        tmp_name, _ = QFileDialog.getSaveFileName(
-            self, "Create New Timestamp file", None,
-            "Timestamp File (*.tmsp);;All Files (*)"
-        )
-        if not tmp_name:
-            return
-
-        try:
-            if (os.stat(QDir.toNativeSeparators(tmp_name)).st_size == 0):
-                    # File is empty, create a non-empty one:
-                    with open(QDir.toNativeSeparators(tmp_name), "w") as fh:
-                        fh.write("[]")  # Write the minimal valid JSON string to the file to allow it to be used
-            else:
-                pass
-
-            # with open(tmp_name, 'r') as fh:
-            #     if fh.__sizeof__()>0:
-            #         # File is not empty:
-            #         pass
-            #     else:
-            #         # File is empty, create a non-empty one:
-            #         fh.close()
-            #         with open(tmp_name, "w") as fh:
-            #             fh.write("[]")  # Write the minimal valid JSON string to the file to allow it to be used
-
-        except WindowsError:
-            with open(tmp_name, "w") as fh:
-                fh.write("[]") # Write the minimal valid JSON string to the file to allow it to be used
-
-
-        # Create new file:
-        self.set_timestamp_filename(QDir.toNativeSeparators(tmp_name))
-
-    def _sort_model(self):
-        self.ui.list_timestamp.sortByColumn(0, Qt.AscendingOrder)
-
-    def _select_blank_row(self, parent, start, end):
-        self.ui.list_timestamp.selectRow(start)
-
-    def set_timestamp_filename(self, filename):
-        """
-        Set the timestamp file name
-        """
-        if not os.path.isfile(filename):
-            self._show_error("Cannot access timestamp file " + filename)
-            return
-
-        try:
-            self.timestamp_model = TimestampModel(filename, self)
-            self.timestamp_model.timeParseError.connect(
-                lambda err: self._show_error(err)
-            )
-            self.proxy_model.setSortRole(Qt.UserRole)
-            self.proxy_model.dataChanged.connect(self._sort_model)
-            self.proxy_model.dataChanged.connect(self.update_slider_highlight)
-            self.proxy_model.setSourceModel(self.timestamp_model)
-            self.proxy_model.rowsInserted.connect(self._sort_model)
-            self.proxy_model.rowsInserted.connect(self._select_blank_row)
-            self.ui.list_timestamp.setModel(self.proxy_model)
-
-            self.timestamp_filename = filename
-            self.ui.entry_timestamp.setText(self.timestamp_filename)
-
-            self.mapper.setModel(self.proxy_model)
-            self.mapper.addMapping(self.ui.entry_start_time, 0)
-            self.mapper.addMapping(self.ui.entry_end_time, 1)
-            self.mapper.addMapping(self.ui.entry_description, 2)
-            self.ui.list_timestamp.selectionModel().selectionChanged.connect(
-                self.timestamp_selection_changed)
-            self._sort_model()
-
-            directory = os.path.dirname(self.timestamp_filename)
-            basename = os.path.basename(self.timestamp_filename)
-            timestamp_name_without_ext = os.path.splitext(basename)[0]
-            for file_in_dir in os.listdir(directory):
-                current_filename = os.path.splitext(file_in_dir)[0]
-                found_video = (current_filename == timestamp_name_without_ext
-                               and file_in_dir != basename)
-                if found_video:
-                    found_video_file = os.path.join(directory, file_in_dir)
-                    self.set_video_filename(found_video_file)
-                    break
-        except ValueError as err:
-            self._show_error("Timestamp file is invalid")
-
-    def timestamp_selection_changed(self, selected, deselected):
-        if len(selected) > 0:
-            self.mapper.setCurrentModelIndex(selected.indexes()[0])
-            self.ui.button_save.setEnabled(True)
-            self.ui.button_remove_entry.setEnabled(True)
-            self.ui.entry_start_time.setReadOnly(False)
-            self.ui.entry_end_time.setReadOnly(False)
-            self.ui.entry_description.setReadOnly(False)
-        else:
-            self.mapper.setCurrentModelIndex(QModelIndex())
-            self.ui.button_save.setEnabled(False)
-            self.ui.button_remove_entry.setEnabled(False)
-            self.ui.entry_start_time.clear()
-            self.ui.entry_end_time.clear()
-            self.ui.entry_description.clear()
-            self.ui.entry_start_time.setReadOnly(True)
-            self.ui.entry_end_time.setReadOnly(True)
-            self.ui.entry_description.setReadOnly(True)
 
     def set_video_filename(self, filename):
         """
@@ -914,7 +738,7 @@ class MainVideoPlayerWindow(QMainWindow):
                 self.media_player.set_hwnd(self.ui.frame_video.winId())
             elif sys.platform == "darwin": # for MacOS
                 self.media_player.set_nsobject(self.ui.frame_video.winId())
-            self.ui.entry_video.setText(self.video_filename)
+            # self.ui.entry_video.setText(self.video_filename)
             self.update_window_title()
             self.update_video_file_labels_on_file_change()
             self.media_started_playing = False

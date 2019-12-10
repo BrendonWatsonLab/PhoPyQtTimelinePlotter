@@ -32,6 +32,7 @@ from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_AnnotationComments impo
 # from app.database.SqliteEventsDatabase import load_video_events_from_database
 from app.database.SqlAlchemyDatabase import load_annotation_events_from_database, save_annotation_events_to_database, create_TimestampedAnnotation
 
+from GUI.UI.VideoPlayer.VideoPlayerWidget import VideoPlayerWidget
 from GUI.UI.VideoPlayer.MainVideoPlayerWindow import *
 from GUI.SetupWindow.SetupWindow import *
 
@@ -53,6 +54,8 @@ from GUI.UI.TimelineFloatingHeaderWidget.TimelineFloatingHeaderWidget import Tim
 
 from GUI.Model.DataMovieLinkInfo import DataMovieLinkInfo
 
+from GUI.Helpers.DurationRepresentationHelpers import DurationRepresentationMixin, OffsetRepresentationMixin
+
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.
         ConstrainVideosShownToGlobal = 2 #  keeps the global the same, and only shows the videos within the global start and end range
@@ -68,7 +71,7 @@ class ViewportScaleAdjustmentOptions(Enum):
 self.activeScaleMultiplier: this multipler determines how many times longer the contents of the scrollable viewport are than the viewport width itself.
 
 """
-class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
+class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessingWindow):
     
     static_VideoTrackTrackID = -1 # The integer ID of the main video track
     
@@ -159,13 +162,21 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
 
         # Reference Manager:
-        self.referenceManager = ReferenceMarkerManager(10, parent=self)
+        self.referenceManager = ReferenceMarkerManager(self.totalStartTime, self.totalEndTime, self.width(), 10, parent=self)
         self.referenceManager.used_markers_updated.connect(self.on_reference_line_markers_updated)
         self.referenceManager.wants_extended_data.connect(self.on_request_extended_reference_line_data)
         self.referenceManager.selection_changed.connect(self.on_reference_line_marker_list_selection_changed)
         self.activeZoomChanged.connect(self.referenceManager.on_active_zoom_changed)
         self.activeViewportChanged.connect(self.referenceManager.on_active_viewport_changed)
         self.activeGlobalTimelineTimesChanged.connect(self.referenceManager.on_active_global_timeline_times_changed)
+        self.minimumTimelineTrackWidthChanged.connect(self.referenceManager.set_fixed_width)
+
+
+        self.wantsCreateNewVideoPlayerWindowOnClose = False
+        # self.pendingCreateVideoPlayerURL = None # self.pendingCreateVideoPlayerURL: holds the URL of the video file that we currently want to load. Used to enable waiting for the previous video player to close before a new one is opened with this URL.
+        self.pendingCreateVideoPlayerSelectedItem = None # self.pendingCreateVideoPlayerSelectedItem: holds the URL of the video file that we currently want to load. Used to enable waiting for the previous video player to close before a new one is opened with this URL.
+
+
 
         self.videoPlayerWindow = None
         self.helpWindow = None
@@ -745,11 +756,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         event_x = self.duration_to_offset(duration_offset)
         return event_x
 
-    def datetime_to_percent(self, newDatetime):
-        duration_offset = newDatetime - self.totalStartTime
-        percent_x = duration_offset / self.totalDuration
-        return percent_x
-
     # Computes the position in the scroll view's contents (the timeline track offset position) from the viewport's/window's viewport_x_offset
     def viewport_offset_to_contents_offset(self, viewport_x_offset):
         print("TimelineDrawingWindow.viewport_offset_to_contents_offset(viewport_x_offset: {0})...".format(str(viewport_x_offset)))
@@ -1164,14 +1170,20 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
 
     def try_set_video_player_window_url(self, url):
         #TODO: temp: set the videoPlayerWindow to None to ensure that a new one is created. Note that setting it to None doesn't actually close the old one.
-        self.videoPlayerWindow = None
-
-
+        # self.videoPlayerWindow = None
+        
         if (not (self.videoPlayerWindow is None)):
-            print("Using existing Video Player Window...")
-            self.videoPlayerWindow.movieLink = None # Disable the movieLink
-            self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
-            self.videoPlayerWindow.set_video_filename(url)
+            # print("Using existing Video Player Window...")
+            print("Closing existing Video Player Window...")
+            self.videoPlayerWindow.close()
+            self.wantsCreateNewVideoPlayerWindowOnClose = True
+            self.pendingCreateVideoPlayerURL = url
+
+            # Close the previous window and wait for it to be done closing before creating a new one.
+
+            # self.videoPlayerWindow.movieLink = None # Disable the movieLink
+            # self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
+            # self.videoPlayerWindow.set_video_filename(url)
 
             # self.videoPlayerWindow.show()
         else:
@@ -1183,7 +1195,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             except Exception as e:
                 print("Error Spawning Video Window:", e)
                 return False
-
             
             try:
                 self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
@@ -1198,15 +1209,51 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                 print("Error Setting video filename for Video Window:", e)
                 return False
 
+            self.videoPlayerWindow.movieLink = DataMovieLinkInfo(self.pendingCreateVideoPlayerSelectedItem, self.videoPlayerWindow, self, parent=self)
+
+            if self.wantsCreateNewVideoPlayerWindowOnClose:
+                # Set the property false after the window has been created
+                self.wantsCreateNewVideoPlayerWindowOnClose = False
+                self.pendingCreateVideoPlayerSelectedItem = None
+                self.pendingCreateVideoPlayerURL = None
+
+
             return True
 
 
+    # Called when the video player window closes.
     @pyqtSlot()
     def on_video_player_window_closed(self):
         """ Cleanup the popup widget here """
         print("TimelineDrawingWindow.on_video_player_window_closed()...")
         print("Popup closed.")
-        # self.videoPlayerWindow = None
+
+        # Deselect the video in the timeline:
+        for aVideoTrackIndex in range(0, len(self.videoFileTrackWidgets)):
+            currVideoTrackWidget = self.videoFileTrackWidgets[aVideoTrackIndex]
+            currVideoTrackWidget.clear_now_playing() 
+            currVideoTrackWidget.deselect_all()
+            currVideoTrackWidget.update()
+
+        # Remove the red playback line:
+        self.timelineMasterTrackWidget.blockSignals(True)
+        self.extendedTracksContainer.blockSignals(True)
+
+        self.timelineMasterTrackWidget.on_update_video_line(None)
+        self.extendedTracksContainer.on_update_video_line(None)
+
+        self.timelineMasterTrackWidget.update()
+        self.extendedTracksContainer.update()
+        
+        self.extendedTracksContainer.blockSignals(False)
+        self.timelineMasterTrackWidget.blockSignals(False)
+
+        self.videoPlayerWindow = None
+
+        if self.wantsCreateNewVideoPlayerWindowOnClose:
+            # open the pending URL in a new video player window after the previous one was successfully closed.
+            self.try_set_video_player_window_url(self.pendingCreateVideoPlayerURL)
+
 
 
     # Shows the Video File Tree window:
@@ -1239,9 +1286,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             # Create a new setup window
             self.databaseBrowserUtilityWindow = ExampleDatabaseTableWindow(self.database_connection)
             self.databaseBrowserUtilityWindow.show()
-
-        
-        
 
     # @pyqtSlot(int, int)
     # Occurs when the user selects an object (durationObject) in the child video track with the mouse
@@ -1289,9 +1333,11 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
                 currActiveVideoTrack.set_now_playing(trackObjectIndex)
 
                 if currSelectedObject.is_video_url_accessible():
+                    self.pendingCreateVideoPlayerSelectedItem = currSelectedObject
                     self.try_set_video_player_window_url(str(selected_video_path))
-                    self.videoPlayerWindow.movieLink = DataMovieLinkInfo(currSelectedObject, self.videoPlayerWindow, self, parent=self)
+                    
                 else:
+                    self.pendingCreateVideoPlayerSelectedItem = None
                     print("video file is inaccessible. Not opening the video player window")
                     if self.videoPlayerWindow is not None:
                         self.videoPlayerWindow.try_set_video_player_window_url(None)
@@ -1390,7 +1436,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         self.extendedTracksContainer.blockSignals(True)
 
         # Update the reference manager
-        self.referenceManager.update_next_unused_marker(x_offset)
+        # self.referenceManager.update_next_unused_marker(x_offset)
+        self.referenceManager.update_next_unused_marker(desired_datetime, self.get_minimum_track_width())
 
         self.timelineMasterTrackWidget.update()
         self.extendedTracksContainer.update()
@@ -1404,7 +1451,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # on_request_extended_reference_line_data(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
         additional_data = []
         for aListItem in referenceLineList:
-            curr_x = aListItem.get_x_offset_position()
+            curr_view = aListItem.get_view()
+            curr_x = curr_view.get_x_offset_position()
             curr_datetime = self.offset_to_datetime(curr_x)
             additional_data.append(curr_datetime)
 
@@ -1417,7 +1465,8 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         print("TimelineDrawingWindow.on_reference_line_markers_updated(...)")
         additional_data = []
         for aListItem in referenceLineList:
-            curr_x = aListItem.get_x_offset_position()
+            curr_view = aListItem.get_view()
+            curr_x = curr_view.get_x_offset_position()
             curr_datetime = self.offset_to_datetime(curr_x)
             additional_data.append(curr_datetime)
 
@@ -1442,13 +1491,23 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
         # Build the metadata
         output_data = []
         for aListItem in curr_markers:
-            curr_x = aListItem.get_x_offset_position()
-            curr_datetime = self.offset_to_datetime(curr_x)
             # combine the datetime and the list item as a tuple
-            output_data.append(curr_datetime, aListItem)
+            output_data.append(aListItem)
 
         # Assuming there's two valid markers, return them in order
-        output_data.sort(key = lambda mark_tuple: mark_tuple[0])
+        output_data.sort(key = lambda combined_entry: combined_entry.get_record().time)
+
+
+        # for aListItem in curr_markers:
+        #     curr_view = aListItem.get_view()
+        #     curr_x = curr_view.get_x_offset_position()
+        #     curr_datetime = self.offset_to_datetime(curr_x)
+        #     # combine the datetime and the list item as a tuple
+        #     output_data.append(curr_datetime, aListItem)
+
+        # # Assuming there's two valid markers, return them in order
+        # output_data.sort(key = lambda mark_tuple: mark_tuple[0])
+
         return output_data
 
 
@@ -1486,14 +1545,32 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             first_item = selected_ref_lines[0]
             second_item = selected_ref_lines[1]
 
-            start_time = first_item[0]
-            end_time = second_item[0]
+            # start_time = first_item[0]
+            # end_time = second_item[0]
+            start_time = first_item.get_record().time
+            end_time = second_item.get_record().time
 
             print("trying to create annotation from {0} to {1}".format(str(start_time), str(end_time)))
             # Since we don't know what the source for these global mark references are, we have to create a new annotation without any existing comment/config. This means the UI won't render it on a track by default.
             # currTrackWidget.create_comment_datetime(start_time, end_time)
             print("ERROR: UNIMPLMENTED: TODO: Create a generic annotation dialog (with a temporary config) and allow the user to add it even if the track isn't currently displayed)")
             return
+
+
+    # Tries to create a comment between the two provided dates
+
+    @pyqtSlot(datetime, datetime)
+    def try_create_comment_between_dates(self, startDate, endDate):
+        print("try_create_comment_between_dates(...)")
+        start_time = startDate
+        end_time = endDate
+
+        print("trying to create annotation from {0} to {1}".format(str(start_time), str(end_time)))
+        # Since we don't know what the source for these global mark references are, we have to create a new annotation without any existing comment/config. This means the UI won't render it on a track by default.
+        # currTrackWidget.create_comment_datetime(start_time, end_time)
+        print("ERROR: UNIMPLMENTED: TODO: Create a generic annotation dialog (with a temporary config) and allow the user to add it even if the track isn't currently displayed)")
+        return
+
 
 
 
@@ -1660,11 +1737,6 @@ class TimelineDrawingWindow(AbstractDatabaseAccessingWindow):
             else:
                 print("creating annotation....")
                 currTrackWidget.create_comment_datetime(sel_start, sel_endtime)
-
-
-            
-
-
 
         else:
             print("WARNING: Couldn't find matching annotation track for filter {0}".format(str(currTrackFilter)))

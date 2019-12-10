@@ -75,10 +75,6 @@ class TickedTimelineDrawingBaseWidget(FixedTimelineContentsWidthMixin, QWidget):
 
     def get_reference_manager(self):
         return self.referenceManager
-        # if self.parent():
-        #     return self.parent().get_reference_manager()
-        # else:
-        #     return None
 
 
     def draw_tick_lines(self, painter):

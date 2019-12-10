@@ -67,6 +67,11 @@ class TimelineTrackDrawingWidget_Videos(TrackConfigMixin, TimelineTrackDrawingWi
         
 
 
+    # Clears the "now playing" status from any videos in the track
+    def clear_now_playing(self):
+        for aPreviousPlayingVideoIndex in self.currNowPlayingVideoIndicies:
+            self.durationObjects[aPreviousPlayingVideoIndex].set_is_playing(False)
+
     def set_now_playing(self, videoObjectIndex):
         if self.currNowPlayingVideoIndicies.__contains__(videoObjectIndex):
             # already playing, just return
@@ -74,8 +79,7 @@ class TimelineTrackDrawingWidget_Videos(TrackConfigMixin, TimelineTrackDrawingWi
             return
 
         # Set other videos to not now_playing
-        for aPreviousPlayingVideoIndex in self.currNowPlayingVideoIndicies:
-            self.durationObjects[aPreviousPlayingVideoIndex].set_is_playing(False)
+        self.clear_now_playing()
 
         # Set new video to now_playing
         self.durationObjects[videoObjectIndex].set_is_playing(True)

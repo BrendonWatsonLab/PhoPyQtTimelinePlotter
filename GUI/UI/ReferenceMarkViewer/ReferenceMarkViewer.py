@@ -84,23 +84,19 @@ class ReferenceMarkViewer(ActiveReferenceMarkersMixin, QWidget):
 
         for (anIndex, anItem) in enumerate(self.activeMarkersList):
             curr_string = ""
+            curr_item_view = anItem.get_view()
+            curr_item_record = anItem.get_record()
             # Create the new table item            
             # aDataRowIndex = anIndex + 1 # Add one to compensate for the header row
             aDataRowIndex = anIndex # Add one to compensate for the header row
             # self.ui.tableWidget.setItem(aDataRowIndex,0,QTableWidgetItem(str(aRowIndex)))
-            self.ui.tableWidget.setItem(aDataRowIndex,0,QTableWidgetItem(anItem.identifier))
+            self.ui.tableWidget.setItem(aDataRowIndex,0,QTableWidgetItem(curr_item_view.identifier))
 
-            if self.activeMetadataList[anIndex] is None:
-                curr_string = str(anItem.get_position_tuple_string())
-                self.ui.tableWidget.setItem(aDataRowIndex,1,QTableWidgetItem(curr_string))
-                self.ui.tableWidget.setItem(aDataRowIndex,2,QTableWidgetItem("No Metadata"))
-            else:
-                curr_metadata_item = self.activeMetadataList[anIndex]
-                # curr_string = ('RefMark[identifier: {0}]: (datetime: {1})'.format(anItem.identifier, str(curr_metadata_item)))
-                curr_string = str(curr_metadata_item)
-                # curr_string = str(anItem) + str(self.activeMetadataList[anIndex])
-                self.ui.tableWidget.setItem(aDataRowIndex,1,QTableWidgetItem(str(anItem.get_position_tuple_string())))
-                self.ui.tableWidget.setItem(aDataRowIndex,2,QTableWidgetItem(curr_string))
+            curr_string = str(curr_item_view.get_position_tuple_string())
+            self.ui.tableWidget.setItem(aDataRowIndex,1,QTableWidgetItem(curr_string))
+            curr_string = curr_item_record.time_string
+            self.ui.tableWidget.setItem(aDataRowIndex,2,QTableWidgetItem(curr_string))
+
 
 
     def on_item_clicked(self):
@@ -164,8 +160,11 @@ class ReferenceMarkViewer(ActiveReferenceMarkersMixin, QWidget):
         # first_item = selected_ref_lines[0]
         # second_item = selected_ref_lines[1]
 
-        start_time = self.activeMetadataList[first_item_index]
-        end_time = self.activeMetadataList[second_item_index]
+        # start_time = self.activeMetadataList[first_item_index]
+        # end_time = self.activeMetadataList[second_item_index]
+
+        start_time = self.activeMarkersList[first_item_index].get_record().time
+        end_time = self.activeMarkersList[second_item_index].get_record().time
 
         # TODO: assumes they're in the right order!
 

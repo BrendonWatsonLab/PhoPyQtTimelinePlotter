@@ -80,6 +80,36 @@ class DurationRepresentationMixin(object):
     def get_total_duration(self):
         return (self.get_total_end_time() - self.get_total_start_time())
 
+    # Timeline position/time converion functions:
+    def datetime_to_percent(self, newDatetime):
+        duration_offset = newDatetime - self.totalStartTime
+        percent_x = duration_offset / self.totalDuration
+        return percent_x
+
+
+
+## Unused:
+class OffsetRepresentationMixin(object):
+
+    """
+        Object must have the following instance properties:
+        self.width()
+        self.height()
+
+        self.totalStartTime
+        self.totalEndTime
+        self.activeScaleMultiplier
+    """
+
+    def get_total_start_time(self):
+        return self.totalStartTime
+
+    def get_total_end_time(self):
+        return self.totalEndTime
+
+    def get_total_duration(self):
+        return (self.get_total_end_time() - self.get_total_start_time())
+
     def get_active_scale_multiplier(self):
         return self.activeScaleMultiplier
 
