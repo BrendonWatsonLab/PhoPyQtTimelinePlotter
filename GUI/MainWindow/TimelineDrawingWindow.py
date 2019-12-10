@@ -956,8 +956,8 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
     # returns the new active scale multiplier
     def set_minimum_track_width(self, desiredMinimumWidth):
         newActiveScaleMultiplier = desiredMinimumWidth / self.width()
-        self.activeScaleMultiplier = newActiveScaleMultiplier
-        return newActiveScaleMultiplier
+        self.set_new_active_scale_multiplier(newActiveScaleMultiplier)
+        return self.activeScaleMultiplier
 
     def get_viewport_width(self):
         return self.timelineScroll.width()
@@ -981,8 +981,10 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         return (currPercent * self.totalDuration)
 
     def set_active_viewport_duration(self, desiredDuration):
-        desiredPercent = desiredDuration / self.totalDuration
-        return self.set_active_viewport_duration_percent_viewport_total(desiredPercent)
+        self.set_new_desired_viewport_duration(desiredDuration)
+        return self.activeScaleMultiplier
+        # desiredPercent = desiredDuration / self.totalDuration
+        # return self.set_active_viewport_duration_percent_viewport_total(desiredPercent)
 
     """ STATICMETHOD: compute_activeScaleMultiplier_from_desiredViewportDuration(currentViewportWidth, totalTimelineDuration, desiredViewportDisplayDuration)
     Given: a desired duration to display in the viewport
@@ -1052,15 +1054,13 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
     ## Timeline ZOOMING:
     def on_zoom_in(self):
-        self.viewportAdjustmentMode = ViewportScaleAdjustmentOptions.MaintainDesiredViewportZoomFactor
-        self.activeScaleMultiplier = min(TimelineDrawingWindow.MaxZoomLevel, (self.activeScaleMultiplier + TimelineDrawingWindow.ZoomDelta))
-        self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
-        self.on_active_zoom_changed()
+        newActiveScaleMultiplier = min(TimelineDrawingWindow.MaxZoomLevel, (self.activeScaleMultiplier + TimelineDrawingWindow.ZoomDelta))
+        self.set_new_active_scale_multiplier(newActiveScaleMultiplier)
+
 
     def on_zoom_home(self):
-        self.viewportAdjustmentMode = ViewportScaleAdjustmentOptions.MaintainDesiredViewportZoomFactor
-        self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
-        self.on_active_zoom_changed()
+        newActiveScaleMultiplier = TimelineDrawingWindow.DefaultZoom
+        self.set_new_active_scale_multiplier(newActiveScaleMultiplier)
 
     def on_zoom_current_video(self):
         # on_zoom_current_video(): zooms the viewport to fit the current video
@@ -1093,19 +1093,15 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             return
 
     def on_zoom_out(self):
-        self.viewportAdjustmentMode = ViewportScaleAdjustmentOptions.MaintainDesiredViewportZoomFactor
-        self.activeScaleMultiplier = max(TimelineDrawingWindow.MinZoomLevel, (self.activeScaleMultiplier - TimelineDrawingWindow.ZoomDelta))
-        self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
-        self.on_active_zoom_changed()
+        newActiveScaleMultiplier = max(TimelineDrawingWindow.MinZoomLevel, (self.activeScaleMultiplier - TimelineDrawingWindow.ZoomDelta))
+        self.set_new_active_scale_multiplier(newActiveScaleMultiplier)
         
     def on_finish_editing_zoom_custom(self):
         print("on_finish_editing_zoom_custom()")
         double_newZoom = self.ui.doubleSpinBox_currentZoom.value()
         print("new_zoom: {0}".format(double_newZoom))
-        self.viewportAdjustmentMode = ViewportScaleAdjustmentOptions.MaintainDesiredViewportZoomFactor
-        self.activeScaleMultiplier = double_newZoom
-        self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
-        self.on_active_zoom_changed()
+        newActiveScaleMultiplier = double_newZoom
+        self.set_new_active_scale_multiplier(newActiveScaleMultiplier)
 
     def refreshUI_viewport_zoom_controls(self):
         self.ui.doubleSpinBox_currentZoom.blockSignals(True)
@@ -1145,7 +1141,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         
         # Compute appropriate zoom.
         newZoom = self.set_active_viewport_duration(newViewportDuration)
-        self.on_active_zoom_changed()
+        # self.on_active_zoom_changed()
         return self.sync_active_viewport_start_to_datetime(start_time)
 
 
@@ -1978,6 +1974,33 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         print('track_config_dialog_canceled()')
         self.activeTrackID_ConfigEditingIndex = None
 
+    # Sets the self.activeScaleMultiplier, then calls the updateViewportZoomFactorsUsingCurrentAdjustmentMode() function to update the corresponding quantity. If the value changes, emits the appropriate signals
+    def set_new_active_scale_multiplier(self, newActiveScaleMultiplier):
+        self.viewportAdjustmentMode = ViewportScaleAdjustmentOptions.MaintainDesiredViewportZoomFactor
+        oldScaleMultiplier = self.activeScaleMultiplier
+        if (newActiveScaleMultiplier != oldScaleMultiplier):
+            # If the desired viewport duration is changing
+            self.activeScaleMultiplier = newActiveScaleMultiplier
+            self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
+            self.activeZoomChanged.emit()
+            self.activeViewportChanged.emit()
+            self.minimumTimelineTrackWidthChanged.emit(self.get_minimum_track_width())
+            self.update()
+
+    # Sets the self.activeViewportDuration, then calls the updateViewportZoomFactorsUsingCurrentAdjustmentMode() function to update the corresponding quantity. If the value changes, emits the appropriate signals
+    def set_new_desired_viewport_duration(self, newDesiredViewportDuration):
+        self.viewportAdjustmentMode = ViewportScaleAdjustmentOptions.MaintainDesiredViewportDisplayDuration
+        oldViewportDuration = self.activeViewportDuration
+
+        if (newDesiredViewportDuration != oldViewportDuration):
+            # If the desired viewport duration is changing
+            self.activeViewportDuration = newDesiredViewportDuration
+            
+            self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
+            self.activeZoomChanged.emit()
+            self.activeViewportChanged.emit()
+            self.minimumTimelineTrackWidthChanged.emit(self.get_minimum_track_width())
+            self.update()
 
     """ updateViewportZoomFactorsUsingCurrentAdjustmentMode()
         Called to ensure that the corect activeViewportDuration and activeScaleMultiplier are set, given the current viewportAdjustmentMode.
