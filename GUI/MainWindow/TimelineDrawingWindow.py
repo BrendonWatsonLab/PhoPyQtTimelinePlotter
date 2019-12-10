@@ -1121,13 +1121,13 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
     # Returns the current perent scrolled the viewport is through the entire timeline.
     def get_viewport_percent_scrolled(self):
         # TODO: check that this is correct. I think it is.
-        return (self.timelineScroll.horizontalScrollBar().value() / (self.timelineScroll.horizontalScrollBar().maximum() - self.timelineScroll.horizontalScrollBar().minimum()))
+        return (float(self.timelineScroll.horizontalScrollBar().value()) / (float(self.timelineScroll.horizontalScrollBar().maximum()) - float(self.timelineScroll.horizontalScrollBar().minimum())))
 
 
     # Scrolls the viewport to the desired percent_scrolled of entire timeline.
     def set_viewport_percent_scrolled(self, percent_scrolled):
-        scrollbar_scroll_relative_offset = (percent_scrolled * (self.timelineScroll.horizontalScrollBar().maximum() - self.timelineScroll.horizontalScrollBar().minimum()))
-        scrollbar_offset = scrollbar_scroll_relative_offset + self.timelineScroll.horizontalScrollBar().minimum()
+        scrollbar_scroll_relative_offset = (float(percent_scrolled) * (float(self.timelineScroll.horizontalScrollBar().maximum()) - float(self.timelineScroll.horizontalScrollBar().minimum())))
+        scrollbar_offset = scrollbar_scroll_relative_offset + float(self.timelineScroll.horizontalScrollBar().minimum())
         self.timelineScroll.horizontalScrollBar().setValue(scrollbar_offset)
 
     # Moves and sizes the current viewport's position such that it's start position is aligned with a specific start_time and its end position is aligned with a specific end_time. This also adjusts the zoom!
