@@ -153,6 +153,7 @@ class OperationTypes(Enum):
         NoOperation = 1
         FilesystemFileFind = 2
         FilesystemMetadataLoad = 3
+        FilesystemThumbnailGeneration = 4
 
 class PendingFilesystemOperation(QObject):
 

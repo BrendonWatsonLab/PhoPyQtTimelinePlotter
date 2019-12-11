@@ -59,6 +59,9 @@ from GUI.Helpers.DurationRepresentationHelpers import DurationRepresentationMixi
 
 from GUI.Model.TrackType import TrackType, TrackStorageArray
 
+from app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoThumbnail, VideoPreviewThumbnailGenerator
+
+
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.
         ConstrainVideosShownToGlobal = 2 #  keeps the global the same, and only shows the videos within the global start and end range
@@ -237,6 +240,9 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         self.activeGlobalTimelineTimesChanged.connect(self.referenceManager.on_active_global_timeline_times_changed)
         self.minimumTimelineTrackWidthChanged.connect(self.referenceManager.set_fixed_width)
 
+        # Video Thumbnail Generator:
+        self.videoThumbnailGenerator = VideoPreviewThumbnailGenerator([], parent=self)
+        self.videoThumbnailGenerator.thumbnailGenerationComplete.connect(self.on_video_thumbnail_generation_complete)
 
         self.wantsCreateNewVideoPlayerWindowOnClose = False
         # self.pendingCreateVideoPlayerURL = None # self.pendingCreateVideoPlayerURL: holds the URL of the video file that we currently want to load. Used to enable waiting for the previous video player to close before a new one is opened with this URL.
@@ -1437,6 +1443,9 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
             self.videoPlayerWindow.movieLink = DataMovieLinkInfo(self.pendingCreateVideoPlayerSelectedItem, self.videoPlayerWindow, self, parent=self)
             
+            # Start thumbnail generation for this video file too:
+            self.get_video_thumbnail_generator().add_video_path(url)
+
             # if self.wantsCreateNewVideoPlayerWindowOnClose:
             # Set the property false after the window has been created
             self.wantsCreateNewVideoPlayerWindowOnClose = False
@@ -2249,3 +2258,22 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         # Iterate through all video files and find the partition events that overlap them.
         # for aVideoInfoObj in self.video:
         #     pass
+
+    def get_video_thumbnail_generator(self):
+        return self.videoThumbnailGenerator
+
+    # on_video_thumbnail_generation_complete(): Called when a thumbnail generation is complete for a given video
+    @pyqtSlot()
+    def on_video_thumbnail_generation_complete(self):
+        print("TimelineDrawingWindow.on_video_thumbnail_generation_complete()...")
+        # Clear the top-level nodes
+        # for (aSearchPathIndex, aSearchPath) in enumerate(self.searchPaths):
+        for (key_path, cache_value) in self.get_video_thumbnail_generator().get_cache().items():
+            # key_path: the video file path that had the thumbnails generated for it
+            print("thumbnail generation complete for [{0}]: {1} frames".format(str(key_path), len(cache_value)))
+
+
+            
+           
+        self.update()
+    
