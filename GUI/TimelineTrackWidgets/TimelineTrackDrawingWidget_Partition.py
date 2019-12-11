@@ -164,8 +164,11 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
     @pyqtSlot(int)    
     def on_partition_modify_event(self, childIndex):
         print("on_partition_modify_event(...)")
-        selectedPartitionIndex = self.get_selected_partition_index()
-        selectedPartitionViewObject = self.get_selected_partition().get_view()
+
+        selectedPartitionIndex = childIndex
+        selectedPartitionObj = self.partitions[childIndex]
+        selectedPartitionViewObject = selectedPartitionObj.get_view()
+
         if ((not (selectedPartitionViewObject is None))):
             self.activeEditingPartitionIndex = selectedPartitionIndex
             self.activePartitionEditDialog = PartitionEditDialog(self.database_connection, parent=self)
@@ -270,7 +273,7 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
                 self.selection_changed.emit(self.trackID, newlySelectedObjectIndex)
 
             # Called once the selected partition object has been set the Partitioner should call "self.owning_parent_track.reloadModelFromDatabase()"
-            self.on_partition_modify_event()
+            self.on_partition_modify_event(newlySelectedObjectIndex)
         
         pass
 
