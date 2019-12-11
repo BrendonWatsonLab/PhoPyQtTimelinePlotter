@@ -496,6 +496,9 @@ class Partitioner(AbstractDatabaseAccessingQObject):
 
         # After saving to the database, we should reload from the database. The parent does this.
         self.owning_parent_track.reloadModelFromDatabase()
+        # Should the parent actually do this as opposed to this track?
+        self.owning_parent_track.setWindowModified(False)
+
         ## TODO: this doesn't update the owner's objects (doesn't call owner.reinitialize_from_partition_manager() or owner.update())
         print("done.")
             
