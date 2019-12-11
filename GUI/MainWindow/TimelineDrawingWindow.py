@@ -1133,11 +1133,11 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         # self.sync_active_viewport_start_to_datetime(current_viewport_start_time) # Use the saved start time to re-align the viewport's left edge
 
     def get_viewport_offset_display_string(self):
-        outString = str("{0:.6f}".format(round(self.get_viewport_percent_scrolled(),6)))
+        outString = str("{0:.6f} | ".format(round(self.get_viewport_percent_scrolled(),6)))
 
         viewport_start_time = self.get_viewport_active_start_time()
-
-
+        viewport_start_time_string = viewport_start_time.strftime("X%m/X%d X%I:%m%p").replace('X0', 'X').replace('X', '')
+        outString = outString + viewport_start_time_string
 
         return outString
 
