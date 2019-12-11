@@ -190,8 +190,7 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
 
     def on_child_action_comment(self, childIndex):
         print("TimelineTrackDrawingWidget_EventsBase.on_child_action_comment({0})".format(str(childIndex)))
-        #TODO: shouldn't need to get_selected_duration_obj(). Should be able to use the childIndex.
-        selected_obj = self.get_selected_duration_obj()
+        selected_obj = self.durationObjects[childIndex]
         if (selected_obj is None):
             print("ERROR: selected duration object is None! Can't perform action!")
             return
