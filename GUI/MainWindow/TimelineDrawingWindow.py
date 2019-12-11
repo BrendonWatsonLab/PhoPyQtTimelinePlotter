@@ -8,7 +8,7 @@ from enum import Enum
 
 from PyQt5 import QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QGridLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea
-from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QAction, qApp, QApplication, QAbstractSlider
+from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QAction, qApp, QApplication, QAbstractSlider, QAbstractScrollArea
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
@@ -244,7 +244,6 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
         # Temporary "pending" items that will be set and then cleared once the appropriate action is performed with them
         self.pending_adjust_viewport_start_datetime = None
-
 
         self.videoPlayerWindow = None
         self.helpWindow = None
@@ -1073,16 +1072,16 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
     ## Timeline ZOOMING:
     def on_zoom_in(self):
-        self.pending_adjust_viewport_start_datetime = self.get_viewport_active_start_time()
+        # self.pending_adjust_viewport_start_datetime = self.get_viewport_active_start_time()
         newActiveScaleMultiplier = min(TimelineDrawingWindow.MaxZoomLevel, (self.activeScaleMultiplier + TimelineDrawingWindow.ZoomDelta))
         self.set_new_active_scale_multiplier(newActiveScaleMultiplier)
 
 
     def on_zoom_home(self):
-        current_viewport_start_time = self.get_viewport_active_start_time()
+        # current_viewport_start_time = self.get_viewport_active_start_time()
         newActiveScaleMultiplier = TimelineDrawingWindow.DefaultZoom
         self.set_new_active_scale_multiplier(newActiveScaleMultiplier)
-        self.sync_active_viewport_start_to_datetime(current_viewport_start_time) # Use the saved start time to re-align the viewport's left edge
+        # self.sync_active_viewport_start_to_datetime(current_viewport_start_time) # Use the saved start time to re-align the viewport's left edge
 
 
     def on_zoom_current_video(self):
@@ -1117,20 +1116,20 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
     def on_zoom_out(self):
         # Save the datetime represented by the viewport's left edge so that it can be re-aligned after zoom is performed.
-        current_viewport_start_time = self.get_viewport_active_start_time()
+        # current_viewport_start_time = self.get_viewport_active_start_time()
         newActiveScaleMultiplier = max(TimelineDrawingWindow.MinZoomLevel, (self.activeScaleMultiplier - TimelineDrawingWindow.ZoomDelta))
         self.set_new_active_scale_multiplier(newActiveScaleMultiplier)
-        self.sync_active_viewport_start_to_datetime(current_viewport_start_time) # Use the saved start time to re-align the viewport's left edge
+        # self.sync_active_viewport_start_to_datetime(current_viewport_start_time) # Use the saved start time to re-align the viewport's left edge
         
     def on_finish_editing_zoom_custom(self):
         # print("on_finish_editing_zoom_custom()")
         # Save the datetime represented by the viewport's left edge so that it can be re-aligned after zoom is performed.
-        current_viewport_start_time = self.get_viewport_active_start_time()
+        # current_viewport_start_time = self.get_viewport_active_start_time()
         double_newZoom = self.ui.doubleSpinBox_currentZoom.value()
         # print("new_zoom: {0}".format(double_newZoom))
         newActiveScaleMultiplier = double_newZoom
         self.set_new_active_scale_multiplier(newActiveScaleMultiplier)
-        self.sync_active_viewport_start_to_datetime(current_viewport_start_time) # Use the saved start time to re-align the viewport's left edge
+        # self.sync_active_viewport_start_to_datetime(current_viewport_start_time) # Use the saved start time to re-align the viewport's left edge
 
     def refreshUI_viewport_zoom_controls(self):
         self.ui.doubleSpinBox_currentZoom.blockSignals(True)
