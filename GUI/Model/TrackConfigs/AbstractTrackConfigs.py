@@ -18,6 +18,8 @@ from app.database.entry_models.db_model import StaticFileExtension, FileParentFo
 from GUI.Model.ModelViewContainer import ModelViewContainer
 
 from GUI.Model.TrackType import TrackType, TrackStorageArray
+
+# INCLUDE:
 # from GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, TrackCache, TrackFilterBase
 
 
@@ -217,7 +219,6 @@ class TrackConfigurationBase(QObject):
     # get_track_storageArray_type(): returns GUI.Model.TrackStorageArray type object
     def get_track_storageArray_type(self):
         return self.get_filter().get_track_storageArray_type()
-
 
     def filter_records(self, session):
         return self.get_filter().build_filter(session)

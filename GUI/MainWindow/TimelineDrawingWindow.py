@@ -176,7 +176,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
     
     debug_desiredVideoTracks = [0, 1]
     debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(False, True, True), VideoTrackGroupSettings(False, True, True)]
-    
+
     # debug_desiredVideoTracks = [5, 6, 8, 9]
 
     def __init__(self, database_connection, totalStartTime, totalEndTime):
@@ -365,7 +365,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             # B00
             currTrackIndex = 0
 
-            # Loop through and add all the tracks
+            # Loop through and create all of the track configs, the track GUI widget objects, etc
             for (index, currTrackBBID) in enumerate(self.loadedVideoTrackIndicies):
                 currGroup = VideoTrackGroup(index)
 
@@ -512,8 +512,6 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
             self.extendedTracksContainerVboxLayout.addWidget(currHeaderIncludedContainer)
 
-
-
         def initUI_setupEventTrackWidget(self, currWidget, currTrackConfigurationIndex):
             self.minimumTimelineTrackWidthChanged.connect(currWidget.set_fixed_width)
 
@@ -564,7 +562,6 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             currHeaderIncludedContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
             self.extendedTracksContainerVboxLayout.addWidget(currHeaderIncludedContainer)
-
 
         def initUI_layout(self):
 

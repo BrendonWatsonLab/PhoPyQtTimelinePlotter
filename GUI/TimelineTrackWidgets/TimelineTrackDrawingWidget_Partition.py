@@ -13,7 +13,7 @@ from GUI.Model.Partitions import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import *
 
 from GUI.UI.PartitionEditDialog.PartitionEditDialog import *
-from GUI.Model.TrackType import TrackType, TrackConfigMixin
+from GUI.Model.TrackType import TrackType, TrackConfigMixin, TrackConfigDataCacheMixin
 
 ## TODO:
 """
@@ -55,7 +55,7 @@ class TrackContextConfig(QObject):
 
 # Consts of N "Cuts" that separate a block into N+1 "Partitions"
 #  
-class TimelineTrackDrawingWidget_Partition(TrackConfigMixin, TimelineTrackDrawingWidgetBase):
+class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfigMixin, TimelineTrackDrawingWidgetBase):
     default_shouldDismissSelectionUponMouseButtonRelease = False
     default_itemSelectionMode = ItemSelectionOptions.SingleSelection
 

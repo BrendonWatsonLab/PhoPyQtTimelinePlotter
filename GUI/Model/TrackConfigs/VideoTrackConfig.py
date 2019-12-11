@@ -19,6 +19,10 @@ from GUI.Model.ModelViewContainer import ModelViewContainer
 from GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, TrackCache, TrackFilterBase
 from GUI.Model.TrackType import TrackType
 
+# INCLUDE:
+# from GUI.Model.TrackConfigs.VideoTrackConfig import VideoTrackFilter, VideoTrackConfiguration
+
+
 """
 Represents a filter for a specific track
 """
