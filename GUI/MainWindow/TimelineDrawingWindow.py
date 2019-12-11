@@ -1223,7 +1223,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         return True
         
         
-
+    ## These functions use the dictionary and array objects built up during initialization to retrieve tracks, configs, and headers by a given trackID.
     # find the track widget with the corresponding trackID
     def get_track_with_trackID(self, trackID):
         currLocatorTuple = self.trackID_to_TrackWidgetLocatorTuple[trackID]
@@ -1233,11 +1233,41 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         if track_storage_array_type == TrackStorageArray.Video:
             found_track_widget = self.videoFileTrackWidgets[track_stroage_array_index]
             pass
-        else:
+        if track_storage_array_type == TrackStorageArray.Event:
             found_track_widget = self.eventTrackWidgets[track_stroage_array_index]
             pass
+
+        else:
+            print("UNIMPLEMENTED ERROR: get_track_with_trackID({0})".format(str(trackID)))
+            return None
         
         return found_track_widget
+
+    # find the track header widget with the corresponding trackID
+    def get_track_header_with_trackID(self, trackID):
+        currLocatorTuple = self.trackID_to_TrackWidgetLocatorTuple[trackID]
+        track_storage_array_type = currLocatorTuple[0]
+        track_stroage_array_index = currLocatorTuple[1]
+        found_obj = None
+        if track_storage_array_type == TrackStorageArray.Video:
+            found_obj = self.videoFileTrackWidgetHeaders[trackID]
+            pass
+        if track_storage_array_type == TrackStorageArray.Event:
+            found_obj = self.eventTrackWidgetHeaders[trackID]
+            pass
+
+        else:
+            print("UNIMPLEMENTED ERROR: get_track_header_with_trackID({0})".format(str(trackID)))
+            return None
+        
+        return found_obj
+
+    # find the track header widget with the corresponding trackID
+    def get_track_floating_header_with_trackID(self, trackID):
+        return self.trackFloatingWidgetHeaders[trackID] # The floating headers are easy, as they're all in the same dictionary for both Video and Event tracks. Implemented just for consistency with self.get_track_header_with_trackID(trackID).
+
+
+
 
     ## Timeline Navigation:
     def on_jump_to_start(self):
@@ -1443,9 +1473,6 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
             self.videoPlayerWindow.movieLink = DataMovieLinkInfo(self.pendingCreateVideoPlayerSelectedItem, self.videoPlayerWindow, self, parent=self)
             
-            # Start thumbnail generation for this video file too:
-            self.get_video_thumbnail_generator().add_video_path(url)
-
             # if self.wantsCreateNewVideoPlayerWindowOnClose:
             # Set the property false after the window has been created
             self.wantsCreateNewVideoPlayerWindowOnClose = False
@@ -1930,6 +1957,39 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             print("Error: unknown track type!")
             return
     
+    
+
+    @pyqtSlot(int, object)
+    def on_video_track_child_generate_thumbnails(self, trackID, videoDurationObj):
+        print("TimelineDrawingWindow.on_video_track_child_generate_thumbnails({0}, {1})".format(str(trackID), str(videoDurationObj)))
+
+        currTrackConfig = self.trackConfigurationsDict[trackID]
+        currFoundTrack = self.get_track_with_trackID(trackID)
+
+        # currSpecifiedChildItem = currFoundTrack[]
+        proposed_video_file_path = videoDurationObj.get_full_path()
+        if (proposed_video_file_path is not None):
+            # Have a valid video file path
+            print("TimelineDrawingWindow.on_video_track_child_generate_thumbnails(...): starting thumbnail generation with video: {0}...".format(str(proposed_video_file_path)))
+            # Start thumbnail generation for this video file too:
+            self.get_video_thumbnail_generator().add_video_path(proposed_video_file_path)
+
+        else:
+            print("TimelineDrawingWindow.on_video_track_child_generate_thumbnails(...): video URL can not be resolved. Perhaps the file doesn't exist?")
+            return
+            
+        return
+
+
+
+    @pyqtSlot(int, object)
+    def on_track_child_get_info(self, trackID, commentObj):
+        print("TimelineDrawingWindow.on_track_child_get_info({0}, {1})".format(str(trackID), str(commentObj)))
+        # Find the correct config:
+        pass
+
+
+
     @pyqtSlot(int, object)
     def on_track_child_create_comment(self, trackID, commentObj):
         print("TimelineDrawingWindow.on_track_child_create_comment({0}, {1})".format(str(trackID), str(commentObj)))
@@ -1948,6 +2008,8 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
         currTrackConfig = currTrackHeader.get_config()
         currTrackFilter = currTrackConfig.get_filter()
+
+        ## TODO: Convert to make use of my track groups helper objects.
         # Use the filter to find the matching annotations track if it exists
         found_dest_track_id = None
         for (aKey, currDestTrackHeader) in self.eventTrackWidgetHeaders.items():
@@ -2272,8 +2334,5 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             # key_path: the video file path that had the thumbnails generated for it
             print("thumbnail generation complete for [{0}]: {1} frames".format(str(key_path), len(cache_value)))
 
-
-            
-           
         self.update()
     

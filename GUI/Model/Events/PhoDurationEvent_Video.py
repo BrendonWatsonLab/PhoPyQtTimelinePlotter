@@ -24,6 +24,7 @@ class PhoDurationEvent_Video(PhoDurationEvent):
     IsPlayingIndicatorFractionOfHeight = 0.08
 
     on_annotate = pyqtSignal(int)
+    on_generate_thumbnails = pyqtSignal(int)
 
     def __init__(self, startTime, endTime, name='', color=QColor(51, 204, 255, PhoEvent.DefaultOpacity), extended_data=dict(), parent=None):
         super(PhoDurationEvent_Video, self).__init__(startTime, endTime, name, color, extended_data, parent=parent)
@@ -32,6 +33,7 @@ class PhoDurationEvent_Video(PhoDurationEvent):
     def buildMenu(self):
         self.menu = super().buildMenu()
         self.annotation_action = self.menu.addAction("Create annotation...")
+        self.generate_thumbnails_action = self.menu.addAction("Generate thumbnails...")
         return self.menu
 
     def handleMenuAction(self, action):
@@ -43,6 +45,9 @@ class PhoDurationEvent_Video(PhoDurationEvent):
             if action == self.annotation_action:
                 print("PhoDurationEvent_Video.Annotation action!")
                 self.on_annotate.emit(self.get_track_index())
+            elif action == self.generate_thumbnails_action:
+                print("PhoDurationEvent_Video.Generate Thumbnails action!")
+                self.on_generate_thumbnails.emit(self.get_track_index())
             else:
                 print("Unknown menu option!!")
                 return action
@@ -56,6 +61,20 @@ class PhoDurationEvent_Video(PhoDurationEvent):
 
     def get_video_url(self):
         return self.extended_data['path']
+
+    # get_full_path(): gets the full, resolved path for the video file
+    def get_full_path(self):
+        currUrl = self.get_video_url()
+        videoFilePath = Path(currUrl)
+        try:
+            my_abs_path = videoFilePath.resolve(strict=True)
+            return my_abs_path
+        except FileNotFoundError:
+            # doesn't exist
+            return None
+
+        return None
+
 
     def is_video_url_accessible(self):
         currUrl = self.get_video_url()
@@ -75,6 +94,8 @@ class PhoDurationEvent_Video(PhoDurationEvent):
         else:
             # exists
             return True
+
+        
 
     def get_parent_url(self):
         return self.extended_data['parent_path']

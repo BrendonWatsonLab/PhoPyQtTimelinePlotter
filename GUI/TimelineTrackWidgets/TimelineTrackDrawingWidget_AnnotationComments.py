@@ -71,7 +71,7 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigDataCacheMixin, T
     # on_reloadModelFromConfigCache(...): called when the config cache updates to reload the widget
     @pyqtSlot()
     def on_reloadModelFromConfigCache(self):
-        print("TimelineTrackDrawingWidget_AnnotationComments.reloadModelFromConfigCache()")
+        # print("TimelineTrackDrawingWidget_AnnotationComments.reloadModelFromConfigCache()")
         # TODO: close any open dialogs, etc, etc
         self.reset_on_reload()
         active_cache = self.trackConfig.get_cache()

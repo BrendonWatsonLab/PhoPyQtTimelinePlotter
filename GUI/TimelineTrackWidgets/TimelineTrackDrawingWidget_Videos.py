@@ -21,12 +21,25 @@ class TimelineTrackDrawingWidget_Videos(TrackConfigMixin, TimelineTrackDrawingWi
     default_shouldDismissSelectionUponMouseButtonRelease = False
     default_itemSelectionMode = ItemSelectionOptions.MultiSelection
 
+    child_action_generate_thumbnails = pyqtSignal(int, object)
+
+
     def __init__(self, trackConfig, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
         super(TimelineTrackDrawingWidget_Videos, self).__init__(trackConfig.get_track_id(), [], [], totalStartTime, totalEndTime, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
         self.currNowPlayingVideoIndicies = []
         self.activeVideoEditDialog = None
         self.trackConfig = trackConfig
+        self.child_action_generate_thumbnails.connect(self.parent().on_video_track_child_generate_thumbnails)
+
         self.trackConfig.cacheUpdated.connect(self.reloadModelFromConfigCache)
+
+
+    ## Override:
+    # attach_child_duration_object_signals(): called to attach the signals to the children duration objects
+    def attach_child_duration_object_signals(self):
+        super().attach_child_duration_object_signals()
+        for aDurationObject in self.durationObjects:
+            aDurationObject.on_generate_thumbnails.connect(self.on_child_action_generate_thumbnails)
 
 
     # Updates the member variables from the database
@@ -174,3 +187,17 @@ class TimelineTrackDrawingWidget_Videos(TrackConfigMixin, TimelineTrackDrawingWi
         print("TimelineTrackDrawingWidget_Videos.on_create_playhead_selection(trackID: {0}, desired_datetime: {1})".format(str(trackID), str(desired_datetime)))
         self.on_create_marker.emit(desired_datetime)
         # self.parent().on_create_playhead_selection(desired_datetime)
+
+
+    @pyqtSlot(int)
+    def on_child_action_generate_thumbnails(self, childIndex):
+        print("TimelineTrackDrawingWidget_Videos.on_child_action_generate_thumbnails({0})".format(str(childIndex)))
+        selected_obj = self.durationObjects[childIndex]
+        if (selected_obj is None):
+            print("ERROR: selected duration object is None! Can't perform action!")
+            return
+        else:
+            # Call parent
+            self.child_action_generate_thumbnails.emit(self.trackID, selected_obj)
+
+        return

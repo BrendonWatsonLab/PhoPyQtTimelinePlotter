@@ -7,7 +7,7 @@ import numpy as np
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget,QTableWidgetItem
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QLinearGradient
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
+from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
 
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import TimelineTrackDrawingWidgetBase, ItemSelectionOptions
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_SelectionBase import TimelineTrackDrawingWidget_SelectionBase
@@ -37,6 +37,7 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
 
 
         # Set up signals to parent:
+        self.child_action_info.connect(self.parent().on_track_child_get_info)
         self.child_action_comment.connect(self.parent().on_track_child_create_comment)
 
         # Set up signals
@@ -57,10 +58,6 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
         self.eventRect = np.repeat(QRect(0,0,0,0), len(self.durationObjects))
         self.instantaneousEventRect = np.repeat(QRect(0, 0, 0, 0), len(self.instantaneousObjects))
 
-        # Draw the trace cursor
-        # qp.setPen(QtGui.QPen(EventsDrawingWindow.TraceCursorColor, 20.0, join=Qt.MiterJoin))
-        # qp.drawRect(event.rect().x(), event.rect().y(), EventsDrawingWindow.TraceCursorWidth, self.height())
-
         ## TODO: Use viewport information to only draw the currently displayed rectangles instead of having to draw it all at once.
         # drawRect = event.rect()
         drawRect = self.rect()
@@ -68,24 +65,7 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
         # Draw the linear horizontal gradient.
         lgrad = self.get_background_gradient(drawRect.height())
 
-        # lgrad = QLinearGradient(drawRect.topLeft(), drawRect.bottomLeft())
-        # lgrad.setColorAt(0.0, Qt.red)
-        # lgrad.setColorAt(1.0, Qt.yellow)
         qp.fillRect(drawRect, lgrad)
-
-        # print("is_emphasized(...): {0}".format(self.is_track_emphasized()))
-
-        # Draw the text label if needed
-        # if self.trackLabelText is not None:
-        #     oldPen = qp.pen()
-        #     oldFont = qp.font()
-
-        #     qp.setPen(TimelineTrackDrawingWidget_SelectionBase.default_TrackTitlePen)
-        #     qp.setFont(TimelineTrackDrawingWidget_SelectionBase.default_TrackTitleFont)
-        #     qp.drawText(drawRect, Qt.AlignLeft, self.trackLabelText)
-
-        #     qp.setPen(oldPen)
-        #     qp.setFont(oldFont)
 
         # Draw the duration objects
         for (index, obj) in enumerate(self.durationObjects):
@@ -166,6 +146,7 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
 
 
     # Menu Event Handlers:
+    @pyqtSlot(int)
     def on_child_action_info(self, childIndex):
         print("TimelineTrackDrawingWidget_EventsBase.on_child_action_info({0})".format(str(childIndex)))
         selected_obj = self.durationObjects[childIndex]
@@ -178,6 +159,7 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
 
         return
 
+    @pyqtSlot(int)
     def on_child_action_modify(self, childIndex):
         print("TimelineTrackDrawingWidget_EventsBase.on_child_action_modify{0})".format(str(childIndex)))
         selected_obj = self.durationObjects[childIndex]
@@ -190,6 +172,7 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
 
         return
 
+    @pyqtSlot(int)
     def on_child_action_comment(self, childIndex):
         print("TimelineTrackDrawingWidget_EventsBase.on_child_action_comment({0})".format(str(childIndex)))
         selected_obj = self.durationObjects[childIndex]
@@ -202,6 +185,7 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
 
         return
 
+    @pyqtSlot(int)
     def on_child_action_delete(self, childIndex):
         print("TimelineTrackDrawingWidget_EventsBase.on_child_action_delete({0})".format(str(childIndex)))
         selected_obj = self.durationObjects[childIndex]

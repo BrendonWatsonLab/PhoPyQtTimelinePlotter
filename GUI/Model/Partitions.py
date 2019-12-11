@@ -173,7 +173,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
     # Note that setAccessibleName(...) isn't called on objects created by a cut event
     def construct_spanning_unlabeled_partition_records(self, loadedDataPartitions):
         ##TODO: from the loaded partitions records (which only contain the user labeled regions) build the intermediate non-user-labeled partitions (with type and subtype None)
-        print("Partitioner.construct_spanning_unlabeled_partition_records(...)")
+        # print("Partitioner.construct_spanning_unlabeled_partition_records(...)")
         spanning_partition_records = []
         # Construct a partition to span to the start of the first data partition
         

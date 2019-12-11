@@ -157,13 +157,13 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
         # builds major (day) markers
         for single_date in ReferenceMarkerManager.daterange(start_date, end_date):
             newObj = RepresentedMarkerTime(single_date, self)
-            print(newObj.time_string)
+            # print(newObj.time_string)
             self.staticDaysMarkerData.append(newObj)
 
         # builds minor markers separated by self.minorMarkersHoursSpacing hours
         for single_date in ReferenceMarkerManager.minor_markers_daterange(start_date, end_date, self.minorMarkersHoursSpacing):
             newObj = RepresentedMarkerTime(single_date, self)
-            print(newObj.time_string)
+            # print(newObj.time_string)
             self.staticMinorMarkerData.append(newObj)
 
 

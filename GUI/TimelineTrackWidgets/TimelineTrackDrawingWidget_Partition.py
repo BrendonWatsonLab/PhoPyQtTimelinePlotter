@@ -132,7 +132,7 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
 
     @pyqtSlot()
     def reloadModelFromConfigCache(self):
-        print("TimelineTrackDrawingWidget_Partition.reloadModelFromConfigCache()")
+        # print("TimelineTrackDrawingWidget_Partition.reloadModelFromConfigCache()")
         active_cache = self.trackConfig.get_cache()
         active_model_view_array = active_cache.get_model_view_array()
         self.durationRecords = []
@@ -165,7 +165,7 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
     # Called by a specific child partition's (double click or menu option) to indicate that it should be edited in a new Partition Editor Dialog
     @pyqtSlot(int)    
     def on_partition_modify_event(self, childIndex):
-        print("on_partition_modify_event(...)")
+        # print("on_partition_modify_event(...)")
 
         selectedPartitionIndex = childIndex
         selectedPartitionObj = self.partitions[childIndex]
