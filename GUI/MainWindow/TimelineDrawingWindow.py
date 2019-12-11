@@ -237,6 +237,8 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         # self.pendingCreateVideoPlayerURL = None # self.pendingCreateVideoPlayerURL: holds the URL of the video file that we currently want to load. Used to enable waiting for the previous video player to close before a new one is opened with this URL.
         self.pendingCreateVideoPlayerSelectedItem = None # self.pendingCreateVideoPlayerSelectedItem: holds the URL of the video file that we currently want to load. Used to enable waiting for the previous video player to close before a new one is opened with this URL.
 
+        # Temporary "pending" items that will be set and then cleared once the appropriate action is performed with them
+        self.pending_adjust_viewport_start_datetime = None
 
 
         self.videoPlayerWindow = None
@@ -1067,10 +1069,10 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
     ## Timeline ZOOMING:
     def on_zoom_in(self):
-        current_viewport_start_time = self.get_viewport_active_start_time()
+        self.pending_adjust_viewport_start_datetime = self.get_viewport_active_start_time()
         newActiveScaleMultiplier = min(TimelineDrawingWindow.MaxZoomLevel, (self.activeScaleMultiplier + TimelineDrawingWindow.ZoomDelta))
         self.set_new_active_scale_multiplier(newActiveScaleMultiplier)
-        self.sync_active_viewport_start_to_datetime(current_viewport_start_time) # Use the saved start time to re-align the viewport's left edge
+
 
     def on_zoom_home(self):
         current_viewport_start_time = self.get_viewport_active_start_time()
@@ -1193,6 +1195,9 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         found_x_offset = self.datetime_to_offset(safe_end_time)
         print("TimelineDrawingWindow.sync_active_viewport_end_to_datetime(endTime: {0}): found_x_offset: {1}".format(str(safe_end_time), str(found_x_offset)))
         self.timelineScroll.ensureVisible(found_x_offset, 0, 0, 0)
+
+        # Shouldn't be needed because it triggers self.on_viewport_slider_changd(...)
+        # Not calling self.on_active_zoom_changed() results in the floating headers not redrawing until the mouse moves over them for some reason...
         self.on_active_zoom_changed()
         return True
         
@@ -2180,6 +2185,12 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         self.on_active_viewport_changed()
         self.resize_children_on_zoom()
         self.refresh_child_widget_display()
+
+        # if (self.pending_adjust_viewport_start_datetime is not None):
+        #     # Re-adjust the viewport's left edge
+        #     self.sync_active_viewport_start_to_datetime(self.pending_adjust_viewport_start_datetime) # Use the saved start time to re-align the viewport's left edge
+        #     self.pending_adjust_viewport_start_datetime = None
+        
 
     @pyqtSlot()
     def on_active_viewport_changed(self):
