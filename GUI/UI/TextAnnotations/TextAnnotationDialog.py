@@ -14,12 +14,12 @@ from GUI.UI.DialogComponents.AbstractDialogMixins import BoxExperCohortAnimalIDs
 class TextAnnotationDialog(ObjectSpecificDialogMixin, BoxExperCohortAnimalIDsFrame_Mixin, QtWidgets.QDialog):
 
      # This defines a signal called 'closed' that takes no arguments.
-    on_cancel = pyqtSignal()
+    on_cancel = pyqtSignal(DialogObjectIdentifier)
 
      # This defines a signal called 'closed' that takes no arguments.
     # on_commit = pyqtSignal([datetime, str, str, str], [datetime, datetime, str, str, str])
 
-    on_commit = pyqtSignal([datetime, str, str, str, int, int, int, int], [datetime, datetime, str, str, str, int, int, int, int])
+    on_commit = pyqtSignal([DialogObjectIdentifier, datetime, str, str, str, int, int, int, int], [DialogObjectIdentifier, datetime, datetime, str, str, str, int, int, int, int])
 
 
     def __init__(self):
@@ -30,8 +30,6 @@ class TextAnnotationDialog(ObjectSpecificDialogMixin, BoxExperCohortAnimalIDsFra
 
 
     def initUI(self):
-        # self.ui.buttonBox.accepted.connect(self.accept)
-        # self.ui.buttonBox.rejected.connect(self.reject)
         pass
 
 
@@ -40,15 +38,15 @@ class TextAnnotationDialog(ObjectSpecificDialogMixin, BoxExperCohortAnimalIDsFra
         # Emit the signal.
         behavioral_box_id, experiment_id, cohort_id, animal_id = self.frame_BoxExperCohortAnimalIDs.get_id_values(shouldReturnNoneTypes=False)
         if (self.get_end_date()):
-            self.on_commit[datetime, datetime, str, str, str, int, int, int, int].emit(self.get_start_date(), self.get_end_date(), self.get_title(), self.get_subtitle(), self.get_body(), behavioral_box_id, experiment_id, cohort_id, animal_id)
+            self.on_commit[DialogObjectIdentifier, datetime, datetime, str, str, str, int, int, int, int].emit(self.get_referred_object_identifier(), self.get_start_date(), self.get_end_date(), self.get_title(), self.get_subtitle(), self.get_body(), behavioral_box_id, experiment_id, cohort_id, animal_id)
         else:
-            self.on_commit[datetime, str, str, str, int, int, int, int].emit(self.get_start_date(), self.get_title(), self.get_subtitle(), self.get_body(), behavioral_box_id, experiment_id, cohort_id, animal_id)
+            self.on_commit[DialogObjectIdentifier, datetime, str, str, str, int, int, int, int].emit(self.get_referred_object_identifier(), self.get_start_date(), self.get_title(), self.get_subtitle(), self.get_body(), behavioral_box_id, experiment_id, cohort_id, animal_id)
             
         super(TextAnnotationDialog, self).accept()
 
     def reject(self):
         print('reject:')
-        self.on_cancel.emit()
+        self.on_cancel.emit(self.get_referred_object_identifier())
         super(TextAnnotationDialog, self).reject()
 
     def set_start_date(self, startDate):
