@@ -150,32 +150,32 @@ class TimelineTrackDrawingWidgetBase(FixedTimelineContentsWidthMixin, AbstractDa
     # def getScale(self):
     #     return float(self.totalDuration)/float(self.width())
 
-    # def offset_to_percent(self, event_x, event_y):
-    #     percent_x = event_x / self.width()
-    #     percent_y = event_y / self.height()
-    #     return (percent_x, percent_y)
+    def offset_to_percent(self, event_x, event_y):
+        percent_x = event_x / self.width()
+        percent_y = event_y / self.height()
+        return (percent_x, percent_y)
 
-    # def offset_to_duration(self, event_x):
-    #     (percent_x, percent_y) = self.offset_to_percent(event_x, 0.0)
-    #     return (self.totalDuration * percent_x)
+    def offset_to_duration(self, event_x):
+        (percent_x, percent_y) = self.offset_to_percent(event_x, 0.0)
+        return (self.totalDuration * percent_x)
 
-    # def offset_to_datetime(self, event_x):
-    #     duration_offset = self.offset_to_duration(event_x)
-    #     return (self.totalStartTime + duration_offset)
+    def offset_to_datetime(self, event_x):
+        duration_offset = self.offset_to_duration(event_x)
+        return (self.totalStartTime + duration_offset)
 
-    # def percent_to_offset(self, percent_offset):
-    #     event_x = percent_offset * self.width()
-    #     return event_x
+    def percent_to_offset(self, percent_offset):
+        event_x = percent_offset * self.width()
+        return event_x
 
-    # def duration_to_offset(self, duration_offset):
-    #     percent_x = duration_offset / self.totalDuration
-    #     event_x = self.percent_to_offset(percent_x)
-    #     return event_x
+    def duration_to_offset(self, duration_offset):
+        percent_x = duration_offset / self.totalDuration
+        event_x = self.percent_to_offset(percent_x)
+        return event_x
 
-    # def datetime_to_offset(self, newDatetime):
-    #     duration_offset = newDatetime - self.totalStartTime
-    #     event_x = self.duration_to_offset(duration_offset)
-    #     return event_x
+    def datetime_to_offset(self, newDatetime):
+        duration_offset = newDatetime - self.totalStartTime
+        event_x = self.duration_to_offset(duration_offset)
+        return event_x
 
     def enterEvent(self, QEvent):
         # print("TimelineTrackDrawingWidgetBase.enterEvent(...): track_id: {0}".format(self.trackID))
