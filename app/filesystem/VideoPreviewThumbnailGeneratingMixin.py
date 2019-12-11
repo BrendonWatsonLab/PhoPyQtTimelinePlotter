@@ -134,8 +134,9 @@ class VideoPreviewThumbnailGenerator(QObject):
     def on_generate_video_thumbnails_execute_thread(self, active_video_paths, progress_callback):
         currProgress = 0.0
         parsedFiles = 0
-        self.pending_operation_status.restart(OperationTypes.FilesystemThumbnailGeneration, active_video_paths)
         numFilesToGenerateThumbnailsFor = len(active_video_paths)
+        self.pending_operation_status.restart(OperationTypes.FilesystemThumbnailGeneration, numFilesToGenerateThumbnailsFor)
+
         for (sub_index, aFoundVideoFile) in enumerate(active_video_paths):
             # Iterate through all found video-files in a given list
             generatedThumbnailObjsList = VideoPreviewThumbnailGenerator.generate_thumbnails_for_video_file(aFoundVideoFile, enable_debug_print=True)
