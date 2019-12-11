@@ -146,7 +146,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
     # ViewportAdjustmentMode = ViewportScaleAdjustmentOptions.MaintainDesiredViewportZoomFactor
     ViewportAdjustmentMode = ViewportScaleAdjustmentOptions.MaintainDesiredViewportDisplayDuration
     # Default viewport width is 1 day
-    DefaultViewportDisplayDuration = timedelta(days=1.0)
+    DefaultViewportDisplayDuration = timedelta(days=4.0)
     # DefaultZoom = 16.0
     DefaultZoom = 8.0
 
@@ -155,7 +155,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
     MaxZoomLevel = 2600.0
 
     DesiredInitialWindowWidth = 1008
-    DesiredInitialWindowHeight = 800
+    DesiredInitialWindowHeight = 900
 
     # Signals:
     
@@ -624,6 +624,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             self.timelineScroll.setWidgetResizable(True)
             # self.timelineScroll.setWidgetResizable(False)
             self.timelineScroll.setMouseTracking(True)
+            self.timelineScroll.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
             self.timelineScroll.horizontalScrollBar().valueChanged.connect(self.on_viewport_slider_changd)
             # self.timelineScroll.setBackgroundRole(QPalette.Dark)
             # self.timelineScroll.setFixedHeight(400)
@@ -1131,6 +1132,15 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         self.set_new_active_scale_multiplier(newActiveScaleMultiplier)
         # self.sync_active_viewport_start_to_datetime(current_viewport_start_time) # Use the saved start time to re-align the viewport's left edge
 
+    def get_viewport_offset_display_string(self):
+        outString = str("{0:.6f}".format(round(self.get_viewport_percent_scrolled(),6)))
+
+        viewport_start_time = self.get_viewport_active_start_time()
+
+
+
+        return outString
+
     def refreshUI_viewport_zoom_controls(self):
         self.ui.doubleSpinBox_currentZoom.blockSignals(True)
         self.ui.doubleSpinBox_currentZoom.setValue(self.activeScaleMultiplier)
@@ -1139,7 +1149,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
     def refreshUI_viewport_info_labels(self):
         self.ui.lblActiveViewportDuration.setText(str(self.get_active_viewport_duration()))
-        self.ui.lblActiveViewportOffsetAbsolute.setText(str("{0:.6f}".format(round(self.get_viewport_percent_scrolled(),6))))
+        self.ui.lblActiveViewportOffsetAbsolute.setText(self.get_viewport_offset_display_string())
 
     def resize_children_on_zoom(self):
         newMinWidth = self.get_minimum_track_width()
@@ -2202,6 +2212,8 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         # Update the UI to reflect the changes
         self.refreshUI_viewport_zoom_controls()
         self.refreshUI_viewport_info_labels()
+
+        # self.timelineScroll.horizontalScrollBar().setPageStep()
 
     @pyqtSlot(int)
     def on_viewport_slider_changd(self, newValue):
