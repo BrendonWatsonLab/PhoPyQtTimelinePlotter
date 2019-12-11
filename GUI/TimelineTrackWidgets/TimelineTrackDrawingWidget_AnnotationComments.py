@@ -386,15 +386,19 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigDataCacheMixin, T
     def try_update_comment(self, partition_identifier, start_date, end_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
         # Tries to update an existing comment
         print('try_update_comment')
-        
-        if (not (self.activeEditingAnnotationIndex is None)):
-            currObjToModify = self.durationRecords[self.activeEditingAnnotationIndex]
+        # if (not (self.activeEditingAnnotationIndex is None)):
+            # currObjToModify = self.durationRecords[self.activeEditingAnnotationIndex]
+        dialog_child_index = partition_identifier.childID
+        # if the referred to child index exists, and is valid within the current array, continue
+        if ((dialog_child_index is not None) and (0 <= dialog_child_index <= (len(self.durationRecords)-1))): 
+            currObjToModify = self.durationRecords[dialog_child_index]
             currObjToModify = modify_TimestampedAnnotation(currObjToModify, start_date, end_date, title, subtitle, body, '', behavioral_box_id, experiment_id, cohort_id, animal_id)
-            self.durationRecords[self.activeEditingAnnotationIndex] = currObjToModify
+            self.durationRecords[dialog_child_index] = currObjToModify
             self.database_commit()
             self.reloadModelFromDatabase()
         else:
-            print("Error: unsure what comment to update!")
+            print("Error: try_update_comment(...): dialog_child_index {0} is not valid".format(str(dialog_child_index)))
+            # print("Error: unsure what comment to update!")
             return
 
     @pyqtSlot(DialogObjectIdentifier, datetime, str, str, str, int, int, int, int)
