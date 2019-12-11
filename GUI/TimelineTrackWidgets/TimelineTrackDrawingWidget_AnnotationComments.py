@@ -47,7 +47,6 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigDataCacheMixin, T
         self.setMouseTracking(True)
 
         self.annotationEditingDialog = None
-        self.activeEditingAnnotationIndex = None
 
         self.trackConfig.cacheUpdated.connect(self.on_reloadModelFromConfigCache)
 
@@ -327,7 +326,6 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigDataCacheMixin, T
         selectedAnnotationView = self.durationObjects[selectedAnnotationIndex]
         
         if ((not (selectedAnnotationView is None))):
-            self.activeEditingAnnotationIndex = selectedAnnotationIndex
             self.annotationEditingDialog = TextAnnotationDialog()
             self.annotationEditingDialog.set_referred_object_identifiers(self.get_trackID(), selectedAnnotationIndex)
             self.annotationEditingDialog.on_cancel.connect(self.comment_dialog_canceled)
@@ -359,7 +357,6 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigDataCacheMixin, T
             self.annotationEditingDialog.on_commit[DialogObjectIdentifier, datetime, datetime, str, str, str, int, int, int, int].connect(self.try_update_comment)
         else:
             print("Couldn't get active annotation object to edit!!")
-            self.activeEditingAnnotationIndex = None
 
     @pyqtSlot(int)    
     def on_annotation_delete_event(self, childIndex):
@@ -369,7 +366,6 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigDataCacheMixin, T
         selectedAnnotationView = self.durationObjects[selectedAnnotationIndex]
         
         if ((not (selectedAnnotationRecord is None))):
-            self.activeEditingAnnotationIndex = None
             # Delete the record from the database
             self.database_connection.delete_from_database([selectedAnnotationRecord])
             self.database_commit()
@@ -377,7 +373,6 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigDataCacheMixin, T
 
         else:
             print("Couldn't get active annotation object to delete!!")
-            self.activeEditingAnnotationIndex = None
 
 
 
@@ -386,8 +381,6 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigDataCacheMixin, T
     def try_update_comment(self, partition_identifier, start_date, end_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
         # Tries to update an existing comment
         print('try_update_comment')
-        # if (not (self.activeEditingAnnotationIndex is None)):
-            # currObjToModify = self.durationRecords[self.activeEditingAnnotationIndex]
         dialog_child_index = partition_identifier.childID
         # if the referred to child index exists, and is valid within the current array, continue
         if ((dialog_child_index is not None) and (0 <= dialog_child_index <= (len(self.durationRecords)-1))): 
@@ -408,7 +401,6 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigDataCacheMixin, T
     @pyqtSlot(DialogObjectIdentifier)
     def comment_dialog_canceled(self, partition_identifier):
         print('comment_Dialog_canceled')
-        self.activeEditingAnnotationIndex = None
 
         
     ## Resize Time with Handles:

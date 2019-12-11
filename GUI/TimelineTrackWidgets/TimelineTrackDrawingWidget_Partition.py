@@ -172,7 +172,6 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
         selectedPartitionViewObject = selectedPartitionObj.get_view()
 
         if ((not (selectedPartitionViewObject is None))):
-            self.activeEditingPartitionIndex = selectedPartitionIndex
             self.activePartitionEditDialog = PartitionEditDialog(self.database_connection, parent=self)
             self.activePartitionEditDialog.set_referred_object_identifiers(self.get_trackID(), selectedPartitionIndex)
             self.activePartitionEditDialog.set_start_date(selectedPartitionViewObject.startTime)
@@ -203,7 +202,6 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
             self.activePartitionEditDialog.on_cancel.connect(self.partition_dialog_canceled)
         else:
             print("Couldn't get active partition object to edit!!")
-            self.activeEditingPartitionIndex = None
 
     # Returns the currently selected partition index or None if none are selected
     def get_selected_partition_index(self):
@@ -454,7 +452,6 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
 
         # if the referred to child index exists, and is valid within the current array, continue
         if ((dialog_child_partition_index is not None) and (0 <= dialog_child_partition_index <= (len(self.partitions)-1))):        
-        # if (not (self.activeEditingPartitionIndex is None)):
             # Convert -1 values for type_id and subtype_id back into "None" objects. They had to be an Int to be passed through the pyQtSlot()
             # Note the values are record IDs (not indicies, so they're 1-indexed). This means that both -1 and 0 are invalid.
             if (type_id < 1):
@@ -486,7 +483,6 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
     @pyqtSlot(DialogObjectIdentifier)
     def partition_dialog_canceled(self, partition_identifier):
         print('comment_Dialog_canceled')
-        self.activeEditingPartitionIndex = None
 
 
     # try_cut_partition(...): tries to cut the partition programmatically at the specified datetime
