@@ -2172,7 +2172,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
     @pyqtSlot()
     def on_window_resized(self):
-        print("window resized! newSize: {0}".format(str(self.width())))
+        # print("window resized! newSize: {0}".format(str(self.width())))
         self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
         self.activeZoomChanged.emit()
         self.activeViewportChanged.emit()
@@ -2183,7 +2183,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
     # Called after self.activeScaleMultiplier is changed to update everything else
     @pyqtSlot()
     def on_active_zoom_changed(self):
-        print("TimelineDrawingWindow.on_active_zoom_changed(...)")
+        # print("TimelineDrawingWindow.on_active_zoom_changed(...)")
         self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
         # Update the UI to reflect the changes
         self.on_active_viewport_changed()
@@ -2198,7 +2198,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
     @pyqtSlot()
     def on_active_viewport_changed(self):
-        print("TimelineDrawingWindow.on_active_viewport_changed(...)")
+        # print("TimelineDrawingWindow.on_active_viewport_changed(...)")
         self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
         # Update the UI to reflect the changes
         self.refreshUI_viewport_zoom_controls()
@@ -2206,7 +2206,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
     @pyqtSlot(int)
     def on_viewport_slider_changd(self, newValue):
-        print("TimelineDrawingWindow.on_viewport_slider_changd({0})".format(str(newValue)))
+        # print("TimelineDrawingWindow.on_viewport_slider_changd({0})".format(str(newValue)))
         self.refreshUI_viewport_info_labels()
         return
 
