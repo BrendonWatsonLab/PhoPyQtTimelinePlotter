@@ -13,7 +13,7 @@ from app.database.DatabaseConnectionRef import DatabasePendingItemsState, Databa
 from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingDialog
 
-from GUI.UI.DialogComponents.AbstractDialogMixins import BoxExperCohortAnimalIDsFrame_Mixin
+from GUI.UI.DialogComponents.AbstractDialogMixins import BoxExperCohortAnimalIDsFrame_Mixin, ObjectSpecificDialogMixin, DialogObjectIdentifier
 
 # When you set a subtype, ensure that its parent is selected as the type
 # When you select a type that's incompatible with the current subtype, probably change the subtype to the first of that type
@@ -28,13 +28,13 @@ row_id      .id     array_index
 The child (subtype) index that's being retrieved from the type's first child row id is wrong with the additional Noneitem. It needs to have 1 added to it.
 """
 ## TODO: The type/subtype functionality in this class can be replaced by a child DialogComponents_BoxExperCohortAnimalIDs and the appropriate Mixin
-class PartitionEditDialog(BoxExperCohortAnimalIDsFrame_Mixin, AbstractDatabaseAccessingDialog):
+class PartitionEditDialog(ObjectSpecificDialogMixin, BoxExperCohortAnimalIDsFrame_Mixin, AbstractDatabaseAccessingDialog):
 
      # This defines a signal called 'closed' that takes no arguments.
     on_cancel = pyqtSignal()
 
      # This defines a signal called 'closed' that takes no arguments.
-    on_commit = pyqtSignal(datetime, datetime, str, str, str, int, int)
+    on_commit = pyqtSignal(DialogObjectIdentifier, datetime, datetime, str, str, str, int, int)
 
     def __init__(self, database_connection, parent=None):
         super(PartitionEditDialog, self).__init__(database_connection, parent) # Call the inherited classes __init__ method
@@ -205,7 +205,7 @@ class PartitionEditDialog(BoxExperCohortAnimalIDsFrame_Mixin, AbstractDatabaseAc
         # Emit the signal.
         final_type, final_subtype = int(self.get_type() or -1), int(self.get_subtype() or -1)
         
-        self.on_commit.emit(self.get_start_date(), self.get_end_date(), self.get_title(), self.get_subtitle(), self.get_body(),
+        self.on_commit.emit(self.get_referred_object_identifier(), self.get_start_date(), self.get_end_date(), self.get_title(), self.get_subtitle(), self.get_body(),
             final_type, final_subtype)
         super(PartitionEditDialog, self).accept()
 

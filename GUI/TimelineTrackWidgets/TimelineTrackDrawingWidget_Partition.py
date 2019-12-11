@@ -15,6 +15,9 @@ from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import *
 from GUI.UI.PartitionEditDialog.PartitionEditDialog import *
 from GUI.Model.TrackType import TrackType, TrackConfigMixin, TrackConfigDataCacheMixin
 
+from GUI.UI.DialogComponents.AbstractDialogMixins import DialogObjectIdentifier
+
+
 ## TODO:
 """
 TODO: Add "undo" functionality to creating cuts. Can use the "cutObjects" to find the last created cut, find the partition created at that timestamp, grab its endTime and then delete it, and then set the endTime of the partition just before it.
@@ -171,6 +174,7 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
         if ((not (selectedPartitionViewObject is None))):
             self.activeEditingPartitionIndex = selectedPartitionIndex
             self.activePartitionEditDialog = PartitionEditDialog(self.database_connection, parent=self)
+            self.activePartitionEditDialog.set_referred_object_identifiers(self.get_trackID(), selectedPartitionIndex)
             self.activePartitionEditDialog.set_start_date(selectedPartitionViewObject.startTime)
             self.activePartitionEditDialog.set_end_date(selectedPartitionViewObject.endTime)
             self.activePartitionEditDialog.set_type(selectedPartitionViewObject.type_id)
@@ -438,14 +442,19 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
             self.hover_changed.emit(self.trackID, self.hovered_object_index)
 
     # Called when the partition edit dialog accept event is called.
-    def try_update_partition(self, start_date, end_date, title, subtitle, body, type_id, subtype_id):
+    @pyqtSlot(DialogObjectIdentifier, datetime, datetime, str, str, str, int, int)
+    def try_update_partition(self, partition_identifier, start_date, end_date, title, subtitle, body, type_id, subtype_id):
         # Tries to create a new comment
         print('try_update_partition')
         if (not (self.trackContextConfig.get_is_valid())):
             print('context is invalid! aborting try_update_partition!')
             return
-        
-        if (not (self.activeEditingPartitionIndex is None)):
+
+        dialog_child_partition_index = partition_identifier.childID
+
+        # if the referred to child index exists, and is valid within the current array, continue
+        if ((dialog_child_partition_index is not None) and (0 <= dialog_child_partition_index <= (len(self.partitions)-1))):        
+        # if (not (self.activeEditingPartitionIndex is None)):
             # Convert -1 values for type_id and subtype_id back into "None" objects. They had to be an Int to be passed through the pyQtSlot()
             # Note the values are record IDs (not indicies, so they're 1-indexed). This means that both -1 and 0 are invalid.
             if (type_id < 1):
@@ -454,7 +463,7 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
             if (subtype_id < 1):
                 subtype_id = None
                 
-            print('Modifying partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(self.activeEditingPartitionIndex, type_id, subtype_id))
+            print('Modifying partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(dialog_child_partition_index, type_id, subtype_id))
             
             # Get new color associated with the modified subtype_id
             if ((type_id is None) or (subtype_id is None)):
@@ -462,17 +471,19 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
             else:
                 newColor = self.behaviors[subtype_id-1].primaryColor.get_QColor()
             
-            self.partitionManager.modify_partition(self.activeEditingPartitionIndex, start_date, end_date, title, subtitle, body, type_id, subtype_id, newColor)
-            print('Modified partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(self.activeEditingPartitionIndex, type_id, subtype_id))
+            self.partitionManager.modify_partition(dialog_child_partition_index, start_date, end_date, title, subtitle, body, type_id, subtype_id, newColor)
+            print('Modified partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(dialog_child_partition_index, type_id, subtype_id))
             self.reinitialize_from_partition_manager()
             self.update()
             # Save to database
             # TODO: currently all saved partitions must be of the same context and subcontext.
             self.partitionManager.save_partitions_to_database()
         else:
-            print("Error: unsure what partition to update!")
+            print("Error: try_update_partition(...): dialog_child_partition_index {0} is not valid".format(str(dialog_child_partition_index)))
+            # print("Error: unsure what partition to update!")
             return
 
+    @pyqtSlot()
     def partition_dialog_canceled(self):
         print('comment_Dialog_canceled')
         self.activeEditingPartitionIndex = None
