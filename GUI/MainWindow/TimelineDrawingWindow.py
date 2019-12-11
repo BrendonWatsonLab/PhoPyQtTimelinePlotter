@@ -1183,13 +1183,15 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
     # Moves the current viewport's position such that it's end position is aligned with a specific end_time
     def sync_active_viewport_end_to_datetime(self, end_time):
+        safe_end_time = end_time
         if end_time > self.totalEndTime:
-            print("Error: end_time > self.totalEndTime!")
-            return False
+            print("Warning: end_time > self.totalEndTime!, setting end_time to self.totalEndTime")
+            safe_end_time = self.totalEndTime
+            # return False
 
          # Compute appropriate offset:
-        found_x_offset = self.datetime_to_offset(end_time)
-        print("TimelineDrawingWindow.sync_active_viewport_end_to_datetime(endTime: {0}): found_x_offset: {1}".format(str(end_time), str(found_x_offset)))
+        found_x_offset = self.datetime_to_offset(safe_end_time)
+        print("TimelineDrawingWindow.sync_active_viewport_end_to_datetime(endTime: {0}): found_x_offset: {1}".format(str(safe_end_time), str(found_x_offset)))
         self.timelineScroll.ensureVisible(found_x_offset, 0, 0, 0)
         self.on_active_zoom_changed()
         return True
