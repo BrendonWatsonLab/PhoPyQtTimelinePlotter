@@ -303,6 +303,8 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             # action_exit.setStatusTip('Exit application')
             # action_exit.triggered.connect(qApp.quit)
 
+            self.ui.actionExport_to.triggered.connect(self.on_user_data_export)
+
             self.ui.actionExit_Application.triggered.connect(qApp.quit)
             self.ui.actionShow_Help.triggered.connect(self.handle_showHelpWindow)
             self.ui.actionVideo_Player.triggered.connect(self.handle_showVideoPlayerWindow)
@@ -2227,3 +2229,23 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         self.updateViewportZoomFactorsUsingCurrentAdjustmentMode()
         self.reload_tracks_from_track_configs()
         return
+
+
+    # export_partition_track_to_file(): exports the specified partition track to one file per video file it overlaps.
+    """
+        For a given partition track, there should be a corresponding video track (and optionally a labeled video track) with one or more videos.
+        For each video in these tracks, translate the datetime to a duration offset from the start of that video. 
+    """
+    def export_partition_track_to_file(self, partitionTrackID):
+        print("TimelineDrawingWindow.export_partition_track_to_file(partitionTrackID: {0})".format(str(partitionTrackID)))
+        pass
+
+    @pyqtSlot()
+    def on_user_data_export(self):
+        # Called when the user selects "Export data..." from the main menu.
+        print("TimelineDrawingWindow.on_user_data_export()")
+        # Show a dialog that asks the user for their export path
+
+        # Iterate through all video files and find the partition events that overlap them.
+        # for aVideoInfoObj in self.video:
+        #     pass

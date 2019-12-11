@@ -58,6 +58,8 @@
     <addaction name="actionSave"/>
     <addaction name="actionSave_As"/>
     <addaction name="separator"/>
+    <addaction name="actionExport_to"/>
+    <addaction name="separator"/>
     <addaction name="actionSettings"/>
     <addaction name="separator"/>
     <addaction name="actionExit_Application"/>
@@ -472,6 +474,14 @@
   <action name="actionShowDatabase_Table_BrowserWindow">
    <property name="text">
     <string>Database Table Browser</string>
+   </property>
+  </action>
+  <action name="actionExport_to">
+   <property name="text">
+    <string>Export to...</string>
+   </property>
+   <property name="toolTip">
+    <string>Export to file...</string>
    </property>
   </action>
  </widget>
