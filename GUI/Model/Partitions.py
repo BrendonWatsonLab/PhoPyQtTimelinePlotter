@@ -40,7 +40,7 @@ from GUI.Model.ModelViewContainer import ModelViewContainer
 
 """
 Each Partition Track has a Partitioner that manages its partitions.
-There's a "partitionDataObjects" which represents the model layer and consists of SQLAlchemy database records
+There's a "partitions" list which represents the model layer and consists of SQLAlchemy database records
 The "partitions" track consists of GUI objects.
 
 
@@ -104,7 +104,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
             partitionDataObjects = []
 
         # call on_reload_partition_records(...) to build any additional appropriate records (spanning the current timeline) needed and the GUI views
-        self.on_reload_partition_records(partitionDataObjects)    
+        self.on_reload_partition_records(partitionDataObjects)
         self.extended_data = extended_data
 
     # Returns a new Partition object (both data and view)
@@ -246,7 +246,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
 
     # Called by the parent when the partition record objects have be loaded from the database. updates self.partitions
     def on_reload_partition_records(self, loadedDataPartitions):
-        print("on_reload_partition_records(...)")
+        print("on_reload_partition_records(loadedDataPartitions: {0})".format(len(loadedDataPartitions)))
         self.partitions = self.construct_spanning_unlabeled_partition_records(loadedDataPartitions)
         print("on_reload_partition_records(...): {0} new partitions".format(len(self.partitions)))
 
@@ -291,7 +291,6 @@ class Partitioner(AbstractDatabaseAccessingQObject):
     def get_partition_views(self):
         return [(aPartition.get_view()) for aPartition in self.partitions]
 
-    ## TODO: remove self.partitionDataObjects references!!! If needed, replace with self.get_partition_records()
     def get_partition_records(self):
         return [(aPartition.get_record()) for aPartition in self.partitions]
 
@@ -302,7 +301,6 @@ class Partitioner(AbstractDatabaseAccessingQObject):
     def cut_partition(self, cut_partition_index, cut_datetime):
         # Creates a cut at a given datetime
         partition_to_cut = self.partitions[cut_partition_index]
-        # data_partition_to_cut = self.partitionDataObjects[cut_partition_index]
 
         parentContextPair = self.get_parent_contexts()
         if (parentContextPair is None):

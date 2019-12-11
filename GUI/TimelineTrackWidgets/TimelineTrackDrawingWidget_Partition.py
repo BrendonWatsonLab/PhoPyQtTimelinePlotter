@@ -53,6 +53,13 @@ class TrackContextConfig(QObject):
         self.subcontext = subcontextObj
         self.is_valid = ((self.context is not None) and (self.subcontext is not None))
 
+
+    def __str__(self):
+        # return 'TrackFilterBase: behavioral_box_ids: {0}, experiment_ids: {1}, cohort_ids: {2}, animal_ids: {3}'.format(self.behavioral_box_ids, self.experiment_ids, self.cohort_ids, self.animal_ids)
+        return '({0})'.format(self.get_context_name())
+
+
+
 # Consts of N "Cuts" that separate a block into N+1 "Partitions"
 #  
 class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfigMixin, TimelineTrackDrawingWidgetBase):
@@ -67,11 +74,11 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
         self.trackConfig = trackConfig
         self.trackConfig.cacheUpdated.connect(self.reloadModelFromConfigCache)
 
-        self.partitionDataObjects = []
-        
+        self.durationRecords = []
+        self.durationObjects = []
+
         self.partitionManager = None
         # self.partitionManager is initialized in self.reloadModelFromDatabase() if it's None
-        # self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, database_connection, name="name", partitionViews=partitionObjects, partitionDataObjects=self.partitionDataObjects)
         self.reloadModelFromDatabase()
 
         self.reinitialize_from_partition_manager()
@@ -95,6 +102,8 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
     # Updates the member variables from the database
     # Note: if there are any pending changes, they will be persisted on this action
     def reloadModelFromDatabase(self):
+        # self.reset_on_reload()
+
         # Load the latest behaviors and colors data from the database
         self.behaviorGroups = self.database_connection.load_behavior_groups_from_database()
         self.behaviors = self.database_connection.load_behaviors_from_database()
@@ -105,16 +114,19 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
         # newSubcontext = newContext.subcontexts[self.trackContextConfig.get_subcontext_index()]
         # self.trackContextConfig.update_on_load(newContext, newSubcontext)
         
-        loadedPartitionRecordsList = []
-        if self.trackContextConfig.get_is_valid():
-            loadedPartitionRecordsList = self.database_connection.load_categorical_duration_labels_from_database(self.trackContextConfig)
+        # loadedPartitionRecordsList = []
+        # if self.trackContextConfig.get_is_valid():
+        #     loadedPartitionRecordsList = self.database_connection.load_categorical_duration_labels_from_database(self.trackContextConfig)
             
-        if self.partitionManager is None:
-            self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, self.database_connection, name="name", partitionViews=None, partitionDataObjects=loadedPartitionRecordsList)
-        else:
-            # Builds the partition objects, meaning both the record and view components
-            self.partitionManager.on_reload_partition_records(loadedPartitionRecordsList)
+        # if self.partitionManager is None:
+        #     self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, self.database_connection, name="name", partitionViews=None, partitionDataObjects=loadedPartitionRecordsList)
+        # else:
+        #     # Builds the partition objects, meaning both the record and view components
+        #     self.partitionManager.on_reload_partition_records(loadedPartitionRecordsList)
 
+        # The partition manager is created/updated in the self.reloadModelFromConfigCache(...) function
+        self.performReloadConfigCache()
+        self.update()
 
     @pyqtSlot()
     def reloadModelFromConfigCache(self):
@@ -124,10 +136,23 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
         self.durationRecords = []
         self.durationObjects = []
 
+        # For the partition track, just add the records, not the views. In fact, the config cache doesn't generate any views for partition tracks because we generate them in the partition manager
         for aContainerObj in active_model_view_array:
             self.durationRecords.append(aContainerObj.get_record())
-            self.durationObjects.append(aContainerObj.get_view())
+            # newViewIndex = len(self.durationObjects)
+            # newView = aContainerObj.get_view()
+            # newView.setAccessibleName(str(newViewIndex))
+            # self.durationObjects.append(newView)
 
+        # Update partitionManager:
+        if self.partitionManager is None:
+            self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, self.database_connection, name="name", partitionViews=None, partitionDataObjects=self.durationRecords)
+        else:
+            # Builds the partition objects, meaning both the record and view components
+            self.partitionManager.on_reload_partition_records(self.durationRecords)
+
+
+        self.reinitialize_from_partition_manager()
         self.update()
 
 
