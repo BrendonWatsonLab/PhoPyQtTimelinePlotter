@@ -47,6 +47,7 @@ from GUI.UI.TimelineHeaderWidget.TimelineHeaderWidget import TimelineHeaderWidge
 # Track Configs
 from GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, TrackCache, TrackFilterBase
 from GUI.Model.TrackConfigs.VideoTrackConfig import VideoTrackFilter, VideoTrackConfiguration
+from GUI.Model.TrackConfigs.PartitionTrackConfig import PartitionTrackFilter, PartitionTrackConfiguration
 
 from GUI.Model.ModelViewContainer import ModelViewContainer
 
@@ -409,9 +410,11 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
                 if wantsPartitionTrack:
                     # Partition tracks:
-                    currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", CategoricalDurationLabel, [currTrackBBID+1], None, None, None, self)
+                    currPartitionTrackContextObj = self.partitionTrackContextsArray[0]
+                    # currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", CategoricalDurationLabel, [currTrackBBID+1], None, None, None, self)
+                    currTrackConfig = PartitionTrackConfiguration(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", currPartitionTrackContextObj, [currTrackBBID+1], None, None, None, self)
                     self.trackConfigurationsDict[currTrackIndex] = currTrackConfig
-                    self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[0])
+                    self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, currPartitionTrackContextObj)
                     specific_storage_array_index = len(self.eventTrackWidgets)
                     currGroup.set_partitionsTrackIndex(specific_storage_array_index)
                     self.trackID_to_TrackWidgetLocatorTuple[currTrackIndex] = (currTrackConfig.get_track_storageArray_type(), specific_storage_array_index)
