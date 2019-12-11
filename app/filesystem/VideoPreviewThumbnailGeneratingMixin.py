@@ -236,20 +236,18 @@ class VideoPreviewThumbnailGenerator(QObject):
                         print("frame_number[{0}]: SUCCESS!".format(str(aFrameNumber)))
                         # Set grayscale colorspace for the frame.
                         # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
                         # Cut the video extension to have the name of the video
                         # my_video_name = video_filename.split(".")[0]
-
                         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-                        # h, w, ch = image.shape
-                        # bytesPerLine = ch * w
-                        # qImg = QtGui.QImage(image.data, w, h, bytesPerLine, QtGui.QImage.Format_RGB888)
-                        # frames.append(qImg)
                         frames.append(image)
                         count += 1
                     else:
                         print("frame_number[{0}] failed".format(str(aFrameNumber)))
                         continue
+
+            # When everything done, release the capture (from https://stackoverflow.com/questions/33650974/opencv-python-read-specific-frame-using-videocapture) not sure if I need to do this.
+            cap.release()
+            cv2.destroyAllWindows()
 
                 # success, image = cap.read()
                 # while success:
