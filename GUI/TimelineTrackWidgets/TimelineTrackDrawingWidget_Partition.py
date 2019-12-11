@@ -53,7 +53,6 @@ class TrackContextConfig(QObject):
         self.subcontext = subcontextObj
         self.is_valid = ((self.context is not None) and (self.subcontext is not None))
 
-
     def __str__(self):
         # return 'TrackFilterBase: behavioral_box_ids: {0}, experiment_ids: {1}, cohort_ids: {2}, animal_ids: {3}'.format(self.behavioral_box_ids, self.experiment_ids, self.cohort_ids, self.animal_ids)
         return '({0})'.format(self.get_context_name())
