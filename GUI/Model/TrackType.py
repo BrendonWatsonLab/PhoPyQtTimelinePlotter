@@ -2,7 +2,13 @@ import sys
 from enum import Enum
 
 ## IMPORT:
-# from GUI.Model.TrackType import TrackType
+# from GUI.Model.TrackType import TrackType, TrackStorageArray
+
+class TrackStorageArray(Enum):
+    Unknown = 1
+    Video = 2
+    Event = 3
+
 
 class TrackType(Enum):
     Unknown = 1
@@ -45,6 +51,18 @@ class TrackType(Enum):
             return 'Partition'
         else:
             return 'ERROR'
+
+    def get_storage_array_type(self):
+        if self == TrackType.Unknown:
+            return TrackStorageArray.Unknown
+        elif self == TrackType.Video:
+            return TrackStorageArray.Video
+        elif self == TrackType.Annotation:
+            return TrackStorageArray.Event
+        elif self == TrackType.Partition:
+            return TrackStorageArray.Event
+        else:
+            return TrackStorageArray.Unknown
 
     def __str__(self):
         return self.get_long_str()

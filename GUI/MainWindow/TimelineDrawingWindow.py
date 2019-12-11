@@ -56,6 +56,8 @@ from GUI.Model.DataMovieLinkInfo import DataMovieLinkInfo
 
 from GUI.Helpers.DurationRepresentationHelpers import DurationRepresentationMixin, OffsetRepresentationMixin
 
+from GUI.Model.TrackType import TrackType, TrackStorageArray
+
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.
         ConstrainVideosShownToGlobal = 2 #  keeps the global the same, and only shows the videos within the global start and end range
@@ -192,8 +194,8 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         self.loadedVideoHelperTrackPreferences = TimelineDrawingWindow.debug_desiredVideoTrackGroupSettings
         self.trackGroups = []
         self.trackID_to_GroupIndexMap = dict() #Maps a track's trackID to the index of its group in self.trackGroups
-        # self.trackGroupDict_VideoTracks = dict()
-        # self.trackGroupDict_
+
+        self.trackID_to_TrackWidgetLocatorTuple = dict() #Maps a track's trackID to the a tuple (storageArrayType: TrackStorageArray, storageArrayIndex: Int) that can be used to retreive the widget
 
         self.viewportAdjustmentMode = TimelineDrawingWindow.ViewportAdjustmentMode        
         self.totalStartTime = totalStartTime
@@ -331,7 +333,6 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             self.ui.toolButton_ScrollToNext.setDefaultAction(self.ui.actionJump_to_Next)
             self.ui.toolButton_ScrollToEnd.setDefaultAction( self.ui.actionJump_to_End)
 
-
         def initUI_timelineTracks(self):
             # Timeline Numberline track:
             masterTimelineDurationSeconds = self.totalDuration.total_seconds()
@@ -350,6 +351,10 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             self.eventTrackWidgets = []
             self.trackGroups = []
             self.trackID_to_GroupIndexMap = dict() #Maps a track's trackID to the index of its group in self.trackGroups
+            self.trackID_to_TrackWidgetLocatorTuple = dict() #Maps a track's trackID to the a tuple (storageArrayType: TrackStorageArray, storageArrayIndex: Int) that can be used to retreive the widget
+
+
+
 
             # B00
             currTrackIndex = 0
@@ -362,7 +367,9 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
                 self.trackConfigurationsDict[currTrackIndex] = currTrackConfig
                 mainVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
                 mainVideoTrack.set_track_title_label('BBID: {0}, originals'.format(currTrackBBID))
-                currGroup.set_videoTrackIndex(len(self.videoFileTrackWidgets))
+                specific_storage_array_index = len(self.videoFileTrackWidgets)
+                currGroup.set_videoTrackIndex(specific_storage_array_index)
+                self.trackID_to_TrackWidgetLocatorTuple[currTrackIndex] = (currTrackConfig.get_track_storageArray_type(), specific_storage_array_index)
                 self.videoFileTrackWidgets.append(mainVideoTrack)
                 self.trackID_to_GroupIndexMap[currTrackIndex] = index
                 currTrackIndex = currTrackIndex + 1
@@ -375,7 +382,9 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
                     self.trackConfigurationsDict[currTrackIndex] = currTrackConfig
                     self.labeledVideoTrack = TimelineTrackDrawingWidget_Videos(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
                     self.labeledVideoTrack.set_track_title_label('BBID: {0}, labeled'.format(currTrackBBID))
-                    currGroup.set_labeledVideoTrackIndex(len(self.videoFileTrackWidgets))
+                    specific_storage_array_index = len(self.videoFileTrackWidgets)
+                    currGroup.set_labeledVideoTrackIndex(specific_storage_array_index)
+                    self.trackID_to_TrackWidgetLocatorTuple[currTrackIndex] = (currTrackConfig.get_track_storageArray_type(), specific_storage_array_index)
                     self.videoFileTrackWidgets.append(self.labeledVideoTrack)
                     self.trackID_to_GroupIndexMap[currTrackIndex] = index
                     currTrackIndex = currTrackIndex + 1
@@ -385,7 +394,9 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
                     currTrackConfig = TrackConfigurationBase(currTrackIndex, "A_B{0:02}Notes".format(currTrackBBID), "Notes", TimestampedAnnotation, [currTrackBBID+1], None, None, None, self)
                     self.trackConfigurationsDict[currTrackIndex] = currTrackConfig
                     self.annotationCommentsTrackWidget = TimelineTrackDrawingWidget_AnnotationComments(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=True, wantsMouseEvents=True)
-                    currGroup.set_annotationsTrackIndex(len(self.eventTrackWidgets))
+                    specific_storage_array_index = len(self.eventTrackWidgets)
+                    currGroup.set_annotationsTrackIndex(specific_storage_array_index)
+                    self.trackID_to_TrackWidgetLocatorTuple[currTrackIndex] = (currTrackConfig.get_track_storageArray_type(), specific_storage_array_index)
                     self.eventTrackWidgets.append(self.annotationCommentsTrackWidget)
                     self.trackID_to_GroupIndexMap[currTrackIndex] = index
                     currTrackIndex = currTrackIndex + 1
@@ -395,7 +406,9 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
                     currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", CategoricalDurationLabel, [currTrackBBID+1], None, None, None, self)
                     self.trackConfigurationsDict[currTrackIndex] = currTrackConfig
                     self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, self.partitionTrackContextsArray[0])
-                    currGroup.set_partitionsTrackIndex(len(self.eventTrackWidgets))
+                    specific_storage_array_index = len(self.eventTrackWidgets)
+                    currGroup.set_partitionsTrackIndex(specific_storage_array_index)
+                    self.trackID_to_TrackWidgetLocatorTuple[currTrackIndex] = (currTrackConfig.get_track_storageArray_type(), specific_storage_array_index)
                     self.eventTrackWidgets.append(self.partitionsTrackWidget)
                     self.trackID_to_GroupIndexMap[currTrackIndex] = index
                     currTrackIndex = currTrackIndex + 1
@@ -464,7 +477,8 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             currFloatingHeader.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
             currFloatingHeader.update_labels_dynamically()
 
-            currFloatingHeader.findNext.connect(self.on_jump_next)
+            currFloatingHeader.findPrevious.connect(self.on_jump_previous_for_track)
+            currFloatingHeader.findNext.connect(self.on_jump_next_for_track)
             currFloatingHeader.showOptions.connect(self.on_track_header_show_options_activated)
             currFloatingHeader.refresh.connect(self.on_track_header_refresh_activated)
 
@@ -521,7 +535,8 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             currFloatingHeader.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
             currFloatingHeader.update_labels_dynamically()
 
-            currFloatingHeader.findNext.connect(self.on_jump_next)
+            currFloatingHeader.findPrevious.connect(self.on_jump_previous_for_track)
+            currFloatingHeader.findNext.connect(self.on_jump_next_for_track)
             currFloatingHeader.showOptions.connect(self.on_track_header_show_options_activated)
             currFloatingHeader.refresh.connect(self.on_track_header_refresh_activated)
 
@@ -1180,16 +1195,65 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         return True
         
         
+
+    # find the track widget with the corresponding trackID
+    def get_track_with_trackID(self, trackID):
+        currLocatorTuple = self.trackID_to_TrackWidgetLocatorTuple[trackID]
+        track_storage_array_type = currLocatorTuple[0]
+        track_stroage_array_index = currLocatorTuple[1]
+        found_track_widget = None
+        if track_storage_array_type == TrackStorageArray.Video:
+            found_track_widget = self.videoFileTrackWidgets[track_stroage_array_index]
+            pass
+        else:
+            found_track_widget = self.eventTrackWidgets[track_stroage_array_index]
+            pass
+        
+        return found_track_widget
+
     ## Timeline Navigation:
     def on_jump_to_start(self):
         print("on_jump_to_start()")
         self.timelineScroll.horizontalScrollBar().setValue(self.timelineScroll.horizontalScrollBar().minimum())
         self.on_active_zoom_changed()
         
+    @pyqtSlot(int)
+    def on_jump_previous_for_track(self, trackID):
+        # Jump to the previous available duration event in the track with the specified trackID
+        print("on_jump_previous_for_track(trackID: {0})".format(str(trackID)))
+        currFoundTrack = self.get_track_with_trackID(trackID)
+
+        offset_datetime = self.get_viewport_active_start_time()
+        # next_video_tuple: (index, videoObj) pair
+        prev_event_tuple = currFoundTrack.find_previous_event(offset_datetime)
+        if prev_event_tuple is None:
+            print("prev_event_tuple is none!")
+            return
+        else:
+            print("prev_event_tuple is {0}".format(prev_event_tuple[0]))
+
+        found_start_date = prev_event_tuple[1].startTime
+        self.sync_active_viewport_start_to_datetime(found_start_date)
+        return
+
     def on_jump_previous(self):
         print("on_jump_previous()")
-        # self.activeScaleMultiplier = TimelineDrawingWindow.DefaultZoom
-        self.on_active_zoom_changed()
+        # Jump to the previous available video in the video track
+        # TODO: could highlight the video that's being jumped to.
+        offset_datetime = self.get_viewport_active_start_time()
+        # next_video_tuple: (index, videoObj) pair
+        prev_video_tuple = self.videoFileTrackWidgets[0].find_previous_event(offset_datetime)
+        if prev_video_tuple is None:
+            print("prev_video_tuple is none!")
+            return
+        else:
+            print("prev_video_tuple is {0}".format(prev_video_tuple[0]))
+
+        found_start_date = prev_video_tuple[1].startTime
+        self.sync_active_viewport_start_to_datetime(found_start_date)
+        return
+
+        
 
     # Zoom the timeline to the current video playhead position
     def on_jump_to_video_playhead(self):
@@ -1211,6 +1275,46 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             pass
         
         return
+
+    @pyqtSlot(int)
+    def on_jump_next_for_track(self, trackID):
+        # Jump to the next available duration event in the track with the specified trackID
+        print("on_jump_next_for_track(trackID: {0})".format(str(trackID)))
+    
+        # currTrackConfig = self.trackConfigurationsDict[trackID]
+        # currGroupIndex = self.trackID_to_GroupIndexMap[trackID]
+        # currGroup = self.trackGroups[currGroupIndex]
+        # # currTrackConfig = currDestTrackHeader.get_config()
+
+        # currTrackObj = None
+
+        # if (currTrackConfig.get_track_type() == TrackType.Video):
+        #     # video track
+        #     currTrackObj = 
+        # elif (currTrackConfig.get_track_type() == TrackType.Annotation):
+        #     # annotation track
+        #     pass
+        # elif (currTrackConfig.get_track_type() == TrackType.Partition):
+        #     # partition track
+        #     pass
+        # else:
+
+        currFoundTrack = self.get_track_with_trackID(trackID)
+
+        offset_datetime = self.get_viewport_active_start_time()
+        # next_event_tuple: (index, eventDurationObj) pair
+        next_event_tuple = currFoundTrack.find_next_event(offset_datetime)
+        if next_event_tuple is None:
+            print("next_event_tuple is none!")
+            return
+        else:
+            print("next_event_tuple is {0}".format(next_event_tuple[0]))
+
+        found_start_date = next_event_tuple[1].startTime
+        self.sync_active_viewport_start_to_datetime(found_start_date)
+        return
+
+
 
     def on_jump_next(self):
         # Jump to the next available video in the video track

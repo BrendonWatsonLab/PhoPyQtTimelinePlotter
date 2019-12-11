@@ -66,6 +66,33 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
         prevSelectedItemIndicies = self.get_selected_event_indicies()
         return [self.durationObjects[anObjIndex] for anObjIndex in prevSelectedItemIndicies]
 
+    # Find the next event
+    def find_next_event(self, following_datetime):
+        for (index, obj) in enumerate(self.durationObjects):
+            if (obj.startTime > following_datetime):
+                return (index, obj)
+        return None # If there is no next event, return None
+
+
+    # Find the previous event
+    def find_previous_event(self, preceeding_datetime):
+        # reversedDurationObjects = self.durationObjects.reversed()
+
+        best_found_candidate_index = None
+        best_found_candidate_object = None
+
+        for (index, obj) in enumerate(self.durationObjects):
+            if (obj.endTime < preceeding_datetime):
+                best_found_candidate_index = index
+                best_found_candidate_object = obj
+            else:
+                # otherwise if the object's endTime is later than our desired preceeding_datetime, we have our candidate to return
+                break
+            
+        if ((best_found_candidate_index is None) and (best_found_candidate_object is None)):
+            return None
+        else:
+            return (best_found_candidate_index, best_found_candidate_object)
 
 
     # Returns the currently selected partition index or None if none are selected

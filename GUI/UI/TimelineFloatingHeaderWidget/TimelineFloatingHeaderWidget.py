@@ -21,6 +21,7 @@ from GUI.Model.TrackConfigs.VideoTrackConfig import *
 # TimelineFloatingHeaderWidget: A label that floats over each track in the viewport that scrolls with the user to prevent the user from getting confused as to which track is which
 class TimelineFloatingHeaderWidget(TrackConfigMixin, QWidget):
     
+    findPrevious = pyqtSignal(int)
     findNext = pyqtSignal(int)
     showOptions = pyqtSignal(int)
     refresh = pyqtSignal(int)
@@ -101,6 +102,10 @@ class TimelineFloatingHeaderWidget(TrackConfigMixin, QWidget):
         self.get_track_config().update_labels_dynamically()
         self.update_from_config()
         return
+
+    def on_find_previous_pressed(self):
+        print("on_find_previous_pressed(...)")
+        self.findPrevious.emit(self.track_id)
 
     def on_find_next_pressed(self):
         print("on_find_next_pressed(...)")

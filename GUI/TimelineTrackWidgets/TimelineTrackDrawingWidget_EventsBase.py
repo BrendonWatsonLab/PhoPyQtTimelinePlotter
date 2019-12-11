@@ -20,8 +20,10 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
 
 
     # child_action_comment = pyqtSignal(object, object)
+    child_action_info = pyqtSignal(int, object)
+    child_action_modify = pyqtSignal(int, object)
     child_action_comment = pyqtSignal(int, object)
-    
+    child_action_delete = pyqtSignal(int, object)
 
     def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
         super(TimelineTrackDrawingWidget_EventsBase, self).__init__(trackID, totalStartTime, totalEndTime, durationObjects, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
@@ -104,22 +106,6 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
         self.update()
 
 
-    # Find the next event
-    def find_next_event(self, following_datetime):
-        for (index, obj) in enumerate(self.durationObjects):
-            if (obj.startTime > following_datetime):
-                return (index, obj)
-        return None # If there is no next event, return None
-
-
-    # Find the previous event
-    # def find_previous_event(self, preceeding_datetime):
-    #     for (index, obj) in enumerate(self.durationObjects):
-    #         if (obj.startTime > following_datetime):
-    #             return (index, obj)
-    #     return None # If there is no next event, return None
-
-
     # TODO: find_overlapping_events(...) doesn't yet work
     def find_overlapping_events(self):
         currOpenEvents = []
@@ -182,11 +168,27 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
     # Menu Event Handlers:
     def on_child_action_info(self, childIndex):
         print("TimelineTrackDrawingWidget_EventsBase.on_child_action_info({0})".format(str(childIndex)))
-        pass
+        selected_obj = self.durationObjects[childIndex]
+        if (selected_obj is None):
+            print("ERROR: selected duration object is None! Can't perform action!")
+            return
+        else:
+            # Call parent
+            self.child_action_info.emit(self.trackID, selected_obj)
+
+        return
 
     def on_child_action_modify(self, childIndex):
         print("TimelineTrackDrawingWidget_EventsBase.on_child_action_modify{0})".format(str(childIndex)))
-        pass
+        selected_obj = self.durationObjects[childIndex]
+        if (selected_obj is None):
+            print("ERROR: selected duration object is None! Can't perform action!")
+            return
+        else:
+            # Call parent
+            self.child_action_modify.emit(self.trackID, selected_obj)
+
+        return
 
     def on_child_action_comment(self, childIndex):
         print("TimelineTrackDrawingWidget_EventsBase.on_child_action_comment({0})".format(str(childIndex)))
@@ -197,11 +199,17 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
         else:
             # Call parent
             self.child_action_comment.emit(self.trackID, selected_obj)
-            # Spawn new annotation dialog
-            # Need to find annotation track with the appropriate filter            
 
         return
 
     def on_child_action_delete(self, childIndex):
         print("TimelineTrackDrawingWidget_EventsBase.on_child_action_delete({0})".format(str(childIndex)))
-        pass
+        selected_obj = self.durationObjects[childIndex]
+        if (selected_obj is None):
+            print("ERROR: selected duration object is None! Can't perform action!")
+            return
+        else:
+            # Call parent
+            self.child_action_delete.emit(self.trackID, selected_obj)
+
+        return
