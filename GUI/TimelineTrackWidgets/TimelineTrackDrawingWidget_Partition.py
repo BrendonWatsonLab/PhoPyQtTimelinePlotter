@@ -483,8 +483,8 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
             # print("Error: unsure what partition to update!")
             return
 
-    @pyqtSlot()
-    def partition_dialog_canceled(self):
+    @pyqtSlot(DialogObjectIdentifier)
+    def partition_dialog_canceled(self, partition_identifier):
         print('comment_Dialog_canceled')
         self.activeEditingPartitionIndex = None
 

@@ -31,7 +31,7 @@ The child (subtype) index that's being retrieved from the type's first child row
 class PartitionEditDialog(ObjectSpecificDialogMixin, BoxExperCohortAnimalIDsFrame_Mixin, AbstractDatabaseAccessingDialog):
 
      # This defines a signal called 'closed' that takes no arguments.
-    on_cancel = pyqtSignal()
+    on_cancel = pyqtSignal(DialogObjectIdentifier)
 
      # This defines a signal called 'closed' that takes no arguments.
     on_commit = pyqtSignal(DialogObjectIdentifier, datetime, datetime, str, str, str, int, int)
@@ -211,7 +211,7 @@ class PartitionEditDialog(ObjectSpecificDialogMixin, BoxExperCohortAnimalIDsFram
 
     def reject(self):
         print('reject:')
-        self.on_cancel.emit()
+        self.on_cancel.emit(self.get_referred_object_identifier())
         super(PartitionEditDialog, self).reject()
 
 
