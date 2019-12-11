@@ -2334,7 +2334,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         # A vertical box layout
         thumbnailsLayout = QVBoxLayout()
 
-        desiredThumbnailSizeKey = "320"
+        desiredThumbnailSizeKey = "40"
 
         # for (aSearchPathIndex, aSearchPath) in enumerate(self.searchPaths):
         for (key_path, cache_value) in self.get_video_thumbnail_generator().get_cache().items():

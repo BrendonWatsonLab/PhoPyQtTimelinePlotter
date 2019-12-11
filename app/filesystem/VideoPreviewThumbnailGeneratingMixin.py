@@ -283,7 +283,8 @@ class VideoPreviewThumbnailGenerator(QObject):
 
         # thumbs = {"original": img}
         thumbs = {"original": qImg}
-        sizes = [640, 320, 160]
+        # sizes = [640, 320, 160]
+        sizes = [160, 80, 40]
         for size in sizes:
             if (width >= size):
                 r = (size + 0.0) / width
