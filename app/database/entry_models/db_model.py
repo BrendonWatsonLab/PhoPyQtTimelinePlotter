@@ -18,6 +18,7 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 
 from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
 from GUI.Model.Events.PhoDurationEvent_AnnotationComment import PhoDurationEvent_AnnotationComment
+from GUI.Model.Events.PhoDurationEvent_Partition import PhoDurationEvent_Partition
 
 from GUI.Model.TrackType import TrackType
 
@@ -388,23 +389,37 @@ class CategoricalDurationLabel(ReferenceBoxExperCohortAnimalMixin, Base):
         __table_args__ = (UniqueConstraint('context_id','subcontext_id','behavioral_box_id','experiment_id','cohort_id','animal_id', name="uix_context_filters_uc"))
 
     @staticmethod
-    def get_gui_view(aVideoRecord, parent=None):
+    def get_gui_view(aRecord, parent=None):
         #TODO: implement!
-        print("ERROR: NEEDS IMPLEMENTATION!!!")
-        # currExtraInfoDict = aVideoRecord.get_output_dict()
-        # outGuiObj = PhoDurationEvent_Video(aVideoRecord.get_start_date(), aVideoRecord.get_end_date(), aVideoRecord.file_fullname, QColor(51,204,255), currExtraInfoDict, parent=parent)
+        end_date = None
+        theColor = None
+        if (aRecord.end_date is None):
+            print("ERROR: partition record doesn't have an endDate! Can't create GUI Object")
+            return None
+        else:
+            end_date = aRecord.end_date
+
+
+        if (parent is not None):
+            if ((aRecord.type_id is None) or (aRecord.subtype_id is None)):
+                theColor = PhoDurationEvent_Partition.ColorBase
+            else:
+                theColor = parent.behaviors[aRecord.subtype_id-1].primaryColor.get_QColor()
+
+        else:
+            print("WARNING: Partition Record's parent is None!")
+            theColor = PhoDurationEvent_Partition.ColorBase
+            pass
+
+        outPartitionGuiObj = PhoDurationEvent_Partition(aRecord.start_date, end_date, \
+            aRecord.primary_text, aRecord.secondary_text, aRecord.tertiary_text, \
+                theColor, aRecord.type_id, aRecord.subtype_id, {'notes':aRecord.notes}, parent=parent)
         
-        # outGuiObj = convert_TimestampedAnnotation(aDataObj, self)
-        # outGuiObj.on_edit.connect(self.on_annotation_modify_event)
-        # outGuiObj.on_edit_by_dragging_handle_start.connect(self.handleStartSliderValueChange)
-        # outGuiObj.on_edit_by_dragging_handle_end.connect(self.handleEndSliderValueChange)
-        # # outGuiObj.on_edit_by_dragging_handle.connect(self.try_resize_comment_with_handles)
-        # # outGuiObj = PhoDurationEvent_AnnotationComment(start_date, end_date, body, title, subtitle)
-        # # newAnnotationIndex = len(self.durationObjects)
-        # # outGuiObj.setAccessibleName(str(newAnnotationIndex))
-        # # outGuiObj
-        # return outGuiObj
-        return None
+        # Connect signals
+        if (parent is not None):
+            outPartitionGuiObj.on_edit.connect(parent.on_partition_modify_event)
+        
+        return outPartitionGuiObj
 
 
 class TimestampedAnnotation(ReferenceBoxExperCohortAnimalMixin, Base):

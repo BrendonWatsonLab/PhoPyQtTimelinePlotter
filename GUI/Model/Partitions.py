@@ -435,16 +435,18 @@ class Partitioner(AbstractDatabaseAccessingQObject):
         # TODO: maybe more dynamic getting of color from parent track?
         # theColor = parent.behaviors[from_database_partition_record.subtype_id-1].primaryColor.get_QColor()
         # Get new color associated with the modified subtype_id
-        if ((from_database_partition_record.type_id is None) or (from_database_partition_record.subtype_id is None)):
-            theColor = PhoDurationEvent_Partition.ColorBase
-        else:
-            theColor = parent.behaviors[from_database_partition_record.subtype_id-1].primaryColor.get_QColor()
-        # theColor = Qt.black
-        outPartitionGuiObj = PhoDurationEvent_Partition(from_database_partition_record.start_date, from_database_partition_record.end_date, \
-            from_database_partition_record.primary_text, from_database_partition_record.secondary_text, from_database_partition_record.tertiary_text, \
-                theColor, from_database_partition_record.type_id, from_database_partition_record.subtype_id, {'notes':from_database_partition_record.notes}, parent=parent)
-        outPartitionGuiObj.on_edit.connect(parent.on_partition_modify_event)
-        return outPartitionGuiObj
+        # if ((from_database_partition_record.type_id is None) or (from_database_partition_record.subtype_id is None)):
+        #     theColor = PhoDurationEvent_Partition.ColorBase
+        # else:
+        #     theColor = parent.behaviors[from_database_partition_record.subtype_id-1].primaryColor.get_QColor()
+        # # theColor = Qt.black
+        # outPartitionGuiObj = PhoDurationEvent_Partition(from_database_partition_record.start_date, from_database_partition_record.end_date, \
+        #     from_database_partition_record.primary_text, from_database_partition_record.secondary_text, from_database_partition_record.tertiary_text, \
+        #         theColor, from_database_partition_record.type_id, from_database_partition_record.subtype_id, {'notes':from_database_partition_record.notes}, parent=parent)
+        # outPartitionGuiObj.on_edit.connect(parent.on_partition_modify_event)
+        # return outPartitionGuiObj
+        return CategoricalDurationLabel.get_gui_view(from_database_partition_record, parent)
+        
 
     # # rebuilds the GUI partitions from the set of data partitions. Could be more efficient by reusing existing partitions
     # def rebuild_gui_partitions(self, from_data_partitions):
