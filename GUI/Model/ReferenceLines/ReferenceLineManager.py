@@ -334,19 +334,19 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
     # Main Window Slots:
     @pyqtSlot()
     def on_active_zoom_changed(self):
-        print("ReferenceMarkerManager.on_active_zoom_changed(...)")
+        # print("ReferenceMarkerManager.on_active_zoom_changed(...)")
         # self.update()
         self.needs_positions_update = True
 
     @pyqtSlot()
     def on_active_viewport_changed(self):
-        print("ReferenceMarkerManager.on_active_viewport_changed(...)")
+        # print("ReferenceMarkerManager.on_active_viewport_changed(...)")
         self.needs_positions_update = True
         # self.update()
 
     @pyqtSlot(datetime, datetime, timedelta)
     def on_active_global_timeline_times_changed(self, totalStartTime, totalEndTime, totalDuration):
-        print("ReferenceMarkerManager.on_active_global_timeline_times_changed({0}, {1}, {2})".format(str(totalStartTime), str(totalEndTime), str(totalDuration)))
+        # print("ReferenceMarkerManager.on_active_global_timeline_times_changed({0}, {1}, {2})".format(str(totalStartTime), str(totalEndTime), str(totalDuration)))
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
         self.totalDuration = totalDuration

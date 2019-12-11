@@ -862,7 +862,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
     # Computes the position in the scroll view's contents (the timeline track offset position) from the viewport's/window's viewport_x_offset
     def viewport_offset_to_contents_offset(self, viewport_x_offset):
-        print("TimelineDrawingWindow.viewport_offset_to_contents_offset(viewport_x_offset: {0})...".format(str(viewport_x_offset)))
+        # print("TimelineDrawingWindow.viewport_offset_to_contents_offset(viewport_x_offset: {0})...".format(str(viewport_x_offset)))
         contentWidget = self.timelineScroll.widget()
         contentWidgetRelativePoint = contentWidget.mapFromParent(QPoint(viewport_x_offset, 0))
         return contentWidgetRelativePoint.x()
@@ -1123,11 +1123,11 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         self.sync_active_viewport_start_to_datetime(current_viewport_start_time) # Use the saved start time to re-align the viewport's left edge
         
     def on_finish_editing_zoom_custom(self):
-        print("on_finish_editing_zoom_custom()")
+        # print("on_finish_editing_zoom_custom()")
         # Save the datetime represented by the viewport's left edge so that it can be re-aligned after zoom is performed.
         current_viewport_start_time = self.get_viewport_active_start_time()
         double_newZoom = self.ui.doubleSpinBox_currentZoom.value()
-        print("new_zoom: {0}".format(double_newZoom))
+        # print("new_zoom: {0}".format(double_newZoom))
         newActiveScaleMultiplier = double_newZoom
         self.set_new_active_scale_multiplier(newActiveScaleMultiplier)
         self.sync_active_viewport_start_to_datetime(current_viewport_start_time) # Use the saved start time to re-align the viewport's left edge
@@ -1197,7 +1197,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
          # Compute appropriate offset:
         found_x_offset = self.datetime_to_offset(safe_end_time)
-        print("TimelineDrawingWindow.sync_active_viewport_end_to_datetime(endTime: {0}): found_x_offset: {1}".format(str(safe_end_time), str(found_x_offset)))
+        # print("TimelineDrawingWindow.sync_active_viewport_end_to_datetime(endTime: {0}): found_x_offset: {1}".format(str(safe_end_time), str(found_x_offset)))
         self.timelineScroll.ensureVisible(found_x_offset, 0, 0, 0)
 
         # Shouldn't be needed because it triggers self.on_viewport_slider_changd(...)

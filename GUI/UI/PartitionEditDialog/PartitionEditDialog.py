@@ -46,8 +46,6 @@ class PartitionEditDialog(BoxExperCohortAnimalIDsFrame_Mixin, AbstractDatabaseAc
         self.show() # Show the GUI
 
     def initUI(self):
-        # self.ui.buttonBox.accepted.connect(self.accept)
-        # self.ui.buttonBox.rejected.connect(self.reject)
         self.ui.comboBox_Type.activated[str].connect(self.on_type_combobox_changed)
         self.ui.comboBox_Subtype.activated[str].connect(self.on_subtype_combobox_changed)
 

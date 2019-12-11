@@ -238,17 +238,17 @@ class TickedTimelineDrawingBaseWidget(FixedTimelineContentsWidthMixin, QWidget):
     # Main Window Slots:
     @pyqtSlot()
     def on_active_zoom_changed(self):
-        print("TickedTimelineDrawingBaseWidget.on_active_zoom_changed(...)")
+        # print("TickedTimelineDrawingBaseWidget.on_active_zoom_changed(...)")
         self.update()
 
     @pyqtSlot()
     def on_active_viewport_changed(self):
-        print("TickedTimelineDrawingBaseWidget.on_active_viewport_changed(...)")
+        # print("TickedTimelineDrawingBaseWidget.on_active_viewport_changed(...)")
         self.update()
 
     @pyqtSlot(datetime, datetime, timedelta)
     def on_active_global_timeline_times_changed(self, totalStartTime, totalEndTime, totalDuration):
-        print("TickedTimelineDrawingBaseWidget.on_active_global_timeline_times_changed({0}, {1}, {2})".format(str(totalStartTime), str(totalEndTime), str(totalDuration)))
+        # print("TickedTimelineDrawingBaseWidget.on_active_global_timeline_times_changed({0}, {1}, {2})".format(str(totalStartTime), str(totalEndTime), str(totalDuration)))
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
         self.totalDuration = totalDuration
