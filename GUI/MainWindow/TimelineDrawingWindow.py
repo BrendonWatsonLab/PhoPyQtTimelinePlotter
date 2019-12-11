@@ -2012,6 +2012,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             modifiedConfig = self.videoFileTrackWidgetHeaders[trackID].get_config()
             modifiedConfig.set_filter(proposedModifiedFilter)
             self.videoFileTrackWidgetHeaders[trackID].set_config(modifiedConfig)
+            self.trackFloatingWidgetHeaders[trackID].update_labels_dynamically()
 
             self.reload_videos_from_track_configs()
             self.update()
@@ -2076,6 +2077,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             modifiedConfig = self.eventTrackWidgetHeaders[trackID].get_config()
             modifiedConfig.set_filter(proposedModifiedFilter)
             self.eventTrackWidgetHeaders[trackID].set_config(modifiedConfig)
+            self.trackFloatingWidgetHeaders[trackID].update_labels_dynamically()
 
             # TODO: Reload events
             modifiedConfig.reload(self.database_connection.get_session(), currTrackWidget)
