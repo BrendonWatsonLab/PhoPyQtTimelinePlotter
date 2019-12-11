@@ -9,9 +9,9 @@ from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
-from GUI.UI.DialogComponents.AbstractDialogMixins import BoxExperCohortAnimalIDsFrame_Mixin
+from GUI.UI.DialogComponents.AbstractDialogMixins import BoxExperCohortAnimalIDsFrame_Mixin, ObjectSpecificDialogMixin, DialogObjectIdentifier
 
-class TextAnnotationDialog(BoxExperCohortAnimalIDsFrame_Mixin, QtWidgets.QDialog):
+class TextAnnotationDialog(ObjectSpecificDialogMixin, BoxExperCohortAnimalIDsFrame_Mixin, QtWidgets.QDialog):
 
      # This defines a signal called 'closed' that takes no arguments.
     on_cancel = pyqtSignal()
