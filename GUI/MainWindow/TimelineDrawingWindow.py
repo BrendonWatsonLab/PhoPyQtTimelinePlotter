@@ -8,7 +8,7 @@ from enum import Enum
 
 from PyQt5 import QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QGridLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea
-from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QAction, qApp, QApplication, QAbstractSlider, QAbstractScrollArea
+from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QAction, qApp, QApplication, QAbstractSlider, QAbstractScrollArea, QDialog, QLabel
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
@@ -1972,7 +1972,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
             # Have a valid video file path
             print("TimelineDrawingWindow.on_video_track_child_generate_thumbnails(...): starting thumbnail generation with video: {0}...".format(str(proposed_video_file_path)))
             # Start thumbnail generation for this video file too:
-            self.get_video_thumbnail_generator().add_video_path(proposed_video_file_path)
+            self.get_video_thumbnail_generator().add_video_path(str(proposed_video_file_path))
 
         else:
             print("TimelineDrawingWindow.on_video_track_child_generate_thumbnails(...): video URL can not be resolved. Perhaps the file doesn't exist?")
@@ -2329,10 +2329,28 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
     def on_video_thumbnail_generation_complete(self):
         print("TimelineDrawingWindow.on_video_thumbnail_generation_complete()...")
         # Clear the top-level nodes
+        self.video_thumbnail_popover_window = QDialog(self)
+        # self.video_thumbnail_popover_window.setCentr
+        # A vertical box layout
+        thumbnailsLayout = QVBoxLayout()
+
+        desiredThumbnailSizeKey = "320"
+
         # for (aSearchPathIndex, aSearchPath) in enumerate(self.searchPaths):
         for (key_path, cache_value) in self.get_video_thumbnail_generator().get_cache().items():
             # key_path: the video file path that had the thumbnails generated for it
             print("thumbnail generation complete for [{0}]: {1} frames".format(str(key_path), len(cache_value)))
+            for (index, aVideoThumbnailObj) in enumerate(cache_value):
+                currThumbsDict = aVideoThumbnailObj.get_thumbs_dict()
+                # currThumbnailImage: should be a QImage
+                currThumbnailImage = currThumbsDict[desiredThumbnailSizeKey]
+                w = QLabel()
+                w.setPixmap(QtGui.QPixmap.fromImage(currThumbnailImage))
+                thumbnailsLayout.addWidget(w)
+
+        
+        self.video_thumbnail_popover_window.setLayout(thumbnailsLayout)
+        self.video_thumbnail_popover_window.show()
 
         self.update()
     

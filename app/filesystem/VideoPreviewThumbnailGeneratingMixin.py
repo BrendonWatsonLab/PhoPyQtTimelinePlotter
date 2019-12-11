@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool
 
+import subprocess
 import cv2
 
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
@@ -138,7 +139,7 @@ class VideoPreviewThumbnailGenerator(QObject):
         self.pending_operation_status.restart(OperationTypes.FilesystemThumbnailGeneration, numFilesToGenerateThumbnailsFor)
 
         for (sub_index, aFoundVideoFile) in enumerate(active_video_paths):
-            # Iterate through all found video-files in a given list
+            # Iterate through all found video-files in a given list (a list of VideoThumbnail objects: [VideoThumbnail])
             generatedThumbnailObjsList = VideoPreviewThumbnailGenerator.generate_thumbnails_for_video_file(aFoundVideoFile, enable_debug_print=True)
             
             if (not (aFoundVideoFile in self.cache.keys())):
@@ -201,29 +202,71 @@ class VideoPreviewThumbnailGenerator(QObject):
 
 
 
+
     @staticmethod
-    def video_to_frames(video_filename, enable_debug_print):
+    def video_to_frames(video_filename, enable_debug_print, use_OpenCV_method=True):
         """Extract frames from video"""
         if enable_debug_print:
             print("video_to_frames({0})...".format(str(video_filename)))
-        cap = cv2.VideoCapture(video_filename)
-        video_length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
+
         frames = []
-        if cap.isOpened() and video_length > 0:
-            frame_ids = [0]
-            if video_length >= 4:
-                frame_ids = [0, 
-                            round(video_length * 0.25), 
-                            round(video_length * 0.5),
-                            round(video_length * 0.75),
-                            video_length - 1]
-            count = 0
-            success, image = cap.read()
-            while success:
-                if count in frame_ids:
-                    frames.append(image)
-                success, image = cap.read()
-                count += 1
+
+        if use_OpenCV_method:
+            if enable_debug_print:
+                print("    video_to_frames(...): using OpenCV method...")
+            cap = cv2.VideoCapture(video_filename)
+            video_length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
+
+            if cap.isOpened() and video_length > 0:
+                frame_ids = [0]
+                if video_length >= 4:
+                    frame_ids = [0,
+                                round(video_length * 0.25),
+                                round(video_length * 0.5),
+                                round(video_length * 0.75),
+                                video_length - 1]
+                count = 0
+                for aFrameNumber in frame_ids:
+                    #The first argument of cap.set(), number 2 defines that parameter for setting the frame selection.
+                    #Number 2 defines flag CV_CAP_PROP_POS_FRAMES which is a 0-based index of the frame to be decoded/captured next.
+                    #The second argument defines the frame number in range 0.0-1.0
+                    cap.set(1, aFrameNumber)
+                    success, image = cap.read()
+                    if success:
+                        print("frame_number[{0}]: SUCCESS!".format(str(aFrameNumber)))
+                        # Set grayscale colorspace for the frame.
+                        # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+                        # Cut the video extension to have the name of the video
+                        # my_video_name = video_filename.split(".")[0]
+
+                        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                        # h, w, ch = image.shape
+                        # bytesPerLine = ch * w
+                        # qImg = QtGui.QImage(image.data, w, h, bytesPerLine, QtGui.QImage.Format_RGB888)
+                        # frames.append(qImg)
+                        frames.append(image)
+                        count += 1
+                    else:
+                        print("frame_number[{0}] failed".format(str(aFrameNumber)))
+                        continue
+
+                # success, image = cap.read()
+                # while success:
+                #     if count in frame_ids:
+                #         frames.append(image)
+                #     success, image = cap.read()
+                #     count += 1
+        else:
+            # Use FFMPEG method:
+            print("    video_to_frames(...): using FFMPEG method...")
+            """
+            -ss: the start time
+            -vframes:
+            """
+            img_output_path = '/data/output/temp.jpg'
+            subprocess.call(['ffmpeg', '-i', video_filename, '-ss', '00:00:00.000', '-vframes:1', img_output_path])
+            # TODO: Read them back in
 
         if enable_debug_print:
             print("done. ({0} frames extracted)...".format(str(len(frames))))
@@ -235,13 +278,23 @@ class VideoPreviewThumbnailGenerator(QObject):
         if enable_debug_print:
             print("image_to_thumbs(...)...")
         height, width, channels = img.shape
-        thumbs = {"original": img}
+        bytesPerLine = channels * width
+        qImg = QtGui.QImage(img.data, width, height, bytesPerLine, QtGui.QImage.Format_RGB888)
+
+        # thumbs = {"original": img}
+        thumbs = {"original": qImg}
         sizes = [640, 320, 160]
         for size in sizes:
             if (width >= size):
                 r = (size + 0.0) / width
                 max_size = (size, int(height * r))
-                thumbs[str(size)] = cv2.resize(img, max_size, interpolation=cv2.INTER_AREA)
+                # thumbs[str(size)] = cv2.resize(img, max_size, interpolation=cv2.INTER_AREA)
+                curr_raw_image = cv2.resize(img, max_size, interpolation=cv2.INTER_AREA)
+                curr_height, curr_width, curr_channels = curr_raw_image.shape
+                curr_bytesPerLine = curr_channels * curr_width
+                curr_q_img = QtGui.QImage(curr_raw_image.data, curr_width, curr_height, curr_bytesPerLine, QtGui.QImage.Format_RGB888)
+                thumbs[str(size)] = curr_q_img
+
 
         if enable_debug_print:
             print("done.")
