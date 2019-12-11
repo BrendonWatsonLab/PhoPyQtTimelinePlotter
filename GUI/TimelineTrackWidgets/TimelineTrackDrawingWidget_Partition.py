@@ -13,7 +13,10 @@ from GUI.Model.Partitions import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import *
 
 from GUI.UI.PartitionEditDialog.PartitionEditDialog import *
-from GUI.Model.TrackType import TrackType, TrackConfigMixin
+from GUI.Model.TrackType import TrackType, TrackConfigMixin, TrackConfigDataCacheMixin
+
+from GUI.UI.DialogComponents.AbstractDialogMixins import DialogObjectIdentifier
+
 
 ## TODO:
 """
@@ -53,9 +56,15 @@ class TrackContextConfig(QObject):
         self.subcontext = subcontextObj
         self.is_valid = ((self.context is not None) and (self.subcontext is not None))
 
+    def __str__(self):
+        # return 'TrackFilterBase: behavioral_box_ids: {0}, experiment_ids: {1}, cohort_ids: {2}, animal_ids: {3}'.format(self.behavioral_box_ids, self.experiment_ids, self.cohort_ids, self.animal_ids)
+        return '({0})'.format(self.get_context_name())
+
+
+
 # Consts of N "Cuts" that separate a block into N+1 "Partitions"
 #  
-class TimelineTrackDrawingWidget_Partition(TrackConfigMixin, TimelineTrackDrawingWidgetBase):
+class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfigMixin, TimelineTrackDrawingWidgetBase):
     default_shouldDismissSelectionUponMouseButtonRelease = False
     default_itemSelectionMode = ItemSelectionOptions.SingleSelection
 
@@ -67,11 +76,11 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigMixin, TimelineTrackDrawin
         self.trackConfig = trackConfig
         self.trackConfig.cacheUpdated.connect(self.reloadModelFromConfigCache)
 
-        self.partitionDataObjects = []
-        
+        self.durationRecords = []
+        self.durationObjects = []
+
         self.partitionManager = None
         # self.partitionManager is initialized in self.reloadModelFromDatabase() if it's None
-        # self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, database_connection, name="name", partitionViews=partitionObjects, partitionDataObjects=self.partitionDataObjects)
         self.reloadModelFromDatabase()
 
         self.reinitialize_from_partition_manager()
@@ -95,6 +104,8 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigMixin, TimelineTrackDrawin
     # Updates the member variables from the database
     # Note: if there are any pending changes, they will be persisted on this action
     def reloadModelFromDatabase(self):
+        # self.reset_on_reload()
+
         # Load the latest behaviors and colors data from the database
         self.behaviorGroups = self.database_connection.load_behavior_groups_from_database()
         self.behaviors = self.database_connection.load_behaviors_from_database()
@@ -105,16 +116,19 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigMixin, TimelineTrackDrawin
         # newSubcontext = newContext.subcontexts[self.trackContextConfig.get_subcontext_index()]
         # self.trackContextConfig.update_on_load(newContext, newSubcontext)
         
-        loadedPartitionRecordsList = []
-        if self.trackContextConfig.get_is_valid():
-            loadedPartitionRecordsList = self.database_connection.load_categorical_duration_labels_from_database(self.trackContextConfig)
+        # loadedPartitionRecordsList = []
+        # if self.trackContextConfig.get_is_valid():
+        #     loadedPartitionRecordsList = self.database_connection.load_categorical_duration_labels_from_database(self.trackContextConfig)
             
-        if self.partitionManager is None:
-            self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, self.database_connection, name="name", partitionViews=None, partitionDataObjects=loadedPartitionRecordsList)
-        else:
-            # Builds the partition objects, meaning both the record and view components
-            self.partitionManager.on_reload_partition_records(loadedPartitionRecordsList)
+        # if self.partitionManager is None:
+        #     self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, self.database_connection, name="name", partitionViews=None, partitionDataObjects=loadedPartitionRecordsList)
+        # else:
+        #     # Builds the partition objects, meaning both the record and view components
+        #     self.partitionManager.on_reload_partition_records(loadedPartitionRecordsList)
 
+        # The partition manager is created/updated in the self.reloadModelFromConfigCache(...) function
+        self.performReloadConfigCache()
+        self.update()
 
     @pyqtSlot()
     def reloadModelFromConfigCache(self):
@@ -124,10 +138,23 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigMixin, TimelineTrackDrawin
         self.durationRecords = []
         self.durationObjects = []
 
+        # For the partition track, just add the records, not the views. In fact, the config cache doesn't generate any views for partition tracks because we generate them in the partition manager
         for aContainerObj in active_model_view_array:
             self.durationRecords.append(aContainerObj.get_record())
-            self.durationObjects.append(aContainerObj.get_view())
+            # newViewIndex = len(self.durationObjects)
+            # newView = aContainerObj.get_view()
+            # newView.setAccessibleName(str(newViewIndex))
+            # self.durationObjects.append(newView)
 
+        # Update partitionManager:
+        if self.partitionManager is None:
+            self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, self.database_connection, name="name", partitionViews=None, partitionDataObjects=self.durationRecords)
+        else:
+            # Builds the partition objects, meaning both the record and view components
+            self.partitionManager.on_reload_partition_records(self.durationRecords)
+
+
+        self.reinitialize_from_partition_manager()
         self.update()
 
 
@@ -139,11 +166,14 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigMixin, TimelineTrackDrawin
     @pyqtSlot(int)    
     def on_partition_modify_event(self, childIndex):
         print("on_partition_modify_event(...)")
-        selectedPartitionIndex = self.get_selected_partition_index()
-        selectedPartitionViewObject = self.get_selected_partition().get_view()
+
+        selectedPartitionIndex = childIndex
+        selectedPartitionObj = self.partitions[childIndex]
+        selectedPartitionViewObject = selectedPartitionObj.get_view()
+
         if ((not (selectedPartitionViewObject is None))):
-            self.activeEditingPartitionIndex = selectedPartitionIndex
             self.activePartitionEditDialog = PartitionEditDialog(self.database_connection, parent=self)
+            self.activePartitionEditDialog.set_referred_object_identifiers(self.get_trackID(), selectedPartitionIndex)
             self.activePartitionEditDialog.set_start_date(selectedPartitionViewObject.startTime)
             self.activePartitionEditDialog.set_end_date(selectedPartitionViewObject.endTime)
             self.activePartitionEditDialog.set_type(selectedPartitionViewObject.type_id)
@@ -172,7 +202,6 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigMixin, TimelineTrackDrawin
             self.activePartitionEditDialog.on_cancel.connect(self.partition_dialog_canceled)
         else:
             print("Couldn't get active partition object to edit!!")
-            self.activeEditingPartitionIndex = None
 
     # Returns the currently selected partition index or None if none are selected
     def get_selected_partition_index(self):
@@ -245,7 +274,7 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigMixin, TimelineTrackDrawin
                 self.selection_changed.emit(self.trackID, newlySelectedObjectIndex)
 
             # Called once the selected partition object has been set the Partitioner should call "self.owning_parent_track.reloadModelFromDatabase()"
-            self.on_partition_modify_event()
+            self.on_partition_modify_event(newlySelectedObjectIndex)
         
         pass
 
@@ -411,14 +440,18 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigMixin, TimelineTrackDrawin
             self.hover_changed.emit(self.trackID, self.hovered_object_index)
 
     # Called when the partition edit dialog accept event is called.
-    def try_update_partition(self, start_date, end_date, title, subtitle, body, type_id, subtype_id):
+    @pyqtSlot(DialogObjectIdentifier, datetime, datetime, str, str, str, int, int)
+    def try_update_partition(self, partition_identifier, start_date, end_date, title, subtitle, body, type_id, subtype_id):
         # Tries to create a new comment
         print('try_update_partition')
         if (not (self.trackContextConfig.get_is_valid())):
             print('context is invalid! aborting try_update_partition!')
             return
-        
-        if (not (self.activeEditingPartitionIndex is None)):
+
+        dialog_child_partition_index = partition_identifier.childID
+
+        # if the referred to child index exists, and is valid within the current array, continue
+        if ((dialog_child_partition_index is not None) and (0 <= dialog_child_partition_index <= (len(self.partitions)-1))):        
             # Convert -1 values for type_id and subtype_id back into "None" objects. They had to be an Int to be passed through the pyQtSlot()
             # Note the values are record IDs (not indicies, so they're 1-indexed). This means that both -1 and 0 are invalid.
             if (type_id < 1):
@@ -427,7 +460,7 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigMixin, TimelineTrackDrawin
             if (subtype_id < 1):
                 subtype_id = None
                 
-            print('Modifying partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(self.activeEditingPartitionIndex, type_id, subtype_id))
+            print('Modifying partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(dialog_child_partition_index, type_id, subtype_id))
             
             # Get new color associated with the modified subtype_id
             if ((type_id is None) or (subtype_id is None)):
@@ -435,20 +468,21 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigMixin, TimelineTrackDrawin
             else:
                 newColor = self.behaviors[subtype_id-1].primaryColor.get_QColor()
             
-            self.partitionManager.modify_partition(self.activeEditingPartitionIndex, start_date, end_date, title, subtitle, body, type_id, subtype_id, newColor)
-            print('Modified partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(self.activeEditingPartitionIndex, type_id, subtype_id))
+            self.partitionManager.modify_partition(dialog_child_partition_index, start_date, end_date, title, subtitle, body, type_id, subtype_id, newColor)
+            print('Modified partition[{0}]: (type_id: {1}, subtype_id: {2})'.format(dialog_child_partition_index, type_id, subtype_id))
             self.reinitialize_from_partition_manager()
             self.update()
             # Save to database
             # TODO: currently all saved partitions must be of the same context and subcontext.
             self.partitionManager.save_partitions_to_database()
         else:
-            print("Error: unsure what partition to update!")
+            print("Error: try_update_partition(...): dialog_child_partition_index {0} is not valid".format(str(dialog_child_partition_index)))
+            # print("Error: unsure what partition to update!")
             return
 
-    def partition_dialog_canceled(self):
+    @pyqtSlot(DialogObjectIdentifier)
+    def partition_dialog_canceled(self, partition_identifier):
         print('comment_Dialog_canceled')
-        self.activeEditingPartitionIndex = None
 
 
     # try_cut_partition(...): tries to cut the partition programmatically at the specified datetime

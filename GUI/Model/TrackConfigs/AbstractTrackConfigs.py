@@ -18,6 +18,8 @@ from app.database.entry_models.db_model import StaticFileExtension, FileParentFo
 from GUI.Model.ModelViewContainer import ModelViewContainer
 
 from GUI.Model.TrackType import TrackType, TrackStorageArray
+
+# INCLUDE:
 # from GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, TrackCache, TrackFilterBase
 
 
@@ -52,8 +54,7 @@ class TrackFilterBase(QObject):
 
         return query
 
-
-    # Returns the records. Children classes shouldn't have to override this
+    # Returns the records. Children classes shouldn't have to override this unless they want to sort it differently
     def build_filter(self, session):
         return self.build_filter_query(session).all()
 
@@ -197,6 +198,10 @@ class TrackConfigurationBase(QObject):
         self.filter = TrackFilterBase(trackRecordClass, behavioral_box_ids, experiment_ids, cohort_ids, animal_ids, parent=parent)
         self.cache = TrackCache([], parent=parent)
 
+    # get_should_auto_build_gui_views(): true if the gui views should automatically be built from the records after a reload(...) command
+    # can be overriden by children if we don't want the GUI views auto-built
+    def get_should_auto_build_gui_views(self):
+        return True
 
     def get_track_id(self):
         return self.trackIndex
@@ -218,7 +223,6 @@ class TrackConfigurationBase(QObject):
     def get_track_storageArray_type(self):
         return self.get_filter().get_track_storageArray_type()
 
-
     def filter_records(self, session):
         return self.get_filter().build_filter(session)
 
@@ -230,7 +234,12 @@ class TrackConfigurationBase(QObject):
         # Build the corresponding GUI objects
         built_model_view_container_array = []
         for (index, aRecord) in enumerate(found_records):
-            aGuiView = self.get_filter().trackRecordClass.get_gui_view(aRecord, parent=owning_parent_track)
+            aGuiView = None
+            if self.get_should_auto_build_gui_views():
+                aGuiView = self.get_filter().trackRecordClass.get_gui_view(aRecord, parent=owning_parent_track)
+            else:
+                aGuiView = None
+
             aModelViewContainer = ModelViewContainer(aRecord, aGuiView)
             built_model_view_container_array.append(aModelViewContainer)
 

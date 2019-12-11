@@ -40,7 +40,7 @@ from GUI.Model.ModelViewContainer import ModelViewContainer
 
 """
 Each Partition Track has a Partitioner that manages its partitions.
-There's a "partitionDataObjects" which represents the model layer and consists of SQLAlchemy database records
+There's a "partitions" list which represents the model layer and consists of SQLAlchemy database records
 The "partitions" track consists of GUI objects.
 
 
@@ -104,7 +104,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
             partitionDataObjects = []
 
         # call on_reload_partition_records(...) to build any additional appropriate records (spanning the current timeline) needed and the GUI views
-        self.on_reload_partition_records(partitionDataObjects)    
+        self.on_reload_partition_records(partitionDataObjects)
         self.extended_data = extended_data
 
     # Returns a new Partition object (both data and view)
@@ -246,7 +246,7 @@ class Partitioner(AbstractDatabaseAccessingQObject):
 
     # Called by the parent when the partition record objects have be loaded from the database. updates self.partitions
     def on_reload_partition_records(self, loadedDataPartitions):
-        print("on_reload_partition_records(...)")
+        print("on_reload_partition_records(loadedDataPartitions: {0})".format(len(loadedDataPartitions)))
         self.partitions = self.construct_spanning_unlabeled_partition_records(loadedDataPartitions)
         print("on_reload_partition_records(...): {0} new partitions".format(len(self.partitions)))
 
@@ -291,7 +291,6 @@ class Partitioner(AbstractDatabaseAccessingQObject):
     def get_partition_views(self):
         return [(aPartition.get_view()) for aPartition in self.partitions]
 
-    ## TODO: remove self.partitionDataObjects references!!! If needed, replace with self.get_partition_records()
     def get_partition_records(self):
         return [(aPartition.get_record()) for aPartition in self.partitions]
 
@@ -302,7 +301,6 @@ class Partitioner(AbstractDatabaseAccessingQObject):
     def cut_partition(self, cut_partition_index, cut_datetime):
         # Creates a cut at a given datetime
         partition_to_cut = self.partitions[cut_partition_index]
-        # data_partition_to_cut = self.partitionDataObjects[cut_partition_index]
 
         parentContextPair = self.get_parent_contexts()
         if (parentContextPair is None):
@@ -435,16 +433,18 @@ class Partitioner(AbstractDatabaseAccessingQObject):
         # TODO: maybe more dynamic getting of color from parent track?
         # theColor = parent.behaviors[from_database_partition_record.subtype_id-1].primaryColor.get_QColor()
         # Get new color associated with the modified subtype_id
-        if ((from_database_partition_record.type_id is None) or (from_database_partition_record.subtype_id is None)):
-            theColor = PhoDurationEvent_Partition.ColorBase
-        else:
-            theColor = parent.behaviors[from_database_partition_record.subtype_id-1].primaryColor.get_QColor()
-        # theColor = Qt.black
-        outPartitionGuiObj = PhoDurationEvent_Partition(from_database_partition_record.start_date, from_database_partition_record.end_date, \
-            from_database_partition_record.primary_text, from_database_partition_record.secondary_text, from_database_partition_record.tertiary_text, \
-                theColor, from_database_partition_record.type_id, from_database_partition_record.subtype_id, {'notes':from_database_partition_record.notes}, parent=parent)
-        outPartitionGuiObj.on_edit.connect(parent.on_partition_modify_event)
-        return outPartitionGuiObj
+        # if ((from_database_partition_record.type_id is None) or (from_database_partition_record.subtype_id is None)):
+        #     theColor = PhoDurationEvent_Partition.ColorBase
+        # else:
+        #     theColor = parent.behaviors[from_database_partition_record.subtype_id-1].primaryColor.get_QColor()
+        # # theColor = Qt.black
+        # outPartitionGuiObj = PhoDurationEvent_Partition(from_database_partition_record.start_date, from_database_partition_record.end_date, \
+        #     from_database_partition_record.primary_text, from_database_partition_record.secondary_text, from_database_partition_record.tertiary_text, \
+        #         theColor, from_database_partition_record.type_id, from_database_partition_record.subtype_id, {'notes':from_database_partition_record.notes}, parent=parent)
+        # outPartitionGuiObj.on_edit.connect(parent.on_partition_modify_event)
+        # return outPartitionGuiObj
+        return CategoricalDurationLabel.get_gui_view(from_database_partition_record, parent)
+        
 
     # # rebuilds the GUI partitions from the set of data partitions. Could be more efficient by reusing existing partitions
     # def rebuild_gui_partitions(self, from_data_partitions):
@@ -496,6 +496,9 @@ class Partitioner(AbstractDatabaseAccessingQObject):
 
         # After saving to the database, we should reload from the database. The parent does this.
         self.owning_parent_track.reloadModelFromDatabase()
+        # Should the parent actually do this as opposed to this track?
+        self.owning_parent_track.setWindowModified(False)
+
         ## TODO: this doesn't update the owner's objects (doesn't call owner.reinitialize_from_partition_manager() or owner.update())
         print("done.")
             

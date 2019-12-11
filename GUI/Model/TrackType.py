@@ -1,5 +1,9 @@
 import sys
 from enum import Enum
+from PyQt5 import QtGui, QtWidgets
+from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget,QTableWidgetItem
+from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
+from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
 
 ## IMPORT:
 # from GUI.Model.TrackType import TrackType, TrackStorageArray
@@ -80,3 +84,10 @@ class TrackConfigMixin(object):
 
     def get_track_type(self):
         return self.get_track_filter().get_track_type()
+
+    
+class TrackConfigDataCacheMixin(object):
+    # performReloadConfigCache(...): actually tells the config cache to update
+    @pyqtSlot()
+    def performReloadConfigCache(self):
+        self.get_track_config().reload(self.database_connection.get_session(), self)

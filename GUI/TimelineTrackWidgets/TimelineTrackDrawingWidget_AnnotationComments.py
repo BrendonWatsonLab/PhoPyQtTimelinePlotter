@@ -17,9 +17,9 @@ from GUI.UI.TextAnnotations.TextAnnotationDialog import *
 
 from app.database.SqlAlchemyDatabase import create_TimestampedAnnotation, convert_TimestampedAnnotation, modify_TimestampedAnnotation, modify_TimestampedAnnotation_startDate, modify_TimestampedAnnotation_endDate
 
-from GUI.Model.TrackType import TrackType, TrackConfigMixin
+from GUI.Model.TrackType import TrackType, TrackConfigMixin, TrackConfigDataCacheMixin
 
-class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTrackDrawingWidget_SelectionBase):
+class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigDataCacheMixin, TrackConfigMixin, TimelineTrackDrawingWidget_SelectionBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
     default_shouldDismissSelectionUponMouseButtonRelease = True
     default_itemSelectionMode = ItemSelectionOptions.SingleSelection
@@ -47,7 +47,6 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
         self.setMouseTracking(True)
 
         self.annotationEditingDialog = None
-        self.activeEditingAnnotationIndex = None
 
         self.trackConfig.cacheUpdated.connect(self.on_reloadModelFromConfigCache)
 
@@ -68,10 +67,6 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
         self.contexts = self.database_connection.load_contexts_from_database()
         self.performReloadConfigCache()
         self.update()
-
-    # performReloadConfigCache(...): actually tells the config cache to update
-    def performReloadConfigCache(self):
-        self.trackConfig.reload(self.database_connection.get_session(), self)
 
     # on_reloadModelFromConfigCache(...): called when the config cache updates to reload the widget
     @pyqtSlot()
@@ -269,8 +264,9 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
     def create_comment_datetime(self, start_datetime, end_datetime):
         # TODO: should get the behavioral_box_id, experiment_id, cohort_id, animal_id from the track's context or config or w/e
         self.annotationEditingDialog = TextAnnotationDialog()
-        self.annotationEditingDialog.on_commit[datetime, str, str, str, int, int, int, int].connect(self.try_create_instantaneous_comment)
-        self.annotationEditingDialog.on_commit[datetime, datetime, str, str, str, int, int, int, int].connect(self.try_create_comment)
+        self.annotationEditingDialog.set_referred_object_identifiers(self.get_trackID(), None)
+        self.annotationEditingDialog.on_commit[DialogObjectIdentifier, datetime, str, str, str, int, int, int, int].connect(self.try_create_instantaneous_comment)
+        self.annotationEditingDialog.on_commit[DialogObjectIdentifier, datetime, datetime, str, str, str, int, int, int, int].connect(self.try_create_comment)
         self.annotationEditingDialog.on_cancel.connect(self.comment_dialog_canceled)
         self.annotationEditingDialog.set_start_date(start_datetime)
         self.annotationEditingDialog.set_end_date(end_datetime)
@@ -291,8 +287,8 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
             
         return False
 
-    @pyqtSlot(datetime, datetime, str, str, str, int, int, int, int)
-    def try_create_comment(self, start_date, end_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
+    @pyqtSlot(DialogObjectIdentifier, datetime, datetime, str, str, str, int, int, int, int)
+    def try_create_comment(self, partition_identifier, start_date, end_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
         # Tries to create a new comment
         print('try_create_comment')
         if end_date == start_date:
@@ -315,9 +311,9 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
         self.reloadModelFromDatabase()
         self.performReloadConfigCache()
 
-    @pyqtSlot(datetime, str, str, str, int, int, int, int)
-    def try_create_instantaneous_comment(self, start_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
-        self.try_create_comment(start_date, None, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id)
+    @pyqtSlot(DialogObjectIdentifier, datetime, str, str, str, int, int, int, int)
+    def try_create_instantaneous_comment(self, partition_identifier, start_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
+        self.try_create_comment(partition_identifier, start_date, None, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id)
 
     # Called by a specific child annotation (double click or menu option) to indicate that it should be edited in a new Annotation Editor Dialog
     @pyqtSlot(int)    
@@ -330,8 +326,8 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
         selectedAnnotationView = self.durationObjects[selectedAnnotationIndex]
         
         if ((not (selectedAnnotationView is None))):
-            self.activeEditingAnnotationIndex = selectedAnnotationIndex
             self.annotationEditingDialog = TextAnnotationDialog()
+            self.annotationEditingDialog.set_referred_object_identifiers(self.get_trackID(), selectedAnnotationIndex)
             self.annotationEditingDialog.on_cancel.connect(self.comment_dialog_canceled)
 
             self.annotationEditingDialog.set_start_date(selectedAnnotationView.startTime)
@@ -357,11 +353,10 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
 
             self.annotationEditingDialog.set_id_values(sel_behavioral_box_id, sel_experiment_id, sel_cohort_id, sel_animal_id)
             
-            self.annotationEditingDialog.on_commit[datetime, str, str, str, int, int, int, int].connect(self.try_update_instantaneous_comment)
-            self.annotationEditingDialog.on_commit[datetime, datetime, str, str, str, int, int, int, int].connect(self.try_update_comment)
+            self.annotationEditingDialog.on_commit[DialogObjectIdentifier, datetime, str, str, str, int, int, int, int].connect(self.try_update_instantaneous_comment)
+            self.annotationEditingDialog.on_commit[DialogObjectIdentifier, datetime, datetime, str, str, str, int, int, int, int].connect(self.try_update_comment)
         else:
             print("Couldn't get active annotation object to edit!!")
-            self.activeEditingAnnotationIndex = None
 
     @pyqtSlot(int)    
     def on_annotation_delete_event(self, childIndex):
@@ -371,7 +366,6 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
         selectedAnnotationView = self.durationObjects[selectedAnnotationIndex]
         
         if ((not (selectedAnnotationRecord is None))):
-            self.activeEditingAnnotationIndex = None
             # Delete the record from the database
             self.database_connection.delete_from_database([selectedAnnotationRecord])
             self.database_commit()
@@ -379,34 +373,34 @@ class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigMixin, TimelineTr
 
         else:
             print("Couldn't get active annotation object to delete!!")
-            self.activeEditingAnnotationIndex = None
 
 
 
     # There's a bug in the database design and they're updating but overlapping. Figure this out. A new one is being created each time I change a field. This wasn't happening before.
-    @pyqtSlot(datetime, datetime, str, str, str, int, int, int, int)
-    def try_update_comment(self, start_date, end_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
+    @pyqtSlot(DialogObjectIdentifier, datetime, datetime, str, str, str, int, int, int, int)
+    def try_update_comment(self, partition_identifier, start_date, end_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
         # Tries to update an existing comment
         print('try_update_comment')
-        
-        if (not (self.activeEditingAnnotationIndex is None)):
-            currObjToModify = self.durationRecords[self.activeEditingAnnotationIndex]
+        dialog_child_index = partition_identifier.childID
+        # if the referred to child index exists, and is valid within the current array, continue
+        if ((dialog_child_index is not None) and (0 <= dialog_child_index <= (len(self.durationRecords)-1))): 
+            currObjToModify = self.durationRecords[dialog_child_index]
             currObjToModify = modify_TimestampedAnnotation(currObjToModify, start_date, end_date, title, subtitle, body, '', behavioral_box_id, experiment_id, cohort_id, animal_id)
-            self.durationRecords[self.activeEditingAnnotationIndex] = currObjToModify
+            self.durationRecords[dialog_child_index] = currObjToModify
             self.database_commit()
             self.reloadModelFromDatabase()
         else:
-            print("Error: unsure what comment to update!")
+            print("Error: try_update_comment(...): dialog_child_index {0} is not valid".format(str(dialog_child_index)))
+            # print("Error: unsure what comment to update!")
             return
 
-    @pyqtSlot(datetime, str, str, str, int, int, int, int)
-    def try_update_instantaneous_comment(self, start_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
-        self.try_update_comment(start_date, None, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id)
+    @pyqtSlot(DialogObjectIdentifier, datetime, str, str, str, int, int, int, int)
+    def try_update_instantaneous_comment(self, partition_identifier, start_date, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id):
+        self.try_update_comment(partition_identifier, start_date, None, title, subtitle, body, behavioral_box_id, experiment_id, cohort_id, animal_id)
 
-    @pyqtSlot()
-    def comment_dialog_canceled(self):
+    @pyqtSlot(DialogObjectIdentifier)
+    def comment_dialog_canceled(self, partition_identifier):
         print('comment_Dialog_canceled')
-        self.activeEditingAnnotationIndex = None
 
         
     ## Resize Time with Handles:

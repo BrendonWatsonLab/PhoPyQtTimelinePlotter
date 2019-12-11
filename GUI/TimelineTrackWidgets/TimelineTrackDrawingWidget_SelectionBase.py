@@ -227,7 +227,6 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
         else:
             print("SelectionBase Track on_button_released(...): Unknown click event!")
 
-
     def on_button_released(self, event):
         # Check if we want to dismiss the selection when the mouse button is released (requiring the user to hold down the button to see the results)
         needs_update = False
