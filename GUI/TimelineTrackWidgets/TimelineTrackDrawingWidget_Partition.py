@@ -439,6 +439,8 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
             QToolTip.showText(event.globalPos(), text, self, self.hovered_object_rect)
             self.hover_changed.emit(self.trackID, self.hovered_object_index)
 
+        super().on_mouse_moved(event)
+
     # Called when the partition edit dialog accept event is called.
     @pyqtSlot(DialogObjectIdentifier, datetime, datetime, str, str, str, int, int)
     def try_update_partition(self, partition_identifier, start_date, end_date, title, subtitle, body, type_id, subtype_id):
