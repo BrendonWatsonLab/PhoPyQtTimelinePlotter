@@ -62,7 +62,7 @@ from GUI.Helpers.MouseTrackingThroughChildrenMixin import MouseTrackingThroughCh
 from GUI.Model.TrackType import TrackType, TrackStorageArray
 
 from app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoThumbnail, VideoPreviewThumbnailGenerator
-from app.filesystem.FileExporting import FileExportingMixin
+from app.filesystem.FileExporting import FileExportingMixin, FileExportFormat, FileExportOptions
 
 
 
@@ -2346,7 +2346,8 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
 
                     currVideoContainerArray = currVideoTrackWidget.get_cached_container_array()
                     
-                    self.export_behavior_data_for_videos(exportFolderPath, currVideoContainerArray, currContainerArray)
+                    # self.export_behavior_data_for_videos(exportFolderPath, currVideoContainerArray, currContainerArray, exportOptions=FileExportOptions.SingleFileForAllVideos)
+                    self.export_behavior_data_for_videos(exportFolderPath, currVideoContainerArray, currContainerArray, exportOptions=FileExportOptions.FilePerVideo)
                 else:
                     print("No matching partition track for group {0}. Nothing to export.".format(str(currGroupIndex)))
 

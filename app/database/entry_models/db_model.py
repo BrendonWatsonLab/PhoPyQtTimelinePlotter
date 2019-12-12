@@ -206,6 +206,13 @@ class Subcontext(Base):
     __table_args__ = (UniqueConstraint('name', 'parent_context', name='_name_parent_uc'),
                      )
 
+    def Subcontext_get_JSON(self):
+        outDict = dict()
+        outDict["name"] = self.name
+        outDict["parentContext"] = self.parentContext.name
+        outDict["notes"] = (self.notes or "")
+        return outDict
+
 class Context(Base):
     __tablename__ = 'Contexts'
 
@@ -218,7 +225,7 @@ class Context(Base):
     def __init__(self,id,name,notes=None):
         self.id = id
         self.name = name
-        self.notes = notes
+        self.note = notes
 
     @classmethod
     def getTableMapping(cls):
@@ -227,6 +234,12 @@ class Context(Base):
             ('Name', cls.name, 'name', {'editable': True}),
             ('Notes', cls.note, 'note', {'editable': True}),
         ]
+
+    def Context_get_JSON(self):
+        outDict = dict()
+        outDict["name"] = self.name
+        outDict["note"] = (self.note or "")
+        return outDict
 
 
 class Experiment(Base):
@@ -388,6 +401,18 @@ class CategoricalDurationLabel(StartEndDatetimeMixin, ReferenceBoxExperCohortAni
 
     # def get_export_output(self):
     #     return {}
+
+
+    def CategoricalDurationLabel_get_JSON(self):
+        outDict = dict()
+        outDict["type_id"] = self.type_id
+        outDict["subtype_id"] = self.subtype_id
+        outDict["tertiarytype_id"] = self.tertiarytype_id
+        # Subcontext's Subcontext_get_JSON() method returns the name of its owning parent Context as well.
+        # outDict["Context"] = self.Context.Contex
+        outDict["Subcontext"] = self.Subcontext.Subcontext_get_JSON()
+
+        return outDict
 
     @staticmethod
     def get_track_type():

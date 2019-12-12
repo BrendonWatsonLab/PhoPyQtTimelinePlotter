@@ -5,6 +5,7 @@ import sys, os, csv, json
 from datetime import datetime, timezone, timedelta
 from enum import Enum
 import collections # For ordered dictionarys ()
+import pathlib
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import QApplication, QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QPushButton, QColorDialog, QFileDialog, QDialog
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
@@ -15,12 +16,26 @@ from app.database.entry_models.db_model import Animal, BehavioralBox, Context, E
 from app.database.entry_models.db_model import ReferenceBoxExperCohortAnimalMixin, StartEndDatetimeMixin
 
 ## INCLUDES:
-# from app.filesystem.FileExporting import FileExportingMixin
+# from app.filesystem.FileExporting import FileExportingMixin, FileExportFormat, FileExportOptions
 
 
 class TimelineRecordJsonEncoder(json.JSONEncoder):
     def default(self, obj):
         outputDict = dict()
+
+        if isinstance(obj, VideoFile):
+            outputDict = {**outputDict, **obj.CategoricalDurationLabel_get_JSON()}
+            outputDict['video'] = obj.file_basename
+
+        elif isinstance(obj, CategoricalDurationLabel):
+            outputDict = {**outputDict, **obj.CategoricalDurationLabel_get_JSON()}
+            # outputDict["behavior"] = obj.type_id
+        elif isinstance(obj, TimestampedAnnotation):
+            outputDict = {**outputDict, **obj.TimestampedAnnotation_get_JSON()}
+        else:
+            print("WARNING: TimelineRecordJsonEncoder: tried to JSON encode an unknown type")
+            json.JSONEncoder.default(self, obj)
+
 
         # Add mixin results to the dictionary
         if isinstance(obj, StartEndDatetimeMixin):
@@ -32,6 +47,14 @@ class TimelineRecordJsonEncoder(json.JSONEncoder):
             outputDict = {**outputDict, **obj.ReferenceBoxExperCohortAnimalMixin_get_JSON()}
 
         return outputDict
+
+class FileExportFormat(Enum):
+        CSV = 1
+        JSON = 2 
+
+class FileExportOptions(Enum):
+        SingleFileForAllVideos = 1 # Exports a single file containing the exported information for all videos
+        FilePerVideo = 2 # Exports one file for each video.
 
 class FileExportingMixin(object):
 
@@ -71,7 +94,7 @@ class FileExportingMixin(object):
 
     # exports the behavior/partition data for a video files given by "videosContainerArray"
     @staticmethod
-    def export_behavior_data_for_videos(outputFilePath, videosContainerArray, partitionsContainerArray):
+    def export_behavior_data_for_videos(outputFilePath, videosContainerArray, partitionsContainerArray, exportFormat=FileExportFormat.JSON, exportOptions=FileExportOptions.FilePerVideo):
         """
         Note each video 
         Should loop through the partition objects and find all videos that they overlap.
@@ -112,15 +135,73 @@ class FileExportingMixin(object):
         # Iterate one more time to produce a streightforward array
         # videoFilePartitionArrayMap
 
-        commaSeparator = ","
-        # Iterate through each video and output the partitions that it owns.
-        for (aVideoRecord, videoPartitionsList) in videoFilePartitionArrayMap.items():
-            partitionString = commaSeparator.join([str(json.dumps(aPartition, cls=TimelineRecordJsonEncoder)) for aPartition in videoPartitionsList])
-            print("video: {0}, partitions: {1}".format(str(aVideoRecord.file_basename), partitionString ))
+        if exportFormat == FileExportFormat.CSV:
+            print("ERROR: export_behavior_data_for_videos(): UNIMPLEMENTED FUNCTIONALITY")
+            return
+        elif exportFormat == FileExportFormat.JSON:
 
-            
+            if exportOptions == FileExportOptions.SingleFileForAllVideos:
+                # Exports a single file for all videos
+                outputJsonDict = dict()
+                # Iterate through each video and to make a dict<String:List> to be written out by JSON
+                for (aVideoRecord, videoPartitionsList) in videoFilePartitionArrayMap.items():
+                    outputJsonDict[aVideoRecord.file_basename] = videoPartitionsList
+
+                # Write it out to a single file in the user specified directory
+                singleFileName = "single_file_export.json"
+                currOutputFilePath = pathlib.Path(outputFilePath).joinpath(singleFileName)
+                with open(currOutputFilePath, 'w') as outfile:
+                    json.dump(outputJsonDict, outfile, cls=TimelineRecordJsonEncoder)
+                print("Exported {0} partitions for {1} videos to {2}.".format(str(numPartitionEvents), str(numVideoEvents), str(currOutputFilePath)))
+
+                return
+
+            elif exportOptions == FileExportOptions.FilePerVideo:
+                # commaSeparator = ","
+                # Iterate through each video and output the partitions that it owns.
+                for (aVideoRecord, videoPartitionsList) in videoFilePartitionArrayMap.items():
+                    currentFileName = "behavior_export_{0}.json".format(aVideoRecord.file_basename)
+                    currOutputFilePath = pathlib.Path(outputFilePath).joinpath(currentFileName)
+                    with open(currOutputFilePath, 'w') as outfile:
+                        json.dump(videoPartitionsList, outfile, cls=TimelineRecordJsonEncoder)
+                        
+                # After we loop through all the videos, print the stats.
+                print("Exported {0} partitions to {1} files in {2}.".format(str(numPartitionEvents), str(numVideoEvents), str(outputFilePath)))
+                return
+
+            else:
+                print("UNIMPLEMENTED ERROR: export_behavior_data_for_videos(): unknown export option")
+                return
+                
+            outputJsonDict = dict()
+            commaSeparator = ","
+            # Iterate through each video and output the partitions that it owns.
+            for (aVideoRecord, videoPartitionsList) in videoFilePartitionArrayMap.items():
+                
+                outputJsonDict[aVideoRecord.file_basename] = videoPartitionsList
+                
+                # # partitionString = commaSeparator.join([str(json.dumps(aPartition, cls=TimelineRecordJsonEncoder)) for aPartition in videoPartitionsList])
+
+                # partitionString = json.dumps(videoPartitionsList, cls=TimelineRecordJsonEncoder)
+                # print("video: {0}, partitions: {1}".format(str(aVideoRecord.file_basename), partitionString ))
+
+                
+            flatJSONString = json.dumps(outputJsonDict, cls=TimelineRecordJsonEncoder)
+            print(flatJSONString)
+
+            with open('data.txt', 'w') as outfile:
+                json.dump(data, outfile)
+          
+            return
+
+        else:
+            print("UNIMPLEMENTED ERROR: export_behavior_data_for_videos(): unknown export format")
+            return
 
         
+
+
+
         # write to CSV
                 
         # with open(path[0], 'w', newline='') as csv_file:
