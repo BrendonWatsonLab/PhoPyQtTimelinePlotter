@@ -142,7 +142,7 @@ class TimelineTrackDrawingWidgetBase(DateTimeRenderMixin, FixedTimelineContentsW
         pass
 
     def on_mouse_moved(self, event):
-        pass
+        QWidget.mouseMoveEvent(self, event)
 
     def get_is_under_mouse(self):
         return self.underMouse()

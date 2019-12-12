@@ -318,6 +318,8 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
         if needs_update:
             self.update()
 
+        super().on_mouse_moved(event)
+
 
     def enterEvent(self, QEvent):
         # here the code for mouse hover
