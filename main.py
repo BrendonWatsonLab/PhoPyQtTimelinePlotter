@@ -76,6 +76,7 @@ class TimelineApplication(QApplication):
 
         if TimelineApplication.shouldShowMainGUIWindow:
             self.mainWindow.show()
+            # hi
             self.mainWindowGeometry = self.mainWindow.frameGeometry()
 
         if TimelineApplication.shouldShowExampleWindow:
