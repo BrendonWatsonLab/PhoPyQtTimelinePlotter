@@ -112,20 +112,6 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
         self.contextsDict = self.database_connection.load_contexts_from_database()
         self.subcontexts = self.database_connection.load_subcontexts_from_database()
 
-        # newContext = self.contextsDict[self.trackContextConfig.get_context_name()]
-        # newSubcontext = newContext.subcontexts[self.trackContextConfig.get_subcontext_index()]
-        # self.trackContextConfig.update_on_load(newContext, newSubcontext)
-        
-        # loadedPartitionRecordsList = []
-        # if self.trackContextConfig.get_is_valid():
-        #     loadedPartitionRecordsList = self.database_connection.load_categorical_duration_labels_from_database(self.trackContextConfig)
-            
-        # if self.partitionManager is None:
-        #     self.partitionManager = Partitioner(self.totalStartTime, self.totalEndTime, self, self.database_connection, name="name", partitionViews=None, partitionDataObjects=loadedPartitionRecordsList)
-        # else:
-        #     # Builds the partition objects, meaning both the record and view components
-        #     self.partitionManager.on_reload_partition_records(loadedPartitionRecordsList)
-
         # The partition manager is created/updated in the self.reloadModelFromConfigCache(...) function
         self.performReloadConfigCache()
         self.update()
@@ -141,10 +127,6 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
         # For the partition track, just add the records, not the views. In fact, the config cache doesn't generate any views for partition tracks because we generate them in the partition manager
         for aContainerObj in active_model_view_array:
             self.durationRecords.append(aContainerObj.get_record())
-            # newViewIndex = len(self.durationObjects)
-            # newView = aContainerObj.get_view()
-            # newView.setAccessibleName(str(newViewIndex))
-            # self.durationObjects.append(newView)
 
         # Update partitionManager:
         if self.partitionManager is None:
@@ -161,6 +143,36 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
     def reinitialize_from_partition_manager(self):
         self.partitions = self.partitionManager.get_partitions()
         self.eventRect = np.repeat(QRect(0,0,0,0), len(self.partitions))
+
+
+    # Find the next event
+    def find_next_event(self, following_datetime):
+        for (index, obj) in enumerate(self.partitions):
+            if (obj.get_view().startTime > following_datetime):
+                return (index, obj.get_view())
+        return None # If there is no next event, return None
+
+
+    # Find the previous event
+    def find_previous_event(self, preceeding_datetime):
+
+        best_found_candidate_index = None
+        best_found_candidate_object = None
+
+        for (index, obj) in enumerate(self.partitions):
+            if (obj.get_view().endTime < preceeding_datetime):
+                best_found_candidate_index = index
+                best_found_candidate_object = obj.get_view()
+            else:
+                # otherwise if the object's endTime is later than our desired preceeding_datetime, we have our candidate to return
+                break
+            
+        if ((best_found_candidate_index is None) and (best_found_candidate_object is None)):
+            return None
+        else:
+            return (best_found_candidate_index, best_found_candidate_object)
+
+
 
     # Called by a specific child partition's (double click or menu option) to indicate that it should be edited in a new Partition Editor Dialog
     @pyqtSlot(int)    
