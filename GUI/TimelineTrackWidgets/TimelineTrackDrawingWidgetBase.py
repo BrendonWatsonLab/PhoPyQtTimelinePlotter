@@ -13,6 +13,8 @@ from enum import Enum
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWidget
 from GUI.UI.UIState import ItemInteractionState, ItemHoverState, ItemSelectionState
 from GUI.Helpers.FixedTimelineContentsWidthMixin import FixedTimelineContentsWidthMixin
+from GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
+
 
 class ItemSelectionOptions(Enum):
         DisableSelection = 1 # disallows selection
@@ -21,7 +23,7 @@ class ItemSelectionOptions(Enum):
         MultiSelection = 3  # allows multiple selection
 
 # The base timeline track widget which all others should inherit from
-class TimelineTrackDrawingWidgetBase(FixedTimelineContentsWidthMixin, AbstractDatabaseAccessingWidget):
+class TimelineTrackDrawingWidgetBase(DateTimeRenderMixin, FixedTimelineContentsWidthMixin, AbstractDatabaseAccessingWidget):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
     hover_changed = pyqtSignal(int, int, name='hover_changed')
     selection_changed = pyqtSignal(int, int, name='selection_changed')

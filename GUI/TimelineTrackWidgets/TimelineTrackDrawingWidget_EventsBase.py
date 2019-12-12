@@ -140,7 +140,7 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
         super().on_mouse_moved(event)
         # Draw the tooltip if we want
         if (not (self.hovered_object_index is None)):
-            text = "event: {0}\nstart_time: {1}\nend_time: {2}\nduration: {3}".format(self.hovered_object.name, self.hovered_object.startTime, self.hovered_object.endTime, self.hovered_object.computeDuration())
+            text = "event: {0}\nstart_time: {1}\nend_time: {2}\nduration: {3}".format(self.hovered_object.name, self.get_full_date_time_string(self.hovered_object.startTime), self.get_full_date_time_string(self.hovered_object.endTime), self.hovered_object.computeDuration())
             QToolTip.showText(event.globalPos(), text, self, self.hovered_object_rect)
             self.update()
 

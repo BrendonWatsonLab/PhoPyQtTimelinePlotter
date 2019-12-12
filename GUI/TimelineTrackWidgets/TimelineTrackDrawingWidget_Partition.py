@@ -435,7 +435,7 @@ class TimelineTrackDrawingWidget_Partition(TrackConfigDataCacheMixin, TrackConfi
         else:
             self.hovered_object = self.partitions[self.hovered_object_index].get_view()
             self.hovered_object_rect = self.eventRect[self.hovered_object_index]
-            text = "event: {0}\nstart_time: {1}\nend_time: {2}\nduration: {3}".format(self.hovered_object.name, self.hovered_object.startTime, self.hovered_object.endTime, self.hovered_object.computeDuration())
+            text = "event: {0}\nstart_time: {1}\nend_time: {2}\nduration: {3}".format(self.hovered_object.name, self.get_full_date_time_string(self.hovered_object.startTime), self.get_full_date_time_string(self.hovered_object.endTime), self.hovered_object.computeDuration())
             QToolTip.showText(event.globalPos(), text, self, self.hovered_object_rect)
             self.hover_changed.emit(self.trackID, self.hovered_object_index)
 
