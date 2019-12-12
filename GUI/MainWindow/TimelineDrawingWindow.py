@@ -56,6 +56,8 @@ from GUI.UI.TimelineFloatingHeaderWidget.TimelineFloatingHeaderWidget import Tim
 from GUI.Model.DataMovieLinkInfo import DataMovieLinkInfo
 
 from GUI.Helpers.DurationRepresentationHelpers import DurationRepresentationMixin, OffsetRepresentationMixin
+from GUI.Helpers.MouseTrackingThroughChildrenMixin import MouseTrackingThroughChildrenMixin
+
 
 from GUI.Model.TrackType import TrackType, TrackStorageArray
 
@@ -128,7 +130,7 @@ class VideoTrackGroup:
 self.activeScaleMultiplier: this multipler determines how many times longer the contents of the scrollable viewport are than the viewport width itself.
 
 """
-class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessingWindow):
+class TimelineDrawingWindow(MouseTrackingThroughChildrenMixin, DurationRepresentationMixin, AbstractDatabaseAccessingWindow):
     
     static_VideoTrackTrackID = -1 # The integer ID of the main video track
     
@@ -259,7 +261,6 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         self.activeVideoTrackConfigEditDialog = None
         self.activeTrackID_ConfigEditingIndex = None
     
-        self.setMouseTracking(True)
 
         self.minimumVideoTrackHeight = 50
         # self.minimumVideoTrackHeight = 25
@@ -276,6 +277,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         self.activeViewportChanged.connect(self.on_active_viewport_changed)
         self.activeGlobalTimelineTimesChanged.connect(self.on_active_global_timeline_times_changed)
 
+        self.setMouseTracking(True)
         # self.show() # Show the GUI
 
         # overlappingVideoEvents = self.mainVideoTrack.find_overlapping_events()
@@ -421,7 +423,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
                     # currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", CategoricalDurationLabel, [currTrackBBID+1], None, None, None, self)
                     currTrackConfig = PartitionTrackConfiguration(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", currPartitionTrackContextObj, [currTrackBBID+1], None, None, None, self)
                     self.trackConfigurationsDict[currTrackIndex] = currTrackConfig
-                    self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, currPartitionTrackContextObj)
+                    self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, currPartitionTrackContextObj, parent=self)
                     specific_storage_array_index = len(self.eventTrackWidgets)
                     currGroup.set_partitionsTrackIndex(specific_storage_array_index)
                     self.trackID_to_TrackWidgetLocatorTuple[currTrackIndex] = (currTrackConfig.get_track_storageArray_type(), specific_storage_array_index)
@@ -627,7 +629,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
 
             self.extendedTracksContainer.setFixedWidth(minimumWidgetWidth)
             ## Scroll Area: should contain only the extendedTracksContainer (not the video container)
-            self.timelineScroll = QScrollArea()
+            self.timelineScroll = QScrollArea(parent=self)
             self.timelineScroll.setWidget(self.extendedTracksContainer)
             self.timelineScroll.setWidgetResizable(True)
             # self.timelineScroll.setWidgetResizable(False)
@@ -656,7 +658,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
                 
 
             # Main Vertical Splitter:
-            self.verticalSplitter = QSplitter(Qt.Vertical)
+            self.verticalSplitter = QSplitter(Qt.Vertical, parent=self)
             self.verticalSplitter.setHandleWidth(8)
             self.verticalSplitter.setMouseTracking(True)
             self.verticalSplitter.addWidget(self.videoPlayerContainer)
@@ -1233,10 +1235,9 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         if track_storage_array_type == TrackStorageArray.Video:
             found_track_widget = self.videoFileTrackWidgets[track_stroage_array_index]
             pass
-        if track_storage_array_type == TrackStorageArray.Event:
+        elif track_storage_array_type == TrackStorageArray.Event:
             found_track_widget = self.eventTrackWidgets[track_stroage_array_index]
             pass
-
         else:
             print("UNIMPLEMENTED ERROR: get_track_with_trackID({0})".format(str(trackID)))
             return None
@@ -1252,10 +1253,9 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         if track_storage_array_type == TrackStorageArray.Video:
             found_obj = self.videoFileTrackWidgetHeaders[trackID]
             pass
-        if track_storage_array_type == TrackStorageArray.Event:
+        elif track_storage_array_type == TrackStorageArray.Event:
             found_obj = self.eventTrackWidgetHeaders[trackID]
             pass
-
         else:
             print("UNIMPLEMENTED ERROR: get_track_header_with_trackID({0})".format(str(trackID)))
             return None
