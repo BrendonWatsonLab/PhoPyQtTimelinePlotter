@@ -38,3 +38,9 @@ class DateTimeRenderMixin(object):
     @staticmethod
     def get_full_date_time_string(drawTime):
         return drawTime.strftime("X%m/X%d X%I:%m %p").replace('X0', 'X').replace('X', '')
+
+
+    # "7/27/19 7:18:03am" style timestring Includes years and seconds.
+    @staticmethod
+    def get_full_long_date_time_string(drawTime):
+        return drawTime.strftime("X%m/X%d/%y X%I:%m:%S %p").replace('X0', 'X').replace('X', '')

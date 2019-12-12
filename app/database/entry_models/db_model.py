@@ -21,7 +21,12 @@ from GUI.Model.Events.PhoDurationEvent_AnnotationComment import PhoDurationEvent
 from GUI.Model.Events.PhoDurationEvent_Partition import PhoDurationEvent_Partition
 
 from GUI.Model.TrackType import TrackType
+from GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
 
+
+## INCLUDES:
+# from app.database.entry_models.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, CategoricalDurationLabel, VideoFile
+# from app.database.entry_models.db_model import ReferenceBoxExperCohortAnimalMixin, StartEndDatetimeMixin
 
 # (Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, VideoFile)
 
@@ -90,6 +95,21 @@ class ReferenceBoxExperCohortAnimalMixin(object):
         self.cohort_id = cohort_id
         self.animal_id = animal_id
 
+    def ReferenceBoxExperCohortAnimalMixin_get_JSON(self):
+        outDict = dict()
+        if self.behavioral_box_id is not None:
+            outDict["behavioral_box_id"] = self.behavioral_box_id
+
+        if self.experiment_id is not None:
+            outDict["experiment_id"] = self.experiment_id
+
+        if self.cohort_id is not None:
+            outDict["cohort_id"] = self.cohort_id
+
+        if self.animal_id is not None:
+            outDict["animal_id"] = self.animal_id
+
+        return outDict
 
 
     # @classmethod
@@ -102,7 +122,7 @@ class ReferenceBoxExperCohortAnimalMixin(object):
     #     ]
     
 
-class StartEndDatetimeMixin(object):
+class StartEndDatetimeMixin(DateTimeRenderMixin, object):
 
     def get_start_date(self):
         return datetime.fromtimestamp(float(self.start_date) / 1000.0)
@@ -113,6 +133,8 @@ class StartEndDatetimeMixin(object):
         else:
             return datetime.fromtimestamp(float(self.end_date) / 1000.0)
 
+    def StartEndDatetimeMixin_get_JSON(self):
+        return {"start_date":self.get_full_long_date_time_string(self.get_start_date()), "end_date":self.get_full_long_date_time_string(self.get_end_date())}
 
 
 
@@ -184,6 +206,13 @@ class Subcontext(Base):
     __table_args__ = (UniqueConstraint('name', 'parent_context', name='_name_parent_uc'),
                      )
 
+    def Subcontext_get_JSON(self):
+        outDict = dict()
+        outDict["name"] = self.name
+        outDict["parentContext"] = self.parentContext.name
+        outDict["notes"] = (self.notes or "")
+        return outDict
+
 class Context(Base):
     __tablename__ = 'Contexts'
 
@@ -196,7 +225,7 @@ class Context(Base):
     def __init__(self,id,name,notes=None):
         self.id = id
         self.name = name
-        self.notes = notes
+        self.note = notes
 
     @classmethod
     def getTableMapping(cls):
@@ -205,6 +234,12 @@ class Context(Base):
             ('Name', cls.name, 'name', {'editable': True}),
             ('Notes', cls.note, 'note', {'editable': True}),
         ]
+
+    def Context_get_JSON(self):
+        outDict = dict()
+        outDict["name"] = self.name
+        outDict["note"] = (self.note or "")
+        return outDict
 
 
 class Experiment(Base):
@@ -364,6 +399,21 @@ class CategoricalDurationLabel(StartEndDatetimeMixin, ReferenceBoxExperCohortAni
     # __table_args__ = (UniqueConstraint('start_date', 'end_date', 'type_id', 'subtype_id', 'tertiarytype_id' name='_customer_location_uc'),
     #                  )
 
+    # def get_export_output(self):
+    #     return {}
+
+
+    def CategoricalDurationLabel_get_JSON(self):
+        outDict = dict()
+        outDict["type_id"] = self.type_id
+        outDict["subtype_id"] = self.subtype_id
+        outDict["tertiarytype_id"] = self.tertiarytype_id
+        # Subcontext's Subcontext_get_JSON() method returns the name of its owning parent Context as well.
+        # outDict["Context"] = self.Context.Contex
+        outDict["Subcontext"] = self.Subcontext.Subcontext_get_JSON()
+
+        return outDict
+
     @staticmethod
     def get_track_type():
         return TrackType.Partition
@@ -429,6 +479,13 @@ class CategoricalDurationLabel(StartEndDatetimeMixin, ReferenceBoxExperCohortAni
             outPartitionGuiObj.on_edit.connect(parent.on_partition_modify_event)
         
         return outPartitionGuiObj
+
+    # Overriden from StartEndDatetimeMixin because this record type uniquely used actual datetime values instead of floats.
+    def get_start_date(self):
+        return self.start_date
+
+    def get_end_date(self):
+        return self.end_date
 
 
 class TimestampedAnnotation(StartEndDatetimeMixin, ReferenceBoxExperCohortAnimalMixin, Base):
