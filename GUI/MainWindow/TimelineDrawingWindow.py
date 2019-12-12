@@ -1235,10 +1235,9 @@ class TimelineDrawingWindow(MouseTrackingThroughChildrenMixin, DurationRepresent
         if track_storage_array_type == TrackStorageArray.Video:
             found_track_widget = self.videoFileTrackWidgets[track_stroage_array_index]
             pass
-        if track_storage_array_type == TrackStorageArray.Event:
+        elif track_storage_array_type == TrackStorageArray.Event:
             found_track_widget = self.eventTrackWidgets[track_stroage_array_index]
             pass
-
         else:
             print("UNIMPLEMENTED ERROR: get_track_with_trackID({0})".format(str(trackID)))
             return None
@@ -1254,10 +1253,9 @@ class TimelineDrawingWindow(MouseTrackingThroughChildrenMixin, DurationRepresent
         if track_storage_array_type == TrackStorageArray.Video:
             found_obj = self.videoFileTrackWidgetHeaders[trackID]
             pass
-        if track_storage_array_type == TrackStorageArray.Event:
+        elif track_storage_array_type == TrackStorageArray.Event:
             found_obj = self.eventTrackWidgetHeaders[trackID]
             pass
-
         else:
             print("UNIMPLEMENTED ERROR: get_track_header_with_trackID({0})".format(str(trackID)))
             return None
