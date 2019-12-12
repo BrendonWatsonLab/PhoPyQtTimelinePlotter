@@ -27,6 +27,7 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
     def __init__(self, trackID, totalStartTime, totalEndTime, durationObjects, database_connection, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
         super(TimelineTrackDrawingWidget_SelectionBase, self).__init__(trackID, totalStartTime, totalEndTime, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
         self.reloadModelFromDatabase()
+        self.durationRecords = []
         self.durationObjects = durationObjects
         self.eventRect = np.repeat(QRect(0,0,0,0), len(durationObjects))
 
