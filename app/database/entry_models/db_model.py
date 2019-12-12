@@ -102,7 +102,16 @@ class ReferenceBoxExperCohortAnimalMixin(object):
     #     ]
     
 
+class StartEndDatetimeMixin(object):
 
+    def get_start_date(self):
+        return datetime.fromtimestamp(float(self.start_date) / 1000.0)
+
+    def get_end_date(self):
+        if self.end_date is None:
+            return None
+        else:
+            return datetime.fromtimestamp(float(self.end_date) / 1000.0)
 
 
 
@@ -270,7 +279,7 @@ class StaticFileExtension(Base):
         ]
 
 
-class Cohort(Base):
+class Cohort(StartEndDatetimeMixin, Base):
     __tablename__ = 'Cohorts'
 
     id = Column(Integer, primary_key=True)
@@ -300,7 +309,7 @@ Datatypes:
 Interval: datetime.timedelta()
 Numeric
 """
-class CategoricalDurationLabel(ReferenceBoxExperCohortAnimalMixin, Base):
+class CategoricalDurationLabel(StartEndDatetimeMixin, ReferenceBoxExperCohortAnimalMixin, Base):
     __tablename__ = 'CategoricalDurationLabels'
 
     id = Column(Integer, primary_key=True)
@@ -422,7 +431,7 @@ class CategoricalDurationLabel(ReferenceBoxExperCohortAnimalMixin, Base):
         return outPartitionGuiObj
 
 
-class TimestampedAnnotation(ReferenceBoxExperCohortAnimalMixin, Base):
+class TimestampedAnnotation(StartEndDatetimeMixin, ReferenceBoxExperCohortAnimalMixin, Base):
     __tablename__ = 'TimestampedAnnotations'
 
     id = Column(Integer, primary_key=True)
@@ -450,14 +459,14 @@ class TimestampedAnnotation(ReferenceBoxExperCohortAnimalMixin, Base):
         Context = relationship('Context')
     """
 
-    def get_start_date(self):
-        return datetime.fromtimestamp(float(self.start_date) / 1000.0)
+    # def get_start_date(self):
+    #     return datetime.fromtimestamp(float(self.start_date) / 1000.0)
 
-    def get_end_date(self):
-        if self.end_date is None:
-            return None
-        else:
-            return datetime.fromtimestamp(float(self.end_date) / 1000.0)
+    # def get_end_date(self):
+    #     if self.end_date is None:
+    #         return None
+    #     else:
+    #         return datetime.fromtimestamp(float(self.end_date) / 1000.0)
 
     @staticmethod
     def get_track_type():
@@ -501,7 +510,7 @@ class TimestampedAnnotation(ReferenceBoxExperCohortAnimalMixin, Base):
         return outGuiObj
 
 
-class ExperimentalConfigurationEvent(Base):
+class ExperimentalConfigurationEvent(StartEndDatetimeMixin, Base):
     __tablename__ = 'ExperimentalConfigurationEvents'
 
     id = Column(Integer, primary_key=True)
@@ -523,7 +532,7 @@ class ExperimentalConfigurationEvent(Base):
     labjack = relationship('Labjack')
 
 
-class VideoFile(ReferenceBoxExperCohortAnimalMixin, Base):
+class VideoFile(StartEndDatetimeMixin, ReferenceBoxExperCohortAnimalMixin, Base):
     __tablename__ = 'VideoFile'
 
     id = Column(Integer, primary_key=True)
@@ -580,11 +589,11 @@ class VideoFile(ReferenceBoxExperCohortAnimalMixin, Base):
         self.is_original_video = is_original_video
         self.notes = notes
 
-    def get_start_date(self):
-        return datetime.fromtimestamp(float(self.start_date) / 1000.0)
+    # def get_start_date(self):
+    #     return datetime.fromtimestamp(float(self.start_date) / 1000.0)
 
-    def get_end_date(self):
-        return datetime.fromtimestamp(float(self.end_date) / 1000.0)
+    # def get_end_date(self):
+    #     return datetime.fromtimestamp(float(self.end_date) / 1000.0)
 
     def get_duration(self):
         return float(self.duration) / 1000.0
