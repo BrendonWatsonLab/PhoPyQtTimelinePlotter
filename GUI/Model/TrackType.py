@@ -85,8 +85,30 @@ class TrackConfigMixin(object):
     def get_track_type(self):
         return self.get_track_filter().get_track_type()
 
-    
+""" TrackConfigDataCacheMixin:
+This object has a config with a cache that caches both its active record and view objects. 
+"""
 class TrackConfigDataCacheMixin(object):
+
+    # Gets the container array from the cache
+    @pyqtSlot()
+    def get_cached_container_array(self):
+        active_cache = self.trackConfig.get_cache()
+        active_model_view_array = active_cache.get_model_view_array()
+        return active_model_view_array
+
+    @pyqtSlot()
+    def get_cached_duration_records(self):
+        return self.durationRecords
+
+    # TODO: durationObjects aren't populated correctly for partition tracks because they're stored in the partition manager
+    @pyqtSlot()
+    def get_cached_duration_views(self):
+        return self.durationObjects
+
+    
+
+
     # performReloadConfigCache(...): actually tells the config cache to update
     @pyqtSlot()
     def performReloadConfigCache(self):
