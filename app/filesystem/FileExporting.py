@@ -1,7 +1,7 @@
 # coding: utf-8
 # FileExporting.py
 # Written by Pho Hale on 12-12-2019
-import sys, os, csv
+import sys, os, csv, json
 from datetime import datetime, timezone, timedelta
 from enum import Enum
 import collections # For ordered dictionarys ()
@@ -11,9 +11,27 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QStandardItemModel
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QRunnable, QUrl
 
-## IMPORTS:
+from app.database.entry_models.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, CategoricalDurationLabel, VideoFile
+from app.database.entry_models.db_model import ReferenceBoxExperCohortAnimalMixin, StartEndDatetimeMixin
+
+## INCLUDES:
 # from app.filesystem.FileExporting import FileExportingMixin
 
+
+class TimelineRecordJsonEncoder(json.JSONEncoder):
+    def default(self, obj):
+        outputDict = dict()
+
+        # Add mixin results to the dictionary
+        if isinstance(obj, StartEndDatetimeMixin):
+            # Uses dictionary unpacking, a python 3.5 feature, to add the keys returned from the type-speciic function into the dictionary.
+            outputDict = {**outputDict, **obj.StartEndDatetimeMixin_get_JSON()}
+
+        if isinstance(obj, ReferenceBoxExperCohortAnimalMixin):
+            # Uses dictionary unpacking, a python 3.5 feature, to add the keys returned from the type-speciic function into the dictionary.
+            outputDict = {**outputDict, **obj.ReferenceBoxExperCohortAnimalMixin_get_JSON()}
+
+        return outputDict
 
 class FileExportingMixin(object):
 
@@ -97,7 +115,7 @@ class FileExportingMixin(object):
         commaSeparator = ","
         # Iterate through each video and output the partitions that it owns.
         for (aVideoRecord, videoPartitionsList) in videoFilePartitionArrayMap.items():
-            partitionString = commaSeparator.join([str(aPartition) for aPartition in videoPartitionsList])
+            partitionString = commaSeparator.join([str(json.dumps(aPartition, cls=TimelineRecordJsonEncoder)) for aPartition in videoPartitionsList])
             print("video: {0}, partitions: {1}".format(str(aVideoRecord.file_basename), partitionString ))
 
             

@@ -23,6 +23,10 @@ from GUI.Model.Events.PhoDurationEvent_Partition import PhoDurationEvent_Partiti
 from GUI.Model.TrackType import TrackType
 
 
+## INCLUDES:
+# from app.database.entry_models.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, CategoricalDurationLabel, VideoFile
+# from app.database.entry_models.db_model import ReferenceBoxExperCohortAnimalMixin, StartEndDatetimeMixin
+
 # (Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, VideoFile)
 
 """
@@ -90,6 +94,21 @@ class ReferenceBoxExperCohortAnimalMixin(object):
         self.cohort_id = cohort_id
         self.animal_id = animal_id
 
+    def ReferenceBoxExperCohortAnimalMixin_get_JSON(self):
+        outDict = dict()
+        if self.behavioral_box_id is not None:
+            outDict["behavioral_box_id"] = self.behavioral_box_id
+
+        if self.experiment_id is not None:
+            outDict["experiment_id"] = self.experiment_id
+
+        if self.cohort_id is not None:
+            outDict["cohort_id"] = self.cohort_id
+
+        if self.animal_id is not None:
+            outDict["animal_id"] = self.animal_id
+
+        return outDict
 
 
     # @classmethod
@@ -113,6 +132,8 @@ class StartEndDatetimeMixin(object):
         else:
             return datetime.fromtimestamp(float(self.end_date) / 1000.0)
 
+    def StartEndDatetimeMixin_get_JSON(self):
+        return {"start_date":str(self.get_start_date()), "end_date":str(self.get_end_date())}
 
 
 
@@ -363,6 +384,9 @@ class CategoricalDurationLabel(StartEndDatetimeMixin, ReferenceBoxExperCohortAni
 
     # __table_args__ = (UniqueConstraint('start_date', 'end_date', 'type_id', 'subtype_id', 'tertiarytype_id' name='_customer_location_uc'),
     #                  )
+
+    # def get_export_output(self):
+    #     return {}
 
     @staticmethod
     def get_track_type():
