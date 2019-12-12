@@ -62,6 +62,8 @@ from GUI.Helpers.MouseTrackingThroughChildrenMixin import MouseTrackingThroughCh
 from GUI.Model.TrackType import TrackType, TrackStorageArray
 
 from app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoThumbnail, VideoPreviewThumbnailGenerator
+from app.filesystem.FileExporting import FileExportingMixin
+
 
 
 class GlobalTimeAdjustmentOptions(Enum):
@@ -130,7 +132,7 @@ class VideoTrackGroup:
 self.activeScaleMultiplier: this multipler determines how many times longer the contents of the scrollable viewport are than the viewport width itself.
 
 """
-class TimelineDrawingWindow(MouseTrackingThroughChildrenMixin, DurationRepresentationMixin, AbstractDatabaseAccessingWindow):
+class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixin, DurationRepresentationMixin, AbstractDatabaseAccessingWindow):
     
     static_VideoTrackTrackID = -1 # The integer ID of the main video track
     
@@ -2309,6 +2311,7 @@ class TimelineDrawingWindow(MouseTrackingThroughChildrenMixin, DurationRepresent
     """
     def export_partition_track_to_file(self, partitionTrackID):
         print("TimelineDrawingWindow.export_partition_track_to_file(partitionTrackID: {0})".format(str(partitionTrackID)))
+        
         pass
 
     @pyqtSlot()
@@ -2316,6 +2319,37 @@ class TimelineDrawingWindow(MouseTrackingThroughChildrenMixin, DurationRepresent
         # Called when the user selects "Export data..." from the main menu.
         print("TimelineDrawingWindow.on_user_data_export()")
         # Show a dialog that asks the user for their export path
+        exportFilePath = self.on_exportFile_selected()
+        if exportFilePath == '':
+            print("User canceled the export!")
+            return
+
+        # Get the video records for the currently displayed tracks.
+        self.videoFileRecords
+        self.totalTrackCount = len(self.videoFileTrackWidgets) + len(self.eventTrackWidgets)
+        self.totalNumGroups = len(self.trackGroups)
+
+        # Loop through the groups to layout the tracks
+        for currGroupIndex in range(0, self.totalNumGroups):
+            currGroup = self.trackGroups[currGroupIndex]
+            if currGroup.get_videoTrackIndex() is not None:
+                currVideoTrackWidget = self.videoFileTrackWidgets[currGroup.get_videoTrackIndex()]
+
+                if currGroup.get_annotationsTrackIndex() is not None:
+                    currWidget = self.eventTrackWidgets[currGroup.get_annotationsTrackIndex()]
+
+                    
+                if currGroup.get_partitionsTrackIndex() is not None:
+                    currWidget = self.eventTrackWidgets[currGroup.get_partitionsTrackIndex()]
+                    currContainerArray = currWidget.get_cached_container_array()
+                    
+                    aContainerObj.get_record()
+                    self.export_behavior_data_for_video(exportFilePath, aVideoRecord, partitionRecords)
+
+
+            
+
+
 
         # Iterate through all video files and find the partition events that overlap them.
         # for aVideoInfoObj in self.video:
