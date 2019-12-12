@@ -21,6 +21,7 @@ from GUI.Model.Events.PhoDurationEvent_AnnotationComment import PhoDurationEvent
 from GUI.Model.Events.PhoDurationEvent_Partition import PhoDurationEvent_Partition
 
 from GUI.Model.TrackType import TrackType
+from GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
 
 
 ## INCLUDES:
@@ -121,7 +122,7 @@ class ReferenceBoxExperCohortAnimalMixin(object):
     #     ]
     
 
-class StartEndDatetimeMixin(object):
+class StartEndDatetimeMixin(DateTimeRenderMixin, object):
 
     def get_start_date(self):
         return datetime.fromtimestamp(float(self.start_date) / 1000.0)
@@ -133,7 +134,7 @@ class StartEndDatetimeMixin(object):
             return datetime.fromtimestamp(float(self.end_date) / 1000.0)
 
     def StartEndDatetimeMixin_get_JSON(self):
-        return {"start_date":str(self.get_start_date()), "end_date":str(self.get_end_date())}
+        return {"start_date":self.get_full_long_date_time_string(self.get_start_date()), "end_date":self.get_full_long_date_time_string(self.get_end_date())}
 
 
 
