@@ -7,6 +7,9 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 
+## INCLUDES:
+# from GUI.Helpers import clickable
+
 def clickable(widget):
     class Filter(QObject):
         clicked = pyqtSignal()

@@ -56,6 +56,8 @@ from GUI.UI.TimelineFloatingHeaderWidget.TimelineFloatingHeaderWidget import Tim
 from GUI.Model.DataMovieLinkInfo import DataMovieLinkInfo
 
 from GUI.Helpers.DurationRepresentationHelpers import DurationRepresentationMixin, OffsetRepresentationMixin
+from GUI.Helpers.MouseTrackingThroughChildrenMixin import MouseTrackingThroughChildrenMixin
+
 
 from GUI.Model.TrackType import TrackType, TrackStorageArray
 
@@ -128,7 +130,7 @@ class VideoTrackGroup:
 self.activeScaleMultiplier: this multipler determines how many times longer the contents of the scrollable viewport are than the viewport width itself.
 
 """
-class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessingWindow):
+class TimelineDrawingWindow(MouseTrackingThroughChildrenMixin, DurationRepresentationMixin, AbstractDatabaseAccessingWindow):
     
     static_VideoTrackTrackID = -1 # The integer ID of the main video track
     
@@ -259,7 +261,6 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         self.activeVideoTrackConfigEditDialog = None
         self.activeTrackID_ConfigEditingIndex = None
     
-        self.setMouseTracking(True)
 
         self.minimumVideoTrackHeight = 50
         # self.minimumVideoTrackHeight = 25
@@ -276,6 +277,7 @@ class TimelineDrawingWindow(DurationRepresentationMixin, AbstractDatabaseAccessi
         self.activeViewportChanged.connect(self.on_active_viewport_changed)
         self.activeGlobalTimelineTimesChanged.connect(self.on_active_global_timeline_times_changed)
 
+        self.setMouseTracking(True)
         # self.show() # Show the GUI
 
         # overlappingVideoEvents = self.mainVideoTrack.find_overlapping_events()
