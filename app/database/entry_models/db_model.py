@@ -430,6 +430,13 @@ class CategoricalDurationLabel(StartEndDatetimeMixin, ReferenceBoxExperCohortAni
         
         return outPartitionGuiObj
 
+    # Overriden from StartEndDatetimeMixin because this record type uniquely used actual datetime values instead of floats.
+    def get_start_date(self):
+        return self.start_date
+
+    def get_end_date(self):
+        return self.end_date
+
 
 class TimestampedAnnotation(StartEndDatetimeMixin, ReferenceBoxExperCohortAnimalMixin, Base):
     __tablename__ = 'TimestampedAnnotations'

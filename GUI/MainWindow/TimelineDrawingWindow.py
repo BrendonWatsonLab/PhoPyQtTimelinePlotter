@@ -2319,13 +2319,14 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         # Called when the user selects "Export data..." from the main menu.
         print("TimelineDrawingWindow.on_user_data_export()")
         # Show a dialog that asks the user for their export path
-        exportFilePath = self.on_exportFile_selected()
-        if exportFilePath == '':
+        # exportFilePath = self.on_exportFile_selected()
+
+        exportFolderPath = self.on_exportFilesToFolder_selected()
+        if exportFolderPath == '':
             print("User canceled the export!")
             return
 
         # Get the video records for the currently displayed tracks.
-        self.videoFileRecords
         self.totalTrackCount = len(self.videoFileTrackWidgets) + len(self.eventTrackWidgets)
         self.totalNumGroups = len(self.trackGroups)
 
@@ -2335,18 +2336,22 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
             if currGroup.get_videoTrackIndex() is not None:
                 currVideoTrackWidget = self.videoFileTrackWidgets[currGroup.get_videoTrackIndex()]
 
-                if currGroup.get_annotationsTrackIndex() is not None:
-                    currWidget = self.eventTrackWidgets[currGroup.get_annotationsTrackIndex()]
+                # if currGroup.get_annotationsTrackIndex() is not None:
+                #     currWidget = self.eventTrackWidgets[currGroup.get_annotationsTrackIndex()]
 
                     
                 if currGroup.get_partitionsTrackIndex() is not None:
                     currWidget = self.eventTrackWidgets[currGroup.get_partitionsTrackIndex()]
                     currContainerArray = currWidget.get_cached_container_array()
+
+                    currVideoContainerArray = currVideoTrackWidget.get_cached_container_array()
                     
-                    aContainerObj.get_record()
-                    self.export_behavior_data_for_video(exportFilePath, aVideoRecord, partitionRecords)
+                    self.export_behavior_data_for_videos(exportFolderPath, currVideoContainerArray, currContainerArray)
+                else:
+                    print("No matching partition track for group {0}. Nothing to export.".format(str(currGroupIndex)))
 
-
+            else:
+                print("Group {0} has no video track! Skipping; nothing to export.".format(str(currGroupIndex)))
             
 
 
