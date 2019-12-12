@@ -423,7 +423,7 @@ class TimelineDrawingWindow(MouseTrackingThroughChildrenMixin, DurationRepresent
                     # currTrackConfig = TrackConfigurationBase(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", CategoricalDurationLabel, [currTrackBBID+1], None, None, None, self)
                     currTrackConfig = PartitionTrackConfiguration(currTrackIndex, "P_B{0:02}Parti".format(currTrackBBID), "Parti", currPartitionTrackContextObj, [currTrackBBID+1], None, None, None, self)
                     self.trackConfigurationsDict[currTrackIndex] = currTrackConfig
-                    self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, currPartitionTrackContextObj)
+                    self.partitionsTrackWidget = TimelineTrackDrawingWidget_Partition(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, currPartitionTrackContextObj, parent=self)
                     specific_storage_array_index = len(self.eventTrackWidgets)
                     currGroup.set_partitionsTrackIndex(specific_storage_array_index)
                     self.trackID_to_TrackWidgetLocatorTuple[currTrackIndex] = (currTrackConfig.get_track_storageArray_type(), specific_storage_array_index)
@@ -629,7 +629,7 @@ class TimelineDrawingWindow(MouseTrackingThroughChildrenMixin, DurationRepresent
 
             self.extendedTracksContainer.setFixedWidth(minimumWidgetWidth)
             ## Scroll Area: should contain only the extendedTracksContainer (not the video container)
-            self.timelineScroll = QScrollArea()
+            self.timelineScroll = QScrollArea(parent=self)
             self.timelineScroll.setWidget(self.extendedTracksContainer)
             self.timelineScroll.setWidgetResizable(True)
             # self.timelineScroll.setWidgetResizable(False)
@@ -658,7 +658,7 @@ class TimelineDrawingWindow(MouseTrackingThroughChildrenMixin, DurationRepresent
                 
 
             # Main Vertical Splitter:
-            self.verticalSplitter = QSplitter(Qt.Vertical)
+            self.verticalSplitter = QSplitter(Qt.Vertical, parent=self)
             self.verticalSplitter.setHandleWidth(8)
             self.verticalSplitter.setMouseTracking(True)
             self.verticalSplitter.addWidget(self.videoPlayerContainer)
