@@ -416,6 +416,9 @@ class ReferenceMarkerManager(IndicatorLineMixin, DurationRepresentationMixin, QO
 
 
         if self.needs_positions_update:
+            # Emit an event to update the list (the positions might have changed)
+            self.used_markers_updated.emit(self.get_used_markers())
+
             # we've done the positions update at this point, so turn off the flag
             self.needs_positions_update = False
 

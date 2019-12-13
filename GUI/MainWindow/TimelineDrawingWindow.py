@@ -1848,10 +1848,12 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         print("TimelineDrawingWindow.on_reference_line_markers_updated(...)")
         additional_data = []
         for aListItem in referenceLineList:
-            curr_view = aListItem.get_view()
-            curr_x = curr_view.get_x_offset_position()
-            curr_datetime = self.offset_to_datetime(curr_x)
-            additional_data.append(curr_datetime)
+            # curr_view = aListItem.get_view()
+            curr_record = aListItem.get_record()
+            # curr_x = curr_view.get_x_offset_position()
+            # curr_datetime = self.offset_to_datetime(curr_x)
+            # curr_datetime =
+            additional_data.append(curr_record.time)
 
         print(additional_data)
         #  self.referenceManager.
