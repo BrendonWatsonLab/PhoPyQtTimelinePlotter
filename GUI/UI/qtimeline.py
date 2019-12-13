@@ -37,11 +37,6 @@ class QTimeLine(TickedTimelineDrawingBaseWidget):
         self.majorTextVerticalOffset = 0.0
         self.minorTextVerticalOffset = 10.0
 
-    #     self.initUI()
-    #
-    # def initUI(self):
-    #     self.setGeometry(300, 300, self.length, 200)
-
     # Draw the date labels:
     def drawTextLabels(self, painter):
 
