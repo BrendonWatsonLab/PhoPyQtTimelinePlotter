@@ -212,7 +212,7 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
     @pyqtSlot(int)
     def on_update_hover(self, x):
         self.is_driven_externally = True
-        # self.pos = QPoint(x, 0)
+        self.pos = QPoint(x, 0)
         self.update()
 
 
