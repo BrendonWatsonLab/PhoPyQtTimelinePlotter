@@ -27,6 +27,67 @@ from GUI.Helpers.DurationRepresentationHelpers import DurationRepresentationMixi
 __textColor__ = QColor(20, 20, 20)
 __font__ = QFont('Decorative', 12)
 
+""" IndicatorLineMixin
+Responsible for managing the position of three indicator lines: user-hover, user-select, and video-playback
+"""
+class IndicatorLineMixin(object):
+
+    hoverDatetimeChanged = pyqtSignal(datetime)
+    selectedDatetimeChanged = pyqtSignal(datetime)
+
+
+    @pyqtSlot(datetime)
+    def on_update_indicator_selected(self, desired_datetime):
+        indicatorContainer = self.get_indicator_marker_user_select()
+        # Update the record
+        indicatorContainer.get_record().time = desired_datetime
+
+        # Update the view
+        indicatorContainer.get_view().update_position(0.0, self.get_scale())
+        indicatorContainer.get_view().is_enabled = True
+        
+        # Set the flag that indicates view positions will be recalculated in the draw event
+        self.needs_positions_update = True
+        self.selectedDatetimeChanged.emit(desired_datetime)
+        self.update()
+
+    @pyqtSlot(datetime)
+    def on_update_indicator_hover(self, desired_datetime):
+        indicatorContainer = self.get_indicator_marker_user_hover()
+        # Update the record
+        indicatorContainer.get_record().time = desired_datetime
+
+        # Update the view
+        indicatorContainer.get_view().update_position(0.0, self.get_scale())
+        indicatorContainer.get_view().is_enabled = True
+        
+        # Set the flag that indicates view positions will be recalculated in the draw event
+        self.needs_positions_update = True
+        self.hoverDatetimeChanged.emit(desired_datetime)
+        self.update()
+
+
+    @pyqtSlot(datetime)
+    def on_update_indicator_video_playback(self, desired_datetime):
+        # passing in None for x allows the line to be removed
+        indicatorContainer = self.get_indicator_marker_video_playback()
+
+        if desired_datetime is None:
+            indicatorContainer.get_view().is_enabled = False
+        else:
+            # Update the record
+            indicatorContainer.get_record().time = desired_datetime
+
+            # Update the view
+            indicatorContainer.get_view().update_position(0.0, self.get_scale())
+            indicatorContainer.get_view().is_enabled = True
+            # Set the flag that indicates view positions will be recalculated in the draw event
+            self.needs_positions_update = True
+        
+        self.update()
+
+
+
 
 """
 ReferenceMarkerManager is a shared singleton that defines the positions of "reference lines" that are drawn throughout the main timeline.
@@ -35,7 +96,7 @@ ReferenceMarkerManager is a shared singleton that defines the positions of "refe
 Want to have an array of datetimes at which to plot tick lines.
 The widget's current size is used, along with the totalStartTime and totalEndTime, to compute the positions at which to draw the tick lines and labels.
 """
-class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
+class ReferenceMarkerManager(IndicatorLineMixin, DurationRepresentationMixin, QObject):
 
     used_markers_updated = pyqtSignal(list)
     
@@ -48,6 +109,9 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
     # dynamic (moving) lines
     videoPlaybackLineProperties = TickProperties(Qt.red, 1.0, Qt.SolidLine)
     hoverLineProperties = TickProperties(Qt.cyan, 0.8, Qt.DashLine)
+    selectLineProperties = TickProperties(Qt.blue, 0.8, Qt.SolidLine)
+
+
     # L = queue.Queue(maxsize=20)
 
     def __init__(self, totalStartTime, totalEndTime, drawWidth, num_markers, parent=None):
@@ -75,8 +139,15 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
         self.used_mark_stack = []
         self.used_mark_extended_metadata_stack = []
 
+
+        # Dynamic Indicator Markers:
+        self.videoPlaybackIndicatorContainer = None
+        self.userMouseHoverIndicatorContainer = None
+        self.userMouseSelectionIndicatorContainer = None
+
         self.bulk_add_reference_makers(num_markers)
         self.bulk_add_static_marker_data()
+        self.add_special_indicator_markers()
 
         
     def get_scale(self):
@@ -148,9 +219,6 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
         #     if (not ReferenceMarkerManager.is_start_of_day(potential_marker)):
         #         yield potential_marker  
 
-
-
-
     ## Static Tick Reference Markers
     # Builds the static day and hour reference markers
     def bulk_add_static_marker_data(self):
@@ -182,9 +250,37 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
         Like current user hovered position, current user selected position, or current video playback time.
     """
     def add_special_indicator_markers(self):
-        self.videoPlaybackIndicator = 
+        # dynamic (moving) lines
+        # Video playback line
+        curr_properties = ReferenceMarkerManager.videoPlaybackLineProperties
+        new_view_obj = ReferenceMarker("video_playback", False, properties=curr_properties, parent=self)
+        new_view_obj.update_position(0.0, self.get_scale())
+        new_record_obj = RepresentedMarkerRecord(datetime.now(), parent=self)
+        self.videoPlaybackIndicatorContainer =  ModelViewContainer(new_record_obj, new_view_obj)
+
+        # Hover line
+        curr_properties = ReferenceMarkerManager.hoverLineProperties
+        new_view_obj = ReferenceMarker("hover", False, properties=curr_properties, parent=self)
+        new_view_obj.update_position(0.0, self.get_scale())
+        new_record_obj = RepresentedMarkerRecord(datetime.now(), parent=self)
+        self.userMouseHoverIndicatorContainer =  ModelViewContainer(new_record_obj, new_view_obj)
+
+        # User Selection line
+        curr_properties = ReferenceMarkerManager.selectLineProperties
+        new_view_obj = ReferenceMarker("select", False, properties=curr_properties, parent=self)
+        new_view_obj.update_position(0.0, self.get_scale())
+        new_record_obj = RepresentedMarkerRecord(datetime.now(), parent=self)
+        self.userMouseSelectionIndicatorContainer =  ModelViewContainer(new_record_obj, new_view_obj)
 
 
+    def get_indicator_marker_user_hover(self):
+        return self.userMouseHoverIndicatorContainer
+        
+    def get_indicator_marker_user_select(self):
+        return self.userMouseSelectionIndicatorContainer
+
+    def get_indicator_marker_video_playback(self):
+        return self.videoPlaybackIndicatorContainer
 
 
     ## User Reference Markers
@@ -284,6 +380,35 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
                 value.get_view().update_position(item_x_offset, self.get_scale())
             # Draw the correctly updated record
             value.get_view().draw(painter, event, scale)
+
+
+        # Update the indicator markers if needed
+        ## TODO: could improve efficiency by only updating them if they need to be updated (with independent variables that don't require redrawing all reference markers whenever the hover line changes, for example)
+        indicatorContainer_Select = self.get_indicator_marker_user_select()
+        indicatorContainer_Hover = self.get_indicator_marker_user_hover()
+        indicatorContainer_Video = self.get_indicator_marker_video_playback()
+
+        if self.needs_positions_update:
+            currRecord = indicatorContainer_Select.get_record()
+            itemDatetime = currRecord.time
+            item_x_offset = self.compute_x_offset_from_datetime(drawWidth, itemDatetime)
+            indicatorContainer_Select.get_view().update_position(item_x_offset, self.get_scale())
+
+            currRecord = indicatorContainer_Hover.get_record()
+            itemDatetime = currRecord.time
+            item_x_offset = self.compute_x_offset_from_datetime(drawWidth, itemDatetime)
+            indicatorContainer_Hover.get_view().update_position(item_x_offset, self.get_scale())
+
+            currRecord = indicatorContainer_Video.get_record()
+            itemDatetime = currRecord.time
+            item_x_offset = self.compute_x_offset_from_datetime(drawWidth, itemDatetime)
+            indicatorContainer_Video.get_view().update_position(item_x_offset, self.get_scale())
+
+        # Draw the correctly updated record
+        indicatorContainer_Select.get_view().draw(painter, event, scale)
+        indicatorContainer_Hover.get_view().draw(painter, event, scale)
+        indicatorContainer_Video.get_view().draw(painter, event, scale)
+
 
         if self.needs_positions_update:
             # we've done the positions update at this point, so turn off the flag

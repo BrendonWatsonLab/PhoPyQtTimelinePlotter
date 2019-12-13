@@ -239,6 +239,11 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         self.referenceManager.used_markers_updated.connect(self.on_reference_line_markers_updated)
         self.referenceManager.wants_extended_data.connect(self.on_request_extended_reference_line_data)
         self.referenceManager.selection_changed.connect(self.on_reference_line_marker_list_selection_changed)
+
+        # self.referenceManager.hoverDatetimeChanged.connect(self.on_reference_indicator_line_hover_changed)
+        # self.referenceManager.selectedDatetimeChanged.connect(self.on_reference_indicator_line_selection_changed)
+
+
         self.activeZoomChanged.connect(self.referenceManager.on_active_zoom_changed)
         self.activeViewportChanged.connect(self.referenceManager.on_active_viewport_changed)
         self.activeGlobalTimelineTimesChanged.connect(self.referenceManager.on_active_global_timeline_times_changed)
@@ -1748,6 +1753,9 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         self.timelineMasterTrackWidget.blockSignals(True)
         self.extendedTracksContainer.blockSignals(True)
 
+        curr_datetime = self.offset_to_datetime(timeline_x_offset)
+        self.get_reference_manager().on_update_indicator_hover(curr_datetime)
+
         self.timelineMasterTrackWidget.on_update_video_line(timeline_x_offset)
         self.extendedTracksContainer.on_update_video_line(timeline_x_offset)
         
@@ -1762,8 +1770,12 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         self.timelineMasterTrackWidget.blockSignals(True)
         self.extendedTracksContainer.blockSignals(True)
 
+        curr_datetime = self.offset_to_datetime(x)
+        self.get_reference_manager().on_update_indicator_hover(curr_datetime)
         self.timelineMasterTrackWidget.on_update_hover(x)
         self.extendedTracksContainer.on_update_hover(x)
+
+        
 
         # if(self.videoPlayerWindow):
         #     movie_link = self.videoPlayerWindow.get_movie_link()
