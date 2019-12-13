@@ -142,6 +142,11 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
         qp.end()
 
     # Mouse movement
+    def mouseMoveEvent(self, e):
+        QWidget.mouseMoveEvent(self, e)
+        pass
+
+    #  (NEVER CALLED)
     def mouseMoveRect(self, e):
         self.pos = e.pos()
         x = self.pos.x()
@@ -156,7 +161,7 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
 
         self.update()
 
-    # Mouse pressed
+    # Mouse pressed (NEVER CALLED)
     def mousePressRect(self, e):
         if e.button() == Qt.LeftButton:
             x = e.pos().x()
@@ -172,12 +177,12 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
         if e.button() == Qt.LeftButton:
             self.clicking = False  # Set clicking check to false
 
-    # Enter
+    # Enter (NEVER CALLED)
     def enterRect(self, e):
         self.is_in = True
         self.is_driven_externally = False
 
-    # Leave
+    # Leave (NEVER CALLED)
     def leaveRect(self, e):
         self.is_in = False
         self.update()

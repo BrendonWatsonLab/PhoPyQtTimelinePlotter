@@ -82,6 +82,9 @@ class ExtendedTracksContainerWidget(TickedTimelineDrawingBaseWidget):
         x = self.pos.x()
         self.hoverChanged.emit(x)
         self.update()
+        super().mouseMoveEvent(e)
+        
+
 
 
 

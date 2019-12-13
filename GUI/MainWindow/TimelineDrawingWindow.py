@@ -982,6 +982,9 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
 
         self.statusBar().showMessage(text)
 
+        # Call the default implementation to allow passing the events through. Doesn't make much sense in the main window
+        QWidget.mouseMoveEvent(self, event)
+
     def wheelEvent(self, event):
         # print("mouse wheel event! {0}".format(str(event)))
         hsb=self.timelineScroll.horizontalScrollBar()

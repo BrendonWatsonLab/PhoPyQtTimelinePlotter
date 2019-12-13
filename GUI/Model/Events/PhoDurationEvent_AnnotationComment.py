@@ -200,6 +200,9 @@ class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
             
             self.update()
 
+        # Call the default implementation to allow passing the events through. Doesn't make much sense in the main window
+        QWidget.mouseMoveEvent(self, event)
+
     def on_key_pressed(self, event):
         gey = event.key()
         self.func = (None, None)
