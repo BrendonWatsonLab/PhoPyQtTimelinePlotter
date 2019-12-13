@@ -49,7 +49,6 @@ class IndicatorLineMixin(object):
         # Set the flag that indicates view positions will be recalculated in the draw event
         self.needs_positions_update = True
         self.selectedDatetimeChanged.emit(desired_datetime)
-        self.update()
 
     @pyqtSlot(datetime)
     def on_update_indicator_hover(self, desired_datetime):
@@ -64,7 +63,6 @@ class IndicatorLineMixin(object):
         # Set the flag that indicates view positions will be recalculated in the draw event
         self.needs_positions_update = True
         self.hoverDatetimeChanged.emit(desired_datetime)
-        self.update()
 
 
     @pyqtSlot(datetime)
@@ -84,7 +82,6 @@ class IndicatorLineMixin(object):
             # Set the flag that indicates view positions will be recalculated in the draw event
             self.needs_positions_update = True
         
-        self.update()
 
 
 
