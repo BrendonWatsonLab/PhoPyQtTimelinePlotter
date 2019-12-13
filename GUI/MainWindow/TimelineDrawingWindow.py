@@ -987,19 +987,70 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         """
         modifiers = QtWidgets.QApplication.keyboardModifiers()
         if modifiers == QtCore.Qt.ShiftModifier:
-            print('Shift+Scroll')
+            # Speed-scroll (3x faster)
+            # print('Shift+Scroll')
             dy = 3 * dy
+            hsb.setSliderPosition(hsb.sliderPosition()+dy)
+
         elif modifiers == QtCore.Qt.ControlModifier:
-            print('Control+Scroll')
+            # print('Control+Scroll')
+            # Zoom in/out
+            # TODO: Scroll should zoom in/out instead of scroll horizontally. Should zoom centered on the mouse cursor location.
+            # zoomInFactor = 1.25
+            # zoomOutFactor = 1 / zoomInFactor
+
+            # Set Anchors
+            # self.setTransformationAnchor(QtGui.QGraphicsView.NoAnchor)
+            # self.setResizeAnchor(QtGui.QGraphicsView.NoAnchor)
+
+            # Save the scene pos
+            # oldPos = self.mapToScene(event.pos())
+            oldPos = event.pos()
+
+            # Capture the view offset:
+            originalViewportDateOffset = self.get_viewport_active_start_time()
+
+
+            # Zoom
+            if event.angleDelta().y() > 0:
+                # zoomFactor = zoomInFactor
+                print("Zooming in.")
+                self.on_zoom_in()
+            else:
+                print("Zooming out.")
+                # zoomFactor = zoomOutFactor
+                self.on_zoom_out()
+            
+            # self.scale(zoomFactor, zoomFactor)
+            
+            # Get the new position
+            # newPos = self.mapToScene(event.pos())
+            newPos = event.pos()
+
+            # Move scene to old position
+            delta = newPos - oldPos
+            # self.translate(delta.x(), delta.y())
+
+            # time.delay(2)
+
+            # Jump to the original offset:
+            self.sync_active_viewport_start_to_datetime(originalViewportDateOffset)
+
+
+
+
         elif modifiers == (QtCore.Qt.ControlModifier |
                            QtCore.Qt.ShiftModifier):
-            print('Control+Shift+Scroll')
+            # Scroll
+            # print('Control+Shift+Scroll')
+            hsb.setSliderPosition(hsb.sliderPosition()+dy)
         else:
-            print('Scroll (no modifiers)')
+            # Scroll
+            # print('Scroll (no modifiers)')
+            hsb.setSliderPosition(hsb.sliderPosition()+dy)
 
 
 
-        hsb.setSliderPosition(hsb.sliderPosition()+dy)
 
     ## Zoom in/default/out events
     def get_minimum_track_width(self):
@@ -1104,6 +1155,14 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
 
 
     ## Timeline ZOOMING:
+    def preserve_cursor_offset_on_zoom(self):
+        # Get cursor position's datetime
+        
+        pass
+
+    def restore_cursor_offset_after_zoom(self):
+        pass
+
     def on_zoom_in(self):
         # self.pending_adjust_viewport_start_datetime = self.get_viewport_active_start_time()
         newActiveScaleMultiplier = min(TimelineDrawingWindow.MaxZoomLevel, (self.activeScaleMultiplier + TimelineDrawingWindow.ZoomDelta))
