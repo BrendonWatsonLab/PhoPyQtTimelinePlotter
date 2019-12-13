@@ -47,7 +47,8 @@ class IndicatorLineMixin(object):
         indicatorContainer.get_view().is_enabled = True
         
         # Set the flag that indicates view positions will be recalculated in the draw event
-        self.needs_positions_update = True
+        # self.needs_positions_update = True
+        self.needs_indicator_update = True
         self.selectedDatetimeChanged.emit(desired_datetime)
 
     @pyqtSlot(datetime)
@@ -61,7 +62,8 @@ class IndicatorLineMixin(object):
         indicatorContainer.get_view().is_enabled = True
         
         # Set the flag that indicates view positions will be recalculated in the draw event
-        self.needs_positions_update = True
+        # self.needs_positions_update = True
+        self.needs_indicator_update = True
         self.hoverDatetimeChanged.emit(desired_datetime)
 
 
@@ -80,7 +82,8 @@ class IndicatorLineMixin(object):
             indicatorContainer.get_view().update_position(0.0, self.get_scale())
             indicatorContainer.get_view().is_enabled = True
             # Set the flag that indicates view positions will be recalculated in the draw event
-            self.needs_positions_update = True
+            # self.needs_positions_update = True
+            self.needs_indicator_update = True
         
 
 
@@ -127,6 +130,7 @@ class ReferenceMarkerManager(IndicatorLineMixin, DurationRepresentationMixin, QO
         # self.markerViewsDict = dict()
         self.markersDict = dict()
         self.needs_positions_update = True
+        self.needs_indicator_update = False
 
         self.staticDaysMarkerData = []
         self.staticMinorMarkerData = []
@@ -387,7 +391,7 @@ class ReferenceMarkerManager(IndicatorLineMixin, DurationRepresentationMixin, QO
         indicatorContainer_Hover = self.get_indicator_marker_user_hover()
         indicatorContainer_Video = self.get_indicator_marker_video_playback()
 
-        if self.needs_positions_update:
+        if (self.needs_positions_update or self.needs_indicator_update):
             currRecord = indicatorContainer_Select.get_record()
             itemDatetime = currRecord.time
             item_x_offset = self.compute_x_offset_from_datetime(drawWidth, itemDatetime)
@@ -402,6 +406,8 @@ class ReferenceMarkerManager(IndicatorLineMixin, DurationRepresentationMixin, QO
             itemDatetime = currRecord.time
             item_x_offset = self.compute_x_offset_from_datetime(drawWidth, itemDatetime)
             indicatorContainer_Video.get_view().update_position(item_x_offset, self.get_scale())
+            # we've done the indicator positions update at this point, so turn off the flag
+            self.needs_indicator_update = False
 
         # Draw the correctly updated record
         indicatorContainer_Select.get_view().draw(painter, event, scale)
