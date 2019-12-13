@@ -47,7 +47,6 @@ class IndicatorLineMixin(object):
         indicatorContainer.get_view().is_enabled = True
         
         # Set the flag that indicates view positions will be recalculated in the draw event
-        # self.needs_positions_update = True
         self.needs_indicator_update = True
         self.selectedDatetimeChanged.emit(desired_datetime)
 
@@ -62,7 +61,6 @@ class IndicatorLineMixin(object):
         indicatorContainer.get_view().is_enabled = True
         
         # Set the flag that indicates view positions will be recalculated in the draw event
-        # self.needs_positions_update = True
         self.needs_indicator_update = True
         self.hoverDatetimeChanged.emit(desired_datetime)
 
@@ -82,7 +80,6 @@ class IndicatorLineMixin(object):
             indicatorContainer.get_view().update_position(0.0, self.get_scale())
             indicatorContainer.get_view().is_enabled = True
             # Set the flag that indicates view positions will be recalculated in the draw event
-            # self.needs_positions_update = True
             self.needs_indicator_update = True
         
 
