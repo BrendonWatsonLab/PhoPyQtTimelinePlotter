@@ -106,6 +106,13 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
         # videoPlaybackIndicatorMarkerContainer = self.referenceManager.get_indicator_marker_video_playback()
         
 
+        
+
+        # Update hover line visibility
+        hoverIndicatorMarkerContainer = self.referenceManager.get_indicator_marker_user_hover()
+        hoverIndicatorMarkerContainer.get_view().updateIsEnabled((self.is_in or self.is_driven_externally))
+
+
         # if self.video_pos is not None:
         #     painter.setPen(TickedTimelineDrawingBaseWidget.videoPlaybackLineProperties.get_pen())
         #     painter.drawLine(self.video_pos.x(), 0, self.video_pos.x(), self.height())
@@ -116,7 +123,6 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
         #     if (self.is_in or self.is_driven_externally): 
         #         painter.setPen(TickedTimelineDrawingBaseWidget.hoverLineProperties.get_pen())
         #         painter.drawLine(self.pos.x(), 0, self.pos.x(), self.height())
-
 
 
         # # Draw video playback indicator line
@@ -220,7 +226,7 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
 
     @pyqtSlot(int)
     def on_update_hover(self, x):
-        # self.is_driven_externally = True
+        self.is_driven_externally = True
         # self.pos = QPoint(x, 0)
         self.update()
 

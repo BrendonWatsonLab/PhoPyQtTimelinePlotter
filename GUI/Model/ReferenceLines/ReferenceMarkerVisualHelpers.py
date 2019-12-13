@@ -87,7 +87,7 @@ class ReferenceMarker(QObject):
 
             painter.drawText(textRect, Qt.AlignCenter, self.identifier)
 
-            
+
 
     # Called to draw the line and optionally the triangular pointer
     def draw(self, painter, drawRect, scale):
@@ -126,3 +126,9 @@ class ReferenceMarker(QObject):
 
     def __str__(self):
         return 'RefMark[identifier: {0}]: {1}'.format(self.identifier, self.get_position_tuple_string())
+
+    def get_is_enabled(self):
+        return self.is_enabled
+
+    def updateIsEnabled(self, newIsEnabled):
+        self.is_enabled = newIsEnabled

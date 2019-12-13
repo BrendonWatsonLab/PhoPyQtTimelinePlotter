@@ -1578,6 +1578,7 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         self.timelineMasterTrackWidget.blockSignals(True)
         self.extendedTracksContainer.blockSignals(True)
 
+        self.get_reference_manager().on_update_indicator_video_playback(None)
         self.timelineMasterTrackWidget.on_update_video_line(None)
         self.extendedTracksContainer.on_update_video_line(None)
 
