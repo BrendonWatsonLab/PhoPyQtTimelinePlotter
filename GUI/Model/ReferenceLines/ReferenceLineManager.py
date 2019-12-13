@@ -384,32 +384,32 @@ class ReferenceMarkerManager(IndicatorLineMixin, DurationRepresentationMixin, QO
 
         # Update the indicator markers if needed
         ## TODO: could improve efficiency by only updating them if they need to be updated (with independent variables that don't require redrawing all reference markers whenever the hover line changes, for example)
-        indicatorContainer_Select = self.get_indicator_marker_user_select()
-        indicatorContainer_Hover = self.get_indicator_marker_user_hover()
-        indicatorContainer_Video = self.get_indicator_marker_video_playback()
+        # indicatorContainer_Select = self.get_indicator_marker_user_select()
+        # indicatorContainer_Hover = self.get_indicator_marker_user_hover()
+        # indicatorContainer_Video = self.get_indicator_marker_video_playback()
 
-        if (self.needs_positions_update or self.needs_indicator_update):
-            currRecord = indicatorContainer_Select.get_record()
-            itemDatetime = currRecord.time
-            item_x_offset = self.compute_x_offset_from_datetime(drawWidth, itemDatetime)
-            indicatorContainer_Select.get_view().update_position(item_x_offset, self.get_scale())
+        # if (self.needs_positions_update or self.needs_indicator_update):
+        #     currRecord = indicatorContainer_Select.get_record()
+        #     itemDatetime = currRecord.time
+        #     item_x_offset = self.compute_x_offset_from_datetime(drawWidth, itemDatetime)
+        #     indicatorContainer_Select.get_view().update_position(item_x_offset, self.get_scale())
 
-            currRecord = indicatorContainer_Hover.get_record()
-            itemDatetime = currRecord.time
-            item_x_offset = self.compute_x_offset_from_datetime(drawWidth, itemDatetime)
-            indicatorContainer_Hover.get_view().update_position(item_x_offset, self.get_scale())
+        #     currRecord = indicatorContainer_Hover.get_record()
+        #     itemDatetime = currRecord.time
+        #     item_x_offset = self.compute_x_offset_from_datetime(drawWidth, itemDatetime)
+        #     indicatorContainer_Hover.get_view().update_position(item_x_offset, self.get_scale())
 
-            currRecord = indicatorContainer_Video.get_record()
-            itemDatetime = currRecord.time
-            item_x_offset = self.compute_x_offset_from_datetime(drawWidth, itemDatetime)
-            indicatorContainer_Video.get_view().update_position(item_x_offset, self.get_scale())
-            # we've done the indicator positions update at this point, so turn off the flag
-            self.needs_indicator_update = False
+        #     currRecord = indicatorContainer_Video.get_record()
+        #     itemDatetime = currRecord.time
+        #     item_x_offset = self.compute_x_offset_from_datetime(drawWidth, itemDatetime)
+        #     indicatorContainer_Video.get_view().update_position(item_x_offset, self.get_scale())
+        #     # we've done the indicator positions update at this point, so turn off the flag
+        #     self.needs_indicator_update = False
 
-        # Draw the correctly updated record
-        indicatorContainer_Select.get_view().draw(painter, event, scale)
-        indicatorContainer_Hover.get_view().draw(painter, event, scale)
-        indicatorContainer_Video.get_view().draw(painter, event, scale)
+        # # Draw the correctly updated record
+        # indicatorContainer_Select.get_view().draw(painter, event, scale)
+        # indicatorContainer_Hover.get_view().draw(painter, event, scale)
+        # indicatorContainer_Video.get_view().draw(painter, event, scale)
 
 
         if self.needs_positions_update:

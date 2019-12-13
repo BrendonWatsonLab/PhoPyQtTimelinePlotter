@@ -104,38 +104,23 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
 
         # Draw video playback indicator line
         # videoPlaybackIndicatorMarkerContainer = self.referenceManager.get_indicator_marker_video_playback()
-        
-
-        
-
-        # Update hover line visibility
-        hoverIndicatorMarkerContainer = self.referenceManager.get_indicator_marker_user_hover()
-        hoverIndicatorMarkerContainer.get_view().updateIsEnabled((self.is_in or self.is_driven_externally))
+        # # Update hover line visibility
+        # hoverIndicatorMarkerContainer = self.referenceManager.get_indicator_marker_user_hover()
+        # hoverIndicatorMarkerContainer.get_view().updateIsEnabled((self.is_in or self.is_driven_externally))
 
 
-        # if self.video_pos is not None:
-        #     painter.setPen(TickedTimelineDrawingBaseWidget.videoPlaybackLineProperties.get_pen())
-        #     painter.drawLine(self.video_pos.x(), 0, self.video_pos.x(), self.height())
+        # Draw video playback indicator line
+        if self.video_pos is not None:
+            painter.setPen(TickedTimelineDrawingBaseWidget.videoPlaybackLineProperties.get_pen())
+            painter.drawLine(self.video_pos.x(), 0, self.video_pos.x(), self.height())
 
 
-        # # Draw hover line
-        # if self.pos is not None:
-        #     if (self.is_in or self.is_driven_externally): 
-        #         painter.setPen(TickedTimelineDrawingBaseWidget.hoverLineProperties.get_pen())
-        #         painter.drawLine(self.pos.x(), 0, self.pos.x(), self.height())
-
-
-        # # Draw video playback indicator line
-        # if self.video_pos is not None:
-        #     painter.setPen(TickedTimelineDrawingBaseWidget.videoPlaybackLineProperties.get_pen())
-        #     painter.drawLine(self.video_pos.x(), 0, self.video_pos.x(), self.height())
-
-
-        # # Draw hover line
-        # if self.pos is not None:
-        #     if (self.is_in or self.is_driven_externally): 
-        #         painter.setPen(TickedTimelineDrawingBaseWidget.hoverLineProperties.get_pen())
-        #         painter.drawLine(self.pos.x(), 0, self.pos.x(), self.height())
+        # Draw hover line
+        if self.pos is not None:
+            if (self.is_in or self.is_driven_externally): 
+                painter.setPen(TickedTimelineDrawingBaseWidget.hoverLineProperties.get_pen())
+                painter.drawLine(self.pos.x(), 0, self.pos.x(), self.height())
+                
         pass
 
 
@@ -234,10 +219,10 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
     @pyqtSlot(int)
     def on_update_video_line(self, x):
         # passing in None for x allows the line to be removed
-        # if x is None:
-        #     self.video_pos = None
-        # else:
-        #     self.video_pos = QPoint(x, 0)
+        if x is None:
+            self.video_pos = None
+        else:
+            self.video_pos = QPoint(x, 0)
         
         self.update()
 
