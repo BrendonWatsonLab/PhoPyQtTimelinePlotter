@@ -979,6 +979,26 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         # print("mouse wheel event! {0}".format(str(event)))
         hsb=self.timelineScroll.horizontalScrollBar()
         dy=((-event.angleDelta().y()/8)/15)*hsb.singleStep()
+        ## Detect modifier keys being held down to modify scroll action.
+        """
+        Shift Held down: Triple the timeline x-offset speed.
+        Ctrl Held down: Zoom in and out instead of modifying the timeline x-offset
+
+        """
+        modifiers = QtWidgets.QApplication.keyboardModifiers()
+        if modifiers == QtCore.Qt.ShiftModifier:
+            print('Shift+Scroll')
+            dy = 3 * dy
+        elif modifiers == QtCore.Qt.ControlModifier:
+            print('Control+Scroll')
+        elif modifiers == (QtCore.Qt.ControlModifier |
+                           QtCore.Qt.ShiftModifier):
+            print('Control+Shift+Scroll')
+        else:
+            print('Scroll (no modifiers)')
+
+
+
         hsb.setSliderPosition(hsb.sliderPosition()+dy)
 
     ## Zoom in/default/out events
