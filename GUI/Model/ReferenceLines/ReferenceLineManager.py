@@ -44,6 +44,10 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
 
     selection_changed = pyqtSignal(list, list)
 
+
+    # dynamic (moving) lines
+    videoPlaybackLineProperties = TickProperties(Qt.red, 1.0, Qt.SolidLine)
+    hoverLineProperties = TickProperties(Qt.cyan, 0.8, Qt.DashLine)
     # L = queue.Queue(maxsize=20)
 
     def __init__(self, totalStartTime, totalEndTime, drawWidth, num_markers, parent=None):
@@ -80,8 +84,6 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
 
     def get_used_markers(self):
         return [self.get_markers()[aKey] for aKey in self.used_mark_stack]
-
-
 
     # Returns the start of the day
     @staticmethod
@@ -124,10 +126,8 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
         hours_only_start_date = datetime(year=start_date.year, month=start_date.month, day=start_date.day, hour=start_date.hour, minute=0, second=0, tzinfo=start_date.tzinfo)
         hoursDelta = timedelta(hours=hoursBetween)
 
-
         numSecondsBetween = int(ReferenceMarkerManager.secondsBetween(start_date, end_date))
         numHoursBetween = int(float(numSecondsBetween)/3600.0)
-
 
         for n in range(numHoursBetween):
             potential_marker = hours_only_start_date + timedelta(hours=n)
@@ -149,6 +149,10 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
         #         yield potential_marker  
 
 
+
+
+    ## Static Tick Reference Markers
+    # Builds the static day and hour reference markers
     def bulk_add_static_marker_data(self):
         self.staticDaysMarkerData = []
         self.staticMinorMarkerData = []
@@ -166,22 +170,29 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
             # print(newObj.time_string)
             self.staticMinorMarkerData.append(newObj)
 
-
-        
-
-
     def get_static_major_marker_data(self):
         return self.staticDaysMarkerData
         
     def get_static_minor_marker_data(self):
         return self.staticMinorMarkerData
 
+
+    ## Special Indicator Reference Markers
+    """
+        Like current user hovered position, current user selected position, or current video playback time.
+    """
+    def add_special_indicator_markers(self):
+        self.videoPlaybackIndicator = 
+
+
+
+
+    ## User Reference Markers
+    # Creates a list/stack of reusable (but initially undisplayed) reference markers that can later be obtained by get_next_unused_marker_key() and update_next_unused_marker(...)
     def bulk_add_reference_makers(self, num_markers):
         self.used_mark_stack = []
         self.used_mark_extended_metadata_stack = []
         self.needs_positions_update = True
-        # self.markerRecordsDict = dict()
-        # self.markerViewsDict = dict()
         self.markersDict = dict()
 
         for a_marker_index in range(num_markers):
@@ -197,11 +208,6 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
 
         self.used_markers_updated.emit(self.get_used_markers())
 
-    # def add_reference_marker(self, with_identifier, properties=TickProperties(QColor(250, 187, 187), 0.9, Qt.SolidLine), position=QPoint(0.0, 0.0)):
-    #     new_obj = ReferenceMarker(with_identifier, True, properties=properties, parent=self)
-    #     new_obj.update_position(position, self.get_scale())
-    #     self.markers[with_identifier] = new_obj
-
     # Returns the next unused marker so it can be used
     def get_next_unused_marker_key(self):
         for (aKey, aValue) in self.get_markers().items():
@@ -212,21 +218,6 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
         return None
 
     # Called to update the position of the next unused marker (making it used)
-    # def update_next_unused_marker(self, new_position):
-    #     potential_unused_marker_key = self.get_next_unused_marker()
-    #     if (potential_unused_marker_key is None):
-    #         print("ERROR: no unused markers available. Need to implement reuse")
-    #         return
-    #     else:
-    #         self.get_markers()[potential_unused_marker_key].update_position(new_position, self.get_scale())
-    #         self.get_markers()[potential_unused_marker_key].is_enabled = True
-    #         # Add the key of the now used item to the used_stack
-    #         self.used_mark_stack.append(potential_unused_marker_key)
-
-    #         self.show_active_markers_list()
-    #         self.used_markers_updated.emit(self.get_used_markers())
-    #         self.wants_extended_data.emit(self.get_used_markers())
-
     def update_next_unused_marker(self, new_datetime, currDrawWidth):
         self.drawWidth = currDrawWidth
         potential_unused_marker_key = self.get_next_unused_marker_key()
@@ -267,20 +258,10 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
     def get_markers(self):
         return self.markersDict
 
-    # def get_marker_views(self):
-    #     return self.markerViewsDict
-
-    # def get_marker_records(self):
-    #     return self.markerRecordsDict
-
     # Given the percent offset of the total duration, gets the x-offset for the timeline tracks (not the viewport, its contents)
     @staticmethod
     def percent_offset_to_track_offset(drawWidth, track_percent):
         return float(drawWidth) * float(track_percent)
-
-
-    # def percent_offset_to_track_offset(self, track_percent):
-    #     return float(self.drawWidth) * float(track_percent)
 
     # compute_x_offset_from_datetime(aDatetime): depends on current duration and width
     def compute_x_offset_from_datetime(self, drawWidth, aDatetime):
@@ -289,7 +270,7 @@ class ReferenceMarkerManager(DurationRepresentationMixin, QObject):
         return item_x_offset
 
 
-
+    ## The main draw event. Called by TickedTimelineDrawingBaseWidget to draw the tick marks and indicator lines, in addition to the reference lines.
     def draw(self, painter, event, scale):
         # drawWidth = event.width()
         drawWidth = self.drawWidth
