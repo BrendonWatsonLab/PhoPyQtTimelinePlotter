@@ -252,6 +252,7 @@ class ReferenceMarkerManager(IndicatorLineMixin, DurationRepresentationMixin, QO
         curr_properties = ReferenceMarkerManager.videoPlaybackLineProperties
         new_view_obj = ReferenceMarker("video_playback", False, properties=curr_properties, parent=self)
         new_view_obj.update_position(0.0, self.get_scale())
+        new_view_obj.drawsPointer = False
         new_record_obj = RepresentedMarkerRecord(datetime.now(), parent=self)
         self.videoPlaybackIndicatorContainer =  ModelViewContainer(new_record_obj, new_view_obj)
 
@@ -259,6 +260,7 @@ class ReferenceMarkerManager(IndicatorLineMixin, DurationRepresentationMixin, QO
         curr_properties = ReferenceMarkerManager.hoverLineProperties
         new_view_obj = ReferenceMarker("hover", False, properties=curr_properties, parent=self)
         new_view_obj.update_position(0.0, self.get_scale())
+        new_view_obj.drawsPointer = False
         new_record_obj = RepresentedMarkerRecord(datetime.now(), parent=self)
         self.userMouseHoverIndicatorContainer =  ModelViewContainer(new_record_obj, new_view_obj)
 
@@ -266,6 +268,7 @@ class ReferenceMarkerManager(IndicatorLineMixin, DurationRepresentationMixin, QO
         curr_properties = ReferenceMarkerManager.selectLineProperties
         new_view_obj = ReferenceMarker("select", False, properties=curr_properties, parent=self)
         new_view_obj.update_position(0.0, self.get_scale())
+        new_view_obj.drawsPointer = False
         new_record_obj = RepresentedMarkerRecord(datetime.now(), parent=self)
         self.userMouseSelectionIndicatorContainer =  ModelViewContainer(new_record_obj, new_view_obj)
 
