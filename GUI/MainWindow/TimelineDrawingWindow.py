@@ -724,6 +724,11 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         # Cursor tracking
         self.cursorX = 0.0
         self.cursorY = 0.0
+
+        # The timeline-contents relative X position computed from self.cursorX
+        self.timelineCursorX = 0.0
+        self.timelineCursorDurationOffset = None
+        self.timelineCursorDatetime = None
         #self.cursorTraceRect = QRect(0,0,0,0)
 
     def reloadModelFromDatabase(self):
@@ -948,23 +953,22 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         self.cursorX = event.x()
         self.cursorY = event.y()
         
-        
         # track_offset_x = self.percent_offset_to_track_offset(self.get_viewport_percent_scrolled())
         # duration_offset = self.offset_to_duration(self.cursorX)
         # datetime = self.offset_to_datetime(self.cursorX)
 
         # Get scrollview x_offset from window x_offset
-        timeline_contents_x_offset = self.viewport_offset_to_contents_offset(self.cursorX)
-        duration_offset = self.offset_to_duration(timeline_contents_x_offset)
-        datetime = self.offset_to_datetime(timeline_contents_x_offset)
+        self.timelineCursorX = self.viewport_offset_to_contents_offset(self.cursorX)
+        self.timelineCursorDurationOffset = self.offset_to_duration(self.timelineCursorX)
+        self.timelineCursorDatetime = self.offset_to_datetime(self.timelineCursorX)
 
-        text = "window x: {0}, contents_x: {1},  duration: {2}, datetime: {3}".format(self.cursorX, timeline_contents_x_offset, duration_offset, datetime)
+        text = "window x: {0}, contents_x: {1},  duration: {2}, datetime: {3}".format(self.cursorX, self.timelineCursorX, self.timelineCursorDurationOffset, str(datetime))
         # Call the on_mouse_moved handler for the video track which will update its .hovered_object property, which is then read and used for relative offsets
 
         for (anIndex, aTimelineVideoTrack) in enumerate(self.videoFileTrackWidgets):
             potentially_hovered_child_object = aTimelineVideoTrack.hovered_object
             if potentially_hovered_child_object:
-                relative_duration_offset = potentially_hovered_child_object.compute_relative_offset_duration(datetime)
+                relative_duration_offset = potentially_hovered_child_object.compute_relative_offset_duration(self.timelineCursorDatetime)
                 text = text + ' -- relative to duration: {0}'.format(relative_duration_offset)
                 break
 
