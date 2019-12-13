@@ -29,6 +29,9 @@ __font__ = QFont('Decorative', 12)
 
 """ IndicatorLineMixin
 Responsible for managing the position of three indicator lines: user-hover, user-select, and video-playback
+
+NOTE: The indicator line views are currently unused due to them introducing visual bugs that weren't easy to resolve.
+I'm planning on using the record objects of each container to access the pointer datetimes and such. This is a heavy implementation for such a simple feature.
 """
 class IndicatorLineMixin(object):
 
