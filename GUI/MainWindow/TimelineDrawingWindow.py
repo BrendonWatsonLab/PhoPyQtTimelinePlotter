@@ -1572,6 +1572,9 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
 
     # @pyqtSlot(int, int)
     # Occurs when the user selects an object (durationObject) in the child video track with the mouse
+    """
+    # Selecting a non-video track event shouldn't deselect the video. Likewise, selecting a new video shouldn't deselect comments or partitions (I don't think).
+    """
     def handle_child_selection_event(self, trackIndex, trackObjectIndex):
         text = "handle_child_selection_event(...): trackIndex: {0}, trackObjectIndex: {1}".format(trackIndex, trackObjectIndex)
         print(text)
@@ -1584,8 +1587,8 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
             #     currWidget = self.eventTrackWidgets[i]
             #     currWidget.set_active_filter(self.totalStartTime, self.totalEndTime)
 
-            for aVideoTrackIndex in range(0, len(self.videoFileTrackWidgets)):
-                currVideoTrackWidget = self.videoFileTrackWidgets[aVideoTrackIndex]
+            for index in range(0, len(self.videoFileTrackWidgets)):
+                currVideoTrackWidget = self.videoFileTrackWidgets[index]
                 # currVideoTrackWidget.set_active_filter(self.totalStartTime, self.totalEndTime)
                 currVideoTrackWidget.deselect_all()
                 currVideoTrackWidget.update()
@@ -1597,25 +1600,31 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
 
             # currSelectedObjectIndex = self.mainVideoTrack.selected_duration_object_indicies[0]
             currSelectedObjectIndex = trackObjectIndex
-            currActiveVideoTrack = self.videoFileTrackWidgets[trackIndex]
-            currSelectedObject = currActiveVideoTrack.durationObjects[trackObjectIndex]
+
+            # Get the track from its trackID. It may not be a video track.
+            currActiveTrack = self.get_track_with_trackID(trackIndex)
+            # currActiveTrack = self.videoFileTrackWidgets[trackIndex]
+            currSelectedObject = currActiveTrack.durationObjects[trackObjectIndex]
             
             # Deselect any other video timelines
-            for aVideoTrackIndex in range(0, len(self.videoFileTrackWidgets)):
-                if (aVideoTrackIndex == trackIndex):
+            for index in range(0, len(self.videoFileTrackWidgets)):
+                aVideoTrackObj = self.videoFileTrackWidgets[index]
+                aVideoTrackID = aVideoTrackObj.get_trackID()
+                if (aVideoTrackID == trackIndex):
                     # Skip the active track
                     continue
                 else:
-                    currVideoTrackWidget = self.videoFileTrackWidgets[aVideoTrackIndex]
-                    currVideoTrackWidget.deselect_all()
-                    currVideoTrackWidget.update()
+                    aVideoTrackObj.deselect_all()
+                    aVideoTrackObj.update()
+
+
 
             if currSelectedObject is not None:
                 selected_video_path = currSelectedObject.get_video_url()
                 # print(selected_video_path)
                 
                 if currSelectedObject.is_video_url_accessible():
-                    currActiveVideoTrack.set_now_playing(trackObjectIndex)
+                    currActiveTrack.set_now_playing(trackObjectIndex)
                     self.pendingCreateVideoPlayerSelectedItem = currSelectedObject
                     self.try_set_video_player_window_url(str(selected_video_path))
                     
