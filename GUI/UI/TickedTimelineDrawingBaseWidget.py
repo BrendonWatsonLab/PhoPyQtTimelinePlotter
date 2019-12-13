@@ -213,9 +213,9 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
 
     @pyqtSlot(float)
     def on_update_selected_position(self, pointer_desired_x):
-        # self.pointerPos = pointer_desired_x
+        self.pointerPos = pointer_desired_x
         self.positionChanged.emit(pointer_desired_x)
-        # self.pointerTimePos = self.pointerPos * self.getScale()
+        self.pointerTimePos = self.pointerPos * self.getScale()
         self.update()
 
     @pyqtSlot(int)

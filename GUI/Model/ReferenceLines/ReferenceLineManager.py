@@ -273,16 +273,15 @@ class ReferenceMarkerManager(IndicatorLineMixin, DurationRepresentationMixin, QO
         self.userMouseSelectionIndicatorContainer =  ModelViewContainer(new_record_obj, new_view_obj)
 
 
-    def get_indicator_marker_user_hover(self):
-        return self.userMouseHoverIndicatorContainer
-        
-    def get_indicator_marker_user_select(self):
-        return self.userMouseSelectionIndicatorContainer
-
     def get_indicator_marker_video_playback(self):
         return self.videoPlaybackIndicatorContainer
 
+    def get_indicator_marker_user_select(self):
+        return self.userMouseSelectionIndicatorContainer
 
+    def get_indicator_marker_user_hover(self):
+        return self.userMouseHoverIndicatorContainer
+        
     ## User Reference Markers
     # Creates a list/stack of reusable (but initially undisplayed) reference markers that can later be obtained by get_next_unused_marker_key() and update_next_unused_marker(...)
     def bulk_add_reference_makers(self, num_markers):

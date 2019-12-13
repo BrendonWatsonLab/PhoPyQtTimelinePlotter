@@ -1754,7 +1754,7 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         self.extendedTracksContainer.blockSignals(True)
 
         curr_datetime = self.offset_to_datetime(timeline_x_offset)
-        self.get_reference_manager().on_update_indicator_hover(curr_datetime)
+        self.get_reference_manager().on_update_indicator_video_playback(curr_datetime)
 
         self.timelineMasterTrackWidget.on_update_video_line(timeline_x_offset)
         self.extendedTracksContainer.on_update_video_line(timeline_x_offset)
