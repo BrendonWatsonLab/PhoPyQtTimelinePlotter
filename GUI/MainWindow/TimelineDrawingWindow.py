@@ -67,6 +67,7 @@ from app.filesystem.FileExporting import FileExportingMixin, FileExportFormat, F
 from GUI.Model.TrackGroups import VideoTrackGroupSettings, VideoTrackGroup, TrackReference, TrackChildReference, VideoTrackGroupOwningMixin
 from GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
 
+from app.filesystem.LabjackFilesystemLoadingMixin import LabjackEventFile, LabjackFilesystemLoader
 
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.
@@ -134,8 +135,11 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
     # debug_desiredVideoTracks = [0, 1, 5, 6, 8, 9]
     # debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(False, True, False), VideoTrackGroupSettings(False, True, False), VideoTrackGroupSettings(False, True, False), VideoTrackGroupSettings(False, True, False), VideoTrackGroupSettings(False, True, False), VideoTrackGroupSettings(False, True, False)]
     
-    debug_desiredVideoTracks = [0, 1]
-    debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(False, True, True), VideoTrackGroupSettings(False, True, True)]
+    # debug_desiredVideoTracks = [0, 1]
+    # debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(False, True, True), VideoTrackGroupSettings(False, True, True)]
+
+    debug_desiredVideoTracks = [1]
+    debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(True, True, True)]
 
     # debug_desiredVideoTracks = [5, 6, 8, 9]
 
@@ -166,6 +170,9 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
 
+        self.labjackDataFilesystemLoader = LabjackFilesystemLoader([], parent=self)
+        self.labjackDataFilesystemLoader.loadingLabjackDataFilesComplete.connect(self.on_labjack_files_loading_complete)
+
         # Update the data model, and set up the timeline totalStartTime, totalEndTime, totalDuration from the loaded videos if we're in that enum mode.
         self.reloadModelFromDatabase()
         self.reload_timeline_display_bounds()
@@ -194,6 +201,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
 
         # self.referenceManager.hoverDatetimeChanged.connect(self.on_reference_indicator_line_hover_changed)
         # self.referenceManager.selectedDatetimeChanged.connect(self.on_reference_indicator_line_selection_changed)
+
 
 
         self.activeZoomChanged.connect(self.referenceManager.on_active_zoom_changed)
@@ -269,7 +277,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             # action_exit.setStatusTip('Exit application')
             # action_exit.triggered.connect(qApp.quit)
 
-            self.ui.actionExport_to.triggered.connect(self.on_user_data_export)
+
 
             self.ui.actionExit_Application.triggered.connect(qApp.quit)
             self.ui.actionShow_Help.triggered.connect(self.handle_showHelpWindow)
@@ -278,6 +286,13 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             self.ui.actionVideo_FIle_ShowListWindow.triggered.connect(self.handle_showVideoTreeWindow)
             self.ui.actionShowDatabase_Table_BrowserWindow.triggered.connect(self.handle_showDatabaseBrowserUtilityWindow)
             
+
+            ## Import:
+            self.ui.actionImport_Labjack_Data.triggered.connect(self.on_user_labjack_data_load)
+
+            ## Export:
+            self.ui.actionExport_to.triggered.connect(self.on_user_data_export)
+
             ## Setup Zoom:
             self.ui.actionZoom_In.triggered.connect(self.on_zoom_in)
             self.ui.actionZoom_Default.triggered.connect(self.on_zoom_home)
@@ -708,9 +723,18 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         self.videoFileRecords = self.database_connection.load_video_file_info_from_database()
         self.videoInfoObjects = []
         # Iterate through loaded database records to build videoInfoObjects
+        
+        videoFileStartDates = []
+        videoFileEndDates = []
+
         for aVideoFileRecord in self.videoFileRecords:
             aVideoInfoObj = aVideoFileRecord.get_video_info_obj()
             self.videoInfoObjects.append(aVideoInfoObj)
+            videoFileStartDates.append(aVideoFileRecord.get_start_date())
+            videoFileEndDates.append(aVideoFileRecord.get_end_date())
+
+        
+        self.get_labjack_data_files_loader().set_start_end_video_file_dates(videoFileStartDates, videoFileEndDates)
 
         self.update()
 
@@ -2434,3 +2458,33 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
 
         self.update()
     
+
+    @pyqtSlot()
+    def on_user_labjack_data_load(self):
+        # Called when the user selects "Import Labjack data..." from the main menu.
+        print("TimelineDrawingWindow.on_user_labjack_data_load()")
+        # Show a dialog that asks the user for their export path
+        # exportFilePath = self.on_exportFile_selected()
+
+        path = QFileDialog.getOpenFileName(self, 'Open Labjack Data File', os.getenv('HOME'), 'CSV(*.csv)')
+        importFilePath = path[0]
+        if importFilePath == '':
+            print("User canceled the import!")
+            return
+        self.get_labjack_data_files_loader().add_labjack_file_path(importFilePath)
+
+
+    
+    def get_labjack_data_files_loader(self):
+        return self.labjackDataFilesystemLoader
+
+    @pyqtSlot()
+    def on_labjack_files_loading_complete(self):
+        print("TimelineDrawingWindow.on_labjack_files_loading_complete()...")
+        activeLoader = self.get_labjack_data_files_loader()
+        for (key_path, cache_value) in activeLoader.get_cache().items():
+            # key_path: the labjack data file path that had the labjack events loaded from it
+            print("labjack event loading complete for [{0}]: {1} files".format(str(key_path), len(cache_value)))
+            # for (index, aVideoThumbnailObj) in enumerate(cache_value):
+            #     currThumbsDict = aVideoThumbnailObj.get_thumbs_dict()
+            pass

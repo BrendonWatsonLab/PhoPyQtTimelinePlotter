@@ -21,6 +21,7 @@ class OperationTypes(Enum):
         FilesystemFileFind = 2
         FilesystemMetadataLoad = 3
         FilesystemThumbnailGeneration = 4
+        FilesystemLabjackFileLoad = 5
 
 class PendingFilesystemOperation(QObject):
 
