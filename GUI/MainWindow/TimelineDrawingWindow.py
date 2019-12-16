@@ -64,7 +64,7 @@ from GUI.Model.TrackType import TrackType, TrackStorageArray
 from app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoThumbnail, VideoPreviewThumbnailGenerator
 from app.filesystem.FileExporting import FileExportingMixin, FileExportFormat, FileExportOptions
 
-
+from GUI.Model.TrackGroups import VideoTrackGroupSettings, VideoTrackGroup, TrackReference, TrackChildReference, VideoTrackGroupOwningMixin
 
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.
@@ -77,62 +77,12 @@ class ViewportScaleAdjustmentOptions(Enum):
         MaintainDesiredViewportDisplayDuration = 2 #  keeps the self.activeViewportDuration the same, and adjusts the self.activeScaleMultiplier to match upon window resize
 
 
-class VideoTrackGroupSettings:
-    def __init__(self, wantsLabeledVideoTrack=False, wantsAnnotationsTrack=True, wantsPartitionTrack=False):
-        self.wantsLabeledVideoTrack = wantsLabeledVideoTrack
-        self.wantsAnnotationsTrack = wantsAnnotationsTrack
-        self.wantsPartitionTrack = wantsPartitionTrack
-
-    # wantsLabeledVideoTrack, wantsAnnotationsTrack, wantsPartitionTrack = self.get_helper_track_preferences()
-    def get_helper_track_preferences(self):
-        return (self.wantsLabeledVideoTrack, self.wantsAnnotationsTrack, self.wantsPartitionTrack)
-
-
-class VideoTrackGroup:
-    def __init__(self, groupID, videoTrackIndex=None, labeledVideoTrackIndex=None, annotationsTrackIndex=None, partitionsTrackIndex=None):
-        self.groupID = groupID
-        self.videoTrackIndex = videoTrackIndex
-        self.labeledVideoTrackIndex = labeledVideoTrackIndex
-        self.annotationsTrackIndex = annotationsTrackIndex
-        self.partitionsTrackIndex = partitionsTrackIndex
-
-    def get_group_id(self):
-        return self.groupID
-
-    def get_videoTrackIndex(self):
-        return self.videoTrackIndex
-
-    def get_labeledVideoTrackIndex(self):
-        return self.labeledVideoTrackIndex
-
-    def get_annotationsTrackIndex(self):
-        return self.annotationsTrackIndex
-
-    def get_partitionsTrackIndex(self):
-        return self.partitionsTrackIndex
-
-    def set_videoTrackIndex(self, newValue):
-        self.videoTrackIndex = newValue
-
-    def set_labeledVideoTrackIndex(self, newValue):
-        self.labeledVideoTrackIndex = newValue
-
-    def set_annotationsTrackIndex(self, newValue):
-        self.annotationsTrackIndex = newValue
-
-    def set_partitionsTrackIndex(self, newValue):
-        self.partitionsTrackIndex = newValue
-
-
-
-
-
 
 """
 self.activeScaleMultiplier: this multipler determines how many times longer the contents of the scrollable viewport are than the viewport width itself.
 
 """
-class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixin, DurationRepresentationMixin, AbstractDatabaseAccessingWindow):
+class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, MouseTrackingThroughChildrenMixin, DurationRepresentationMixin, AbstractDatabaseAccessingWindow):
     
     static_VideoTrackTrackID = -1 # The integer ID of the main video track
     
@@ -255,7 +205,7 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
 
         self.wantsCreateNewVideoPlayerWindowOnClose = False
         # self.pendingCreateVideoPlayerURL = None # self.pendingCreateVideoPlayerURL: holds the URL of the video file that we currently want to load. Used to enable waiting for the previous video player to close before a new one is opened with this URL.
-        self.pendingCreateVideoPlayerSelectedItem = None # self.pendingCreateVideoPlayerSelectedItem: holds the URL of the video file that we currently want to load. Used to enable waiting for the previous video player to close before a new one is opened with this URL.
+        self.pendingCreateVideoPlayerSelectedItemReference = None # self.pendingCreateVideoPlayerSelectedItem: holds the URL of the video file that we currently want to load. Used to enable waiting for the previous video player to close before a new one is opened with this URL.
 
         # Temporary "pending" items that will be set and then cleared once the appropriate action is performed with them
         self.pending_adjust_viewport_start_datetime = None
@@ -1540,12 +1490,12 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
                 print("Error Setting video filename for Video Window:", e)
                 return False
 
-            self.videoPlayerWindow.movieLink = DataMovieLinkInfo(self.pendingCreateVideoPlayerSelectedItem, self.videoPlayerWindow, self, parent=self)
+            self.videoPlayerWindow.movieLink = DataMovieLinkInfo(self.pendingCreateVideoPlayerSelectedItemReference, self.videoPlayerWindow, self, parent=self)
             
             # if self.wantsCreateNewVideoPlayerWindowOnClose:
             # Set the property false after the window has been created
             self.wantsCreateNewVideoPlayerWindowOnClose = False
-            self.pendingCreateVideoPlayerSelectedItem = None
+            self.pendingCreateVideoPlayerSelectedItemReference = None
             self.pendingCreateVideoPlayerURL = None
 
 
@@ -1693,11 +1643,19 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
                 
                 if currSelectedObject.is_video_url_accessible():
                     currActiveTrack.set_now_playing(trackObjectIndex)
-                    self.pendingCreateVideoPlayerSelectedItem = currSelectedObject
+                    # Construct a TrackChildReference object
+                    currActiveGroupID = self.get_group_id_from_track_id(trackIndex)
+                    currActiveTrackRef = TrackReference(trackIndex, currActiveGroupID)
+                    currActiveChildRef = TrackChildReference(currActiveTrackRef, trackObjectIndex, currSelectedObject, parent=self)
+
+                    # self.pendingCreateVideoPlayerSelectedItemReference = currSelectedObject
+                    self.pendingCreateVideoPlayerSelectedItemReference = currActiveChildRef
+                    
+
                     self.try_set_video_player_window_url(str(selected_video_path))
                     
                 else:
-                    self.pendingCreateVideoPlayerSelectedItem = None
+                    self.pendingCreateVideoPlayerSelectedItemReference = None
                     print("video file is inaccessible. Not opening the video player window")
                     if self.videoPlayerWindow is not None:
                         self.videoPlayerWindow.try_set_video_player_window_url(None)
@@ -1942,6 +1900,9 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
                 print("Movie link has no active playbackPlayheadDatetime!")
                 return
 
+            # Get the appropriate trackID for the partition track belonging to the video that's currently opened.
+
+
             # self.sync_active_viewport_start_to_datetime(playbackPlayheadDatetime) #jump there.
             self.on_partition_cut_at(playbackPlayheadDatetime) #then cut
 
@@ -1953,16 +1914,26 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         
     
     # Creates a cut on the partition track at the specified time
-    def on_partition_cut_at(self, cut_datetime):
-        print("on_partition_cut_at({0})".format(cut_datetime))
-        self.partitionsTrackWidget.try_cut_partition(cut_datetime)
+    def on_partition_cut_at(self, partitionTrackID, cut_datetime):
+        print("on_partition_cut_at(trackID: {0}, time: {1})".format(str(partitionTrackID), self.get_full_long_date_time_string(cut_datetime)))
+        foundTrack = self.get_track_with_trackID(partitionTrackID)
+        if foundTrack is None:
+            print("couldn't find track with trackID: {0}".format(str(partitionTrackID)))
+            return False
+        
 
+        return foundTrack.try_cut_partition(cut_datetime)
 
     # Creates a new annotation comment on the appropriate track at the specified time
-    def on_comment_create_at(self, comment_datetime):
-        print("on_comment_create_at({0})".format(comment_datetime))
-        # self.partitionsTrackWidget.try_cut_partition(comment_datetime)
+    def on_comment_create_at(self, commentTrackID, comment_datetime):
+        print("on_comment_create_at(trackID: {0}, time: {1})".format(str(commentTrackID), self.get_full_long_date_time_string(comment_datetime)))
+        foundTrack = self.get_track_with_trackID(commentTrackID)
+        if foundTrack is None:
+            print("couldn't find track with trackID: {0}".format(str(commentTrackID)))
+            return False
         
+        print("WARNING: UNIMPLEMENTED: on_comment_create_at(...)")
+        return False        
 
 
     # Track Header Operations:

@@ -5,6 +5,7 @@ from datetime import datetime, timezone, timedelta
 from PyQt5.QtWidgets import QFrame
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize
 
+from GUI.Model.TrackGroups import VideoTrackGroupSettings, VideoTrackGroup, TrackReference, TrackChildReference, VideoTrackGroupOwningMixin
 from GUI.UI.VideoPlayer.VideoPlayerWidget import VideoPlayerWidget
 
 """
@@ -24,7 +25,6 @@ class DataMovieLink_SyncOption(Enum):
         TimelineToVideo = 3  # Set video time from timeline
 
 """
-self.videoDurationEventObj: phoDurationEvent_Video
 self.videoPlayerWindow: MainVideoPlayerWindow
 """
 class DataMovieLinkInfo(QObject):
@@ -38,15 +38,17 @@ class DataMovieLinkInfo(QObject):
     # //video_playback_state_changed
     # video_playback_position_updated
 
-    def __init__(self, videoEventObj, videoPlayerWindowRef, mainTimelineWindowRef, parent=None, sync_option=DataMovieLink_SyncOption.Bidirectional):
+    # videoEventChildReference: TrackChildReference
+
+    def __init__(self, videoEventChildReference, videoPlayerWindowRef, mainTimelineWindowRef, parent=None, sync_option=DataMovieLink_SyncOption.Bidirectional):
         super(DataMovieLinkInfo, self).__init__(parent=parent)
-        self.videoDurationEventObj = videoEventObj
+
+        self._videoEventChildReference = videoEventChildReference
         self.videoPlayerWindow = videoPlayerWindowRef
         self.mainTimelineWindowRef = mainTimelineWindowRef
 
         # TODO: Currently the self.sync_option does nothing. Only video window -> timeline window is currently fully implemented
         self.sync_option = sync_option
-
 
         self.active_relative_video_playback_percent_offset = None
         self.active_absolute_datetime = None
@@ -64,19 +66,22 @@ class DataMovieLinkInfo(QObject):
         # Bound to trigger the video player to update on timeline adjust
         self.timeline_datetime_position_changed.connect(self.videoPlayerWindow.on_timeline_position_updated)
 
+    # Returns the phoDurationEvent_Video type object
+    def get_video_duration_event_obj(self):
+        return self._videoEventChildReference.get_childEventObject()
 
     # video window
     def get_video_url(self):
-        return self.videoDurationEventObj.get_video_url()
+        return self.get_video_duration_event_obj().get_video_url()
 
     def get_video_duration(self):
-        return self.videoDurationEventObj.computeDuration()
+        return self.get_video_duration_event_obj().computeDuration()
     
     def get_video_start_time(self):
-        return self.videoDurationEventObj.startTime
+        return self.get_video_duration_event_obj().startTime
 
     def get_video_end_time(self):
-        return self.videoDurationEventObj.endTime
+        return self.get_video_duration_event_obj().endTime
 
     # timeline window
     def get_timeline_duration(self):
@@ -103,16 +108,16 @@ class DataMovieLinkInfo(QObject):
     # Given a video playback duration % (0.0 - 1.0), returns the real-world absolute time corresponding to it
     def compute_absolute_time(self, video_duration_percent):
         video_duration_relative_offset = video_duration_percent * self.get_video_duration()
-        return self.videoDurationEventObj.compute_absolute_time(video_duration_relative_offset)
+        return self.get_video_duration_event_obj().compute_absolute_time(video_duration_relative_offset)
 
 
     # Given a real-world absolute datetime, return the video playback duration % (0.0 - 1.0) corresponding to it
     def compute_video_percent_offset(self, absolute_time):
         # check if absolute_time is within the video
-        if (not self.videoDurationEventObj.contains(absolute_time)):
+        if (not self.get_video_duration_event_obj().contains(absolute_time)):
             return None
         else:
-            video_duration_relative_offset = self.videoDurationEventObj.compute_relative_offset_duration(absolute_time)
+            video_duration_relative_offset = self.get_video_duration_event_obj().compute_relative_offset_duration(absolute_time)
             return (video_duration_relative_offset / self.get_video_duration())
 
 
@@ -125,10 +130,6 @@ class DataMovieLinkInfo(QObject):
             timeline_duration_relative_offset = self.mainTimelineWindowRef.compute_relative_offset_duration(absolute_time)
             return (timeline_duration_relative_offset / self.get_timeline_duration())
 
-
-    def compute_absolute_time(self, video_duration_percent):
-        video_duration_relative_offset = video_duration_percent * self.get_video_duration()
-        return self.videoDurationEventObj.compute_absolute_time(video_duration_relative_offset)
 
 
 
