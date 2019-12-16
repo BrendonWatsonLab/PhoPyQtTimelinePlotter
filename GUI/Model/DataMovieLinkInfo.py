@@ -73,6 +73,11 @@ class DataMovieLinkInfo(SimpleErrorStatusMixin, QObject):
 
 
 
+    # Returns the TrackChildReference reference type object
+    def get_video_event_reference(self):
+        return self._videoEventChildReference
+
+
     # Returns the phoDurationEvent_Video type object
     def get_video_duration_event_obj(self):
         return self._videoEventChildReference.get_childEventObject()

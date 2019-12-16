@@ -65,6 +65,8 @@ from app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoThumbnail, 
 from app.filesystem.FileExporting import FileExportingMixin, FileExportFormat, FileExportOptions
 
 from GUI.Model.TrackGroups import VideoTrackGroupSettings, VideoTrackGroup, TrackReference, TrackChildReference, VideoTrackGroupOwningMixin
+from GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
+
 
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.
@@ -82,7 +84,7 @@ class ViewportScaleAdjustmentOptions(Enum):
 self.activeScaleMultiplier: this multipler determines how many times longer the contents of the scrollable viewport are than the viewport width itself.
 
 """
-class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, MouseTrackingThroughChildrenMixin, DurationRepresentationMixin, AbstractDatabaseAccessingWindow):
+class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, MouseTrackingThroughChildrenMixin, DateTimeRenderMixin, DurationRepresentationMixin, AbstractDatabaseAccessingWindow):
     
     static_VideoTrackTrackID = -1 # The integer ID of the main video track
     
@@ -324,9 +326,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             self.trackGroups = []
             self.trackID_to_GroupIndexMap = dict() #Maps a track's trackID to the index of its group in self.trackGroups
             self.trackID_to_TrackWidgetLocatorTuple = dict() #Maps a track's trackID to the a tuple (storageArrayType: TrackStorageArray, storageArrayIndex: Int) that can be used to retreive the widget
-
-
-
 
             # B00
             currTrackIndex = 0
@@ -1892,10 +1891,27 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
                 return
 
             # Get the appropriate trackID for the partition track belonging to the video that's currently opened.
+            activeChildRef = active_movie_link.get_video_event_reference()
+            if activeChildRef is None:
+                print("No active child reference!")
+                return
 
+            # activeVideoTrackID = activeChildRef.get_track_id()
+            activeGroupID = activeChildRef.get_group_id()
+            activeGroup = self.trackGroups[activeGroupID]
+
+            # get the partition track index (note that this is not the trackID) from the group
+            partitionTrackIndex = activeGroup.get_partitionsTrackIndex()
+            if partitionTrackIndex is None:
+                print("No partition track for the group {0}".format(str(activeGroupID)))
+                return
+            
+            # Find the matching partition track:
+            currWidget = self.eventTrackWidgets[partitionTrackIndex]
+            partitionTrackID = currWidget.get_trackID()
 
             # self.sync_active_viewport_start_to_datetime(playbackPlayheadDatetime) #jump there.
-            self.on_partition_cut_at(playbackPlayheadDatetime) #then cut
+            self.on_partition_cut_at(partitionTrackID, playbackPlayheadDatetime) #then cut
 
         except AttributeError as e:
             print("Couldn't get movie link's active playbackPlayheadDatetime! Error:", e)
@@ -1912,7 +1928,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             print("couldn't find track with trackID: {0}".format(str(partitionTrackID)))
             return False
         
-
         return foundTrack.try_cut_partition(cut_datetime)
 
     # Creates a new annotation comment on the appropriate track at the specified time
