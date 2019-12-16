@@ -130,19 +130,20 @@ class LabjackFilesystemLoader(QObject):
         if restricted_labjack_file_paths is None:
             restricted_labjack_file_paths = self.labjackFilePaths
 
-        self.load_labjack_data_files(restricted_labjack_file_paths)
+        if (len(restricted_labjack_file_paths)>0):
+            self.load_labjack_data_files(restricted_labjack_file_paths)
 
         self.targetLabjackDataFilePathsUpdated.emit()
 
 
-    # TODO: Integrate with the cache
-    def loadLabjackFile(self, aLabjackFilePath, videoStartDates, videoEndDates):
-        print("LabjackFilesystemLoader.loadLabjackFile({0})".format(str(aLabjackFilePath)))
-        outEventFileObj = LabjackEventFile(aLabjackFilePath)
-        (dateTimes, onesEventFormatDataArray, variableData, labjackEvents) = LabjackFilesystemLoader.loadLabjackFiles(aLabjackFilePath, videoStartDates, videoEndDates, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
-        outEventFileObj.set_loaded_values(dateTimes, onesEventFormatDataArray, variableData, labjackEvents)
-        # Return the created object
-        return outEventFileObj
+    # # TODO: Integrate with the cache
+    # def loadLabjackFile(self, aLabjackFilePath, videoStartDates, videoEndDates):
+    #     print("LabjackFilesystemLoader.loadLabjackFile({0})".format(str(aLabjackFilePath)))
+    #     outEventFileObj = LabjackEventFile(aLabjackFilePath)
+    #     (dateTimes, onesEventFormatDataArray, variableData, labjackEvents) = LabjackFilesystemLoader.loadLabjackFiles(aLabjackFilePath, videoStartDates, videoEndDates, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
+    #     outEventFileObj.set_loaded_values(dateTimes, onesEventFormatDataArray, variableData, labjackEvents)
+    #     # Return the created object
+    #     return outEventFileObj
 
     @staticmethod
     def loadLabjackFiles(labjackFilePath, videoDates, videoEndDates, shouldLimitEventsToVideoDates=True, limitedVariablesToCreateEventsFor=None, usePhoServerFormat=False, phoServerFormatIsStdOut=True):
@@ -263,38 +264,38 @@ class LabjackFilesystemLoader(QObject):
             else:
                 pass
 
-        # Filter the erroneous events from the individual arrays in each variableData
-        for index, aPort in enumerate(portNames):
-            #print('Invalid dispense events detected: ', invalidDispenseEventIndicies)
-            dispenseVariableIndex = index+4
-            dispenseVariableTimestamps = np.array(variableData[dispenseVariableIndex]['timestamps'])
-            dispenseVariableInvalidTimestamps = np.array(invalidDispenseEventTimestamps[aPort])
-            print(aPort, ": ", len(dispenseVariableInvalidTimestamps), 'invalid dispense events out of', len(dispenseVariableTimestamps), 'events.')
-            print("Removing invalid events...")
-            dispenseVariableInvalidIndicies = np.isin(dispenseVariableTimestamps, dispenseVariableInvalidTimestamps)
-            mask = np.ones(len(dispenseVariableTimestamps), dtype=bool)
-            mask[dispenseVariableInvalidIndicies] = False
-            variableData[dispenseVariableIndex]['timestamps'] = variableData[dispenseVariableIndex]['timestamps'][mask]
-            variableData[dispenseVariableIndex]['values'] = variableData[dispenseVariableIndex]['values'][mask]
-            variableData[dispenseVariableIndex]['variableSpecificEvents'] = np.array(variableData[dispenseVariableIndex]['variableSpecificEvents'])[mask]
-            variableData[dispenseVariableIndex]['videoIndicies'] = variableData[dispenseVariableIndex]['videoIndicies'][mask]
-
-
-        # Filter the erroneous events from dateTimes and onesEventFormatDataArray
-        dispenseVariableAnyInvalidIndicies = np.isin(dateTimes, allInvalidDispenseEventTimestamps)
-        mask = np.ones(len(dateTimes), dtype=bool)
-        mask[dispenseVariableAnyInvalidIndicies] = False
-        dateTimes = dateTimes[mask]
-        onesEventFormatDataArray = onesEventFormatDataArray[mask]
-        if usePhoServerFormat:
-            dispenseVariableAnyInvalidIndicies = np.isin(relevantDateTimes, allInvalidDispenseEventTimestamps)
-            mask = np.ones(len(relevantDateTimes), dtype=bool)
-            mask[dispenseVariableAnyInvalidIndicies] = False
-            relevantFileLines = np.array(relevantFileLines)[mask]
-            erroneousEventFreeCSVFilePath = r'C:\Users\halechr\repo\PhoPyQtTimelinePlotter\data\output\erroneousEventsRemoved.csv'
-            print('Writing to CSV file:', erroneousEventFreeCSVFilePath)
-            writeLinesToCsvFile(relevantFileLines, filePath=erroneousEventFreeCSVFilePath)
-            print('done.')
+        # # Filter the erroneous events from the individual arrays in each variableData
+        # for index, aPort in enumerate(portNames):
+        #     #print('Invalid dispense events detected: ', invalidDispenseEventIndicies)
+        #     dispenseVariableIndex = index+4
+        #     dispenseVariableTimestamps = np.array(variableData[dispenseVariableIndex]['timestamps'])
+        #     dispenseVariableInvalidTimestamps = np.array(invalidDispenseEventTimestamps[aPort])
+        #     print(aPort, ": ", len(dispenseVariableInvalidTimestamps), 'invalid dispense events out of', len(dispenseVariableTimestamps), 'events.')
+        #     print("Removing invalid events...")
+        #     dispenseVariableInvalidIndicies = np.isin(dispenseVariableTimestamps, dispenseVariableInvalidTimestamps)
+        #     mask = np.ones(len(dispenseVariableTimestamps), dtype=bool)
+        #     mask[dispenseVariableInvalidIndicies] = False
+        #     variableData[dispenseVariableIndex]['timestamps'] = variableData[dispenseVariableIndex]['timestamps'][mask]
+        #     variableData[dispenseVariableIndex]['values'] = variableData[dispenseVariableIndex]['values'][mask]
+        #     variableData[dispenseVariableIndex]['variableSpecificEvents'] = np.array(variableData[dispenseVariableIndex]['variableSpecificEvents'])[mask]
+        #     variableData[dispenseVariableIndex]['videoIndicies'] = variableData[dispenseVariableIndex]['videoIndicies'][mask]
+        #
+        #
+        # # Filter the erroneous events from dateTimes and onesEventFormatDataArray
+        # dispenseVariableAnyInvalidIndicies = np.isin(dateTimes, allInvalidDispenseEventTimestamps)
+        # mask = np.ones(len(dateTimes), dtype=bool)
+        # mask[dispenseVariableAnyInvalidIndicies] = False
+        # dateTimes = dateTimes[mask]
+        # onesEventFormatDataArray = onesEventFormatDataArray[mask]
+        # if usePhoServerFormat:
+        #     dispenseVariableAnyInvalidIndicies = np.isin(relevantDateTimes, allInvalidDispenseEventTimestamps)
+        #     mask = np.ones(len(relevantDateTimes), dtype=bool)
+        #     mask[dispenseVariableAnyInvalidIndicies] = False
+        #     relevantFileLines = np.array(relevantFileLines)[mask]
+        #     erroneousEventFreeCSVFilePath = r'C:\Users\halechr\repo\PhoPyQtTimelinePlotter\data\output\erroneousEventsRemoved.csv'
+        #     print('Writing to CSV file:', erroneousEventFreeCSVFilePath)
+        #     writeLinesToCsvFile(relevantFileLines, filePath=erroneousEventFreeCSVFilePath)
+        #     print('done.')
 
         return (dateTimes, onesEventFormatDataArray, variableData, labjackEvents)
         

@@ -2484,7 +2484,11 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         activeLoader = self.get_labjack_data_files_loader()
         for (key_path, cache_value) in activeLoader.get_cache().items():
             # key_path: the labjack data file path that had the labjack events loaded from it
-            print("labjack event loading complete for [{0}]: {1} files".format(str(key_path), len(cache_value)))
+
+            loaded_labjack_events = cache_value.get_labjack_events()
+            print("labjack event loading complete for [{0}]: {1} files".format(str(key_path), len(loaded_labjack_events)))
+
+            
             # for (index, aVideoThumbnailObj) in enumerate(cache_value):
             #     currThumbsDict = aVideoThumbnailObj.get_thumbs_dict()
             pass
