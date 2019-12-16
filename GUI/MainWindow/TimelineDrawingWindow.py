@@ -204,7 +204,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         self.videoThumbnailGenerator.thumbnailGenerationComplete.connect(self.on_video_thumbnail_generation_complete)
 
         self.wantsCreateNewVideoPlayerWindowOnClose = False
-        # self.pendingCreateVideoPlayerURL = None # self.pendingCreateVideoPlayerURL: holds the URL of the video file that we currently want to load. Used to enable waiting for the previous video player to close before a new one is opened with this URL.
         self.pendingCreateVideoPlayerSelectedItemReference = None # self.pendingCreateVideoPlayerSelectedItem: holds the URL of the video file that we currently want to load. Used to enable waiting for the previous video player to close before a new one is opened with this URL.
 
         # Temporary "pending" items that will be set and then cleared once the appropriate action is performed with them
@@ -1456,9 +1455,8 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             print("Closing existing Video Player Window...")
             self.videoPlayerWindow.close()
             self.wantsCreateNewVideoPlayerWindowOnClose = True
-            # self.pendingCreateVideoPlayerURL = url
             # self.pendingCreateVideoPlayerSelectedItemReference = self.pendingCreateVideoPlayerSelectedItemReference
-            
+
             # Close the previous window and wait for it to be done closing before creating a new one.
 
         else:
@@ -1493,67 +1491,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             return True
 
 
-
-    # def try_set_video_player_window_url(self, url):
-    #     #TODO: temp: set the videoPlayerWindow to None to ensure that a new one is created. Note that setting it to None doesn't actually close the old one.
-    #     # self.videoPlayerWindow = None
-        
-    #     if (not (self.videoPlayerWindow is None)):
-    #         # print("Using existing Video Player Window...")
-    #         print("Closing existing Video Player Window...")
-    #         self.videoPlayerWindow.close()
-    #         self.wantsCreateNewVideoPlayerWindowOnClose = True
-    #         self.pendingCreateVideoPlayerURL = url
-
-    #         # Close the previous window and wait for it to be done closing before creating a new one.
-
-    #         # self.videoPlayerWindow.movieLink = None # Disable the movieLink
-    #         # self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
-    #         # self.videoPlayerWindow.set_video_filename(url)
-
-    #         # self.videoPlayerWindow.show()
-    #     else:
-    #         # Create a new videoPlayerWindow window
-    #         print("Creating new Video Player Window...")
-    #         try:
-    #             self.videoPlayerWindow = MainVideoPlayerWindow(parent=self)
-    #             self.videoPlayerWindow.close_signal.connect(self.on_video_player_window_closed)
-    #         except Exception as e:
-    #             print("Error Spawning Video Window:", e)
-    #             return False
-            
-    #         try:
-    #             self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
-    #         except Exception as e:
-    #             print("Error Setting timestamp filename for Video Window:", e)
-    #             return False
-
-    #         # try:
-    #         #     self.videoPlayerWindow.set_video_filename(url)
-    #         # except Exception as e:
-    #         #     print("Error Setting video filename for Video Window:", e)
-    #         #     return False
-
-    #         # self.videoPlayerWindow.movieLink = DataMovieLinkInfo(self.pendingCreateVideoPlayerSelectedItemReference, self.videoPlayerWindow, self, parent=self)
-
-    #         try:
-    #             newMovieLink = DataMovieLinkInfo(self.pendingCreateVideoPlayerSelectedItemReference, self.videoPlayerWindow, self, parent=self)
-    #             self.videoPlayerWindow.set_video_media_link(newMovieLink)
-    #         except Exception as e:
-    #             print("Error Creating or setting DataMovieLinkInfo object for Video Window:", e)
-    #             return False
-
-
-    #         # if self.wantsCreateNewVideoPlayerWindowOnClose:
-    #         # Set the property false after the window has been created
-    #         self.wantsCreateNewVideoPlayerWindowOnClose = False
-    #         self.pendingCreateVideoPlayerSelectedItemReference = None
-    #         self.pendingCreateVideoPlayerURL = None
-
-
-    #         return True
-
-
     # Called when the video player window closes.
     @pyqtSlot()
     def on_video_player_window_closed(self):
@@ -1586,7 +1523,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
 
         if self.wantsCreateNewVideoPlayerWindowOnClose:
             # open the pending URL in a new video player window after the previous one was successfully closed.
-            # self.try_set_video_player_window_url(self.pendingCreateVideoPlayerURL)
             self.try_set_video_player_window_video()
 
 
