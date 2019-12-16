@@ -88,8 +88,6 @@ class VideoTrackGroupOwningMixin(object):
         return self.trackID_to_GroupIndexMap[trackID]
 
 
-    pass
-
 
 class VideoTrackGroupSettings(QObject):
     def __init__(self, wantsLabeledVideoTrack=False, wantsAnnotationsTrack=True, wantsPartitionTrack=False, parent=None):
