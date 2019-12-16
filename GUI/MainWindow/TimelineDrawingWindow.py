@@ -1124,8 +1124,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         newActiveViewportDuration = desiredPercent * totalTimelineDuration
         return newActiveViewportDuration
 
-
-
     """ compute_current_activeScaleMultiplier_from_desiredViewportDuration(desiredViewportDisplayDuration)
     Given: a desired duration to display in the viewport
     Return: the correct activeScaleMultiplier (zoom factor) that would need to be set at the current window width.
@@ -1149,29 +1147,17 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
     def percent_offset_to_track_offset(self, track_percent):
         return float(self.get_minimum_track_width()) * float(track_percent)
 
-    ## Datetime functions copied from the versions created for the PhoDurationEvent class
-    # returns true if the absolute_datetime falls within the current entire timeline. !Not the viewport!
-    def contains_date(self, absolute_datetime):
-        return ((self.totalStartTime <= absolute_datetime) and (self.totalEndTime >= absolute_datetime))
-
-    # Returns the duration of the time relative to this timeline.
-    def compute_relative_offset_duration(self, time):
-        relative_offset_duration = time - self.totalStartTime
-        return relative_offset_duration
-
-    # Returns the absolute (wall/world) time for a relative_duration into the timeline
-    def compute_absolute_time(self, relative_duration):
-        return (self.totalStartTime + relative_duration)
 
 
     ## Timeline ZOOMING:
     ## TODO: Implement
     def preserve_cursor_offset_on_zoom(self):
         # Get cursor position's datetime
-        
+        print("TODO: WARNING: UNIMPLEMENTED: TimelineDrawingWindow.preserve_cursor_offset_on_zoom()")
         pass
 
     def restore_cursor_offset_after_zoom(self):
+        print("TODO: WARNING: UNIMPLEMENTED: TimelineDrawingWindow.restore_cursor_offset_after_zoom()")
         pass
 
     def on_zoom_in(self):
@@ -1262,7 +1248,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
     def get_viewport_percent_scrolled(self):
         # TODO: check that this is correct. I think it is.
         return (float(self.timelineScroll.horizontalScrollBar().value()) / (float(self.timelineScroll.horizontalScrollBar().maximum()) - float(self.timelineScroll.horizontalScrollBar().minimum())))
-
 
     # Scrolls the viewport to the desired percent_scrolled of entire timeline.
     def set_viewport_percent_scrolled(self, percent_scrolled):
@@ -1727,7 +1712,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
             #     currWidget = self.eventTrackWidgets[i]
             #     currWidget.set_active_filter(currHoveredObject.startTime, currHoveredObject.endTime)
 
-
     # Occurs when the user selects an object in the child video track with the mouse
     def handle_child_hover_event(self, trackIndex, trackObjectIndex):
         text = "handle_child_hover_event(...): trackIndex: {0}, trackObjectIndex: {1}".format(trackIndex, trackObjectIndex)
@@ -1841,8 +1825,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
 
         self.referenceManager.update_marker_metadata(additional_data)
 
-
-
     @pyqtSlot(list)
     def on_reference_line_markers_updated(self, referenceLineList):
         print("TimelineDrawingWindow.on_reference_line_markers_updated(...)")
@@ -1858,17 +1840,10 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         print(additional_data)
         #  self.referenceManager.
 
-        
-    # @pyqtSlot(list, int)
-    # def on_reference_line_marker_list_selection_changed(self, referenceLineList, selected_index):
-    #     print("TimelineDrawingWindow.on_reference_line_marker_list_selection_changed(referenceLineList, selected_index: {0})".format(str(selected_index)))
-    #      # on_reference_line_marker_list_selection_changed(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
-
     @pyqtSlot(list, list)
     def on_reference_line_marker_list_selection_changed(self, referenceLineList, selected_indicies):
         print("TimelineDrawingWindow.on_reference_line_marker_list_selection_changed(referenceLineList, selected_indicies: {0})".format(str(selected_indicies)))
          # on_reference_line_marker_list_selection_changed(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
-
 
     # try_get_reference_lines(): Tries to get all the reference items and their metadata
     def try_get_reference_lines(self):
@@ -1895,7 +1870,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
 
         return output_data
 
-
     # try_get_selected_reference_lines(): Tries to get the currently selected reference items
     def try_get_selected_reference_lines(self):
         curr_reference_line_data = self.try_get_reference_lines()
@@ -1914,10 +1888,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
 
         return curr_complete_active_items
     
-
-
-    
-
     # try_create_comment_from_selected_reference_lines(): tries to create a new annotation comment from the selected reference marks
     @pyqtSlot()
     def try_create_comment_from_selected_reference_lines(self):
@@ -1941,9 +1911,7 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
             print("ERROR: UNIMPLMENTED: TODO: Create a generic annotation dialog (with a temporary config) and allow the user to add it even if the track isn't currently displayed)")
             return
 
-
     # Tries to create a comment between the two provided dates
-
     @pyqtSlot(datetime, datetime)
     def try_create_comment_between_dates(self, startDate, endDate):
         print("try_create_comment_between_dates(...)")
@@ -2061,8 +2029,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
             print("Error: unknown track type!")
             return
     
-    
-
     @pyqtSlot(int, object)
     def on_video_track_child_generate_thumbnails(self, trackID, videoDurationObj):
         print("TimelineDrawingWindow.on_video_track_child_generate_thumbnails({0}, {1})".format(str(trackID), str(videoDurationObj)))
@@ -2084,15 +2050,11 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
             
         return
 
-
-
     @pyqtSlot(int, object)
     def on_track_child_get_info(self, trackID, commentObj):
         print("TimelineDrawingWindow.on_track_child_get_info({0}, {1})".format(str(trackID), str(commentObj)))
         # Find the correct config:
         pass
-
-
 
     @pyqtSlot(int, object)
     def on_track_child_create_comment(self, trackID, commentObj):
@@ -2381,7 +2343,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         #     self.sync_active_viewport_start_to_datetime(self.pending_adjust_viewport_start_datetime) # Use the saved start time to re-align the viewport's left edge
         #     self.pending_adjust_viewport_start_datetime = None
         
-
     @pyqtSlot()
     def on_active_viewport_changed(self):
         # print("TimelineDrawingWindow.on_active_viewport_changed(...)")

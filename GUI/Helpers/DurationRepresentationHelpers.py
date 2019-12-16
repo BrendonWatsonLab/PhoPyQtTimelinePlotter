@@ -86,6 +86,21 @@ class DurationRepresentationMixin(object):
         percent_x = duration_offset / self.totalDuration
         return percent_x
 
+    ## Datetime functions copied from the versions created for the PhoDurationEvent class
+    # returns true if the absolute_datetime falls within the current entire timeline. !Not the viewport!
+    def contains_date(self, absolute_datetime):
+        return ((self.get_total_start_time() <= absolute_datetime) and (self.get_total_end_time() >= absolute_datetime))
+
+    # Returns the duration of the time relative to this timeline.
+    def compute_relative_offset_duration(self, time):
+        relative_offset_duration = time - self.get_total_start_time()
+        return relative_offset_duration
+
+    # Returns the absolute (wall/world) time for a relative_duration into the timeline
+    def compute_absolute_time(self, relative_duration):
+        return (self.get_total_start_time() + relative_duration)
+
+
 
 
 ## Unused:
