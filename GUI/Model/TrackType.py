@@ -19,6 +19,7 @@ class TrackType(Enum):
     Video = 2
     Annotation = 3
     Partition = 4
+    DataFile = 5
 
     def get_short_str(self):
         if self == TrackType.Unknown:
@@ -29,6 +30,8 @@ class TrackType(Enum):
             return 'A'
         elif self == TrackType.Partition:
             return 'P'
+        elif self == TrackType.DataFile:
+            return 'D'
         else:
             return '!'
 
@@ -53,6 +56,8 @@ class TrackType(Enum):
             return 'Annotation'
         elif self == TrackType.Partition:
             return 'Partition'
+        elif self == TrackType.DataFile:
+            return 'DataFile'
         else:
             return 'ERROR'
 
@@ -64,6 +69,8 @@ class TrackType(Enum):
         elif self == TrackType.Annotation:
             return TrackStorageArray.Event
         elif self == TrackType.Partition:
+            return TrackStorageArray.Event
+        elif self == TrackType.DataFile:
             return TrackStorageArray.Event
         else:
             return TrackStorageArray.Unknown
@@ -105,9 +112,6 @@ class TrackConfigDataCacheMixin(object):
     @pyqtSlot()
     def get_cached_duration_views(self):
         return self.durationObjects
-
-    
-
 
     # performReloadConfigCache(...): actually tells the config cache to update
     @pyqtSlot()

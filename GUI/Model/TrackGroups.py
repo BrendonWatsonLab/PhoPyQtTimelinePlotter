@@ -90,25 +90,27 @@ class VideoTrackGroupOwningMixin(object):
 
 
 class VideoTrackGroupSettings(QObject):
-    def __init__(self, wantsLabeledVideoTrack=False, wantsAnnotationsTrack=True, wantsPartitionTrack=False, parent=None):
+    def __init__(self, wantsLabeledVideoTrack=False, wantsAnnotationsTrack=True, wantsPartitionTrack=False, wantedDataTracks=[], parent=None):
         super().__init__(parent=parent)
         self.wantsLabeledVideoTrack = wantsLabeledVideoTrack
         self.wantsAnnotationsTrack = wantsAnnotationsTrack
         self.wantsPartitionTrack = wantsPartitionTrack
+        self.wantedDataTracks = wantedDataTracks
 
-    # wantsLabeledVideoTrack, wantsAnnotationsTrack, wantsPartitionTrack = self.get_helper_track_preferences()
+    # wantsLabeledVideoTrack, wantsAnnotationsTrack, wantsPartitionTrack, wantedDataTracks = self.get_helper_track_preferences()
     def get_helper_track_preferences(self):
-        return (self.wantsLabeledVideoTrack, self.wantsAnnotationsTrack, self.wantsPartitionTrack)
+        return (self.wantsLabeledVideoTrack, self.wantsAnnotationsTrack, self.wantsPartitionTrack, self.wantedDataTracks)
 
 
 class VideoTrackGroup(QObject):
-    def __init__(self, groupID, videoTrackIndex=None, labeledVideoTrackIndex=None, annotationsTrackIndex=None, partitionsTrackIndex=None, parent=None):
+    def __init__(self, groupID, videoTrackIndex=None, labeledVideoTrackIndex=None, annotationsTrackIndex=None, partitionsTrackIndex=None, dataTrackIndicies=[], parent=None):
         super().__init__(parent=parent)
         self.groupID = groupID
         self.videoTrackIndex = videoTrackIndex
         self.labeledVideoTrackIndex = labeledVideoTrackIndex
         self.annotationsTrackIndex = annotationsTrackIndex
         self.partitionsTrackIndex = partitionsTrackIndex
+        self.dataTrackIndicies = dataTrackIndicies
 
     def get_group_id(self):
         return self.groupID
@@ -125,6 +127,9 @@ class VideoTrackGroup(QObject):
     def get_partitionsTrackIndex(self):
         return self.partitionsTrackIndex
 
+    def get_dataTrackIndicies(self):
+        return self.dataTrackIndicies
+
     def set_videoTrackIndex(self, newValue):
         self.videoTrackIndex = newValue
 
@@ -137,7 +142,11 @@ class VideoTrackGroup(QObject):
     def set_partitionsTrackIndex(self, newValue):
         self.partitionsTrackIndex = newValue
 
+    def set_dataTrackIndicies(self, newValue):
+        self.dataTrackIndicies = newValue
 
+    def append_dataTrackIndex(self, newValue):
+        self.dataTrackIndicies.append(newValue)
 
     # "has_*_track() functions: test if the group has a specific track type"
     def has_video_track(self):
@@ -151,6 +160,13 @@ class VideoTrackGroup(QObject):
 
     def has_partitions_track(self):
         return (self.get_partitionsTrackIndex() is not None)
+
+    # Returns the number of "data" type tracks. Doesn't include partition, annotation, labeled, etc.
+    def get_num_data_tracks(self):
+        return len(self.get_dataTrackIndicies())
+
+    def has_data_tracks(self):
+        return (self.get_num_data_tracks() > 0)
 
 
 

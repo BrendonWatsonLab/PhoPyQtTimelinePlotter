@@ -48,6 +48,8 @@ from GUI.UI.TimelineHeaderWidget.TimelineHeaderWidget import TimelineHeaderWidge
 from GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, TrackCache, TrackFilterBase
 from GUI.Model.TrackConfigs.VideoTrackConfig import VideoTrackFilter, VideoTrackConfiguration
 from GUI.Model.TrackConfigs.PartitionTrackConfig import PartitionTrackFilter, PartitionTrackConfiguration
+from GUI.Model.TrackConfigs.DataFileTrackConfig import DataFileTrackFilter, DataFileTrackConfiguration
+
 
 from GUI.Model.ModelViewContainer import ModelViewContainer
 
@@ -361,7 +363,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
                 currTrackIndex = currTrackIndex + 1
 
                 currHelperTracksOptions = self.loadedVideoHelperTrackPreferences[index]
-                wantsLabeledVideoTrack, wantsAnnotationsTrack, wantsPartitionTrack = currHelperTracksOptions.get_helper_track_preferences()
+                wantsLabeledVideoTrack, wantsAnnotationsTrack, wantsPartitionTrack, wantedDataTracks = currHelperTracksOptions.get_helper_track_preferences()
                 # Add the tagged video track for the same box
                 if wantsLabeledVideoTrack:
                     currTrackConfig = VideoTrackConfiguration(currTrackIndex, "B{0:02}Labeled".format(currTrackBBID), "Labeled", False, True, [currTrackBBID+1], None, None, None, self)
@@ -400,6 +402,21 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
                     self.eventTrackWidgets.append(self.partitionsTrackWidget)
                     self.trackID_to_GroupIndexMap[currTrackIndex] = index
                     currTrackIndex = currTrackIndex + 1
+
+                # Data Tracks:
+                for aWantedDataTrack in wantedDataTracks:
+                    dataTrackName = aWantedDataTrack
+                    currTrackConfig = DataFileTrackConfiguration(currTrackIndex, "D_B{0:02}{1}".format(currTrackBBID, dataTrackName), dataTrackName, [currTrackBBID+1], None, None, None, self)
+                    self.trackConfigurationsDict[currTrackIndex] = currTrackConfig
+                    currDataTrackWidget = TimelineTrackDrawingWidget_SelectionBase(currTrackIndex, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=False, wantsMouseEvents=False)
+                    specific_storage_array_index = len(self.eventTrackWidgets)
+                    currGroup.append_dataTrackIndex(specific_storage_array_index)
+                    self.trackID_to_TrackWidgetLocatorTuple[currTrackIndex] = (currTrackConfig.get_track_storageArray_type(), specific_storage_array_index)
+                    self.eventTrackWidgets.append(currDataTrackWidget)
+                    self.trackID_to_GroupIndexMap[currTrackIndex] = index
+                    currTrackIndex = currTrackIndex + 1
+
+                    pass
 
                 self.trackGroups.append(currGroup)
 

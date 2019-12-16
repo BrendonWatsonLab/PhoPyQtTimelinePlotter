@@ -15,6 +15,8 @@ from app.database.entry_models.db_model import Animal, BehavioralBox, Context, E
 from app.database.entry_models.db_model import StaticFileExtension, FileParentFolder
 # from app.database.entry_models.db_model_extension import ExVideoFile
 
+from app.filesystem.FilesystemRecordBase import *
+
 from GUI.Model.ModelViewContainer import ModelViewContainer
 
 from GUI.Model.TrackType import TrackType, TrackStorageArray
@@ -161,7 +163,6 @@ class TrackFilterBase(QObject):
     # get_track_storageArray_type(): returns GUI.Model.TrackStorageArray type object
     def get_track_storageArray_type(self):
         return self.get_track_type().get_storage_array_type()
-
 
     # matches(other_filter): returns True IFF behavioral_box_ids, experiment_ids, cohort_ids, and animal_ids all match other_filter
     def matches(self, other_filter):
