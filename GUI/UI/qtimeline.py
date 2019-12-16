@@ -37,10 +37,10 @@ class QTimeLine(TickedTimelineDrawingBaseWidget):
         self.majorTextVerticalOffset = 0.0
         self.minorTextVerticalOffset = 10.0
 
-    #     self.initUI()
-    #
-    # def initUI(self):
-    #     self.setGeometry(300, 300, self.length, 200)
+
+        self.indicatorTextVerticalOffset_Hover = 0.0
+        self.indicatorTextVerticalOffset_VideoPlayback = 0.0
+        
 
     # Draw the date labels:
     def drawTextLabels(self, painter):
@@ -59,6 +59,39 @@ class QTimeLine(TickedTimelineDrawingBaseWidget):
             painter.drawText(item_x_offset - self.halfTextLabelWidth, self.minorTextVerticalOffset, self.textLabelWidth, 100, Qt.AlignHCenter, self.get_hours_of_day_only_time_string(aStaticMarkerData.time))
 
 
+    # Draws the current hover and video playback time *text labels*
+    def drawCurrentIndicatorTextLabels(self, painter):
+        painter.setFont(self.font)
+
+        # Draw video playback indicator line
+        # videoPlaybackIndicatorMarkerContainer = self.referenceManager.get_indicator_marker_video_playback()
+        # # Update hover line visibility
+        # hoverIndicatorMarkerContainer = self.referenceManager.get_indicator_marker_user_hover()
+
+        # Draw video playback indicator line
+        if self.video_pos is not None:
+            painter.setPen(TickedTimelineDrawingBaseWidget.videoPlaybackLineProperties.get_pen())
+            # painter.drawLine(self.video_pos.x(), 0, self.video_pos.x(), self.height())
+            videoPlaybackIndicatorMarkerContainer = self.referenceManager.get_indicator_marker_video_playback()
+            
+
+            
+            painter.drawText(self.video_pos.x() - self.halfTextLabelWidth, self.indicatorTextVerticalOffset_VideoPlayback, self.textLabelWidth, 100, Qt.AlignHCenter, self.get_full_long_date_time_twoLine_string(videoPlaybackIndicatorMarkerContainer.get_record().time))
+
+
+
+        # Draw hover line
+        if self.pos is not None:
+            if (self.is_in or self.is_driven_externally): 
+                painter.setPen(TickedTimelineDrawingBaseWidget.hoverLineProperties.get_pen())
+                # painter.drawLine(self.pos.x(), 0, self.pos.x(), self.height())
+                hoverIndicatorMarkerContainer = self.referenceManager.get_indicator_marker_user_hover()
+                painter.drawText(self.pos.x() - self.halfTextLabelWidth, self.indicatorTextVerticalOffset_Hover, self.textLabelWidth, 100, Qt.AlignHCenter, self.get_full_long_date_time_twoLine_string(hoverIndicatorMarkerContainer.get_record().time))
+
+
+        pass
+
+
     # Draw bottom horizontal baseline line
     def drawHorizontalBaseLine(self, painter):
         painter.setPen(QPen(self.activeColor, 5, Qt.SolidLine))
@@ -69,8 +102,11 @@ class QTimeLine(TickedTimelineDrawingBaseWidget):
         qp.begin(self)
         qp.setRenderHint(QPainter.Antialiasing)
 
-        # Draw the date labels:
+        # Draw the static date labels:
         self.drawTextLabels(qp)
+
+        # Draw the dynamic indicator labels
+        self.drawCurrentIndicatorTextLabels(qp)
 
         # Draw bottom horizontal baseline line
         self.drawHorizontalBaseLine(qp)

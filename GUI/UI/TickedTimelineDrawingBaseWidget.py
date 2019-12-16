@@ -103,6 +103,13 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
     def draw_indicator_lines(self, painter):
 
         # Draw video playback indicator line
+        # videoPlaybackIndicatorMarkerContainer = self.referenceManager.get_indicator_marker_video_playback()
+        # # Update hover line visibility
+        # hoverIndicatorMarkerContainer = self.referenceManager.get_indicator_marker_user_hover()
+        # hoverIndicatorMarkerContainer.get_view().updateIsEnabled((self.is_in or self.is_driven_externally))
+
+
+        # Draw video playback indicator line
         if self.video_pos is not None:
             painter.setPen(TickedTimelineDrawingBaseWidget.videoPlaybackLineProperties.get_pen())
             painter.drawLine(self.video_pos.x(), 0, self.video_pos.x(), self.height())
@@ -113,6 +120,9 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
             if (self.is_in or self.is_driven_externally): 
                 painter.setPen(TickedTimelineDrawingBaseWidget.hoverLineProperties.get_pen())
                 painter.drawLine(self.pos.x(), 0, self.pos.x(), self.height())
+                
+        pass
+
 
     def paintRect(self, event):
         qp = QPainter()
@@ -132,6 +142,11 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
         qp.end()
 
     # Mouse movement
+    def mouseMoveEvent(self, e):
+        QWidget.mouseMoveEvent(self, e)
+        pass
+
+    #  (NEVER CALLED)
     def mouseMoveRect(self, e):
         self.pos = e.pos()
         x = self.pos.x()
@@ -146,7 +161,7 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
 
         self.update()
 
-    # Mouse pressed
+    # Mouse pressed (NEVER CALLED)
     def mousePressRect(self, e):
         if e.button() == Qt.LeftButton:
             x = e.pos().x()
@@ -162,12 +177,12 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
         if e.button() == Qt.LeftButton:
             self.clicking = False  # Set clicking check to false
 
-    # Enter
+    # Enter (NEVER CALLED)
     def enterRect(self, e):
         self.is_in = True
         self.is_driven_externally = False
 
-    # Leave
+    # Leave (NEVER CALLED)
     def leaveRect(self, e):
         self.is_in = False
         self.update()
@@ -185,19 +200,19 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
     def setBackgroundColor(self, color):
         self.backgroundColor = color
 
-    @pyqtSlot(float)
-    def on_update_selected_position(self, pointer_desired_x):
-        self.pointerPos = pointer_desired_x
-        self.positionChanged.emit(pointer_desired_x)
-        self.pointerTimePos = self.pointerPos * self.getScale()
-        self.update()
-
 
     @pyqtSlot(float)
     def on_update_reference_marker_position(self, pointer_desired_x):
         self.get_reference_manager().update_next_unused_marker(pointer_desired_x)
         self.update()
 
+
+    @pyqtSlot(float)
+    def on_update_selected_position(self, pointer_desired_x):
+        self.pointerPos = pointer_desired_x
+        self.positionChanged.emit(pointer_desired_x)
+        self.pointerTimePos = self.pointerPos * self.getScale()
+        self.update()
 
     @pyqtSlot(int)
     def on_update_hover(self, x):

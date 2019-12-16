@@ -20,7 +20,7 @@ from GUI.HelpWindow.HelpWindowFinal import *
 from GUI.MainObjectListsWindow.MainObjectListsWindow import *
 from GUI.ExampleDatabaseTableWindow import ExampleDatabaseTableWindow
 
-from GUI.Model.ReferenceLines.ReferenceLineManager import ReferenceMarkerManager
+from GUI.Model.ReferenceLines.ReferenceLineManager import ReferenceMarkerManager, IndicatorLineMixin
 # from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget import *
 from GUI.UI.qtimeline import *
 
@@ -239,6 +239,11 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         self.referenceManager.used_markers_updated.connect(self.on_reference_line_markers_updated)
         self.referenceManager.wants_extended_data.connect(self.on_request_extended_reference_line_data)
         self.referenceManager.selection_changed.connect(self.on_reference_line_marker_list_selection_changed)
+
+        # self.referenceManager.hoverDatetimeChanged.connect(self.on_reference_indicator_line_hover_changed)
+        # self.referenceManager.selectedDatetimeChanged.connect(self.on_reference_indicator_line_selection_changed)
+
+
         self.activeZoomChanged.connect(self.referenceManager.on_active_zoom_changed)
         self.activeViewportChanged.connect(self.referenceManager.on_active_viewport_changed)
         self.activeGlobalTimelineTimesChanged.connect(self.referenceManager.on_active_global_timeline_times_changed)
@@ -719,6 +724,11 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         # Cursor tracking
         self.cursorX = 0.0
         self.cursorY = 0.0
+
+        # The timeline-contents relative X position computed from self.cursorX
+        self.timelineCursorX = 0.0
+        self.timelineCursorDurationOffset = None
+        self.timelineCursorDatetime = None
         #self.cursorTraceRect = QRect(0,0,0,0)
 
     def reloadModelFromDatabase(self):
@@ -879,8 +889,7 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         contentWidgetRelativePoint = contentWidget.mapFromParent(QPoint(viewport_x_offset, 0))
         return contentWidgetRelativePoint.x()
 
-        # hsb=self.timelineScroll.horizontalScrollBar()
-        # return (hsb.value() + viewport_x_offset)
+
 
     # Returns the index of the child object that the (x, y) point falls within, or None if it doesn't fall within an event.
     def find_hovered_timeline_track(self, event_x, event_y):
@@ -944,24 +953,22 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         self.cursorX = event.x()
         self.cursorY = event.y()
         
-        # Get scrollview x_offset from window x_offset
-
-        timeline_contents_x_offset = self.viewport_offset_to_contents_offset(self.cursorX)
         # track_offset_x = self.percent_offset_to_track_offset(self.get_viewport_percent_scrolled())
-
         # duration_offset = self.offset_to_duration(self.cursorX)
         # datetime = self.offset_to_datetime(self.cursorX)
 
-        duration_offset = self.offset_to_duration(timeline_contents_x_offset)
-        datetime = self.offset_to_datetime(timeline_contents_x_offset)
+        # Get scrollview x_offset from window x_offset
+        self.timelineCursorX = self.viewport_offset_to_contents_offset(self.cursorX)
+        self.timelineCursorDurationOffset = self.offset_to_duration(self.timelineCursorX)
+        self.timelineCursorDatetime = self.offset_to_datetime(self.timelineCursorX)
 
-        text = "window x: {0}, contents_x: {1},  duration: {2}, datetime: {3}".format(self.cursorX, timeline_contents_x_offset, duration_offset, datetime)
+        text = "window x: {0}, contents_x: {1},  duration: {2}, datetime: {3}".format(self.cursorX, self.timelineCursorX, self.timelineCursorDurationOffset, str(datetime))
         # Call the on_mouse_moved handler for the video track which will update its .hovered_object property, which is then read and used for relative offsets
 
         for (anIndex, aTimelineVideoTrack) in enumerate(self.videoFileTrackWidgets):
             potentially_hovered_child_object = aTimelineVideoTrack.hovered_object
             if potentially_hovered_child_object:
-                relative_duration_offset = potentially_hovered_child_object.compute_relative_offset_duration(datetime)
+                relative_duration_offset = potentially_hovered_child_object.compute_relative_offset_duration(self.timelineCursorDatetime)
                 text = text + ' -- relative to duration: {0}'.format(relative_duration_offset)
                 break
 
@@ -974,6 +981,9 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
 
 
         self.statusBar().showMessage(text)
+
+        # Call the default implementation to allow passing the events through. Doesn't make much sense in the main window
+        QWidget.mouseMoveEvent(self, event)
 
     def wheelEvent(self, event):
         # print("mouse wheel event! {0}".format(str(event)))
@@ -1155,6 +1165,7 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
 
 
     ## Timeline ZOOMING:
+    ## TODO: Implement
     def preserve_cursor_offset_on_zoom(self):
         # Get cursor position's datetime
         
@@ -1168,13 +1179,11 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         newActiveScaleMultiplier = min(TimelineDrawingWindow.MaxZoomLevel, (self.activeScaleMultiplier + TimelineDrawingWindow.ZoomDelta))
         self.set_new_active_scale_multiplier(newActiveScaleMultiplier)
 
-
     def on_zoom_home(self):
         # current_viewport_start_time = self.get_viewport_active_start_time()
         newActiveScaleMultiplier = TimelineDrawingWindow.DefaultZoom
         self.set_new_active_scale_multiplier(newActiveScaleMultiplier)
         # self.sync_active_viewport_start_to_datetime(current_viewport_start_time) # Use the saved start time to re-align the viewport's left edge
-
 
     def on_zoom_current_video(self):
         # on_zoom_current_video(): zooms the viewport to fit the current video
@@ -1273,7 +1282,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         # self.on_active_zoom_changed()
         return self.sync_active_viewport_start_to_datetime(start_time)
 
-
     # Gets the start datetime aligned with the left edge of the viewport
     def get_viewport_active_start_time(self):
         track_offset_x = self.percent_offset_to_track_offset(self.get_viewport_percent_scrolled())
@@ -1285,7 +1293,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         # get the viewport's end time
         end_time = start_time + self.get_active_viewport_duration()
         return self.sync_active_viewport_end_to_datetime(end_time)
-
 
     # Moves the current viewport's position such that it's end position is aligned with a specific end_time
     def sync_active_viewport_end_to_datetime(self, end_time):
@@ -1392,8 +1399,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         self.sync_active_viewport_start_to_datetime(found_start_date)
         return
 
-        
-
     # Zoom the timeline to the current video playhead position
     def on_jump_to_video_playhead(self):
         try:
@@ -1452,8 +1457,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         found_start_date = next_event_tuple[1].startTime
         self.sync_active_viewport_start_to_datetime(found_start_date)
         return
-
-
 
     def on_jump_next(self):
         # Jump to the next available video in the video track
@@ -1582,6 +1585,7 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         self.timelineMasterTrackWidget.blockSignals(True)
         self.extendedTracksContainer.blockSignals(True)
 
+        self.get_reference_manager().on_update_indicator_video_playback(None)
         self.timelineMasterTrackWidget.on_update_video_line(None)
         self.extendedTracksContainer.on_update_video_line(None)
 
@@ -1748,6 +1752,7 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
             currWidget = self.eventTrackWidgets[i]
             currWidget.update()
 
+    # Called to update the red video playback indicator line
     @pyqtSlot(float)
     def on_video_playback_position_updated(self, timeline_percent_offset):
         # print("on_video_playback_position_updated({0})".format(str(timeline_percent_offset)))
@@ -1755,6 +1760,9 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
 
         self.timelineMasterTrackWidget.blockSignals(True)
         self.extendedTracksContainer.blockSignals(True)
+
+        curr_datetime = self.offset_to_datetime(timeline_x_offset)
+        self.get_reference_manager().on_update_indicator_video_playback(curr_datetime)
 
         self.timelineMasterTrackWidget.on_update_video_line(timeline_x_offset)
         self.extendedTracksContainer.on_update_video_line(timeline_x_offset)
@@ -1770,8 +1778,12 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         self.timelineMasterTrackWidget.blockSignals(True)
         self.extendedTracksContainer.blockSignals(True)
 
+        curr_datetime = self.offset_to_datetime(x)
+        self.get_reference_manager().on_update_indicator_hover(curr_datetime)
         self.timelineMasterTrackWidget.on_update_hover(x)
         self.extendedTracksContainer.on_update_hover(x)
+
+        
 
         # if(self.videoPlayerWindow):
         #     movie_link = self.videoPlayerWindow.get_movie_link()
@@ -1836,10 +1848,12 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         print("TimelineDrawingWindow.on_reference_line_markers_updated(...)")
         additional_data = []
         for aListItem in referenceLineList:
-            curr_view = aListItem.get_view()
-            curr_x = curr_view.get_x_offset_position()
-            curr_datetime = self.offset_to_datetime(curr_x)
-            additional_data.append(curr_datetime)
+            # curr_view = aListItem.get_view()
+            curr_record = aListItem.get_record()
+            # curr_x = curr_view.get_x_offset_position()
+            # curr_datetime = self.offset_to_datetime(curr_x)
+            # curr_datetime =
+            additional_data.append(curr_record.time)
 
         print(additional_data)
         #  self.referenceManager.

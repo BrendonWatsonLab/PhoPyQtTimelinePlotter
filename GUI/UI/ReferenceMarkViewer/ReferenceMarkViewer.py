@@ -22,16 +22,20 @@ class ActiveReferenceMarkersMixin(object):
 
     @pyqtSlot(list)
     def on_active_markers_list_updated(self, newList):
+        print(".on_active_markers_list_updated(...)")
         self.activeMarkersList = newList
         self.activeMetadataList = np.repeat(None, len(self.activeMarkersList)) # Clear the metadata
         self.reload_list()
 
     @pyqtSlot(list)
     def on_active_markers_metadata_updated(self, newMetadata):
+        print(".on_active_markers_metadata_updated(...)")
         self.activeMetadataList = newMetadata
         self.reload_list()
 
-
+""" ReferenceMarkViewer
+A window that displays a list of reference markers
+"""
 class ReferenceMarkViewer(ActiveReferenceMarkersMixin, QWidget):
 
     # selection_changed = pyqtSignal(list, list)
@@ -97,8 +101,6 @@ class ReferenceMarkViewer(ActiveReferenceMarkersMixin, QWidget):
             curr_string = curr_item_record.time_string
             self.ui.tableWidget.setItem(aDataRowIndex,2,QTableWidgetItem(curr_string))
 
-
-
     def on_item_clicked(self):
         # note selectedItems() returns a list of selected cells, not rows.
         # selected_items = self.get_selected_items()
@@ -124,7 +126,6 @@ class ReferenceMarkViewer(ActiveReferenceMarkersMixin, QWidget):
         self.ui.toolButton_AlignRight.setEnabled(num_selected_items>0)
         self.update()
 
-
     def get_selected_items(self):
         return self.ui.tableWidget.selectedItems()
 
@@ -135,7 +136,6 @@ class ReferenceMarkViewer(ActiveReferenceMarkersMixin, QWidget):
 
         # list_set = set(list1)
         
-
     def get_selected_item_indicies(self):
         selected_items = self.get_selected_items()
         selected_indicies = []
@@ -192,6 +192,12 @@ class ReferenceMarkViewer(ActiveReferenceMarkersMixin, QWidget):
         print("handle_align_right_button_pressed()")
         self.action_align_right.emit()
 
+
+    # Slots:
+    @pyqtSlot(list)
+    def on_used_markers_updated(self, usedMarkersList):
+        print(".on_used_markers_updated(...)")
+        used_markers_updated
 
 
 ## TODO: Unused/Unimplemented

@@ -34,20 +34,6 @@ class ExtendedTracksContainerWidget(TickedTimelineDrawingBaseWidget):
 
         self.backgroundColor = ExtendedTracksContainerWidget.defaultBackgroundColor
 
-    #     self.initUI()
-    #
-    # def initUI(self):
-    #     # self.setGeometry(300, 300, self.length, 200)
-    #
-    #     # self.setSizePolicy(
-    #     #     QtWidgets.QSizePolicy.MinimumExpanding,
-    #     #     QtWidgets.QSizePolicy.MinimumExpanding
-    #     # )
-    #
-    #     self.setSizePolicy(
-    #         QtWidgets.QSizePolicy.Expanding,
-    #         QtWidgets.QSizePolicy.Expanding
-    #     )
 
     
     def draw_tick_lines(self, painter):
@@ -96,6 +82,9 @@ class ExtendedTracksContainerWidget(TickedTimelineDrawingBaseWidget):
         x = self.pos.x()
         self.hoverChanged.emit(x)
         self.update()
+        super().mouseMoveEvent(e)
+        
+
 
 
 

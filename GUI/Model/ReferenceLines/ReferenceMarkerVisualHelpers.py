@@ -53,6 +53,7 @@ class ReferenceMarker(QObject):
         self.font = __font__
 
         self.drawsPointer = True
+        self.drawsText = True
 
         self.is_driven_externally = False
 
@@ -77,13 +78,16 @@ class ReferenceMarker(QObject):
         painter.drawPolygon(poly)
         painter.drawLine(line)
 
-        # Draw text
-        painter.setPen(self.textColor)
-        painter.setFont(self.font)
-        textRect = poly.boundingRect()
-        textRect = textRect.marginsRemoved(QMargins(0, 0, 0, 4))
+        if self.drawsText:
+            # Draw text
+            painter.setPen(self.textColor)
+            painter.setFont(self.font)
+            textRect = poly.boundingRect()
+            textRect = textRect.marginsRemoved(QMargins(0, 0, 0, 4))
 
-        painter.drawText(textRect, Qt.AlignCenter, self.identifier)
+            painter.drawText(textRect, Qt.AlignCenter, self.identifier)
+
+
 
     # Called to draw the line and optionally the triangular pointer
     def draw(self, painter, drawRect, scale):
@@ -122,3 +126,9 @@ class ReferenceMarker(QObject):
 
     def __str__(self):
         return 'RefMark[identifier: {0}]: {1}'.format(self.identifier, self.get_position_tuple_string())
+
+    def get_is_enabled(self):
+        return self.is_enabled
+
+    def updateIsEnabled(self, newIsEnabled):
+        self.is_enabled = newIsEnabled
