@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QFrame
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize
 
 from GUI.Model.TrackGroups import VideoTrackGroupSettings, VideoTrackGroup, TrackReference, TrackChildReference, VideoTrackGroupOwningMixin
+from GUI.Model.Errors import SimpleErrorStatusMixin
 from GUI.UI.VideoPlayer.VideoPlayerWidget import VideoPlayerWidget
 
 """
@@ -24,10 +25,13 @@ class DataMovieLink_SyncOption(Enum):
         VideoToTimeline = 2 #  Set timeline time from video
         TimelineToVideo = 3  # Set video time from timeline
 
+
+
+
 """
 self.videoPlayerWindow: MainVideoPlayerWindow
 """
-class DataMovieLinkInfo(QObject):
+class DataMovieLinkInfo(SimpleErrorStatusMixin, QObject):
 
     # videoFileUrlChanged = pyqtSignal(str)
 
@@ -42,6 +46,7 @@ class DataMovieLinkInfo(QObject):
 
     def __init__(self, videoEventChildReference, videoPlayerWindowRef, mainTimelineWindowRef, parent=None, sync_option=DataMovieLink_SyncOption.Bidirectional):
         super(DataMovieLinkInfo, self).__init__(parent=parent)
+        self._error_string = None
 
         self._videoEventChildReference = videoEventChildReference
         self.videoPlayerWindow = videoPlayerWindowRef
@@ -66,6 +71,8 @@ class DataMovieLinkInfo(QObject):
         # Bound to trigger the video player to update on timeline adjust
         self.timeline_datetime_position_changed.connect(self.videoPlayerWindow.on_timeline_position_updated)
 
+
+
     # Returns the phoDurationEvent_Video type object
     def get_video_duration_event_obj(self):
         return self._videoEventChildReference.get_childEventObject()
@@ -73,6 +80,11 @@ class DataMovieLinkInfo(QObject):
     # video window
     def get_video_url(self):
         return self.get_video_duration_event_obj().get_video_url()
+
+    # Getters:
+    @property
+    def video_url(self):
+        return self.get_video_url()
 
     def get_video_duration(self):
         return self.get_video_duration_event_obj().computeDuration()

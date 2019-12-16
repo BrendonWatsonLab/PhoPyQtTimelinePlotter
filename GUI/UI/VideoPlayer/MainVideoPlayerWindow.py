@@ -7,14 +7,14 @@ import traceback
 
 import qtawesome as qta
 from PyQt5 import uic
-from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, \
-    QMessageBox, QDataWidgetMapper
+from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox, QDataWidgetMapper
 from PyQt5.QtGui import QCursor
-from PyQt5.QtCore import QDir, QTimer, Qt, QModelIndex, QSortFilterProxyModel
+from PyQt5.QtCore import QDir, QTimer, Qt, QModelIndex, QSortFilterProxyModel, pyqtSignal, pyqtSlot
 
 from lib import vlc
 from app.model import TimestampModel, ToggleButtonModel, TimestampDelta
 
+from GUI.Model.Errors import SimpleErrorStatusMixin
 from GUI.Model.DataMovieLinkInfo import *
 
 """
@@ -73,16 +73,105 @@ play_pause_model
 
 """
 
+""" MediaPlayerUpdatingMixin: used by MainVideoPlayerWindow to load/change media
+        self._movieLink = None
+"""
+class MediaPlayerUpdatingMixin(SimpleErrorStatusMixin, object):
+    loaded_media_changed = pyqtSignal() # Called when the loaded video is changed
 
-class MainVideoPlayerWindow(QMainWindow):
+    # Internal Signals
+    _movie_link_changed = pyqtSignal()
+    _video_filename_changed = pyqtSignal()
+
+    def get_video_filename(self):
+        if self._movieLink is None:
+            return None
+        else:
+            return str(self._movieLink.get_video_url())
+
+    def get_movie_link(self):
+        return self._movieLink
+
+
+    @property
+    def video_filename(self):
+        return self.get_video_filename()
+
+
+    # @property
+    # def movieLink(self):
+    #     return self.get_movie_link()
+
+
+
+    @pyqtSlot()
+    def set_video_media_link(self, newMediaLink):
+        self._movieLink = newMediaLink
+        self._movie_link_changed.emit()
+
+        
+    @pyqtSlot()
+    def _on_movie_link_changed(self):
+        newVideoFilename = self.get_video_filename()
+        if not os.path.isfile(newVideoFilename):
+            self.set_has_error("ERROR: Cannot access video file " + newVideoFilename)
+            self._show_error("ERROR: Cannot access video file " + newVideoFilename)
+            return
+        else:
+            self._video_filename_changed.emit()
+
+    @pyqtSlot()
+    def _on_video_filename_changed(self):
+        """
+        Set the video filename
+        """
+        # Close the previous file:
+        self.media_stop()
+
+        self.startDirectory = os.path.pardir
+        # self.video_filename = filename
+
+        media = self.vlc_instance.media_new(self.video_filename)
+        media.parse()
+        if not media.get_duration():
+            self.set_has_error("Cannot play this media file")
+            self._show_error("Cannot play this media file")
+            self.media_player.set_media(None)
+            # self.video_filename = None
+        else:
+            self.media_player.set_media(media)
+
+            # The media player has to be 'connected' to the QFrame (otherwise the
+            # video would be displayed in it's own window). This is platform
+            # specific, so we must give the ID of the QFrame (or similar object) to
+            # vlc. Different platforms have different functions for this
+            if sys.platform.startswith('linux'): # for Linux using the X Server
+                self.media_player.set_xwindow(self.ui.frame_video.winId())
+            elif sys.platform == "win32": # for Windows
+                self.media_player.set_hwnd(self.ui.frame_video.winId())
+            elif sys.platform == "darwin": # for MacOS
+                self.media_player.set_nsobject(self.ui.frame_video.winId())
+            else:
+                print("WARNING: MainVideoPlayerWindow.set_video_filename(...): Unknown platform! {0}".format(str(sys.platform)))
+
+            self.update_window_title()
+            self.update_video_file_labels_on_file_change()
+            self.media_started_playing = False
+            self.media_is_playing = False
+            # self.set_volume(self.ui.slider_volume.value())
+            self.play_pause_model.setState(True)
+            self.update_preview_frame()
+
+        self.loaded_media_changed.emit()
+
+
+class MainVideoPlayerWindow(MediaPlayerUpdatingMixin, QMainWindow):
     """
     The main window class
     """
 
     SpeedBurstPlaybackRate = 16.0
 
-
-    loaded_media_changed = pyqtSignal() # Called when the loaded video is changed
     video_playback_position_updated = pyqtSignal(float) # video_playback_position_updated:  called when the playback position of the video changes. Either due to playing, or after a user event
     video_playback_state_changed = pyqtSignal() # video_playback_state_changed: called when play/pause state changes
     close_signal = pyqtSignal() # Called when the window is closing. 
@@ -93,7 +182,7 @@ class MainVideoPlayerWindow(QMainWindow):
         self.ui = uic.loadUi("GUI/UI/VideoPlayer/MainVideoPlayerWindow.ui", self)
 
         self.timestamp_filename = None
-        self.video_filename = None
+        # self.video_filename = None
         self.media_start_time = None
         self.media_end_time = None
         self.restart_needed = False
@@ -118,7 +207,12 @@ class MainVideoPlayerWindow(QMainWindow):
         # if sys.platform == "darwin":  # for MacOS
         #     self.ui.frame_video = QMacCocoaViewContainer(0)
 
-        self.movieLink = None
+        self._movieLink = None
+
+        # MediaPlayerUpdatingMixin init
+        self._error_string = None
+        self._movie_link_changed.connect(self._on_movie_link_changed)
+        self._video_filename_changed.connect(self._on_video_filename_changed)
 
         self.initUI()
 
@@ -260,12 +354,12 @@ class MainVideoPlayerWindow(QMainWindow):
         print("MainVideoPlayerWindow.on_close()!")
         self.timer.stop() # Stop the timer
         self.media_player.stop() # Stop the playing media
-        self.movieLink = None
+        self._movieLink = None
         self.close_signal.emit()
 
     # Movie Link:
     def get_movie_link(self):
-        return self.movieLink
+        return self._movieLink
 
     # Called when the UI slider position is updated via user-click
     def set_media_position(self, position):
@@ -842,52 +936,6 @@ class MainVideoPlayerWindow(QMainWindow):
         #     self.ui.entry_start_time.setReadOnly(True)
         #     self.ui.entry_end_time.setReadOnly(True)
         #     self.ui.entry_description.setReadOnly(True)
-
-    def set_video_filename(self, filename):
-        """
-        Set the video filename
-        """
-        if not os.path.isfile(filename):
-            self._show_error("ERROR: Cannot access video file " + filename)
-            return
-
-        # Close the previous file:
-        self.media_stop()
-
-        self.startDirectory = os.path.pardir
-        self.video_filename = filename
-
-        media = self.vlc_instance.media_new(self.video_filename)
-        media.parse()
-        if not media.get_duration():
-            self._show_error("Cannot play this media file")
-            self.media_player.set_media(None)
-            self.video_filename = None
-        else:
-            self.media_player.set_media(media)
-
-            # The media player has to be 'connected' to the QFrame (otherwise the
-            # video would be displayed in it's own window). This is platform
-            # specific, so we must give the ID of the QFrame (or similar object) to
-            # vlc. Different platforms have different functions for this
-            if sys.platform.startswith('linux'): # for Linux using the X Server
-                self.media_player.set_xwindow(self.ui.frame_video.winId())
-            elif sys.platform == "win32": # for Windows
-                self.media_player.set_hwnd(self.ui.frame_video.winId())
-            elif sys.platform == "darwin": # for MacOS
-                self.media_player.set_nsobject(self.ui.frame_video.winId())
-            else:
-                print("WARNING: MainVideoPlayerWindow.set_video_filename(...): Unknown platform! {0}".format(str(sys.platform)))
-
-            self.update_window_title()
-            self.update_video_file_labels_on_file_change()
-            self.media_started_playing = False
-            self.media_is_playing = False
-            # self.set_volume(self.ui.slider_volume.value())
-            self.play_pause_model.setState(True)
-            self.update_preview_frame()
-
-        self.loaded_media_changed.emit()
 
     # TODO: REMOVE
     def browse_video_handler(self):
