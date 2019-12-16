@@ -21,6 +21,7 @@ from pathlib import Path
 
 from app.database.entry_models.db_model import FileParentFolder, StaticFileExtension, VideoFile
 from app.filesystem.VideoConversionHelpers import HandbrakeConversionQueue, save_handbrake_conversion_queue
+from app.filesystem.FilesystemOperations import OperationTypes, PendingFilesystemOperation
 
 # from app.filesystem.VideoFilesystemLoadingMixin import CachedVideoFileLoadingOptions, ParentDirectoryCache, VideoFilesystemLoader
 
@@ -149,46 +150,6 @@ class ParentDirectoryCache(QObject):
         return self.finalOutputParsedVideoResultFiles
 
 
-class OperationTypes(Enum):
-        NoOperation = 1
-        FilesystemFileFind = 2
-        FilesystemMetadataLoad = 3
-        FilesystemThumbnailGeneration = 4
-
-class PendingFilesystemOperation(QObject):
-
-    def __init__(self, operation_type=OperationTypes.NoOperation, end_num = 0, start_num = 0, parent=None):
-        super().__init__(parent=parent)
-        self.operation_type = operation_type
-        self.end_num = end_num
-        self.start_num = 0
-
-    def restart(self, op_type, end_num):
-        self.operation_type = op_type
-        self.end_num = end_num
-        self.start_num = 0
-
-    # updates with the percent value
-    def update(self, new_percent):
-        newVal = (float(new_percent) * float(self.end_num))
-        self.start_num = newVal
-
-    def get_fraction(self):
-        if self.end_num > 0:
-            return (float(self.start_num)/float(self.end_num))
-        else:
-            return 0.0
-
-    def get_percent(self):
-        return (self.get_fraction()*100.0)
-
-    def is_finished(self):
-        if self.end_num > 0:
-            return (self.start_num == self.end_num)
-        else:
-            return False
-
-
 ## VideoFilesystemLoader: this object tries to find video files in the filesystem and add them to the database if they don't exist
 """
 Loads the VideoFiles from the database (cached versions) and then tries to search the filesystem for additional video files.
@@ -283,13 +244,11 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
 
         self.foundFilesUpdated.emit()
 
-
     # Called to add a searcg path
     def add_search_path(self, newSearchPath):
         self.searchPaths.append(newSearchPath)
         self.reload_on_search_paths_changed()
         self.reload_data()
-
 
     def reload_on_search_paths_changed(self):
         print("VideoFilesystemLoader.reload_on_search_paths_changed(...)")
@@ -297,7 +256,6 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
         self.rebuildParentFolders()
 
         self.foundFilesUpdated.emit()
-
 
     def saveVideoFilesToDatabase(self):
         print("VideoFilesystemLoader.saveVideoFilesToDatabase(...)")
@@ -346,9 +304,6 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
 
                     # Add the video file record
                     self.database_connection.save_video_file_info_to_database([aNewVideoFileRecord])
-
-
-
 
     # Creates new "FileParentFolder" entries in the databse if existing ones can't be found
     def rebuildParentFolders(self):
@@ -404,8 +359,6 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
                 print("     parent id: {0}".format(finalParent.id))
                 # self.searchPathsParentIDs.append(finalParent.id)
                 self.cache[aFinalSearchPath].set_database_parent_folder_obj(finalParent)
-
-
 
     ## Primary Filesystem Functions
 

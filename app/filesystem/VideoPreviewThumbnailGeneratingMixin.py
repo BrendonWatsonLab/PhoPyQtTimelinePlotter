@@ -24,8 +24,7 @@ from pathlib import Path
 from app.database.entry_models.db_model import FileParentFolder, StaticFileExtension, VideoFile
 from app.filesystem.VideoConversionHelpers import HandbrakeConversionQueue, save_handbrake_conversion_queue
 
-from app.filesystem.VideoFilesystemLoadingMixin import OperationTypes, PendingFilesystemOperation
-
+from app.filesystem.FilesystemOperations import OperationTypes, PendingFilesystemOperation
 
 # from app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoThumbnail, VideoPreviewThumbnailGenerator
 

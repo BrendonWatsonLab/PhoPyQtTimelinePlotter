@@ -64,7 +64,10 @@ from GUI.Model.TrackType import TrackType, TrackStorageArray
 from app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoThumbnail, VideoPreviewThumbnailGenerator
 from app.filesystem.FileExporting import FileExportingMixin, FileExportFormat, FileExportOptions
 
+from GUI.Model.TrackGroups import VideoTrackGroupSettings, VideoTrackGroup, TrackReference, TrackChildReference, VideoTrackGroupOwningMixin
+from GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
 
+from app.filesystem.LabjackFilesystemLoadingMixin import LabjackEventFile, LabjackFilesystemLoader
 
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.
@@ -77,62 +80,12 @@ class ViewportScaleAdjustmentOptions(Enum):
         MaintainDesiredViewportDisplayDuration = 2 #  keeps the self.activeViewportDuration the same, and adjusts the self.activeScaleMultiplier to match upon window resize
 
 
-class VideoTrackGroupSettings:
-    def __init__(self, wantsLabeledVideoTrack=False, wantsAnnotationsTrack=True, wantsPartitionTrack=False):
-        self.wantsLabeledVideoTrack = wantsLabeledVideoTrack
-        self.wantsAnnotationsTrack = wantsAnnotationsTrack
-        self.wantsPartitionTrack = wantsPartitionTrack
-
-    # wantsLabeledVideoTrack, wantsAnnotationsTrack, wantsPartitionTrack = self.get_helper_track_preferences()
-    def get_helper_track_preferences(self):
-        return (self.wantsLabeledVideoTrack, self.wantsAnnotationsTrack, self.wantsPartitionTrack)
-
-
-class VideoTrackGroup:
-    def __init__(self, groupID, videoTrackIndex=None, labeledVideoTrackIndex=None, annotationsTrackIndex=None, partitionsTrackIndex=None):
-        self.groupID = groupID
-        self.videoTrackIndex = videoTrackIndex
-        self.labeledVideoTrackIndex = labeledVideoTrackIndex
-        self.annotationsTrackIndex = annotationsTrackIndex
-        self.partitionsTrackIndex = partitionsTrackIndex
-
-    def get_group_id(self):
-        return self.groupID
-
-    def get_videoTrackIndex(self):
-        return self.videoTrackIndex
-
-    def get_labeledVideoTrackIndex(self):
-        return self.labeledVideoTrackIndex
-
-    def get_annotationsTrackIndex(self):
-        return self.annotationsTrackIndex
-
-    def get_partitionsTrackIndex(self):
-        return self.partitionsTrackIndex
-
-    def set_videoTrackIndex(self, newValue):
-        self.videoTrackIndex = newValue
-
-    def set_labeledVideoTrackIndex(self, newValue):
-        self.labeledVideoTrackIndex = newValue
-
-    def set_annotationsTrackIndex(self, newValue):
-        self.annotationsTrackIndex = newValue
-
-    def set_partitionsTrackIndex(self, newValue):
-        self.partitionsTrackIndex = newValue
-
-
-
-
-
 
 """
 self.activeScaleMultiplier: this multipler determines how many times longer the contents of the scrollable viewport are than the viewport width itself.
 
 """
-class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixin, DurationRepresentationMixin, AbstractDatabaseAccessingWindow):
+class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, MouseTrackingThroughChildrenMixin, DateTimeRenderMixin, DurationRepresentationMixin, AbstractDatabaseAccessingWindow):
     
     static_VideoTrackTrackID = -1 # The integer ID of the main video track
     
@@ -182,8 +135,11 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
     # debug_desiredVideoTracks = [0, 1, 5, 6, 8, 9]
     # debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(False, True, False), VideoTrackGroupSettings(False, True, False), VideoTrackGroupSettings(False, True, False), VideoTrackGroupSettings(False, True, False), VideoTrackGroupSettings(False, True, False), VideoTrackGroupSettings(False, True, False)]
     
-    debug_desiredVideoTracks = [0, 1]
-    debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(False, True, True), VideoTrackGroupSettings(False, True, True)]
+    # debug_desiredVideoTracks = [0, 1]
+    # debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(False, True, True), VideoTrackGroupSettings(False, True, True)]
+
+    debug_desiredVideoTracks = [1]
+    debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(True, True, True)]
 
     # debug_desiredVideoTracks = [5, 6, 8, 9]
 
@@ -213,6 +169,9 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
+
+        self.labjackDataFilesystemLoader = LabjackFilesystemLoader([], parent=self)
+        self.labjackDataFilesystemLoader.loadingLabjackDataFilesComplete.connect(self.on_labjack_files_loading_complete)
 
         # Update the data model, and set up the timeline totalStartTime, totalEndTime, totalDuration from the loaded videos if we're in that enum mode.
         self.reloadModelFromDatabase()
@@ -244,6 +203,7 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         # self.referenceManager.selectedDatetimeChanged.connect(self.on_reference_indicator_line_selection_changed)
 
 
+
         self.activeZoomChanged.connect(self.referenceManager.on_active_zoom_changed)
         self.activeViewportChanged.connect(self.referenceManager.on_active_viewport_changed)
         self.activeGlobalTimelineTimesChanged.connect(self.referenceManager.on_active_global_timeline_times_changed)
@@ -254,8 +214,7 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         self.videoThumbnailGenerator.thumbnailGenerationComplete.connect(self.on_video_thumbnail_generation_complete)
 
         self.wantsCreateNewVideoPlayerWindowOnClose = False
-        # self.pendingCreateVideoPlayerURL = None # self.pendingCreateVideoPlayerURL: holds the URL of the video file that we currently want to load. Used to enable waiting for the previous video player to close before a new one is opened with this URL.
-        self.pendingCreateVideoPlayerSelectedItem = None # self.pendingCreateVideoPlayerSelectedItem: holds the URL of the video file that we currently want to load. Used to enable waiting for the previous video player to close before a new one is opened with this URL.
+        self.pendingCreateVideoPlayerSelectedItemReference = None # self.pendingCreateVideoPlayerSelectedItem: holds the URL of the video file that we currently want to load. Used to enable waiting for the previous video player to close before a new one is opened with this URL.
 
         # Temporary "pending" items that will be set and then cleared once the appropriate action is performed with them
         self.pending_adjust_viewport_start_datetime = None
@@ -318,7 +277,7 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
             # action_exit.setStatusTip('Exit application')
             # action_exit.triggered.connect(qApp.quit)
 
-            self.ui.actionExport_to.triggered.connect(self.on_user_data_export)
+
 
             self.ui.actionExit_Application.triggered.connect(qApp.quit)
             self.ui.actionShow_Help.triggered.connect(self.handle_showHelpWindow)
@@ -327,6 +286,13 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
             self.ui.actionVideo_FIle_ShowListWindow.triggered.connect(self.handle_showVideoTreeWindow)
             self.ui.actionShowDatabase_Table_BrowserWindow.triggered.connect(self.handle_showDatabaseBrowserUtilityWindow)
             
+
+            ## Import:
+            self.ui.actionImport_Labjack_Data.triggered.connect(self.on_user_labjack_data_load)
+
+            ## Export:
+            self.ui.actionExport_to.triggered.connect(self.on_user_data_export)
+
             ## Setup Zoom:
             self.ui.actionZoom_In.triggered.connect(self.on_zoom_in)
             self.ui.actionZoom_Default.triggered.connect(self.on_zoom_home)
@@ -375,9 +341,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
             self.trackGroups = []
             self.trackID_to_GroupIndexMap = dict() #Maps a track's trackID to the index of its group in self.trackGroups
             self.trackID_to_TrackWidgetLocatorTuple = dict() #Maps a track's trackID to the a tuple (storageArrayType: TrackStorageArray, storageArrayIndex: Int) that can be used to retreive the widget
-
-
-
 
             # B00
             currTrackIndex = 0
@@ -760,9 +723,18 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         self.videoFileRecords = self.database_connection.load_video_file_info_from_database()
         self.videoInfoObjects = []
         # Iterate through loaded database records to build videoInfoObjects
+        
+        videoFileStartDates = []
+        videoFileEndDates = []
+
         for aVideoFileRecord in self.videoFileRecords:
             aVideoInfoObj = aVideoFileRecord.get_video_info_obj()
             self.videoInfoObjects.append(aVideoInfoObj)
+            videoFileStartDates.append(aVideoFileRecord.get_start_date())
+            videoFileEndDates.append(aVideoFileRecord.get_end_date())
+
+        
+        self.get_labjack_data_files_loader().set_start_end_video_file_dates(videoFileStartDates, videoFileEndDates)
 
         self.update()
 
@@ -1124,8 +1096,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         newActiveViewportDuration = desiredPercent * totalTimelineDuration
         return newActiveViewportDuration
 
-
-
     """ compute_current_activeScaleMultiplier_from_desiredViewportDuration(desiredViewportDisplayDuration)
     Given: a desired duration to display in the viewport
     Return: the correct activeScaleMultiplier (zoom factor) that would need to be set at the current window width.
@@ -1149,29 +1119,17 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
     def percent_offset_to_track_offset(self, track_percent):
         return float(self.get_minimum_track_width()) * float(track_percent)
 
-    ## Datetime functions copied from the versions created for the PhoDurationEvent class
-    # returns true if the absolute_datetime falls within the current entire timeline. !Not the viewport!
-    def contains_date(self, absolute_datetime):
-        return ((self.totalStartTime <= absolute_datetime) and (self.totalEndTime >= absolute_datetime))
-
-    # Returns the duration of the time relative to this timeline.
-    def compute_relative_offset_duration(self, time):
-        relative_offset_duration = time - self.totalStartTime
-        return relative_offset_duration
-
-    # Returns the absolute (wall/world) time for a relative_duration into the timeline
-    def compute_absolute_time(self, relative_duration):
-        return (self.totalStartTime + relative_duration)
 
 
     ## Timeline ZOOMING:
     ## TODO: Implement
     def preserve_cursor_offset_on_zoom(self):
         # Get cursor position's datetime
-        
+        print("TODO: WARNING: UNIMPLEMENTED: TimelineDrawingWindow.preserve_cursor_offset_on_zoom()")
         pass
 
     def restore_cursor_offset_after_zoom(self):
+        print("TODO: WARNING: UNIMPLEMENTED: TimelineDrawingWindow.restore_cursor_offset_after_zoom()")
         pass
 
     def on_zoom_in(self):
@@ -1262,7 +1220,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
     def get_viewport_percent_scrolled(self):
         # TODO: check that this is correct. I think it is.
         return (float(self.timelineScroll.horizontalScrollBar().value()) / (float(self.timelineScroll.horizontalScrollBar().maximum()) - float(self.timelineScroll.horizontalScrollBar().minimum())))
-
 
     # Scrolls the viewport to the desired percent_scrolled of entire timeline.
     def set_viewport_percent_scrolled(self, percent_scrolled):
@@ -1514,24 +1471,17 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
             self.videoPlayerWindow.close_signal.connect(self.on_video_player_window_closed)
             self.videoPlayerWindow.show()
 
-    def try_set_video_player_window_url(self, url):
-        #TODO: temp: set the videoPlayerWindow to None to ensure that a new one is created. Note that setting it to None doesn't actually close the old one.
-        # self.videoPlayerWindow = None
-        
+    # Sets the video player window's video link object to the current one.
+    def try_set_video_player_window_video(self):
+
         if (not (self.videoPlayerWindow is None)):
-            # print("Using existing Video Player Window...")
             print("Closing existing Video Player Window...")
             self.videoPlayerWindow.close()
             self.wantsCreateNewVideoPlayerWindowOnClose = True
-            self.pendingCreateVideoPlayerURL = url
+            # self.pendingCreateVideoPlayerSelectedItemReference = self.pendingCreateVideoPlayerSelectedItemReference
 
             # Close the previous window and wait for it to be done closing before creating a new one.
 
-            # self.videoPlayerWindow.movieLink = None # Disable the movieLink
-            # self.videoPlayerWindow.set_timestamp_filename(r"C:\Users\halechr\repo\looper\testdata\NewTimestamps.tmsp")
-            # self.videoPlayerWindow.set_video_filename(url)
-
-            # self.videoPlayerWindow.show()
         else:
             # Create a new videoPlayerWindow window
             print("Creating new Video Player Window...")
@@ -1548,21 +1498,18 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
                 print("Error Setting timestamp filename for Video Window:", e)
                 return False
 
-
+            # Set the movie link object
             try:
-                self.videoPlayerWindow.set_video_filename(url)
+                newMovieLink = DataMovieLinkInfo(self.pendingCreateVideoPlayerSelectedItemReference, self.videoPlayerWindow, self, parent=self.videoPlayerWindow)
+                self.videoPlayerWindow.set_video_media_link(newMovieLink)
             except Exception as e:
-                print("Error Setting video filename for Video Window:", e)
+                print("Error Creating or setting DataMovieLinkInfo object for Video Window:", e)
                 return False
 
-            self.videoPlayerWindow.movieLink = DataMovieLinkInfo(self.pendingCreateVideoPlayerSelectedItem, self.videoPlayerWindow, self, parent=self)
-            
             # if self.wantsCreateNewVideoPlayerWindowOnClose:
             # Set the property false after the window has been created
             self.wantsCreateNewVideoPlayerWindowOnClose = False
-            self.pendingCreateVideoPlayerSelectedItem = None
-            self.pendingCreateVideoPlayerURL = None
-
+            self.pendingCreateVideoPlayerSelectedItemReference = None
 
             return True
 
@@ -1599,7 +1546,7 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
 
         if self.wantsCreateNewVideoPlayerWindowOnClose:
             # open the pending URL in a new video player window after the previous one was successfully closed.
-            self.try_set_video_player_window_url(self.pendingCreateVideoPlayerURL)
+            self.try_set_video_player_window_video()
 
 
 
@@ -1708,14 +1655,24 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
                 
                 if currSelectedObject.is_video_url_accessible():
                     currActiveTrack.set_now_playing(trackObjectIndex)
-                    self.pendingCreateVideoPlayerSelectedItem = currSelectedObject
-                    self.try_set_video_player_window_url(str(selected_video_path))
+                    # Construct a TrackChildReference object
+                    currActiveGroupID = self.get_group_id_from_track_id(trackIndex)
+                    currActiveTrackRef = TrackReference(trackIndex, currActiveGroupID)
+                    currActiveChildRef = TrackChildReference(currActiveTrackRef, trackObjectIndex, currSelectedObject, parent=self)
+
+                    # self.pendingCreateVideoPlayerSelectedItemReference = currSelectedObject
+                    self.pendingCreateVideoPlayerSelectedItemReference = currActiveChildRef
+                    
+                    self.try_set_video_player_window_video()
+
+                    # self.try_set_video_player_window_url(str(selected_video_path))
                     
                 else:
-                    self.pendingCreateVideoPlayerSelectedItem = None
+                    self.pendingCreateVideoPlayerSelectedItemReference = None
                     print("video file is inaccessible. Not opening the video player window")
                     if self.videoPlayerWindow is not None:
-                        self.videoPlayerWindow.try_set_video_player_window_url(None)
+                        self.try_set_video_player_window_video()
+                        # self.videoPlayerWindow.try_set_video_player_window_url(None)
                         # Close any active movieLinks since there can't be a selection here. 
                         self.videoPlayerWindow.movieLink = None
 
@@ -1726,7 +1683,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
             # for i in range(0, len(self.eventTrackWidgets)):
             #     currWidget = self.eventTrackWidgets[i]
             #     currWidget.set_active_filter(currHoveredObject.startTime, currHoveredObject.endTime)
-
 
     # Occurs when the user selects an object in the child video track with the mouse
     def handle_child_hover_event(self, trackIndex, trackObjectIndex):
@@ -1841,8 +1797,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
 
         self.referenceManager.update_marker_metadata(additional_data)
 
-
-
     @pyqtSlot(list)
     def on_reference_line_markers_updated(self, referenceLineList):
         print("TimelineDrawingWindow.on_reference_line_markers_updated(...)")
@@ -1858,17 +1812,10 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         print(additional_data)
         #  self.referenceManager.
 
-        
-    # @pyqtSlot(list, int)
-    # def on_reference_line_marker_list_selection_changed(self, referenceLineList, selected_index):
-    #     print("TimelineDrawingWindow.on_reference_line_marker_list_selection_changed(referenceLineList, selected_index: {0})".format(str(selected_index)))
-    #      # on_reference_line_marker_list_selection_changed(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
-
     @pyqtSlot(list, list)
     def on_reference_line_marker_list_selection_changed(self, referenceLineList, selected_indicies):
         print("TimelineDrawingWindow.on_reference_line_marker_list_selection_changed(referenceLineList, selected_indicies: {0})".format(str(selected_indicies)))
          # on_reference_line_marker_list_selection_changed(,,,): called by ReferenceMarkerManager to get the datetime information to display in the list
-
 
     # try_get_reference_lines(): Tries to get all the reference items and their metadata
     def try_get_reference_lines(self):
@@ -1895,7 +1842,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
 
         return output_data
 
-
     # try_get_selected_reference_lines(): Tries to get the currently selected reference items
     def try_get_selected_reference_lines(self):
         curr_reference_line_data = self.try_get_reference_lines()
@@ -1914,10 +1860,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
 
         return curr_complete_active_items
     
-
-
-    
-
     # try_create_comment_from_selected_reference_lines(): tries to create a new annotation comment from the selected reference marks
     @pyqtSlot()
     def try_create_comment_from_selected_reference_lines(self):
@@ -1941,9 +1883,7 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
             print("ERROR: UNIMPLMENTED: TODO: Create a generic annotation dialog (with a temporary config) and allow the user to add it even if the track isn't currently displayed)")
             return
 
-
     # Tries to create a comment between the two provided dates
-
     @pyqtSlot(datetime, datetime)
     def try_create_comment_between_dates(self, startDate, endDate):
         print("try_create_comment_between_dates(...)")
@@ -1974,8 +1914,28 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
                 print("Movie link has no active playbackPlayheadDatetime!")
                 return
 
+            # Get the appropriate trackID for the partition track belonging to the video that's currently opened.
+            activeChildRef = active_movie_link.get_video_event_reference()
+            if activeChildRef is None:
+                print("No active child reference!")
+                return
+
+            # activeVideoTrackID = activeChildRef.get_track_id()
+            activeGroupID = activeChildRef.get_group_id()
+            activeGroup = self.trackGroups[activeGroupID]
+
+            # get the partition track index (note that this is not the trackID) from the group
+            partitionTrackIndex = activeGroup.get_partitionsTrackIndex()
+            if partitionTrackIndex is None:
+                print("No partition track for the group {0}".format(str(activeGroupID)))
+                return
+            
+            # Find the matching partition track:
+            currWidget = self.eventTrackWidgets[partitionTrackIndex]
+            partitionTrackID = currWidget.get_trackID()
+
             # self.sync_active_viewport_start_to_datetime(playbackPlayheadDatetime) #jump there.
-            self.on_partition_cut_at(playbackPlayheadDatetime) #then cut
+            self.on_partition_cut_at(partitionTrackID, playbackPlayheadDatetime) #then cut
 
         except AttributeError as e:
             print("Couldn't get movie link's active playbackPlayheadDatetime! Error:", e)
@@ -1985,16 +1945,25 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         
     
     # Creates a cut on the partition track at the specified time
-    def on_partition_cut_at(self, cut_datetime):
-        print("on_partition_cut_at({0})".format(cut_datetime))
-        self.partitionsTrackWidget.try_cut_partition(cut_datetime)
-
+    def on_partition_cut_at(self, partitionTrackID, cut_datetime):
+        print("on_partition_cut_at(trackID: {0}, time: {1})".format(str(partitionTrackID), self.get_full_long_date_time_string(cut_datetime)))
+        foundTrack = self.get_track_with_trackID(partitionTrackID)
+        if foundTrack is None:
+            print("couldn't find track with trackID: {0}".format(str(partitionTrackID)))
+            return False
+        
+        return foundTrack.try_cut_partition(cut_datetime)
 
     # Creates a new annotation comment on the appropriate track at the specified time
-    def on_comment_create_at(self, comment_datetime):
-        print("on_comment_create_at({0})".format(comment_datetime))
-        # self.partitionsTrackWidget.try_cut_partition(comment_datetime)
+    def on_comment_create_at(self, commentTrackID, comment_datetime):
+        print("on_comment_create_at(trackID: {0}, time: {1})".format(str(commentTrackID), self.get_full_long_date_time_string(comment_datetime)))
+        foundTrack = self.get_track_with_trackID(commentTrackID)
+        if foundTrack is None:
+            print("couldn't find track with trackID: {0}".format(str(commentTrackID)))
+            return False
         
+        print("WARNING: UNIMPLEMENTED: on_comment_create_at(...)")
+        return False        
 
 
     # Track Header Operations:
@@ -2061,8 +2030,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
             print("Error: unknown track type!")
             return
     
-    
-
     @pyqtSlot(int, object)
     def on_video_track_child_generate_thumbnails(self, trackID, videoDurationObj):
         print("TimelineDrawingWindow.on_video_track_child_generate_thumbnails({0}, {1})".format(str(trackID), str(videoDurationObj)))
@@ -2084,15 +2051,11 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
             
         return
 
-
-
     @pyqtSlot(int, object)
     def on_track_child_get_info(self, trackID, commentObj):
         print("TimelineDrawingWindow.on_track_child_get_info({0}, {1})".format(str(trackID), str(commentObj)))
         # Find the correct config:
         pass
-
-
 
     @pyqtSlot(int, object)
     def on_track_child_create_comment(self, trackID, commentObj):
@@ -2381,7 +2344,6 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
         #     self.sync_active_viewport_start_to_datetime(self.pending_adjust_viewport_start_datetime) # Use the saved start time to re-align the viewport's left edge
         #     self.pending_adjust_viewport_start_datetime = None
         
-
     @pyqtSlot()
     def on_active_viewport_changed(self):
         # print("TimelineDrawingWindow.on_active_viewport_changed(...)")
@@ -2496,3 +2458,37 @@ class TimelineDrawingWindow(FileExportingMixin, MouseTrackingThroughChildrenMixi
 
         self.update()
     
+
+    @pyqtSlot()
+    def on_user_labjack_data_load(self):
+        # Called when the user selects "Import Labjack data..." from the main menu.
+        print("TimelineDrawingWindow.on_user_labjack_data_load()")
+        # Show a dialog that asks the user for their export path
+        # exportFilePath = self.on_exportFile_selected()
+
+        path = QFileDialog.getOpenFileName(self, 'Open Labjack Data File', os.getenv('HOME'), 'CSV(*.csv)')
+        importFilePath = path[0]
+        if importFilePath == '':
+            print("User canceled the import!")
+            return
+        self.get_labjack_data_files_loader().add_labjack_file_path(importFilePath)
+
+
+    
+    def get_labjack_data_files_loader(self):
+        return self.labjackDataFilesystemLoader
+
+    @pyqtSlot()
+    def on_labjack_files_loading_complete(self):
+        print("TimelineDrawingWindow.on_labjack_files_loading_complete()...")
+        activeLoader = self.get_labjack_data_files_loader()
+        for (key_path, cache_value) in activeLoader.get_cache().items():
+            # key_path: the labjack data file path that had the labjack events loaded from it
+
+            loaded_labjack_events = cache_value.get_labjack_events()
+            print("labjack event loading complete for [{0}]: {1} files".format(str(key_path), len(loaded_labjack_events)))
+
+            
+            # for (index, aVideoThumbnailObj) in enumerate(cache_value):
+            #     currThumbsDict = aVideoThumbnailObj.get_thumbs_dict()
+            pass
