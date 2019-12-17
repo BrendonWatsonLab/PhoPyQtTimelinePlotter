@@ -239,6 +239,8 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
         elif VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths:
             print("Loading video files from database and searching search paths...")
             self.reloadModelFromDatabase()
+            # Rebuild self.searchPaths from the database's parent folders
+            self.searchPaths = [str(aSearchPath) for aSearchPath in self.cache.keys()]
             if restricted_search_paths is None:
                 restricted_search_paths = self.searchPaths
 
@@ -268,7 +270,7 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
             aFinalSearchPath = aLoadedParentFolder.fullpath
 
             if (not (aFinalSearchPath in self.cache.keys())):
-                # Parent doesn't yet exist in cache
+                # Parent doesn't yet exist in cache, create it
                 self.cache[aFinalSearchPath] = ParentDirectoryCache(aFinalSearchPath, CachedFileSource.OnlyFromDatabase)
             else:
                 # Parent already exists

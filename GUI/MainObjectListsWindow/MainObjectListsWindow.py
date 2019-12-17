@@ -130,10 +130,14 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
             aNewGroupNode = QTreeWidgetItem([key_path, '', '', ''])
             # curr_search_path_video_files = cache_value.get_filesystem_video_files()
             curr_search_path_video_files = cache_value.get_combined_video_files()
+            curr_search_path_data_file_map = cache_value.get_combined_video_file_basenames_to_data_file_list_map()
+            curr_search_path_output_data_files = []
 
             print("ui loadedVideoFiles[{0}]: {1}".format(str(key_path), len(curr_search_path_video_files)))
 
             for aFoundVideoFile in curr_search_path_video_files:
+                aCurrVideoFileBasename = aFoundVideoFile.get_base_name()
+
                 potentially_computed_end_date = aFoundVideoFile.get_computed_end_date()
                 if potentially_computed_end_date:
                     computed_end_date = str(potentially_computed_end_date)
@@ -167,7 +171,46 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
                 aNewVideoNode.setForeground(0, currForeground)
                 aNewVideoNode.setFont(0, currFont)
                 
+                # Check for data files:
+                curr_video_file_output_data_files = []
+                if aCurrVideoFileBasename in curr_search_path_data_file_map.keys():
+                    curr_video_file_output_data_files = curr_search_path_data_file_map[aCurrVideoFileBasename]
+
+                # print("ui loadedVideoFiles[{0}]: {1}".format(str(key_path), len(curr_video_file_output_data_files)))
+                for aFoundDataFile in curr_video_file_output_data_files:
+                    aNewDataNode = QTreeWidgetItem([str(aFoundDataFile.full_name), str(aFoundDataFile.parsed_date), computed_end_date, str(aFoundDataFile.get_deeplabcut_info_string())])
+                    # aNewVideoNode.setIcon(0,QIcon("your icon path or file name "))
+
+                    currSource = aFoundDataFile.get_source()
+                    currForeground = MainObjectListsWindow.TreeItem_Default_Foreground
+                    currFont = MainObjectListsWindow.TreeItem_Default_Font
+
+                    if currSource == CachedFileSource.OnlyFromDatabase:
+                        currForeground = MainObjectListsWindow.TreeItem_DatabaseOnly_Foreground
+                        pass
+                    elif currSource == CachedFileSource.OnlyFromFilesystem:
+                        currForeground = MainObjectListsWindow.TreeItem_FilesystemOnly_Foreground
+                        pass
+                    elif currSource == CachedFileSource.NewestFromDatabase:
+                        currForeground = MainObjectListsWindow.TreeItem_DatabaseNewer_Foreground
+                        pass
+                    elif currSource == CachedFileSource.NewestFromFilesystem:
+                        currForeground = MainObjectListsWindow.TreeItem_FilesystemNewer_Foreground
+                        pass
+                    elif currSource == CachedFileSource.Identical:
+                        currForeground =  MainObjectListsWindow.TreeItem_Default_Foreground
+                        pass
+                    else:
+                        pass
+
+                    aNewDataNode.setForeground(0, currForeground)
+                    aNewDataNode.setFont(0, currFont)
+                    
+                    aNewVideoNode.addChild(aNewDataNode)
+
+                # Add the new video node to the group
                 aNewGroupNode.addChild(aNewVideoNode)
+
 
             self.top_level_nodes.append(aNewGroupNode)
             
@@ -211,8 +254,8 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
     def handle_menu_refresh_event(self):
         print("actionRefresh")
+        self.reload_data()
         pass
-
 
     def handle_add_search_directory_activated(self):
         print("handle_add_search_directory_activated")
@@ -241,8 +284,6 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
             print("getting folder name: {0}".format(str(destDir)))
             self.videoLoader.add_search_path(destDir)
 
-
-
     def handle_save_selection_action(self):
         print("handle_save_selection_action()")
 
@@ -251,13 +292,8 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         unconvertedFiles = dict()
         convertedFiles = dict()
 
-
-        
         unconvertedParentPaths = dict()
         convertedParentPaths = dict()
-
-
-        
 
         needs_conversion_files = []
         handbrake_conversion_queue = []
