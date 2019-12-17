@@ -1818,7 +1818,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
 
     @pyqtSlot(list)
     def on_reference_line_markers_updated(self, referenceLineList):
-        print("TimelineDrawingWindow.on_reference_line_markers_updated(...)")
+        # print("TimelineDrawingWindow.on_reference_line_markers_updated(...)")
         additional_data = []
         for aListItem in referenceLineList:
             # curr_view = aListItem.get_view()
@@ -2545,11 +2545,13 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             # print("labjack event loading complete for [{0}]: {1} files".format(str(key_path), len(loaded_labjack_events)))
 
             loaded_labjack_event_containers = cache_value.get_labjack_container_events()
-            print("labjack event container loading complete for [{0}]: {1} files".format(str(key_path), len(loaded_labjack_event_containers)))
+            print("labjack event container loading complete for [{0}]: {1} events".format(str(key_path), len(loaded_labjack_event_containers)))
 
             # Loop through the groups 
             for currGroupIndex in range(0, self.totalNumGroups):
                 currGroup = self.trackGroups[currGroupIndex]
+
+                # Get the data tracks for the current group
                 currGroupDataTrackIndicies = currGroup.get_dataTrackIndicies()
 
                 # Loop through the data tracks
@@ -2560,4 +2562,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
 
                     # Get configuration:
                     currTrackConfig = self.trackConfigurationsDict[currDataTrackTrackID]
+                    # Forcibily update the cache of the data track.
                     currTrackConfig.update_cache(loaded_labjack_event_containers)
+                    # TODO: in the future, use the track's config and filter and stuff

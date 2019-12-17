@@ -232,7 +232,6 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
         print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
         self.reload_data()
 
-
     def get_cache(self):
         return self.cache
 
