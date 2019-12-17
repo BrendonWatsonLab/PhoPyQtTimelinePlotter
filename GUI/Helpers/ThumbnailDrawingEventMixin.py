@@ -14,6 +14,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, 
 # INCLUDES:
 # from GUI.Helpers.ThumbnailDrawingEventMixin import ThumbnailDrawingEventMixin
 
+## TODO: Doesn't work
 """ ThumbnailDrawingEventMixin: a mixin that draws thumbnail images on a timeline event
     Requires:
     self.desiredThumbnailSizeKey = "160"
