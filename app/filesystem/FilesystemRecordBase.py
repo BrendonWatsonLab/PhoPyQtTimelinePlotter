@@ -10,10 +10,13 @@ from GUI.Model.TrackType import TrackType
 # FilesystemRecordBase.py
 # from app.filesystem.FilesystemRecordBase import *
 
+
+""" FilesystemRecordBase: an attempt to make a "record" like object for the filesystem analagous to the records loaded from the database
+
+"""
 class FilesystemRecordBase(object):
 
     @staticmethod
     def get_track_type():
         return TrackType.DataFile
 
-        
