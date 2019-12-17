@@ -3,7 +3,8 @@ from datetime import datetime, timezone, timedelta
 from PyQt5.QtCore import Qt, QObject, QEvent, pyqtSignal
 
 import sqlalchemy as db
-from sqlalchemy.exc import IntegrityError
+
+from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import sessionmaker, selectinload, joinedload
 
 # Table Model Generation:
