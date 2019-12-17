@@ -226,7 +226,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         self.setupWindow = None
         self.videoTreeWindow = None
         self.databaseBrowserUtilityWindow = None
-        self.activeVideoTrackConfigEditDialog = None
+        self.activeTrackConfigEditDialog = None
         self.activeTrackID_ConfigEditingIndex = None
     
 
@@ -2005,18 +2005,18 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             currVideoTrackHeader = self.videoFileTrackWidgetHeaders[trackID]
             currVideoTrackConfig = currVideoTrackHeader.get_config()
             self.activeTrackID_ConfigEditingIndex = trackID
-            self.activeVideoTrackConfigEditDialog = VideoTrackFilterEditDialog(currVideoTrackConfig, parent=self)
-            self.activeVideoTrackConfigEditDialog.on_commit.connect(self.try_update_video_track_filter)
-            self.activeVideoTrackConfigEditDialog.on_cancel.connect(self.track_config_dialog_canceled)
+            self.activeTrackConfigEditDialog = VideoTrackFilterEditDialog(currVideoTrackConfig, parent=self)
+            self.activeTrackConfigEditDialog.on_commit.connect(self.try_update_video_track_filter)
+            self.activeTrackConfigEditDialog.on_cancel.connect(self.track_config_dialog_canceled)
             pass
         elif trackID in self.eventTrackWidgetHeaders.keys():
             # event track
             currTrackHeader = self.eventTrackWidgetHeaders[trackID]
             currTrackConfig = currTrackHeader.get_config()
             self.activeTrackID_ConfigEditingIndex = trackID
-            self.activeVideoTrackConfigEditDialog = TrackFilterEditDialogBase(currTrackConfig, parent=self)
-            self.activeVideoTrackConfigEditDialog.on_commit.connect(self.try_update_event_track_filter)
-            self.activeVideoTrackConfigEditDialog.on_cancel.connect(self.track_config_dialog_canceled)
+            self.activeTrackConfigEditDialog = TrackFilterEditDialogBase(currTrackConfig, parent=self)
+            self.activeTrackConfigEditDialog.on_commit.connect(self.try_update_event_track_filter)
+            self.activeTrackConfigEditDialog.on_cancel.connect(self.track_config_dialog_canceled)
             pass
         else:
             print("WARNING: Couldn't find header with trackID: {0}".format(trackID))
@@ -2495,8 +2495,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             return
         self.get_labjack_data_files_loader().add_labjack_file_path(importFilePath)
 
-
-    
     def get_labjack_data_files_loader(self):
         return self.labjackDataFilesystemLoader
 
