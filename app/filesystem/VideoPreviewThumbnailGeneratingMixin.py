@@ -210,33 +210,48 @@ class VideoPreviewThumbnailGenerator(QObject):
 
 
 
-
-    """ video_to_frames(...): 
+    """ video_to_desired_frames(...): 
     TODO: currently hardcoded to return either 1 (the first) or 5 frames.
 
     """
     @staticmethod
-    def video_to_frames(video_filename, enable_debug_print, use_OpenCV_method=True):
+    def video_to_desired_frames(video_filename, desired_frame_indexes, enable_debug_print, use_OpenCV_method=True):
         """Extract frames from video"""
         if enable_debug_print:
-            print("video_to_frames({0})...".format(str(video_filename)))
+            print("video_to_desired_frames({0})...".format(str(video_filename)))
 
         frames = []
 
         if use_OpenCV_method:
             if enable_debug_print:
-                print("    video_to_frames(...): using OpenCV method...")
+                print("    video_to_desired_frames(...): using OpenCV method...")
             cap = cv2.VideoCapture(video_filename)
             video_length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
 
             if cap.isOpened() and video_length > 0:
                 frame_ids = [0]
-                if video_length >= 4:
-                    frame_ids = [0,
-                                round(video_length * 0.25),
-                                round(video_length * 0.5),
-                                round(video_length * 0.75),
-                                video_length - 1]
+                # Check if desired_frame_indexes is None. If it is, use the default frames. Otherwise, use the user's specified frames
+                if desired_frame_indexes is None:
+                    frame_ids = [0]
+                    if video_length >= 4:
+                        frame_ids = [0,
+                                    round(video_length * 0.25),
+                                    round(video_length * 0.5),
+                                    round(video_length * 0.75),
+                                    video_length - 1]
+                else:
+                    # Non-None desired_frame_indicies:
+                    for aDesiredFrameID in desired_frame_indexes:
+                        if (0 <= aDesiredFrameID < video_length):
+                            frame_ids.append(aDesiredFrameID)
+                        elif (aDesiredFrameID >= video_length):
+                            # desired index is too big
+                            frame_ids.append(video_length - 1) # Get the last frame
+                        elif (aDesiredFrameID < 0):
+                            frame_ids.append(0) # Get the first frame
+                        else:
+                            print("WARNING: this shouldn't happen!")
+
                 count = 0
                 for aFrameNumber in frame_ids:
                     #The first argument of cap.set(), number 2 defines that parameter for setting the frame selection.
@@ -261,15 +276,9 @@ class VideoPreviewThumbnailGenerator(QObject):
             cap.release()
             cv2.destroyAllWindows()
 
-                # success, image = cap.read()
-                # while success:
-                #     if count in frame_ids:
-                #         frames.append(image)
-                #     success, image = cap.read()
-                #     count += 1
         else:
             # Use FFMPEG method:
-            print("    video_to_frames(...): using FFMPEG method...")
+            print("    video_to_desired_frames(...): using FFMPEG method...")
             """
             -ss: the start time
             -vframes:
@@ -280,7 +289,20 @@ class VideoPreviewThumbnailGenerator(QObject):
 
         if enable_debug_print:
             print("done. ({0} frames extracted)...".format(str(len(frames))))
+
         return frames
+
+
+
+
+    """ video_to_frames(...): 
+    TODO: currently hardcoded to return either 1 (the first) or 5 frames.
+
+    """
+    @staticmethod
+    def video_to_frames(video_filename, enable_debug_print, use_OpenCV_method=True):
+        """Extract frames from video"""
+        return VideoPreviewThumbnailGenerator.video_to_desired_frames(video_filename, None, enable_debug_print, use_OpenCV_method)
 
 
     """ image_to_thumbs(img, ...): converts an image to a dictionary of different sized thumbnails
