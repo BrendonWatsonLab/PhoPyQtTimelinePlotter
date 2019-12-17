@@ -955,7 +955,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         self.timelineCursorDurationOffset = self.offset_to_duration(self.timelineCursorX)
         self.timelineCursorDatetime = self.offset_to_datetime(self.timelineCursorX)
 
-        text = "window x: {0}, contents_x: {1},  duration: {2}, datetime: {3}".format(self.cursorX, self.timelineCursorX, self.timelineCursorDurationOffset, str(datetime))
+        text = "window x: {0}, contents_x: {1},  duration: {2}, datetime: {3}".format(self.cursorX, self.timelineCursorX, self.timelineCursorDurationOffset, self.get_full_long_date_time_string(self.timelineCursorDatetime))
         # Call the on_mouse_moved handler for the video track which will update its .hovered_object property, which is then read and used for relative offsets
 
         for (anIndex, aTimelineVideoTrack) in enumerate(self.videoFileTrackWidgets):
