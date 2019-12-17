@@ -66,21 +66,6 @@ class PandasTableWidget(QWidget):
         # Initialize tab screen
         self.tabs = QTabWidget()
 
-        # # self.tab1 = QWidget()
-        # self.tab2 = QWidget()
-        # self.tabs.resize(300,200)
-        
-        # # Add tabs
-        # self.tabs.addTab(self.tab1,"Tab 1")
-        # self.tabs.addTab(self.tab2,"Tab 2")
-        
-        # # Create first tab
-        # self.tab1.layout = QVBoxLayout(self)
-
-        # self.tab1.layout.addWidget(self.pushButton1)
-        # self.tab1.setLayout(self.tab1.layout)
-
-
         for (i, aTableModel) in enumerate(self.get_table_models()):
             currTabNameStr = aTableModel.get_model_display_name()
 
@@ -104,10 +89,7 @@ class PandasTableWidget(QWidget):
             self.table_selection_models[i].selectionChanged.connect(self.update_current_record)
 
             exec( 'self.tab'+str(i)+'.layout.addWidget(self.tables['+str(i)+'])' )
-            # self.tab1.layout.addWidget(self.tables[i])
-
             exec( 'self.tab'+str(i)+'.setLayout(self.tab'+str(i)+'.layout)')
-            # self.tab1.setLayout(self.tab1.layout)
 
             currBtnAddNewRecord = QPushButton("New", self)
             currBtnAddNewRecord.released.connect(self.handle_add_new_record_pressed)
@@ -115,8 +97,6 @@ class PandasTableWidget(QWidget):
             currBtnExportAllRecords = QPushButton("Export", self)
             currBtnExportAllRecords.released.connect(self.handle_export_all_records_pressed)
 
-            
-            # mainLayout.addWidget(currBtnAddNewRecord)
             exec( 'self.tab'+str(i)+'.layout.addWidget(currBtnAddNewRecord)' )
             exec( 'self.tab'+str(i)+'.layout.addWidget(currBtnExportAllRecords)' )
                    
@@ -126,8 +106,6 @@ class PandasTableWidget(QWidget):
         mainLayout.addWidget(self.tabs)
 
         self.setLayout(mainLayout)
-        # mainQWidget.setLayout(mainLayout)     
-        # self.setCentralWidget(mainQWidget)
 
         for (aTableIndex, aTable) in enumerate(self.tables):
             aTable.resizeColumnsToContents()
