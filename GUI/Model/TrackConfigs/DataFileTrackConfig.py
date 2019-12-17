@@ -16,6 +16,7 @@ from sqlalchemy import and_, or_
 # from app.database.entry_models.db_model_extension import ExVideoFile
 
 from app.filesystem.FilesystemRecordBase import *
+from app.filesystem.LabjackFilesystemLoadingMixin import LabjackEventFile, LabjackFilesystemLoader
 
 from GUI.Model.ModelViewContainer import ModelViewContainer
 from GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, TrackCache, TrackFilterBase
@@ -84,4 +85,37 @@ class DataFileTrackConfiguration(TrackConfigurationBase):
 
     def __str__(self):
         return 'DataFileTrackConfiguration: trackIndex: {0}, trackTitle: {1}, trackExtendedDescription: {2}, filter: {3}'.format(self.trackIndex, self.trackTitle, self.trackExtendedDescription, str(self.filter))
+
+    # OVERRIDE TrackConfigurationBase
+    # reload(...): called when the filter is changed to update the cache (reloading the records from the database) as needed
+    def reload(self, session, owning_parent_track):
+        found_records = []
+        if session is not LabjackFilesystemLoader:
+            found_records = self.filter_records(session)
+        else:
+            activeLoader = session
+            print("valid filesystem loader passed!")
+            if len(activeLoader.get_cache().items()) > 0:
+                (key_path, cache_value) = activeLoader.get_cache().items()[0]
+                found_records = cache_value.get_labjack_events()
+
+            else:
+                print("activeLoader's cache is empty!")
+
+
+        print("track[{0}]: {1} records found".format(self.get_track_id(), len(found_records)))
+
+        # Build the corresponding GUI objects
+        built_model_view_container_array = []
+        for (index, aRecord) in enumerate(found_records):
+            aGuiView = None
+            if self.get_should_auto_build_gui_views():
+                aGuiView = self.get_filter().trackRecordClass.get_gui_view(aRecord, parent=owning_parent_track)
+            else:
+                aGuiView = None
+
+            aModelViewContainer = ModelViewContainer(aRecord, aGuiView)
+            built_model_view_container_array.append(aModelViewContainer)
+
+        self.update_cache(built_model_view_container_array)
 
