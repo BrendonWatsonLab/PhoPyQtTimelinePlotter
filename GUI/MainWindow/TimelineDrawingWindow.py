@@ -463,8 +463,9 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             currHeaderIncludedContainer = QWidget(self)
 
             currHeaderTrackConfig = self.trackConfigurationsDict[currVideoTrackWidget.get_trackID()]
+            ## Track Header Widget:
             currHeaderWidget = TimelineHeaderWidget(currHeaderTrackConfig, parent=self)
-            currHeaderWidget.setMinimumSize(50, self.minimumVideoTrackHeight)
+            currHeaderWidget.setMinimumSize(50, currHeaderTrackConfig.get_track_default_height())
             currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
             currHeaderWidget.toggleCollapsed.connect(self.on_track_header_toggle_collapse_activated)
@@ -474,9 +475,9 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             currHeaderWidget.update_labels_dynamically()
             self.videoFileTrackWidgetHeaders[currVideoTrackWidget.get_trackID()] = currHeaderWidget
 
-            # Make the floating label as well
+            ## Floating Track Header Widget:
             currFloatingHeader = TimelineFloatingHeaderWidget(currHeaderTrackConfig, parent=self)
-            currFloatingHeader.setMinimumSize(25, (self.minimumVideoTrackHeight / 2.0))
+            currFloatingHeader.setMinimumSize(25, currHeaderTrackConfig.get_track_default_height())
             currFloatingHeader.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
             currFloatingHeader.update_labels_dynamically()
 
@@ -489,22 +490,17 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
 
             # Set the minimum grid row height
             currFloatingHeaderGridRowID = currTrackConfigurationIndex + 1
-            self.timelineViewportLayout.setRowMinimumHeight(currFloatingHeaderGridRowID, self.minimumVideoTrackHeight)
-
+            self.timelineViewportLayout.setRowMinimumHeight(currFloatingHeaderGridRowID, currHeaderTrackConfig.get_track_default_height())
 
             currHeaderIncludedTrackLayout.addWidget(currVideoTrackWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
-            currVideoTrackWidget.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
+            currVideoTrackWidget.setMinimumSize(minimumWidgetWidth, currHeaderTrackConfig.get_track_default_height())
             currVideoTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
             currHeaderIncludedTrackLayout.addWidget(currHeaderWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
 
             # Floating header track
             # currHeaderIncludedTrackLayout.addWidget(currFloatingHeader, 0, 0, Qt.AlignHCenter|Qt.AlignTop)
-
-
             currHeaderIncludedContainer.setLayout(currHeaderIncludedTrackLayout)
-
-            currHeaderIncludedContainer.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
+            currHeaderIncludedContainer.setMinimumSize(minimumWidgetWidth, currHeaderTrackConfig.get_track_default_height())
             currHeaderIncludedContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
             self.extendedTracksContainerVboxLayout.addWidget(currHeaderIncludedContainer)
@@ -519,8 +515,10 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
 
             currHeaderTrackConfig = self.trackConfigurationsDict[currWidget.get_trackID()]
             
+            ## Track Header Widget:
             currHeaderWidget = TimelineHeaderWidget(currHeaderTrackConfig, parent=self)
-            currHeaderWidget.setMinimumSize(50, self.minimumEventTrackHeight)
+            
+            currHeaderWidget.setMinimumSize(50, currHeaderTrackConfig.get_track_default_height())
             currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
             currHeaderWidget.toggleCollapsed.connect(self.on_track_header_toggle_collapse_activated)
@@ -530,9 +528,11 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             currHeaderWidget.update_labels_dynamically()
             self.eventTrackWidgetHeaders[currWidget.get_trackID()] = currHeaderWidget
 
+            ## Floating Track Header Widget:
             # Make the floating label as well
             currFloatingHeader = TimelineFloatingHeaderWidget(currHeaderTrackConfig, parent=self)
-            currFloatingHeader.setMinimumSize(25, (self.minimumEventTrackHeight / 2.0))
+            # currFloatingHeader.setMinimumSize(25, (currHeaderTrackConfig.get_track_default_height() / 2.0))
+            currFloatingHeader.setMinimumSize(25, currHeaderTrackConfig.get_track_default_height())
             currFloatingHeader.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
             currFloatingHeader.update_labels_dynamically()
 
@@ -545,17 +545,17 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
 
             # Set the minimum grid row height
             currFloatingHeaderGridRowID = currTrackConfigurationIndex + 1
-            self.timelineViewportLayout.setRowMinimumHeight(currFloatingHeaderGridRowID, self.minimumEventTrackHeight)
+            self.timelineViewportLayout.setRowMinimumHeight(currFloatingHeaderGridRowID, currHeaderTrackConfig.get_track_default_height())
 
             currHeaderIncludedTrackLayout.addWidget(currWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
-            currWidget.setMinimumSize(minimumWidgetWidth, self.minimumEventTrackHeight)
+            currWidget.setMinimumSize(minimumWidgetWidth, currHeaderTrackConfig.get_track_default_height())
             currWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
             currHeaderIncludedTrackLayout.addWidget(currHeaderWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
 
             currHeaderIncludedContainer.setLayout(currHeaderIncludedTrackLayout)
 
-            currHeaderIncludedContainer.setMinimumSize(minimumWidgetWidth, self.minimumEventTrackHeight)
+            currHeaderIncludedContainer.setMinimumSize(minimumWidgetWidth, currHeaderTrackConfig.get_track_default_height())
             currHeaderIncludedContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
             self.extendedTracksContainerVboxLayout.addWidget(currHeaderIncludedContainer)
@@ -642,7 +642,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
                 # self.timelineViewportLayout.addWidget(aFloatingHeader, 0, 0, Qt.AlignHCenter|Qt.AlignTop)
                 self.timelineViewportLayout.addWidget(aFloatingHeader, currRowIndex, 0, Qt.AlignRight|Qt.AlignTop)
                 currRowIndex = currRowIndex + 1
-
 
             # Set the timelineViewportContainer's layout to the timeline viewport layout
             self.timelineViewportContainer.setLayout(self.timelineViewportLayout)

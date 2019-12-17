@@ -63,6 +63,7 @@ class TrackType(Enum):
         else:
             return 'ERROR'
 
+
     def get_storage_array_type(self):
         if self == TrackType.Unknown:
             return TrackStorageArray.Unknown
@@ -76,6 +77,27 @@ class TrackType(Enum):
             return TrackStorageArray.Event
         else:
             return TrackStorageArray.Unknown
+
+
+
+    def get_default_track_height(self):
+        defaultMinimumVideoTrackHeight = 50
+        defaultMinimumEventTrackHeight = 50
+
+        if self == TrackType.Unknown:
+            return defaultMinimumEventTrackHeight
+        elif self == TrackType.Video:
+            return defaultMinimumVideoTrackHeight
+        elif self == TrackType.Annotation:
+            return defaultMinimumEventTrackHeight
+        elif self == TrackType.Partition:
+            return defaultMinimumEventTrackHeight
+        elif self == TrackType.DataFile:
+            return 25 # Data tracks are smaller
+        else:
+            return defaultMinimumEventTrackHeight
+
+
 
     def __str__(self):
         return self.get_long_str()

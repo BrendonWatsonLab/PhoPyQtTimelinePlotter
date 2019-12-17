@@ -224,6 +224,10 @@ class TrackConfigurationBase(QObject):
     def get_track_storageArray_type(self):
         return self.get_filter().get_track_storageArray_type()
 
+    # get_track_default_height(): returns the default height for the timeline track
+    def get_track_default_height(self):
+        return self.get_filter().get_track_type().get_default_track_height()
+
     def filter_records(self, session):
         return self.get_filter().build_filter(session)
 
