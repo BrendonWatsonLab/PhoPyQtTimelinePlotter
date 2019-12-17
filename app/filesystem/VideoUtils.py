@@ -111,6 +111,9 @@ class FoundFileResult(QObject):
             self.extended_data = extended_data
             self.source = source
 
+    def get_full_path(self):
+        return self.path
+
     def get_full_name(self):
         return self.full_name
 

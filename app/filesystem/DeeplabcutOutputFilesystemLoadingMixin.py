@@ -50,6 +50,10 @@ class DeeplabCutOutputFileType(Enum):
 
 """
 class DeeplabcutEventFile(QObject):
+
+    dataReloaded = pyqtSignal(pd.DataFrame)
+
+
     def __init__(self, filePath, file_format, parent=None):
         super().__init__(parent=parent)
         self.filePath = filePath
@@ -93,23 +97,22 @@ class DeeplabcutEventFile(QObject):
             print("Unimplemented error!")
             self.data = None
             return
+        
+        self.dataReloaded.emit(self.data)
 
         
-
-
-
     # def set_loaded_values(self, dateTimes, onesEventFormatDataArray, variableData, deeplabcutEvents):
     #     self.dateTimes = dateTimes
     #     self.onesEventFormatDataArray = onesEventFormatDataArray
     #     self.variableData = variableData
     #     self.deeplabcutEvents = deeplabcutEvents
 
-    def set_loaded_values(self, dateTimes, onesEventFormatDataArray, variableData, deeplabcutEventsContainerArray):
-        self.dateTimes = dateTimes
-        self.onesEventFormatDataArray = onesEventFormatDataArray
-        self.variableData = variableData
-        # self.deeplabcutEvents = deeplabcutEvents
-        self.deeplabcutContainerEvents = deeplabcutEventsContainerArray
+    # def set_loaded_values(self, dateTimes, onesEventFormatDataArray, variableData, deeplabcutEventsContainerArray):
+    #     self.dateTimes = dateTimes
+    #     self.onesEventFormatDataArray = onesEventFormatDataArray
+    #     self.variableData = variableData
+    #     # self.deeplabcutEvents = deeplabcutEvents
+    #     self.deeplabcutContainerEvents = deeplabcutEventsContainerArray
 
 
 

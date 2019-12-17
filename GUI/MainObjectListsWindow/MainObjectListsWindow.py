@@ -4,13 +4,14 @@
 import sys
 from datetime import datetime, timezone, timedelta
 import numpy as np
+import pandas as pd
 from enum import Enum
 
 from PyQt5 import QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea
 from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QAction, qApp, QApplication, QTreeWidgetItem, QFileDialog 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool
+from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool, QVariant
 
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWindow
 
@@ -183,6 +184,8 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
                 # print("ui loadedVideoFiles[{0}]: {1}".format(str(key_path), len(curr_video_file_output_data_files)))
                 for aFoundDataFile in curr_video_file_output_data_files:
                     aNewDataNode = QTreeWidgetItem([str(aFoundDataFile.full_name), str(aFoundDataFile.parsed_date), computed_end_date, str(aFoundDataFile.get_deeplabcut_info_string())])
+                    aNewDataNode.setData(0, Qt.UserRole, aFoundDataFile)
+
                     # aNewVideoNode.setIcon(0,QIcon("your icon path or file name "))
 
                     currSource = aFoundDataFile.get_source()
@@ -303,6 +306,9 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
                     # print("ui loadedVideoFiles[{0}]: {1}".format(str(key_path), len(curr_video_file_output_data_files)))
                     for aFoundDataFile in curr_video_file_output_data_files:
                         aNewDataNode = QTreeWidgetItem([str(aFoundDataFile.full_name), str(aFoundDataFile.parsed_date), computed_end_date, str(aFoundDataFile.get_deeplabcut_info_string())])
+                        # aNewDataNode.setData(0, Qt.UserRole, QVariant(aFoundVideoFile))
+                        aNewDataNode.setData(0, Qt.UserRole, aFoundDataFile)
+
                         # aNewVideoNode.setIcon(0,QIcon("your icon path or file name "))
 
                         currSource = aFoundDataFile.get_source()
@@ -482,8 +488,34 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     def handle_child_hover_event(self, trackIndex, trackObjectIndex):
         pass
 
+    def recover_full_path(self, tree_item):
+        # potentialParent = tree_item.parent()
+        # if potentialParent is None:
+        #     # This is a top level item.
+        #     return [tree_item.text(0)]
+        # else:
+        #     # Otherwise the parent is valid
+        #     return self.recover_full_path(potentialParent).append()
+
+        accumulated_path = [tree_item.text(0)]
+        potentialParent = tree_item.parent()
+        while potentialParent is not None:
+            accumulated_path.append(potentialParent.text(0))
+            potentialParent = potentialParent.parent() # Get the parent's parent
+            pass
+
+        else:
+            # Otherwise we have the root-most item
+            accumulated_path.reverse()
+            print(str(accumulated_path))
+            pass
+
+        return accumulated_path
+
+
 
     def menuContextTree(self, point):
+
         # Infos about the node selected.
         index = self.ui.treeWidget_VideoFiles.indexAt(point)
 
@@ -492,6 +524,14 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
         item = self.ui.treeWidget_VideoFiles.itemAt(point)
         name = item.text(0)  # The text of the node.
+        accumulated_array = self.recover_full_path(item)
+
+        user_data = item.data(0, Qt.UserRole)
+        active_item_full_path = user_data.get_full_path()
+
+        # print("user_data: {0}".format(str(user_data)))
+        print("user_data: {0}".format(str(active_item_full_path)))
+        # QVariant(aFoundVideoFile)
 
         # We build the menu.
         menu = QtWidgets.QMenu()
@@ -499,14 +539,22 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         # action = menu.addAction(name)
 
         # See if it's a .csv, .h5, or .pickle file:
-        found_extension = Path(name).suffix
+        active_item_path = Path(active_item_full_path)
+        found_extension = active_item_path.suffix
         print("found_extension: {0}".format(str(found_extension)))
         found_output_format = DeeplabCutOutputFileType.get_from_extension(found_extension)
         if found_output_format is not None:
             # Specifically a deeplabcut output file
-            output_event_file = DeeplabcutEventFile(Path(name), found_output_format, parent=self)
-            action = menu.addAction("Load DeeplabCut output file...")
+            load_file_action = menu.addAction("Load DeeplabCut output file...")
+            output_event_file = DeeplabcutEventFile(active_item_path, found_output_format, parent=self)
+
+            load_file_action.setData(output_event_file)
             # action = menu.addAction(name)
+            # load_file_action.triggered.connect(self.on_click_deeplabcut_file_menu_action_load)
+            menu.triggered.connect(self.on_click_deeplabcut_file_menu_action_load)
+
+            # 
+
 
         else:
             # Non DLC output file extension type
@@ -523,5 +571,33 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     def refresh_child_widget_display(self):
         pass
 
+
+    @pyqtSlot(str, DeeplabCutOutputFileType)
+    def load_deeplabcut_data_file(self, file_path, output_file_type):
+        output_event_file = DeeplabcutEventFile(file_path, output_file_type, parent=self)
+        output_event_file.dataReloaded.connect(self.on_data_reloaded)
+        output_event_file.load_data()
+
+
+
+    @pyqtSlot(pd.DataFrame)
+    def on_data_reloaded(self, df):
+        print("on_data_reloaded(df: {0})".format(str(df)))
+
+
+
+    @pyqtSlot(QtWidgets.QAction)
+    def on_click_deeplabcut_file_menu_action_load(self, action):
+        print("on_click_deeplabcut_file_menu_action_load(action: {0})".format(action.text()))
+        menu_action_name = action.text()
+        menu_action_data = action.data()
+        if menu_action_data is not None:
+            print("Found valid action: {0}".format(str(menu_action_name)))
+            menu_action_data.dataReloaded.connect(self.on_data_reloaded)
+            menu_action_data.load_data()
+
+        # self.load_deeplabcut_data_file()
+        # print('Action: ', action.text())
+    
 
     
