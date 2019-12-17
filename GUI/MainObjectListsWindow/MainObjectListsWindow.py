@@ -83,6 +83,11 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         # Setup the tree
         # self.ui.treeWidget_VideoFiles
         self.ui.treeWidget_VideoFiles.setHeaderLabels(MainObjectListsWindow.VideoFileTreeHeaderLabels)
+        # Connect the tree widget's contextmenu
+        self.ui.treeWidget_VideoFiles.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui.treeWidget_VideoFiles.customContextMenuRequested.connect(self.menuContextTree)
+
+
 
         self.ui.textBrowser_SelectedInfoBox.setText("Hi")
 
@@ -350,11 +355,6 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
 
 
-            
-
-
-
-
     # TODO: update end_date without rebuilding the whole table
     def update_end_date(self, top_level_index, child_index, new_date):
         curr_top_level_node = self.top_level_nodes[top_level_index]
@@ -369,7 +369,6 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         
     def mouseMoveEvent(self, event):
         pass
-
 
     def handle_menu_load_event(self):
         print("actionLoad")
@@ -484,6 +483,30 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     # Occurs when the user selects an object in the child video track with the mouse
     def handle_child_hover_event(self, trackIndex, trackObjectIndex):
         pass
+
+
+    def menuContextTree(self, point):
+        # Infos about the node selected.
+        index = self.ui.treeWidget_VideoFiles.indexAt(point)
+
+        if not index.isValid():
+            return
+
+        item = self.ui.treeWidget_VideoFiles.itemAt(point)
+        name = item.text(0)  # The text of the node.
+
+        # We build the menu.
+        menu = QtWidgets.QMenu()
+        action = menu.addAction("Open item")
+        action = menu.addAction(name)
+        menu.addSeparator()
+        action_1 = menu.addAction("Option 1")
+        action_2 = menu.addAction("Option 2")
+        action_3 = menu.addAction("Option 3")
+
+        menu.exec_(self.ui.treeWidget_VideoFiles.mapToGlobal(point))
+
+
 
     def refresh_child_widget_display(self):
         pass

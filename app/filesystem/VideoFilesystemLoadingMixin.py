@@ -31,6 +31,10 @@ class CachedVideoFileLoadingOptions(Enum):
         LoadOnlyFromDatabase = 1 # Only loads the video file records from the sqlite database. Doesn't search the disk for new video files or update existing ones
         LoadDatabaseAndSearchVideoFileSearchPaths = 2 #  Load the video file records from the sqlite database AND search the video file search paths for new or updated video files.
 
+class CachedDataFileLoadingOptions(Enum):
+        LoadOnlyFromDatabase = 1 # Only loads the video file records from the sqlite database. Doesn't search the disk for new video files or update existing ones
+        LoadDatabaseAndSearchVideoFileSearchPaths = 2 #  Load the video file records from the sqlite database AND search the video file search paths for new or updated video files.
+
 
 
 class ParentDirectoryCache(QObject):
@@ -198,8 +202,9 @@ Loads the VideoFiles from the database (cached versions) and then tries to searc
 """
 class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
 
-    VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
-    # VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadOnlyFromDatabase
+    # VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
+    VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadOnlyFromDatabase
+    DataFileLoadingMode = CachedDataFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
 
 
     foundFilesUpdated = pyqtSignal()
@@ -235,10 +240,13 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
     def reload_data(self, restricted_search_paths=None):
         print("VideoFilesystemLoader.reload_data(...)")
         # Load the video files depending on the setting.
-        if VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadOnlyFromDatabase:
-            print("Only loading video files from database. Ignoring search paths...")
-            self.reloadModelFromDatabase()
-        elif VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths:
+        if ((VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths) or (VideoFilesystemLoader.DataFileLoadingMode == CachedDataFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths)):
+            
+            if VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadOnlyFromDatabase:
+                print("Only loading video files from database. Ignoring search paths...")
+            else:
+                print("Loading video files from database and filesystem...")
+
             print("Loading video files from database and searching search paths...")
             self.reloadModelFromDatabase()
             # Rebuild self.searchPaths from the database's parent folders
@@ -484,13 +492,17 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
 
         # Clear the top-level nodes
         for aSearchPath in active_search_paths:
-            curr_search_path_video_files = findVideoFiles(aSearchPath, shouldPrint=False)
-            curr_search_path_deeplabcut_data_files = findDeeplabCutProducedOutputFiles(aSearchPath, shouldPrint=False)
 
-            # self.found_files_lists.append(curr_search_path_video_files)
-            self.cache[aSearchPath].set_found_filesystem_video_files(curr_search_path_video_files) ## TODO: Don't overwrite the previously cached/found video files
-            self.cache[aSearchPath].set_found_filesystem_deeplabcut_data_output_files(curr_search_path_deeplabcut_data_files)
-            self.total_found_files = self.total_found_files + len(curr_search_path_video_files)
+            if (VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths):
+                curr_search_path_video_files = findVideoFiles(aSearchPath, shouldPrint=False)
+                self.cache[aSearchPath].set_found_filesystem_video_files(curr_search_path_video_files) ## TODO: Don't overwrite the previously cached/found video files
+                self.total_found_files = self.total_found_files + len(curr_search_path_video_files)
+
+            if (VideoFilesystemLoader.DataFileLoadingMode == CachedDataFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths):
+                curr_search_path_deeplabcut_data_files = findDeeplabCutProducedOutputFiles(aSearchPath, shouldPrint=False)
+                self.cache[aSearchPath].set_found_filesystem_deeplabcut_data_output_files(curr_search_path_deeplabcut_data_files)
+                self.total_found_files = self.total_found_files + len(curr_search_path_deeplabcut_data_files)
+            
             searchedSearchPaths = searchedSearchPaths + 1
             self.findFilesInSearchDirectoryComplete.emit(aSearchPath)
             progress_callback.emit(active_search_paths, (searchedSearchPaths*100/self.total_search_paths))
