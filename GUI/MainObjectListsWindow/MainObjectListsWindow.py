@@ -27,6 +27,10 @@ from app.filesystem.VideoConversionHelpers import HandbrakeConversionQueue, save
 from app.filesystem.VideoFilesystemLoadingMixin import CachedVideoFileLoadingOptions, ParentDirectoryCache, VideoFilesystemLoader
 from app.filesystem.DeeplabcutOutputFilesystemLoadingMixin import DeeplabCutOutputFileType, DeeplabcutEventFile, DeeplabcutFilesystemLoader
 
+# Pandas dataframe tables
+from GUI.Model.TableModels.PandasTableModel import PandasTableModel
+from GUI.UI.TableWidgets.PandasTableWidget import PandasTableWidget
+
 class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
     VideoFileTreeHeaderLabels = ['filename', 'start_date', 'end_date', 'is_labeled']
@@ -55,6 +59,7 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         # self.reload_on_search_paths_changed()
 
         self.top_level_nodes = []
+        self.currentTablePreviewWidget = None
 
         self.setMouseTracking(True)
         self.initUI()
@@ -575,7 +580,9 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     @pyqtSlot(pd.DataFrame)
     def on_data_reloaded(self, df):
         print("on_data_reloaded(df: {0})".format(str(df)))
-
+        newModel = PandasTableModel(df, "newModel")
+        self.currentTablePreviewWidget = PandasTableWidget([newModel], parent=None)
+        self.currentTablePreviewWidget.show()
 
 
     @pyqtSlot(QtWidgets.QAction)

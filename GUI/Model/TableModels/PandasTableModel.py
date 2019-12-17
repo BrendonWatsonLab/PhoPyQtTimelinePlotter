@@ -14,9 +14,13 @@ from PyQt5.QtCore import QAbstractTableModel, Qt
 """
 class PandasTableModel(QAbstractTableModel):
 
-    def __init__(self, data):
+    def __init__(self, data, model_display_name):
         QAbstractTableModel.__init__(self)
         self._data = data
+        self._model_display_name = model_display_name
+
+    def get_model_display_name(self):
+        return self._model_display_name
 
     def rowCount(self, parent=None):
         return self._data.shape[0]
