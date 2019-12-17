@@ -24,6 +24,7 @@ from app.database.entry_models.db_model import FileParentFolder, StaticFileExten
 from app.filesystem.VideoConversionHelpers import HandbrakeConversionQueue, save_handbrake_conversion_queue
 
 from app.filesystem.VideoFilesystemLoadingMixin import CachedVideoFileLoadingOptions, ParentDirectoryCache, VideoFilesystemLoader
+from app.filesystem.DeeplabcutOutputFilesystemLoadingMixin import DeeplabCutOutputFileType, DeeplabcutEventFile, DeeplabcutFilesystemLoader
 
 class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
@@ -43,9 +44,6 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     TreeItem_FilesystemOnly_Foreground = QBrush(Qt.green)
     TreeItem_FilesystemNewer_Foreground = QBrush(Qt.darkGreen)
     TreeItem_DatabaseNewer_Foreground = QBrush(Qt.darkBlue)
-
-
-
 
     def __init__(self, database_connection, videoFileSearchPaths):
         super(MainObjectListsWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
@@ -497,12 +495,26 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
         # We build the menu.
         menu = QtWidgets.QMenu()
-        action = menu.addAction("Open item")
-        action = menu.addAction(name)
-        menu.addSeparator()
-        action_1 = menu.addAction("Option 1")
-        action_2 = menu.addAction("Option 2")
-        action_3 = menu.addAction("Option 3")
+        # action = menu.addAction("Open item")
+        # action = menu.addAction(name)
+
+        # See if it's a .csv, .h5, or .pickle file:
+        found_extension = Path(name).suffix
+        print("found_extension: {0}".format(str(found_extension)))
+        found_output_format = DeeplabCutOutputFileType.get_from_extension(found_extension)
+        if found_output_format is not None:
+            # Specifically a deeplabcut output file
+            output_event_file = DeeplabcutEventFile(Path(name), found_output_format, parent=self)
+            action = menu.addAction("Load DeeplabCut output file...")
+            # action = menu.addAction(name)
+
+        else:
+            # Non DLC output file extension type
+            menu.addSeparator()
+            action_1 = menu.addAction("Option 1")
+            action_2 = menu.addAction("Option 2")
+            action_3 = menu.addAction("Option 3")
+
 
         menu.exec_(self.ui.treeWidget_VideoFiles.mapToGlobal(point))
 
