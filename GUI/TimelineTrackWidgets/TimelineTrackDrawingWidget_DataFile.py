@@ -50,6 +50,14 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
         self.reloadModelFromDatabase()
         
 
+    # Override: TrackConfigDataCacheMixin
+   # performReloadConfigCache(...): actually tells the config cache to update
+    @pyqtSlot()
+    def performReloadConfigCache(self):
+        #TODO: figure out how to pass file path
+        self.get_track_config().reload(self.database_connection.get_session(), self)
+    
+    
     ## Data Model Functions:
     # Updates the member variables from the database
     # Note: if there are any pending changes, they will be persisted on this action
@@ -79,9 +87,6 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
             newAnnotationIndex = len(self.durationObjects)
             newAnnotationView = aContainerObj.get_view()
             newAnnotationView.setAccessibleName(str(newAnnotationIndex))
-            # newAnnotation.on_edit.connect(self.on_annotation_modify_event)
-            # newAnnotation.on_edit_by_dragging_handle_start.connect(self.handleStartSliderValueChange)
-            # newAnnotation.on_edit_by_dragging_handle_end.connect(self.handleEndSliderValueChange)
             self.durationObjects.append(newAnnotationView)          
 
         self.update()

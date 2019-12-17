@@ -142,7 +142,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
     # debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(False, True, True), VideoTrackGroupSettings(False, True, True)]
 
     debug_desiredVideoTracks = [1]
-    debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(True, True, True)]
+    debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(True, True, True, ["test"])]
 
     # debug_desiredVideoTracks = [5, 6, 8, 9]
 
@@ -407,7 +407,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
                 # Data Tracks:
                 for aWantedDataTrack in wantedDataTracks:
                     dataTrackName = aWantedDataTrack
-                    currTrackConfig = DataFileTrackConfiguration(currTrackIndex, "D_B{0:02}{1}".format(currTrackBBID, dataTrackName), dataTrackName, [currTrackBBID+1], None, None, None, self)
+                    currTrackConfig = DataFileTrackConfiguration(currTrackIndex, "D_B{0:02}{1}".format(currTrackBBID, dataTrackName), dataTrackName, "", [currTrackBBID+1], None, None, None, self)
                     self.trackConfigurationsDict[currTrackIndex] = currTrackConfig
                     currDataTrackWidget = TimelineTrackDrawingWidget_DataFile(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=False, wantsMouseEvents=True)
                     specific_storage_array_index = len(self.eventTrackWidgets)
@@ -417,7 +417,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
                     self.trackID_to_GroupIndexMap[currTrackIndex] = index
                     currTrackIndex = currTrackIndex + 1
 
-                    pass
 
                 self.trackGroups.append(currGroup)
 
@@ -611,6 +610,14 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
                     initUI_setupEventTrackWidget(self, currWidget, currTrackConfigurationIndex)
                     currTrackConfigurationIndex = currTrackConfigurationIndex + 1
 
+                # Data Tracks:
+                for aWantedDataTrackIndex in currGroup.get_dataTrackIndicies():
+                    currWidget = self.eventTrackWidgets[aWantedDataTrackIndex]
+                    # Event track specific setup
+                    initUI_setupEventTrackWidget(self, currWidget, currTrackConfigurationIndex)
+                    currTrackConfigurationIndex = currTrackConfigurationIndex + 1
+
+                
 
             # General Layout:
             self.extendedTracksContainer.setLayout(self.extendedTracksContainerVboxLayout)

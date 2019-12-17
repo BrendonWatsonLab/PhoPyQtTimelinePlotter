@@ -22,51 +22,60 @@ from GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, 
 from GUI.Model.TrackType import TrackType
 
 # INCLUDES:
-# from GUI.Model.TrackConfigs.DataFileTrackConfig import DataFileTrackFilterConfig, DataFileTrackConfiguration
+# from GUI.Model.TrackConfigs.DataFileTrackConfig import DataFileTrackFilter, DataFileTrackConfiguration
 
 """
 Represents a filter for a specific track
 """
-class DataFileTrackFilterConfig(TrackFilterBase):
+class DataFileTrackFilter(TrackFilterBase):
 
-    def __init__(self, contextConfigObject, behavioral_box_ids=None, experiment_ids=None, cohort_ids=None, animal_ids=None, parent=None):
-        super(DataFileTrackFilterConfig, self).__init__(FilesystemRecordBase, behavioral_box_ids, experiment_ids, cohort_ids, animal_ids, parent=parent)
-        self.contextConfigObject = contextConfigObject
+    def __init__(self, dataFileName, behavioral_box_ids=None, experiment_ids=None, cohort_ids=None, animal_ids=None, parent=None):
+        super(DataFileTrackFilter, self).__init__(FilesystemRecordBase, behavioral_box_ids, experiment_ids, cohort_ids, animal_ids, parent=parent)
+        self.dataFileName = dataFileName
 
     # Returns a filter query so that children classes can extend the filter
     def build_filter_query(self, session):
         print("ERROR: SHOULDN'T BE CALLING DataFileTrackConfig.build_filter_query(...)!!!")
         return None
 
-
-
     # Returns the records sorted by the start_date field
     def build_filter(self, session):
-        return self.build_filter_query(session).order_by(FilesystemRecordBase.start_date).all()
+        # return self.build_filter_query(session).order_by(FilesystemRecordBase.start_date).all()
+        if self.dataFileName is not None:
+            if self.dataFileName != "":
+                # Valid
+                return []
+            else:
+                # oops!
+                return []
+        else:
+            return []
+
+        return []
 
 
     def __str__(self):
-        return 'DataFileTrackConfig: behavioral_box_ids: {0}, experiment_ids: {1}, cohort_ids: {2}, animal_ids: {3}, contextConfigObject: {4}'.format(self._get_behavioral_box_ids_str(), self._get_experiment_ids_str(), self._get_cohort_ids_str(), self._get_animal_ids_str(), str(self.contextConfigObject))
+        return 'DataFileTrackConfig: behavioral_box_ids: {0}, experiment_ids: {1}, cohort_ids: {2}, animal_ids: {3}, dataFileName: {4}'.format(self._get_behavioral_box_ids_str(), self._get_experiment_ids_str(), self._get_cohort_ids_str(), self._get_animal_ids_str(), str(self.dataFileName))
 
     def get_selection_string(self):
         out_string = super().get_selection_string()
-        if self.contextConfigObject is not None:
+        if self.dataFileName is not None:
             out_string = out_string + ", "
-            out_string = out_string + str(self.contextConfigObject)
+            out_string = out_string + str(self.dataFileName)
         else:
             out_string = out_string + ", No Context"
         return out_string
 
     def get_output_dict(self):
-        return {'behavioral_box_ids': self.behavioral_box_ids, 'experiment_ids': self.experiment_ids, 'cohort_ids': self.cohort_ids, 'animal_ids': self.animal_ids, 'contextConfigObject':self.contextConfigObject}
+        return {'behavioral_box_ids': self.behavioral_box_ids, 'experiment_ids': self.experiment_ids, 'cohort_ids': self.cohort_ids, 'animal_ids': self.animal_ids, 'dataFileName':self.dataFileName}
 
 
 # DataFileTrackConfiguration: a class that holds the settings for a timeline track
 class DataFileTrackConfiguration(TrackConfigurationBase):
 
-    def __init__(self, trackIndex, trackTitle, trackExtendedDescription, behavioral_box_ids=None, experiment_ids=None, cohort_ids=None, animal_ids=None, parent=None):
+    def __init__(self, trackIndex, trackTitle, trackExtendedDescription, dataFileName, behavioral_box_ids=None, experiment_ids=None, cohort_ids=None, animal_ids=None, parent=None):
         super(DataFileTrackConfiguration, self).__init__(trackIndex, trackTitle, trackExtendedDescription, FilesystemRecordBase, behavioral_box_ids, experiment_ids, cohort_ids, animal_ids, parent=parent)
-        self.filter = DataFileTrackFilterConfig(contextConfigObject, behavioral_box_ids, experiment_ids, cohort_ids, animal_ids, parent=parent)
+        self.filter = DataFileTrackFilter(dataFileName, behavioral_box_ids, experiment_ids, cohort_ids, animal_ids, parent=parent)
 
     # get_should_auto_build_gui_views(): true if the gui views should automatically be built from the records after a reload(...) command
     # can be overriden by children if we don't want the GUI views auto-built
