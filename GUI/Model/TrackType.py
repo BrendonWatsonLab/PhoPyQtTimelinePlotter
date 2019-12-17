@@ -44,6 +44,8 @@ class TrackType(Enum):
             return 'Note'
         elif self == TrackType.Partition:
             return 'Part'
+        elif self == TrackType.DataFile:
+            return 'Data'
         else:
             return 'ERR'
 

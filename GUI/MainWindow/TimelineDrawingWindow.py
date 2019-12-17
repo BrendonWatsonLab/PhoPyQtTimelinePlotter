@@ -909,7 +909,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
     def keyPressEvent(self, event):
         print("TimelineDrawingWindow.keyPressEvent(): {0}".format(str(event.key())))
 
-
         if event.key() == Qt.Key_Space:
             try:
                 self.videoPlayerWindow.key_handler(event)
