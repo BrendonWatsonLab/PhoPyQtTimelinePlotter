@@ -2453,13 +2453,13 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
     @pyqtSlot()
     def on_video_thumbnail_generation_complete(self):
         print("TimelineDrawingWindow.on_video_thumbnail_generation_complete()...")
-        # Clear the top-level nodes
         self.video_thumbnail_popover_window = QDialog(self)
         # self.video_thumbnail_popover_window.setCentr
         # A vertical box layout
         thumbnailsLayout = QVBoxLayout()
 
-        desiredThumbnailSizeKey = "40"
+        # desiredThumbnailSizeKey = "40"
+        desiredThumbnailSizeKey = "160"
 
         # for (aSearchPathIndex, aSearchPath) in enumerate(self.searchPaths):
         for (key_path, cache_value) in self.get_video_thumbnail_generator().get_cache().items():

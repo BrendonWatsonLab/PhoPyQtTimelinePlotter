@@ -52,11 +52,12 @@ class VideoPreviewThumbnailGenerator(QObject):
     thumbnailGenerationComplete = pyqtSignal()
 
 
-    def __init__(self, videoFilePaths, parent=None):
+    def __init__(self, videoFilePaths, thumbnailSizes = [160, 80, 40], parent=None):
         super(VideoPreviewThumbnailGenerator, self).__init__(parent=parent) # Call the inherited classes __init__ method
         self.cache = dict()
         self.videoFilePaths = videoFilePaths
         self.loadedVideoFiles = []
+        self.desiredThumbnailSizes = thumbnailSizes
         self.pending_operation_status = PendingFilesystemOperation(OperationTypes.NoOperation, 0, 0, parent=self)
 
         # self.reload_on_video_paths_changed()
@@ -139,7 +140,7 @@ class VideoPreviewThumbnailGenerator(QObject):
 
         for (sub_index, aFoundVideoFile) in enumerate(active_video_paths):
             # Iterate through all found video-files in a given list (a list of VideoThumbnail objects: [VideoThumbnail])
-            generatedThumbnailObjsList = VideoPreviewThumbnailGenerator.generate_thumbnails_for_video_file(aFoundVideoFile, enable_debug_print=True)
+            generatedThumbnailObjsList = VideoPreviewThumbnailGenerator.generate_thumbnails_for_video_file(aFoundVideoFile, self.desiredThumbnailSizes, enable_debug_print=True)
             
             if (not (aFoundVideoFile in self.cache.keys())):
                 # Parent doesn't yet exist in cache
@@ -177,7 +178,7 @@ class VideoPreviewThumbnailGenerator(QObject):
 
 
     @staticmethod
-    def generate_thumbnails_for_video_file(activeVideoFilePath, enable_debug_print):
+    def generate_thumbnails_for_video_file(activeVideoFilePath, thumbnailSizes, enable_debug_print=False):
         """Extract frames from the video and creates thumbnails for one of each"""
         # Extract frames from video
         if enable_debug_print:
@@ -188,7 +189,7 @@ class VideoPreviewThumbnailGenerator(QObject):
 
         # Generate and save thumbs
         for i in range(len(frames)):
-            thumbs = VideoPreviewThumbnailGenerator.image_to_thumbs(frames[i], enable_debug_print)
+            thumbs = VideoPreviewThumbnailGenerator.image_to_thumbs(frames[i], thumbnailSizes, enable_debug_print)
             currThumbnailObj = VideoThumbnail(i, thumbs)
             outputThumbnailObjsList.append(currThumbnailObj)
 
@@ -202,6 +203,10 @@ class VideoPreviewThumbnailGenerator(QObject):
 
 
 
+    """ video_to_frames(...): 
+    TODO: currently hardcoded to return either 1 (the first) or 5 frames.
+
+    """
     @staticmethod
     def video_to_frames(video_filename, enable_debug_print, use_OpenCV_method=True):
         """Extract frames from video"""
@@ -269,8 +274,13 @@ class VideoPreviewThumbnailGenerator(QObject):
             print("done. ({0} frames extracted)...".format(str(len(frames))))
         return frames
 
+
+    """ image_to_thumbs(img, ...): converts an image to a dictionary of different sized thumbnails
+        img: the image to compute the thumbnails for
+        thumbnailSizes: [int]: an array of the different thumbnail sizes to generate (in pixels)
+    """
     @staticmethod
-    def image_to_thumbs(img, enable_debug_print):
+    def image_to_thumbs(img, thumbnailSizes, enable_debug_print= False):
         """Create thumbs from image"""
         if enable_debug_print:
             print("image_to_thumbs(...)...")
@@ -281,8 +291,8 @@ class VideoPreviewThumbnailGenerator(QObject):
         # thumbs = {"original": img}
         thumbs = {"original": qImg}
         # sizes = [640, 320, 160]
-        sizes = [160, 80, 40]
-        for size in sizes:
+        # sizes = [160, 80, 40]
+        for size in thumbnailSizes:
             if (width >= size):
                 r = (size + 0.0) / width
                 max_size = (size, int(height * r))
