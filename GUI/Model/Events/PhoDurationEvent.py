@@ -6,6 +6,7 @@
 import sys
 from datetime import datetime, timezone, timedelta
 import numpy as np
+import math
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QMenu
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QFontMetrics
@@ -13,8 +14,9 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 from GUI.Model.Events.PhoEvent import *
 from GUI.UI.EdgeAndCornerSelectionViewHelpers import EdgeAndCornerContainerComponent, EdgeAndCornerContainerViewMixin
+from GUI.Helpers.ThumbnailDrawingEventMixin import ThumbnailDrawingEventMixin
 
-class PhoDurationEvent(EdgeAndCornerContainerViewMixin, PhoEvent):
+class PhoDurationEvent(ThumbnailDrawingEventMixin, EdgeAndCornerContainerViewMixin, PhoEvent):
     InstantaneousEventDuration = timedelta(seconds=2)
     RectCornerRounding = 8
     ColorBase = QColor(51, 204, 255, PhoEvent.DefaultOpacity)  # Teal
@@ -30,6 +32,7 @@ class PhoDurationEvent(EdgeAndCornerContainerViewMixin, PhoEvent):
         super(PhoDurationEvent, self).__init__(startTime, name, color, extended_data, parent=parent)
         self.endTime = endTime
         self.init_EdgeAndCornerContainerViewMixin()
+        self.init_ThumbnailDrawingEventMixin()
 
     def __eq__(self, otherEvent):
         return self.name == otherEvent.name and self.startTime == otherEvent.startTime and self.endTime == otherEvent.endTime
@@ -130,7 +133,6 @@ class PhoDurationEvent(EdgeAndCornerContainerViewMixin, PhoEvent):
         menu = self.buildMenu()
         action = menu.exec_(self.mapToGlobal(pos))
         self.handleMenuAction(action)
-
 
     def on_button_clicked(self, event):
         self.set_state_selected()

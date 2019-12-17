@@ -213,7 +213,9 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
 
         # Video Thumbnail Generator:
         self.videoThumbnailGenerator = VideoPreviewThumbnailGenerator([], parent=self)
-        self.videoThumbnailGenerator.thumbnailGenerationComplete.connect(self.on_video_thumbnail_generation_complete)
+        self.videoThumbnailGenerator.thumbnailGenerationComplete.connect(self.on_all_videos_thumbnail_generation_complete)
+        self.videoThumbnailGenerator.videoThumbnailGenerationComplete.connect(self.on_video_event_thumbnail_generation_complete) # Single video file
+
 
         self.wantsCreateNewVideoPlayerWindowOnClose = False
         self.pendingCreateVideoPlayerSelectedItemReference = None # self.pendingCreateVideoPlayerSelectedItem: holds the URL of the video file that we currently want to load. Used to enable waiting for the previous video player to close before a new one is opened with this URL.
@@ -946,10 +948,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         self.cursorX = event.x()
         self.cursorY = event.y()
         
-        # track_offset_x = self.percent_offset_to_track_offset(self.get_viewport_percent_scrolled())
-        # duration_offset = self.offset_to_duration(self.cursorX)
-        # datetime = self.offset_to_datetime(self.cursorX)
-
         # Get scrollview x_offset from window x_offset
         self.timelineCursorX = self.viewport_offset_to_contents_offset(self.cursorX)
         self.timelineCursorDurationOffset = self.offset_to_duration(self.timelineCursorX)
@@ -2051,9 +2049,15 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             print("Error: unknown track type!")
             return
     
+    """ on_video_track_child_generate_thumbnails(self, trackID, videoDurationObj): called a particular video event for a track with trackID
+
+    """
     @pyqtSlot(int, object)
     def on_video_track_child_generate_thumbnails(self, trackID, videoDurationObj):
         print("TimelineDrawingWindow.on_video_track_child_generate_thumbnails({0}, {1})".format(str(trackID), str(videoDurationObj)))
+
+        # def after_video_track_thumbnails_generated(self, trackID, videoDurationObj):
+        #     print("after_video_track_thumbnails_generated(trackID: {0}, videoDurationObj: {1})".format(str(trackID), str(videoDurationObj)))
 
         currTrackConfig = self.trackConfigurationsDict[trackID]
         currFoundTrack = self.get_track_with_trackID(trackID)
@@ -2063,6 +2067,9 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         if (proposed_video_file_path is not None):
             # Have a valid video file path
             print("TimelineDrawingWindow.on_video_track_child_generate_thumbnails(...): starting thumbnail generation with video: {0}...".format(str(proposed_video_file_path)))
+            # register the video duration object as a receiver of the thumbnail generation finished event
+            self.get_video_thumbnail_generator().videoThumbnailGenerationComplete.connect(videoDurationObj.on_thumbnails_loaded)
+
             # Start thumbnail generation for this video file too:
             self.get_video_thumbnail_generator().add_video_path(str(proposed_video_file_path))
 
@@ -2449,14 +2456,16 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
     def get_video_thumbnail_generator(self):
         return self.videoThumbnailGenerator
 
-    # on_video_thumbnail_generation_complete(): Called when a thumbnail generation is complete for a given video
-    @pyqtSlot()
-    def on_video_thumbnail_generation_complete(self):
-        print("TimelineDrawingWindow.on_video_thumbnail_generation_complete()...")
+
+    # on_video_event_thumbnail_generation_complete(): Called when a thumbnail generation is complete for a given video
+    @pyqtSlot(str, list)
+    def on_video_event_thumbnail_generation_complete(self, videoFileName, generated_thumbnails_list):
+        print("TimelineDrawingWindow.on_video_event_thumbnail_generation_complete(videoFileName: {0})...".format(str(videoFileName)))
         self.video_thumbnail_popover_window = QDialog(self)
         # self.video_thumbnail_popover_window.setCentr
         # A vertical box layout
-        thumbnailsLayout = QVBoxLayout()
+        # thumbnailsLayout = QVBoxLayout()
+        thumbnailsLayout = QHBoxLayout()
 
         # desiredThumbnailSizeKey = "40"
         desiredThumbnailSizeKey = "160"
@@ -2473,9 +2482,37 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
                 w.setPixmap(QtGui.QPixmap.fromImage(currThumbnailImage))
                 thumbnailsLayout.addWidget(w)
 
-        
         self.video_thumbnail_popover_window.setLayout(thumbnailsLayout)
         self.video_thumbnail_popover_window.show()
+
+        self.update()
+
+    # on_video_thumbnail_generation_complete(): Called when a thumbnail generation is complete for a given video
+    @pyqtSlot()
+    def on_all_videos_thumbnail_generation_complete(self):
+        print("TimelineDrawingWindow.on_all_videos_thumbnail_generation_complete()...")
+        # self.video_thumbnail_popover_window = QDialog(self)
+        # # self.video_thumbnail_popover_window.setCentr
+        # # A vertical box layout
+        # thumbnailsLayout = QVBoxLayout()
+
+        # # desiredThumbnailSizeKey = "40"
+        # desiredThumbnailSizeKey = "160"
+
+        # # for (aSearchPathIndex, aSearchPath) in enumerate(self.searchPaths):
+        # for (key_path, cache_value) in self.get_video_thumbnail_generator().get_cache().items():
+        #     # key_path: the video file path that had the thumbnails generated for it
+        #     print("thumbnail generation complete for [{0}]: {1} frames".format(str(key_path), len(cache_value)))
+        #     for (index, aVideoThumbnailObj) in enumerate(cache_value):
+        #         currThumbsDict = aVideoThumbnailObj.get_thumbs_dict()
+        #         # currThumbnailImage: should be a QImage
+        #         currThumbnailImage = currThumbsDict[desiredThumbnailSizeKey]
+        #         w = QLabel()
+        #         w.setPixmap(QtGui.QPixmap.fromImage(currThumbnailImage))
+        #         thumbnailsLayout.addWidget(w)
+
+        # self.video_thumbnail_popover_window.setLayout(thumbnailsLayout)
+        # self.video_thumbnail_popover_window.show()
 
         self.update()
     

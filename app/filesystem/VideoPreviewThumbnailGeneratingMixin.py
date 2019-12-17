@@ -49,7 +49,14 @@ class VideoPreviewThumbnailGenerator(QObject):
     targetVideoFilePathsUpdated = pyqtSignal()
 
     generatedThumbnailsUpdated = pyqtSignal()
+
+    # All video items
     thumbnailGenerationComplete = pyqtSignal()
+
+
+    # Single Video Event Item:
+    videoThumbnailGenerationComplete = pyqtSignal(str, list) # filename, [VideoThumbnail]
+
 
 
     def __init__(self, videoFilePaths, thumbnailSizes = [160, 80, 40], parent=None):
@@ -153,6 +160,7 @@ class VideoPreviewThumbnailGenerator(QObject):
 
             # Add the current video file path to the loaded files
             self.loadedVideoFiles.append(aFoundVideoFile)
+            self.videoThumbnailGenerationComplete.emit(aFoundVideoFile, generatedThumbnailObjsList)
 
             parsedFiles = parsedFiles + 1
             progress_callback.emit(active_video_paths, (parsedFiles*100/numFilesToGenerateThumbnailsFor))
