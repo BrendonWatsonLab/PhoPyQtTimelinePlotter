@@ -207,6 +207,8 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
     findMetadataComplete = pyqtSignal()
     findVideosComplete = pyqtSignal()
 
+    findFilesInSearchDirectoryComplete = pyqtSignal(str)
+
     def __init__(self, database_connection, videoFileSearchPaths, parent=None):
         super(VideoFilesystemLoader, self).__init__(database_connection, parent=parent) # Call the inherited classes __init__ method
         self.cache = dict()
@@ -490,6 +492,7 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
             self.cache[aSearchPath].set_found_filesystem_deeplabcut_data_output_files(curr_search_path_deeplabcut_data_files)
             self.total_found_files = self.total_found_files + len(curr_search_path_video_files)
             searchedSearchPaths = searchedSearchPaths + 1
+            self.findFilesInSearchDirectoryComplete.emit(aSearchPath)
             progress_callback.emit(active_search_paths, (searchedSearchPaths*100/self.total_search_paths))
 
         return "Done."

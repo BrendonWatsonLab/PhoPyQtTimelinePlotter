@@ -52,6 +52,7 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         self.ui = uic.loadUi("GUI/MainObjectListsWindow/MainObjectListsWindow.ui", self) # Load the .ui file
         self.videoLoader = VideoFilesystemLoader(self.database_connection, videoFileSearchPaths, parent=self)
         self.videoLoader.foundFilesUpdated.connect(self.rebuild_from_found_files)
+        self.videoLoader.findFilesInSearchDirectoryComplete.connect(self.on_update_search_path)
         # self.reload_on_search_paths_changed()
 
         self.top_level_nodes = []
@@ -225,6 +226,133 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     def expand_top_level_nodes(self):
         for aTopLevelItem in self.top_level_nodes:
             self.ui.treeWidget_VideoFiles.expandItem(aTopLevelItem)
+
+
+    # Called on .findFilesInSearchDirectoryComplete
+    @pyqtSlot(str)
+    def on_update_search_path(self, updatedSearchPath):
+        if updatedSearchPath not in self.get_video_loader().get_cache().keys():
+            print("Error: on_update_search_path(updatedSearchPath: {0}) called but the item didn't exist in the cache!".format(str(updatedSearchPath)))
+            return
+
+        cache_value = self.get_video_loader().get_cache()[updatedSearchPath]
+        curr_search_path_video_files = cache_value.get_combined_video_files()
+        curr_search_path_data_file_map = cache_value.get_combined_video_file_basenames_to_data_file_list_map()
+        curr_search_path_output_data_files = []
+
+        # Try to get the relevant node:
+        foundTopLevelNode = None
+        for aTopLevelItem in self.top_level_nodes:
+            itemText = aTopLevelItem.text(0)
+            if (itemText != updatedSearchPath):
+                # Keep searching
+                continue
+            else:
+                # Found the item to update...
+                # aTopLevelItem.setText(int column, const QString &text)
+
+                numChildrenNodes = aTopLevelItem.childCount()
+                childrenNodes = aTopLevelItem.takeChildren() # Gets and removes the children nodes
+                # aTopLevelItem.child(childIndex)
+
+                for aFoundVideoFile in curr_search_path_video_files:
+                    aCurrVideoFileBasename = aFoundVideoFile.get_base_name()
+
+                    potentially_computed_end_date = aFoundVideoFile.get_computed_end_date()
+                    if potentially_computed_end_date:
+                        computed_end_date = str(potentially_computed_end_date)
+                    else:
+                        computed_end_date = 'Loading...'
+
+                    aNewVideoNode = QTreeWidgetItem([str(aFoundVideoFile.full_name), str(aFoundVideoFile.parsed_date), computed_end_date, str(aFoundVideoFile.is_deeplabcut_labeled_video)])
+                    # aNewVideoNode.setIcon(0,QIcon("your icon path or file name "))
+
+                    currSource = aFoundVideoFile.get_source()
+                    currForeground = MainObjectListsWindow.TreeItem_Default_Foreground
+                    currFont = MainObjectListsWindow.TreeItem_Default_Font
+
+                    if currSource == CachedFileSource.OnlyFromDatabase:
+                        currForeground = MainObjectListsWindow.TreeItem_DatabaseOnly_Foreground
+                        pass
+                    elif currSource == CachedFileSource.OnlyFromFilesystem:
+                        currForeground = MainObjectListsWindow.TreeItem_FilesystemOnly_Foreground
+                        pass
+                    elif currSource == CachedFileSource.NewestFromDatabase:
+                        currForeground = MainObjectListsWindow.TreeItem_DatabaseNewer_Foreground
+                        pass
+                    elif currSource == CachedFileSource.NewestFromFilesystem:
+                        currForeground = MainObjectListsWindow.TreeItem_FilesystemNewer_Foreground
+                        pass
+                    elif currSource == CachedFileSource.Identical:
+                        currForeground =  MainObjectListsWindow.TreeItem_Default_Foreground
+                        pass
+                    else:
+                        pass
+
+                    aNewVideoNode.setForeground(0, currForeground)
+                    aNewVideoNode.setFont(0, currFont)
+                    
+                    # Check for data files:
+                    curr_video_file_output_data_files = []
+                    if aCurrVideoFileBasename in curr_search_path_data_file_map.keys():
+                        curr_video_file_output_data_files = curr_search_path_data_file_map[aCurrVideoFileBasename]
+
+                    # print("ui loadedVideoFiles[{0}]: {1}".format(str(key_path), len(curr_video_file_output_data_files)))
+                    for aFoundDataFile in curr_video_file_output_data_files:
+                        aNewDataNode = QTreeWidgetItem([str(aFoundDataFile.full_name), str(aFoundDataFile.parsed_date), computed_end_date, str(aFoundDataFile.get_deeplabcut_info_string())])
+                        # aNewVideoNode.setIcon(0,QIcon("your icon path or file name "))
+
+                        currSource = aFoundDataFile.get_source()
+                        currForeground = MainObjectListsWindow.TreeItem_Default_Foreground
+                        currFont = MainObjectListsWindow.TreeItem_Default_Font
+
+                        if currSource == CachedFileSource.OnlyFromDatabase:
+                            currForeground = MainObjectListsWindow.TreeItem_DatabaseOnly_Foreground
+                            pass
+                        elif currSource == CachedFileSource.OnlyFromFilesystem:
+                            currForeground = MainObjectListsWindow.TreeItem_FilesystemOnly_Foreground
+                            pass
+                        elif currSource == CachedFileSource.NewestFromDatabase:
+                            currForeground = MainObjectListsWindow.TreeItem_DatabaseNewer_Foreground
+                            pass
+                        elif currSource == CachedFileSource.NewestFromFilesystem:
+                            currForeground = MainObjectListsWindow.TreeItem_FilesystemNewer_Foreground
+                            pass
+                        elif currSource == CachedFileSource.Identical:
+                            currForeground =  MainObjectListsWindow.TreeItem_Default_Foreground
+                            pass
+                        else:
+                            pass
+
+                        aNewDataNode.setForeground(0, currForeground)
+                        aNewDataNode.setFont(0, currFont)
+
+                        aNewVideoNode.addChild(aNewDataNode)
+
+                    # Add the new video node to the group
+                    aTopLevelItem.addChild(aNewVideoNode)
+
+                print("Found matching top-level-node.")
+                foundTopLevelNode = aTopLevelItem
+                aTopLevelItem.setExpanded(True)
+                break
+
+
+        if foundTopLevelNode is not None:
+            # self.ui.treeWidget_VideoFiles.addTopLevelItems(self.top_level_nodes)
+            # Expand all items
+            self.expand_top_level_nodes()
+            self.ui.treeWidget_VideoFiles.resizeColumnToContents(0)
+            self.update()
+        else:
+            print("Failed to find a top-level node matching {0}".format(str(updatedSearchPath)))
+            return
+
+
+
+            
+
+
 
 
     # TODO: update end_date without rebuilding the whole table
