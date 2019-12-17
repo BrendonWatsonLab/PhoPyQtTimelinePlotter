@@ -22,8 +22,10 @@ from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker
 from pathlib import Path
 
 from app.filesystem.FilesystemOperations import OperationTypes, PendingFilesystemOperation
-from app.filesystem.LabjackEventsLoader import loadLabjackDataFromPhoServerFormat, loadLabjackDataFromMatlabFormat, labjack_variable_names, labjack_variable_colors_dict, labjack_variable_indicies_dict, labjack_variable_event_type, labjack_variable_port_location, writeLinesToCsvFile
+# from app.filesystem.LabjackEventsLoader import loadLabjackDataFromPhoServerFormat, loadLabjackDataFromMatlabFormat, labjack_variable_names, labjack_variable_colors_dict, labjack_variable_indicies_dict, labjack_variable_event_type, labjack_variable_port_location, writeLinesToCsvFile
+from app.filesystem.LabjackEventsLoader import LabjackEventsLoader
 
+from app.filesystem.FilesystemRecordBase import *
 from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
 
 # from app.filesystem.LabjackFilesystemLoadingMixin import LabjackEventFile, LabjackFilesystemLoader
@@ -152,16 +154,16 @@ class LabjackFilesystemLoader(QObject):
         # If shouldLimitEventsToVariables is not None, then only events that are of type of the variable with the name in the array are included
         ## TODO: shouldLimitEventsToVideoDates should also affect the returned dateTimes, dataArray, etc.
         if usePhoServerFormat:
-            (relevantFileLines, relevantDateTimes, dateTimes, onesEventFormatDataArray) = loadLabjackDataFromPhoServerFormat(labjackFilePath, shouldUseStdOutFormat=phoServerFormatIsStdOut)
+            (relevantFileLines, relevantDateTimes, dateTimes, onesEventFormatDataArray) = LabjackEventsLoader.loadLabjackDataFromPhoServerFormat(labjackFilePath, shouldUseStdOutFormat=phoServerFormatIsStdOut)
         else:
-            (dateNums, dateTimes, onesEventFormatDataArray) = loadLabjackDataFromMatlabFormat(labjackFilePath)
+            (dateNums, dateTimes, onesEventFormatDataArray) = LabjackEventsLoader.loadLabjackDataFromMatlabFormat(labjackFilePath)
 
         ## Pre-process the data
-        if limitedVariablesToCreateEventsFor:
+        if limitedVariablesToCreateEventsFor is not None:
             active_labjack_variable_names = limitedVariablesToCreateEventsFor
 
         else:
-            active_labjack_variable_names = labjack_variable_names
+            active_labjack_variable_names = LabjackEventsLoader.labjack_variable_names
 
         numVariables = len(active_labjack_variable_names)
 
@@ -170,13 +172,14 @@ class LabjackFilesystemLoader(QObject):
 
         ## Iterate through the event variables and pre-process them
         variableData = []
+        labjackEventRecords = []
         labjackEvents = []
         # Can't check for invalid events in here because we do it variable by variable.
         for variableIndex in range(0, numVariables):
             currVariableName = active_labjack_variable_names[variableIndex]
-            dataArrayVariableIndex = labjack_variable_indicies_dict[currVariableName]
+            dataArrayVariableIndex = LabjackEventsLoader.labjack_variable_indicies_dict[currVariableName]
             currVariableDataValues = onesEventFormatDataArray[:, dataArrayVariableIndex]
-            currVariableColorTuple = mcolors.to_rgb(labjack_variable_colors_dict[currVariableName])
+            currVariableColorTuple = mcolors.to_rgb(LabjackEventsLoader.labjack_variable_colors_dict[currVariableName])
             currVariableColor = QColor(int(255.0 * currVariableColorTuple[0]), int(255.0 * currVariableColorTuple[1]), int(255.0 * currVariableColorTuple[2]))
 
             # Find the non-zero entries for the current variable
@@ -184,6 +187,7 @@ class LabjackFilesystemLoader(QObject):
             activeValues = currVariableDataValues[nonZeroEntries] # This is just all ones for 0/1 array
             activeTimestamps = dateTimes[nonZeroEntries]
 
+            labjackVariableSpecificRecords = []
             labjackVariableSpecificEvents = []
             ## Find times within video ranges:
             # activeVideoIndicies: contains an int index or None for each timestamp to indiciate which video (if any) the timestamp occured within
@@ -207,14 +211,17 @@ class LabjackFilesystemLoader(QObject):
                 if shouldCreateEvent:
                     currExtendedInfoDict = {'videoIndex': activeVideoIndicies[index],
                                             'video_relative_offset': video_relative_offset,
-                                            'event_type':labjack_variable_event_type[dataArrayVariableIndex],
-                                            'dispense_type':labjack_variable_event_type[dataArrayVariableIndex],
-                                            'port': labjack_variable_port_location[dataArrayVariableIndex],
+                                            'event_type':LabjackEventsLoader.labjack_variable_event_type[dataArrayVariableIndex],
+                                            'dispense_type':LabjackEventsLoader.labjack_variable_event_type[dataArrayVariableIndex],
+                                            'port': LabjackEventsLoader.labjack_variable_port_location[dataArrayVariableIndex],
                                             }
+                    currRecord = FilesystemLabjackEvent_Record(anActiveTimestamp.replace(tzinfo=None), None, currVariableName, currVariableColor, currExtendedInfoDict)
+                    labjackVariableSpecificRecords.append(currRecord)
                     currEvent = PhoDurationEvent(anActiveTimestamp.replace(tzinfo=None), None, currVariableName, currVariableColor, currExtendedInfoDict)
                     labjackVariableSpecificEvents.append(currEvent)
 
             # Append the variable-specific events to the master list of events
+            labjackEventRecords.extend(labjackVariableSpecificRecords)
             labjackEvents.extend(labjackVariableSpecificEvents)
             variableData.append({'timestamps': activeTimestamps, 'values': activeValues, 'videoIndicies': activeVideoIndicies, 'variableSpecificEvents': labjackVariableSpecificEvents})
 
@@ -294,7 +301,7 @@ class LabjackFilesystemLoader(QObject):
         #     relevantFileLines = np.array(relevantFileLines)[mask]
         #     erroneousEventFreeCSVFilePath = r'C:\Users\halechr\repo\PhoPyQtTimelinePlotter\data\output\erroneousEventsRemoved.csv'
         #     print('Writing to CSV file:', erroneousEventFreeCSVFilePath)
-        #     writeLinesToCsvFile(relevantFileLines, filePath=erroneousEventFreeCSVFilePath)
+        #     LabjackEventsLoader.writeLinesToCsvFile(relevantFileLines, filePath=erroneousEventFreeCSVFilePath)
         #     print('done.')
 
         return (dateTimes, onesEventFormatDataArray, variableData, labjackEvents)
