@@ -28,6 +28,7 @@ from GUI.UI.ExtendedTracksContainerWidget import ExtendedTracksContainerWidget
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Videos import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Partition import TrackContextConfig, TimelineTrackDrawingWidget_Partition
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_AnnotationComments import *
+from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_DataFile import *
 
 # from app.database.SqliteEventsDatabase import load_video_events_from_database
 from app.database.SqlAlchemyDatabase import load_annotation_events_from_database, save_annotation_events_to_database, create_TimestampedAnnotation
@@ -408,7 +409,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
                     dataTrackName = aWantedDataTrack
                     currTrackConfig = DataFileTrackConfiguration(currTrackIndex, "D_B{0:02}{1}".format(currTrackBBID, dataTrackName), dataTrackName, [currTrackBBID+1], None, None, None, self)
                     self.trackConfigurationsDict[currTrackIndex] = currTrackConfig
-                    currDataTrackWidget = TimelineTrackDrawingWidget_SelectionBase(currTrackIndex, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=False, wantsMouseEvents=False)
+                    currDataTrackWidget = TimelineTrackDrawingWidget_DataFile(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=False, wantsMouseEvents=True)
                     specific_storage_array_index = len(self.eventTrackWidgets)
                     currGroup.append_dataTrackIndex(specific_storage_array_index)
                     self.trackID_to_TrackWidgetLocatorTuple[currTrackIndex] = (currTrackConfig.get_track_storageArray_type(), specific_storage_array_index)
