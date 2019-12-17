@@ -580,7 +580,14 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     @pyqtSlot(pd.DataFrame)
     def on_data_reloaded(self, df):
         print("on_data_reloaded(df: {0})".format(str(df)))
-        newModel = PandasTableModel(df, "newModel")
+        frame_column_names = df.columns.names
+        frame_column_levels = df.columns.levels
+
+        dlc_command_info = df.columns.levels[0].values[0] # 'DLC_resnet50_ReachingSep27shuffle1_1030000'
+        body_parts_list = list(df.columns.levels[1].values) # ['earL' 'earR' 'nose' 'tail1' 'tailbase']
+        value_index_names = df.columns.levels[2].values # ['likelihood' 'x' 'y']
+
+        newModel = PandasTableModel(df, dlc_command_info)
         self.currentTablePreviewWidget = PandasTableWidget([newModel], parent=None)
         self.currentTablePreviewWidget.show()
 

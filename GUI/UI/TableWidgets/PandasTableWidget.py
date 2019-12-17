@@ -59,6 +59,7 @@ class PandasTableWidget(QWidget):
             
         desiredWindowWidth = 500
         self.resize( desiredWindowWidth, 800 )
+        self.setWindowTitle("DLC File Preview Window")
 
         # Setup the menubar
         initUI_initMenuBar(self)
