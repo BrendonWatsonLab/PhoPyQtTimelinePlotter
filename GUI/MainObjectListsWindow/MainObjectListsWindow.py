@@ -488,15 +488,9 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     def handle_child_hover_event(self, trackIndex, trackObjectIndex):
         pass
 
+    # TODO: Unused. Decided to set the node's data (Qt.UserRole) instead
+    # Note: Doesn't work because the deeplabcut files are nested below their video file
     def recover_full_path(self, tree_item):
-        # potentialParent = tree_item.parent()
-        # if potentialParent is None:
-        #     # This is a top level item.
-        #     return [tree_item.text(0)]
-        # else:
-        #     # Otherwise the parent is valid
-        #     return self.recover_full_path(potentialParent).append()
-
         accumulated_path = [tree_item.text(0)]
         potentialParent = tree_item.parent()
         while potentialParent is not None:
@@ -513,7 +507,7 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         return accumulated_path
 
 
-
+    # Generates the menu to be displayed for a point in the tree.
     def menuContextTree(self, point):
 
         # Infos about the node selected.
@@ -524,14 +518,12 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
         item = self.ui.treeWidget_VideoFiles.itemAt(point)
         name = item.text(0)  # The text of the node.
-        accumulated_array = self.recover_full_path(item)
+        # accumulated_array = self.recover_full_path(item)
 
         user_data = item.data(0, Qt.UserRole)
         active_item_full_path = user_data.get_full_path()
-
         # print("user_data: {0}".format(str(user_data)))
-        print("user_data: {0}".format(str(active_item_full_path)))
-        # QVariant(aFoundVideoFile)
+        # print("user_data: {0}".format(str(active_item_full_path)))
 
         # We build the menu.
         menu = QtWidgets.QMenu()

@@ -88,7 +88,7 @@ class DeeplabcutEventFile(QObject):
             self.data = pd.read_csv(self.get_file_path())
 
         elif (self.file_format == DeeplabCutOutputFileType.HDF):
-            self.data = pd.read_hdf(self.get_file_path(), 'df')
+            self.data = pd.read_hdf(self.get_file_path())
 
         elif (self.file_format == DeeplabCutOutputFileType.EXCEL):
             self.data = pd.read_excel(self.get_file_path(), 'Sheet1', index_col=None, na_values=['NA'])
