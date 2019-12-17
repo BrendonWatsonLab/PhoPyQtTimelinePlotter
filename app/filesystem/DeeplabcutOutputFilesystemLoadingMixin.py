@@ -117,7 +117,7 @@ class DeeplabcutEventFile(QObject):
 
 
 
-## DeeplabcutFilesystemLoader: this object tries to find video files in the filesystem and add them to the database if they don't exist
+## DeeplabcutFilesystemLoader: this object tries to find deeplabcut output files in the filesystem and make them accessible in memory
 """
 Loads the Deeplabcut event files
 """
