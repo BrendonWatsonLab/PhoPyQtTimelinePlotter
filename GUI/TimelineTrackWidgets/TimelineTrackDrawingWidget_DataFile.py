@@ -87,7 +87,7 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
             newAnnotationIndex = len(self.durationObjects)
             newAnnotationView = aContainerObj.get_view()
             newAnnotationView.setAccessibleName(str(newAnnotationIndex))
-            self.durationObjects.append(newAnnotationView)          
+            self.durationObjects.append(newAnnotationView)
 
         self.update()
         

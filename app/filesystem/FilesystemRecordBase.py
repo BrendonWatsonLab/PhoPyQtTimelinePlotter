@@ -9,7 +9,7 @@ from GUI.Model.TrackType import TrackType
 from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent, PhoEvent
 
 # FilesystemRecordBase.py
-# from app.filesystem.FilesystemRecordBase import *
+# from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemLabjackEvent_Record
 
 
 """ FilesystemRecordBase: an attempt to make a "record" like object for the filesystem analagous to the records loaded from the database

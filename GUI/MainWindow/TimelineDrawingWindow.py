@@ -175,6 +175,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
 
         self.labjackDataFilesystemLoader = LabjackFilesystemLoader([], parent=self)
         self.labjackDataFilesystemLoader.loadingLabjackDataFilesComplete.connect(self.on_labjack_files_loading_complete)
+        self.activeGlobalTimelineTimesChanged.connect(self.labjackDataFilesystemLoader.on_active_global_timeline_times_changed)
 
         # Update the data model, and set up the timeline totalStartTime, totalEndTime, totalDuration from the loaded videos if we're in that enum mode.
         self.reloadModelFromDatabase()
@@ -205,8 +206,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         # self.referenceManager.hoverDatetimeChanged.connect(self.on_reference_indicator_line_hover_changed)
         # self.referenceManager.selectedDatetimeChanged.connect(self.on_reference_indicator_line_selection_changed)
 
-
-
         self.activeZoomChanged.connect(self.referenceManager.on_active_zoom_changed)
         self.activeViewportChanged.connect(self.referenceManager.on_active_viewport_changed)
         self.activeGlobalTimelineTimesChanged.connect(self.referenceManager.on_active_global_timeline_times_changed)
@@ -235,7 +234,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         # self.minimumVideoTrackHeight = 25
 
         self.minimumEventTrackHeight = 50
-
 
         self.initUI()
         self.reload_tracks_from_track_configs()
@@ -2418,7 +2416,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         self.totalTrackCount = len(self.videoFileTrackWidgets) + len(self.eventTrackWidgets)
         self.totalNumGroups = len(self.trackGroups)
 
-        # Loop through the groups to layout the tracks
+        # Loop through the groups 
         for currGroupIndex in range(0, self.totalNumGroups):
             currGroup = self.trackGroups[currGroupIndex]
             if currGroup.get_videoTrackIndex() is not None:
@@ -2509,10 +2507,23 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         for (key_path, cache_value) in activeLoader.get_cache().items():
             # key_path: the labjack data file path that had the labjack events loaded from it
 
-            loaded_labjack_events = cache_value.get_labjack_events()
-            print("labjack event loading complete for [{0}]: {1} files".format(str(key_path), len(loaded_labjack_events)))
+            # loaded_labjack_events = cache_value.get_labjack_events()
+            # print("labjack event loading complete for [{0}]: {1} files".format(str(key_path), len(loaded_labjack_events)))
 
-            
-            # for (index, aVideoThumbnailObj) in enumerate(cache_value):
-            #     currThumbsDict = aVideoThumbnailObj.get_thumbs_dict()
-            pass
+            loaded_labjack_event_containers = cache_value.get_labjack_container_events()
+            print("labjack event container loading complete for [{0}]: {1} files".format(str(key_path), len(loaded_labjack_event_containers)))
+
+            # Loop through the groups 
+            for currGroupIndex in range(0, self.totalNumGroups):
+                currGroup = self.trackGroups[currGroupIndex]
+                currGroupDataTrackIndicies = currGroup.get_dataTrackIndicies()
+
+                # Loop through the data tracks
+                for aDataTrackIndex in currGroupDataTrackIndicies:
+                    currDataTrackWidget = self.eventTrackWidgets[aDataTrackIndex]
+                    currContainerArray = currDataTrackWidget.get_cached_container_array()
+                    currDataTrackTrackID = currDataTrackWidget.get_trackID()
+
+                    # Get configuration:
+                    currTrackConfig = self.trackConfigurationsDict[currDataTrackTrackID]
+                    currTrackConfig.update_cache(loaded_labjack_event_containers)

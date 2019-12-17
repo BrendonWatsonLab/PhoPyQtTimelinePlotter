@@ -83,9 +83,9 @@ class LabjackEventsLoader(object):
 
             """
             if (shouldUseStdOutFormat):
-                active_rx_dict = rx_stdout_dict
+                active_rx_dict = LabjackEventsLoader.rx_stdout_dict
             else:
-                active_rx_dict = rx_csv_dict
+                active_rx_dict = LabjackEventsLoader.rx_csv_dict
 
             for key, rx in active_rx_dict.items():
                 match = rx.search(line)
@@ -111,7 +111,7 @@ class LabjackEventsLoader(object):
 
             parsedDateTimes = []  # create an empty list to collect the data
             parsedDataArray = []
-            relevantFileLines = [];
+            relevantFileLines = []
             # open the file and read through it line by line
             with open(filepath, 'r') as file_object:
                 line = file_object.readline()
@@ -190,7 +190,7 @@ class LabjackEventsLoader(object):
     def writeLinesToCsvFile(lines, filePath='results/output.csv'):
         # Open a text file to write the lines out to
         with open(filePath, 'w', newline='') as csvfile:
-            csvfile.write(', '.join(labjack_csv_variable_names) + '\n')
+            csvfile.write(', '.join(LabjackEventsLoader.labjack_csv_variable_names) + '\n')
             for aLine in lines:
                 csvfile.write(aLine.replace(":",","))
             csvfile.close()
