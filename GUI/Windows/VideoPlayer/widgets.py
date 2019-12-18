@@ -7,7 +7,9 @@ from PyQt5.QtGui import QPalette, QColor, QWheelEvent, QKeyEvent, QPainter, \
     QPen
 from PyQt5.QtCore import pyqtSignal, QRect
 
+""" VideoFrame: the frame that contains the VLC video player
 
+"""
 class VideoFrame(QFrame):
     """
     A frame used specifically for video/media purpose
