@@ -90,12 +90,14 @@ btn_PreviousFrame_2
 class HistoricalFrameRenderingMixin(object):
 
     def init_HistoricalFrameRenderingMixin(self):
-        frame_previousFrames
-        btn_PreviousFrame_0
-        btn_PreviousFrame_1
-        btn_PreviousFrame_2
+        # frame_previousFrames
+        # btn_PreviousFrame_0
+        # btn_PreviousFrame_1
+        # btn_PreviousFrame_2
 
-        self.previousFrameButtons = [self.ui.btn_PreviousFrame_0,self.ui.btn_PreviousFrame_1, self.ui.btn_PreviousFrame_2]
+        self.desired_thumbnail_display_size_key = "160"
+
+        self.previousFrameButtons = [self.ui.btn_PreviousFrame_0, self.ui.btn_PreviousFrame_1, self.ui.btn_PreviousFrame_2]
         self.previousFrameButtonIcons = [None, None, None]
 
     # Sets the rendered icon of the button with the specified button_index to the QPixmap specified by frame_pixmap
@@ -108,10 +110,15 @@ class HistoricalFrameRenderingMixin(object):
         pass
 
 
-    @pyqtSlot(int, VideoThumbnail)
-    def on_video_thumbnail_generated(self, frame_index, video_thumbnail_obj):
-        
-        pass
+    @pyqtSlot(VideoThumbnail)
+    def on_video_thumbnail_generated(self, video_thumbnail_obj):
+        frame_index = video_thumbnail_obj.get_frame_index()
+        print("MainVideoPlayerWindow.on_video_thumbnail_generated(...): for frame index {0}".format(str(frame_index)))
+        currThumbsDict = video_thumbnail_obj.get_thumbs_dict()
+        # currThumbnailImage: should be a QImage
+        currThumbnailImage = currThumbsDict[self.desired_thumbnail_display_size_key]
+        currPixmap = QPixmap.fromImage(currThumbnailImage)
+        self.set_preview_frame(0, currPixmap)
 
 
 """ MediaPlayerUpdatingMixin: used by MainVideoPlayerWindow to load/change media

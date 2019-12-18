@@ -28,6 +28,10 @@ from app.filesystem.FilesystemOperations import OperationTypes, PendingFilesyste
 
 # from app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoThumbnail, VideoPreviewThumbnailGenerator
 
+
+""" VideoThumbnail: A cache of all the different thumbnail sizes for a specific frame in a specific video
+
+"""
 class VideoThumbnail(QObject):
     def __init__(self, frameIndex, thumbsDict, parent=None):
         super().__init__(parent=parent)
@@ -39,6 +43,49 @@ class VideoThumbnail(QObject):
 
     def get_thumbs_dict(self):
         return self.thumbsDict
+
+
+""" VideoSpecificThumbnailCache: A cache of all the resultant thumbnails for each frame for a given video file
+
+"""
+class VideoSpecificThumbnailCache(QObject):
+
+    frame_thumbnails_updated = pyqtSignal(str, VideoThumbnail) # (cache_video_file_name: str, frameThumbnailResult: VideoThumbnail)
+
+    def __init__(self, videoFile, parent=None):
+        super().__init__(parent=parent)
+        self._videoFile = videoFile
+        self._frameResultsDict = dict() # a dict(int:VideoThumbnail) for a given video file.
+
+    def get_video_file_name(self):
+        return self._videoFile
+
+    def get_generated_frame_indicies(self):
+        return self.get_frames_results_dict().keys()
+
+    def get_frames_results_dict(self):
+        return self._frameResultsDict
+
+    # reserve_frame_results(pending_desired_frame_indices): adds the pending_desired_frame_indices as keys with a value of None to the results dictionary if they don't already exist.
+    def reserve_frame_results(self, pending_desired_frame_indices):
+        for aFrame in pending_desired_frame_indices:
+            # Get only the frames that haven't already been generated.
+            if aFrame in self.get_generated_frame_indicies():
+                # Skip the already loaded or pending item
+                continue
+            else:
+                # Otherwise reserve it by setting it to None
+                self.get_frames_results_dict()[aFrame] = None
+            
+
+    def update_frame_thumbnail_results(self, updatedThumbnailResultsList):
+        for aThumbnailResult in updatedThumbnailResultsList:
+            curr_frame_index = aThumbnailResult.get_frame_index()
+            curr_frame_index_key = str(curr_frame_index)
+            self.get_frames_results_dict()[curr_frame_index_key] = aThumbnailResult
+            # Emit the signal
+            self.frame_thumbnails_updated.emit(self.get_video_file_name(), aThumbnailResult)
+
         
 ## VideoPreviewThumbnailGenerator: this object generates an array of "VideoThumbnail" type objects from a videoURL
 """
@@ -57,11 +104,13 @@ class VideoPreviewThumbnailGenerator(QObject):
     # Single Video Event Item:
     videoThumbnailGenerationComplete = pyqtSignal(str, list) # filename, [VideoThumbnail]
 
-
+    # Singal Video, Signal Frame, Item:
+    videoFrameThumbnailsUpdated = pyqtSignal(str, VideoThumbnail)
+    
 
     def __init__(self, videoFilePaths, thumbnailSizes = [160, 80, 40], parent=None):
         super(VideoPreviewThumbnailGenerator, self).__init__(parent=parent) # Call the inherited classes __init__ method
-        self.cache = dict()
+        self.cache = dict() # a [str:VideoSpecificThumbnailCache] dict that holds the VideoSpecificThumbnailCache object for each video file
         self.videoFilePaths = videoFilePaths
         self.loadedVideoFiles = []
 
@@ -78,6 +127,12 @@ class VideoPreviewThumbnailGenerator(QObject):
         if (len(videoFilePaths) > 0):
             self.reload_on_video_paths_changed()
         # self.reload_data()
+
+    # Called by the cache's update_frame_thumbnail_results(...) function to indicate that a thumbnail has been generated for a given frame
+    @pyqtSlot(str, VideoThumbnail)
+    def on_cache_frame_thumbnails_updated(self, videoFileName, videoThumbnailResultObj):
+        # Just re-emit the signal
+        self.videoFrameThumbnailsUpdated.emit(videoFileName, videoThumbnailResultObj)
 
 
     def get_cache(self):
@@ -148,17 +203,38 @@ class VideoPreviewThumbnailGenerator(QObject):
         self.pending_operation_status.restart(OperationTypes.FilesystemThumbnailGeneration, numFilesToGenerateThumbnailsFor)
 
         for (sub_index, aFoundVideoFile) in enumerate(active_video_paths):
+
+            ## TODO: should the cache initialization be outside the execute thread function? like in self.generate_video_thumbnails(...)??
+
+            # Check to see if a given file already has a cache in the cache
+            if (aFoundVideoFile in self.cache.keys()):
+                # Current cache exists already
+                # previously_generated_frames = self.cache[aFoundVideoFile].get_generated_frames()
+                # # Get only the frames that haven't already been generated.
+                # desired_frame_indicies = _setdiff_sorted(desired_frame_indicies, previously_generated_frames)
+                pass
+
+            else:
+                # Create the cache.
+                self.cache[aFoundVideoFile] = VideoSpecificThumbnailCache(aFoundVideoFile, parent=self)
+                self.cache[aFoundVideoFile].frame_thumbnails_updated.connect(self.on_cache_frame_thumbnails_updated)
+
+            if desired_frame_indicies is not None:
+                # Add the remaining desired_frame_indicies to the cache with None values to indicate that they are pending
+                self.cache[aFoundVideoFile].reserve_frame_results(desired_frame_indicies)
+            
             # Iterate through all found video-files in a given list (a list of VideoThumbnail objects: [VideoThumbnail])
             generatedThumbnailObjsList = VideoPreviewThumbnailGenerator.generate_thumbnails_for_video_file(aFoundVideoFile, desired_frame_indicies, desired_thumbnail_sizes, enable_debug_print=True)
-            
-            if (not (aFoundVideoFile in self.cache.keys())):
-                # Parent doesn't yet exist in cache
-                self.cache[aFoundVideoFile] = generatedThumbnailObjsList
-            else:
-                # Parent already exists
-                print("WARNING: video path {0} already exists in the cache. Updating its thumbnail objects list...".format(str(aFoundVideoFile)))
-                self.cache[aFoundVideoFile] = generatedThumbnailObjsList
-                pass
+
+            self.cache[aFoundVideoFile].update_frame_thumbnail_results(generatedThumbnailObjsList)
+            # if (not (aFoundVideoFile in self.cache.keys())):
+            #     # Parent doesn't yet exist in cache
+            #     self.cache[aFoundVideoFile] = generatedThumbnailObjsList
+            # else:
+            #     # Parent already exists
+            #     print("WARNING: video path {0} already exists in the cache. Updating its thumbnail objects list...".format(str(aFoundVideoFile)))
+            #     self.cache[aFoundVideoFile] = generatedThumbnailObjsList
+            #     pass
 
             # Add the current video file path to the loaded files
             self.loadedVideoFiles.append(aFoundVideoFile)
@@ -186,7 +262,10 @@ class VideoPreviewThumbnailGenerator(QObject):
 
 
 
-
+    """ generate_thumbnails_for_video_file(...):
+    Returns:
+        A list of "VideoThumbnail" objects, one for each frame index in desired_frame_indicies
+    """
     @staticmethod
     def generate_thumbnails_for_video_file(activeVideoFilePath, desired_frame_indicies, thumbnailSizes, enable_debug_print=False):
         """Extract frames from the video and creates thumbnails for one of each"""

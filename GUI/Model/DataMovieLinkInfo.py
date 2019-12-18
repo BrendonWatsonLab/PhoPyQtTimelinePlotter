@@ -42,7 +42,7 @@ class DataMovieLinkInfo(SimpleErrorStatusMixin, QObject):
     timeline_datetime_position_changed = pyqtSignal(float) # signal emitted when the timeline changes the playhead position. Sent to video player window.
 
     # Thumbnail Generation signals
-    thumbnail_generated = pyqtSignal(int, VideoThumbnail) # (frameIndex: int, thumbnailObj: VideoThumbnail)
+    thumbnail_generated = pyqtSignal(VideoThumbnail) # (thumbnailObj: VideoThumbnail)
     # //video_playback_state_changed
     # video_playback_position_updated
 
@@ -80,6 +80,11 @@ class DataMovieLinkInfo(SimpleErrorStatusMixin, QObject):
         self.videoThumbnailGenerator = VideoPreviewThumbnailGenerator([], parent=self)
         # self.videoThumbnailGenerator.thumbnailGenerationComplete.connect(self.on_all_videos_thumbnail_generation_complete)
         self.videoThumbnailGenerator.videoThumbnailGenerationComplete.connect(self.on_video_event_thumbnail_generation_complete) # Single video file
+        self.videoThumbnailGenerator.videoFrameThumbnailsUpdated.connect(self.on_cache_frame_thumbnails_updated) # Single frame of a signle video file
+        # Connect signal to the video player window
+        self.thumbnail_generated.connect(self.videoPlayerWindow.on_video_thumbnail_generated)
+
+        self.generate_thumbnails()
 
 
     # TODO: Thumbnail generation
@@ -90,7 +95,6 @@ class DataMovieLinkInfo(SimpleErrorStatusMixin, QObject):
             print("TimelineDrawingWindow.on_video_track_child_generate_thumbnails(...): starting thumbnail generation with video: {0}...".format(str(proposed_video_file_path)))
             # register the video duration object as a receiver of the thumbnail generation finished event
             # self.get_video_thumbnail_generator().videoThumbnailGenerationComplete.connect(videoDurationObj.on_thumbnails_loaded)
-            ## TODO: connect to video player window
 
             # Start thumbnail generation for this video file too:
             self.get_video_thumbnail_generator().add_video_path(str(proposed_video_file_path))
@@ -192,36 +196,48 @@ class DataMovieLinkInfo(SimpleErrorStatusMixin, QObject):
     def get_video_thumbnail_generator(self):
         return self.videoThumbnailGenerator
 
+    # Called by the cache's update_frame_thumbnail_results(...) function to indicate that a thumbnail has been generated for a given frame
+    @pyqtSlot(str, VideoThumbnail)
+    def on_cache_frame_thumbnails_updated(self, videoFileName, videoThumbnailResultObj):
+        if videoFileName != str(self.get_video_url()):
+            # Doesn't match this video file
+            print("WARNING: name doesn't match! (updated result video filename: {0}, target video file name: {1}".format(str(videoFileName), str(self.get_video_url())))
+            return
+
+        # Just re-emit the signal
+        self.thumbnail_generated.emit(videoThumbnailResultObj)
+
+
 
     # on_video_event_thumbnail_generation_complete(): Called when a thumbnail generation is complete for a given video
     @pyqtSlot(str, list)
     def on_video_event_thumbnail_generation_complete(self, videoFileName, generated_thumbnails_list):
         print("DataMovieLinkInfo.on_video_event_thumbnail_generation_complete(videoFileName: {0})...".format(str(videoFileName)))
-        self.video_thumbnail_popover_window = QDialog(self)
-        # self.video_thumbnail_popover_window.setCentr
-        # A vertical box layout
-        # thumbnailsLayout = QVBoxLayout()
-        thumbnailsLayout = QHBoxLayout()
+        # self.video_thumbnail_popover_window = QDialog(self)
+        # # self.video_thumbnail_popover_window.setCentr
+        # # A vertical box layout
+        # # thumbnailsLayout = QVBoxLayout()
+        # thumbnailsLayout = QHBoxLayout()
 
-        # desiredThumbnailSizeKey = "40"
-        desiredThumbnailSizeKey = "160"
+        # # desiredThumbnailSizeKey = "40"
+        # desiredThumbnailSizeKey = "160"
 
-        # for (aSearchPathIndex, aSearchPath) in enumerate(self.searchPaths):
-        for (key_path, cache_value) in self.get_video_thumbnail_generator().get_cache().items():
-            # key_path: the video file path that had the thumbnails generated for it
-            print("thumbnail generation complete for [{0}]: {1} frames".format(str(key_path), len(cache_value)))
-            for (index, aVideoThumbnailObj) in enumerate(cache_value):
-                currThumbsDict = aVideoThumbnailObj.get_thumbs_dict()
-                # currThumbnailImage: should be a QImage
-                currThumbnailImage = currThumbsDict[desiredThumbnailSizeKey]
-                w = QLabel()
-                w.setPixmap(QPixmap.fromImage(currThumbnailImage))
-                thumbnailsLayout.addWidget(w)
+        # # for (aSearchPathIndex, aSearchPath) in enumerate(self.searchPaths):
+        # for (key_path, cache_value) in self.get_video_thumbnail_generator().get_cache().items():
+        #     # key_path: the video file path that had the thumbnails generated for it
+        #     print("thumbnail generation complete for [{0}]: {1} frames".format(str(key_path), len(cache_value)))
+        #     for (index, aVideoThumbnailObj) in enumerate(cache_value):
+        #         currThumbsDict = aVideoThumbnailObj.get_thumbs_dict()
+        #         # currThumbnailImage: should be a QImage
+        #         currThumbnailImage = currThumbsDict[desiredThumbnailSizeKey]
+        #         w = QLabel()
+        #         w.setPixmap(QPixmap.fromImage(currThumbnailImage))
+        #         thumbnailsLayout.addWidget(w)
 
-        self.video_thumbnail_popover_window.setLayout(thumbnailsLayout)
-        self.video_thumbnail_popover_window.show()
+        # self.video_thumbnail_popover_window.setLayout(thumbnailsLayout)
+        # self.video_thumbnail_popover_window.show()
 
-        self.update()
+        # self.update()
 
     # on_video_thumbnail_generation_complete(): Called when a thumbnail generation is complete for a given video
     @pyqtSlot()
@@ -250,7 +266,7 @@ class DataMovieLinkInfo(SimpleErrorStatusMixin, QObject):
         # self.video_thumbnail_popover_window.setLayout(thumbnailsLayout)
         # self.video_thumbnail_popover_window.show()
 
-        self.update()
+        # self.update()
     
     
 """
