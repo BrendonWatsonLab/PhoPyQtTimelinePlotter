@@ -268,12 +268,12 @@
   <customwidget>
    <class>TimestampTableView</class>
    <extends>QTableView</extends>
-   <header>GUI.UI.VideoPlayer</header>
+   <header>GUI.Windows.VideoPlayer</header>
   </customwidget>
   <customwidget>
    <class>PlainTextEdit</class>
    <extends>QPlainTextEdit</extends>
-   <header>GUI.UI.VideoPlayer</header>
+   <header>GUI.Windows.VideoPlayer</header>
   </customwidget>
  </customwidgets>
  <resources/>

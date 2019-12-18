@@ -179,7 +179,7 @@ class MainVideoPlayerWindow(MediaPlayerUpdatingMixin, QMainWindow):
     def __init__(self, parent=None):
         # QMainWindow.__init__(self, parent)
         super().__init__(parent=parent)
-        self.ui = uic.loadUi("GUI/UI/VideoPlayer/MainVideoPlayerWindow.ui", self)
+        self.ui = uic.loadUi("GUI/Windows/VideoPlayer/MainVideoPlayerWindow.ui", self)
 
         self.timestamp_filename = None
         # self.video_filename = None

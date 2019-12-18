@@ -7,7 +7,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 from GUI.Model.TrackGroups import VideoTrackGroupSettings, VideoTrackGroup, TrackReference, TrackChildReference, VideoTrackGroupOwningMixin
 from GUI.Model.Errors import SimpleErrorStatusMixin
-from GUI.UI.VideoPlayer.VideoPlayerWidget import VideoPlayerWidget
+from GUI.Windows.VideoPlayer.VideoPlayerWidget import VideoPlayerWidget
 
 """
 The DataMovieLinkInfo class serves as an intermediate between the data window and the video window. It controls the signals between the two.

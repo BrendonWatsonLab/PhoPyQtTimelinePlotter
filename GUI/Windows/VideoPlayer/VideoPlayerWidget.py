@@ -7,27 +7,91 @@ import traceback
 
 import qtawesome as qta
 from PyQt5 import uic
-from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, \
-    QMessageBox, QDataWidgetMapper
+from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QWidget, QMessageBox, QDataWidgetMapper
 from PyQt5.QtGui import QCursor
 from PyQt5.QtCore import QDir, QTimer, Qt, QModelIndex, QSortFilterProxyModel
 
 from lib import vlc
-from app.model import TimestampModel, ToggleButtonModel, TimestampDelta
+from app.model import ToggleButtonModel
+
+from GUI.Model.DataMovieLinkInfo import *
 
 """
 The software displays/plays a video file with variable speed and navigation settings.
-The software runs a timer.
+The software runs a timer, which calls both self.timer_handler() and self.update_ui().
+
+self.update_ui():
+    - Updates the slider_progress (playback slider) when the video plays
+    - Updates the video labels
+
+self.media_time_change_handler(...) is called on VLC's MediaPlayerTimeChanged event:
+    - 
 """
-class MainVideoPlayerWindowBase(QMainWindow):
+
+
+""" Classes belonging to the main media widget
+lblVideoName
+lblVideoSubtitle
+dateTimeEdit
+lblCurrentFrame
+spinBoxCurrentFrame
+lblTotalFrames
+lblCurrentTime
+lblTotalDuration
+lblFileFPS
+spinBoxFrameJumpMultiplier
+
+btnSkipLeft
+btnSkipRight
+btnLeft
+btnRight
+
+button_play_pause
+button_full_screen
+
+button_speed_up
+doubleSpinBoxPlaybackSpeed
+button_slow_down
+
+button_mark_start
+button_mark_end
+
+slider_progress
+
+## DATA MODEL:
+self.media_start_time = None
+        self.media_end_time = None
+        self.restart_needed = False
+        self.timer_period = 100
+        self.is_full_screen = False
+        self.media_started_playing = False
+        self.media_is_playing = False
+        self.original_geometry = None
+play_pause_model
+
+
+"""
+
+
+class VideoPlayerWidget(QWidget):
     """
     The main window class
     """
-    def __init__(self, parent=None):
-        QMainWindow.__init__(self, parent)
-        self.ui = uic.loadUi("GUI/UI/VideoPlayer/MainVideoPlayerWindow.ui")
 
-        self.timestamp_filename = None
+    SpeedBurstPlaybackRate = 16.0
+
+
+    loaded_media_changed = pyqtSignal() # Called when the loaded video is changed
+    video_playback_position_updated = pyqtSignal(float) # video_playback_position_updated:  called when the playback position of the video changes. Either due to playing, or after a user event
+    video_playback_state_changed = pyqtSignal() # video_playback_state_changed: called when play/pause state changes
+    close_signal = pyqtSignal() # Called when the window is closing. 
+
+    def __init__(self, parent=None):
+        # super().__init__(self, parent)
+        super().__init__(parent=parent)
+        self.ui = uic.loadUi("GUI/Windows/VideoPlayer/VideoPlayerWidget.ui", self)
+
+        # self.timestamp_filename = None
         self.video_filename = None
         self.media_start_time = None
         self.media_end_time = None
@@ -40,26 +104,37 @@ class MainVideoPlayerWindowBase(QMainWindow):
 
         self.startDirectory = None
 
-        self.timestamp_model = TimestampModel(None, self)
-        self.proxy_model = QSortFilterProxyModel(self)
-        self.ui.list_timestamp.setModel(self.timestamp_model)
-        self.ui.list_timestamp.doubleClicked.connect(
-            lambda event: self.ui.list_timestamp.indexAt(event.pos()).isValid()
-            and self.run()
-        )
-
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_ui)
-        self.timer.timeout.connect(self.timer_handler)
-        self.timer.start(self.timer_period)
-
         self.vlc_instance = vlc.Instance()
         self.media_player = self.vlc_instance.media_player_new()
+        self.is_display_initial_frame_playback = False
+
+        self.is_speed_burst_mode_active = False
+        self.speedBurstPlaybackRate = VideoPlayerWidget.SpeedBurstPlaybackRate
         # if sys.platform == "darwin":  # for MacOS
         #     self.ui.frame_video = QMacCocoaViewContainer(0)
 
+        self.movieLink = None
+
+        # self.closeEvent.connect(self.closeEvent)
+
+        self.initUI()
+
+    def initUI(self):
+
+        # TODO: bind the signals and such to self.ui.timestampSidebarWidget
+        # self.ui.timestampSidebarWidget.
+
+        self.timer = QTimer(self)
+        self.timer.setInterval(self.timer_period)
+        self.timer.timeout.connect(self.update_ui)
+        self.timer.timeout.connect(self.timer_handler)
+
+
         self.ui.frame_video.doubleClicked.connect(self.toggle_full_screen)
         self.ui.frame_video.wheel.connect(self.wheel_handler)
+
+        # TODO: would send twice when the frame_video has focus.
+        # self.keyPressEvent.connect(self.key_handler)
         self.ui.frame_video.keyPressed.connect(self.key_handler)
 
         # Set up Labels:
@@ -83,18 +158,7 @@ class MainVideoPlayerWindowBase(QMainWindow):
         self.ui.spinBoxFrameJumpMultiplier.value = 1
 
         # Set up buttons
-        self.ui.button_run.clicked.connect(self.run)
-        self.ui.button_timestamp_browse.clicked.connect(
-            self.browse_timestamp_handler
-        )
-        self.ui.button_timestamp_create.clicked.connect(
-            self.create_timestamp_file_handler
-        )
-        self.ui.button_video_browse.clicked.connect(
-            self.browse_video_handler
-        )
-
-
+  
         # Set up directional buttons
         self.ui.btnSkipLeft.clicked.connect(self.skip_left_handler)
         self.ui.btnSkipRight.clicked.connect(self.skip_right_handler)
@@ -138,38 +202,38 @@ class MainVideoPlayerWindowBase(QMainWindow):
         )
         self.ui.button_slow_down.setText("")
 
-        self.ui.button_mark_start.setIcon(
-            qta.icon("fa.quote-left", scale_factor=0.7)
-        )
-        self.ui.button_mark_start.setText("")
-        self.ui.button_mark_end.setIcon(
-            qta.icon("fa.quote-right", scale_factor=0.7)
-        )
-        self.ui.button_mark_end.setText("")
-        self.ui.button_add_entry.clicked.connect(self.add_entry)
-        self.ui.button_remove_entry.clicked.connect(self.remove_entry)
+        # self.ui.button_mark_start.setIcon(
+        #     qta.icon("fa.quote-left", scale_factor=0.7)
+        # )
+        # self.ui.button_mark_start.setText("")
+        # self.ui.button_mark_end.setIcon(
+        #     qta.icon("fa.quote-right", scale_factor=0.7)
+        # )
+        # self.ui.button_mark_end.setText("")
+        # self.ui.button_add_entry.clicked.connect(self.add_entry)
+        # self.ui.button_remove_entry.clicked.connect(self.remove_entry)
 
-        self.ui.button_mark_start.clicked.connect(
-            lambda: self.set_mark(start_time=int(
-                self.media_player.get_position() *
-                self.media_player.get_media().get_duration()))
-        )
-        self.ui.button_mark_end.clicked.connect(
-            lambda: self.set_mark(end_time=int(
-                self.media_player.get_position() *
-                self.media_player.get_media().get_duration()))
-        )
+        # self.ui.button_mark_start.clicked.connect(
+        #     lambda: self.set_mark(start_time=int(
+        #         self.media_player.get_position() *
+        #         self.media_player.get_media().get_duration()))
+        # )
+        # self.ui.button_mark_end.clicked.connect(
+        #     lambda: self.set_mark(end_time=int(
+        #         self.media_player.get_position() *
+        #         self.media_player.get_media().get_duration()))
+        # )
 
         self.ui.slider_progress.setTracking(False)
         self.ui.slider_progress.valueChanged.connect(self.set_media_position)
 
         # self.ui.slider_volume.valueChanged.connect(self.set_volume)
-        self.ui.entry_description.setReadOnly(True)
+        # self.ui.entry_description.setReadOnly(True)
 
         # Mapper between the table and the entry detail
-        self.mapper = QDataWidgetMapper()
-        self.mapper.setSubmitPolicy(QDataWidgetMapper.ManualSubmit)
-        self.ui.button_save.clicked.connect(self.mapper.submit)
+        # self.mapper = QDataWidgetMapper()
+        # self.mapper.setSubmitPolicy(QDataWidgetMapper.ManualSubmit)
+        # self.ui.button_save.clicked.connect(self.mapper.submit)
 
         # Set up default volume
         # self.set_volume(self.ui.slider_volume.value())
@@ -183,8 +247,34 @@ class MainVideoPlayerWindowBase(QMainWindow):
         self.media_player.video_set_mouse_input(False)
         self.media_player.video_set_key_input(False)
 
+        self.timer.start()
+
+        self.update_video_frame_overlay_text()
+
         self.ui.show()
 
+    # Called when the window is closing.
+    # def closeEvent(self, event):
+    #     print("VideoPlayerWidget.closeEvent(...)")
+    #     # print("VideoPlayerWidget.closeEvent({0})".format(str(event)))
+    #     # self.on_close()
+    #     # self.close()
+    #     # event.accept()
+
+    # def on_close(self):
+    #     """ Perform on close stuff here """
+    #     print("VideoPlayerWidget.on_close()!")
+    #     # self.timer.stop() # Stop the timer
+    #     # self.media_player.stop() # Stop the playing media
+    #     # self.movieLink = None
+    #     self.close_signal.emit()
+
+
+    # Movie Link:
+    def get_movie_link(self):
+        return self.movieLink
+
+    # Called when the UI slider position is updated via user-click
     def set_media_position(self, position):
         percentage = position / 10000.0
         self.media_player.set_position(percentage)
@@ -193,35 +283,48 @@ class MainVideoPlayerWindowBase(QMainWindow):
         if absolute_position > self.media_end_time:
             self.media_end_time = -1
 
-    def set_mark(self, start_time=None, end_time=None):
-        if len(self.ui.list_timestamp.selectedIndexes()) == 0:
-            blankRowIndex = self.timestamp_model.blankRowIndex()
-            if not blankRowIndex.isValid():
-                self.add_entry()
-            else:
-                index = self.proxy_model.mapFromSource(blankRowIndex)
-                self.ui.list_timestamp.selectRow(index.row())
-        selectedIndexes = self.ui.list_timestamp.selectedIndexes()
-        if start_time:
-            self.proxy_model.setData(selectedIndexes[0],
-                                     TimestampDelta.string_from_int(
-                                         start_time))
-        if end_time:
-            self.proxy_model.setData(selectedIndexes[1],
-                                     TimestampDelta.string_from_int(
-                                         end_time))
+    # on_timeline_position_updated(...): called when the main timeline window updates the position. Results in programmatically setting the video playback position
+    @pyqtSlot(float)
+    def on_timeline_position_updated(self, new_video_percent_offset):
+        print("on_timeline_position_updated({0})".format(str(new_video_percent_offset)))
+        aPosition = new_video_percent_offset * 10000.0 # Not sure what this does, but it does the inverse of what's done in the start of the "set_media_position(...)" function to get the percentage
+        self.set_media_position(aPosition)
 
+        ### NOT YET IMPLEMENTED
+        print("TODO: NOT YET IMPLEMENTED!!!!")
+
+        # Or we could rely on the signals generated by the slider, which is how it normally works. Just set the slider's position and everything else should update.
+        # TODO: the only provision is that it shouldn't re-emit a "video_playback_position_updated" signal to avoid a cycle
+        # TODO: can I block a specific signal? like self.video_playback_position_updated.blockSignals(True)
+        self.ui.slider_progress.blockSignals(True)
+        self.ui.slider_progress.setValue(aPosition)
+        self.ui.slider_progress.blockSignals(False)
+
+
+    # self.update_ui(): called when the timer fires
     def update_ui(self):
+        if self.media_player is None:
+            return
+
+        # Update the UI Slider to match the current video playback value
         self.ui.slider_progress.blockSignals(True)
         self.ui.slider_progress.setValue(
-            self.media_player.get_position() * 10000
+            self.media_player.get_position() * 10000.0
         )
         #print(self.media_player.get_position() * 10000)
 
         self.update_video_file_play_labels()
 
-        # When the video finishes
         self.ui.slider_progress.blockSignals(False)
+
+        self.ui.doubleSpinBoxPlaybackSpeed.blockSignals(True)
+        self.ui.doubleSpinBoxPlaybackSpeed.setValue(self.media_player.get_rate())
+        self.ui.doubleSpinBoxPlaybackSpeed.blockSignals(False)
+
+        currPos = self.media_player.get_position()
+        self.video_playback_position_updated.emit(currPos)
+        
+        # When the video finishes
         if self.media_started_playing and \
            self.media_player.get_media().get_state() == vlc.State.Ended:
             self.play_pause_model.setState(True)
@@ -234,6 +337,8 @@ class MainVideoPlayerWindowBase(QMainWindow):
             self.run()
 
     # Event Handlers:
+
+    # self.timer_handler(): called when the timer fires
     def timer_handler(self):
         """
         This is a workaround, because for some reason we can't call set_time()
@@ -244,13 +349,19 @@ class MainVideoPlayerWindowBase(QMainWindow):
             self.media_player.set_time(self.media_start_time)
             self.restart_needed = False
 
+
+    # Input Handelers:
     def key_handler(self, event):
+        print("VideoPlayerWidget key handler: {0}".format(str(event.key())))
         if event.key() == Qt.Key_Escape and self.is_full_screen:
             self.toggle_full_screen()
         if event.key() == Qt.Key_F:
             self.toggle_full_screen()
         if event.key() == Qt.Key_Space:
             self.play_pause()
+        if event.key() == Qt.Key_P:
+            self.toggle_speed_burst()
+
 
     def wheel_handler(self, event):
         # self.modify_volume(1 if event.angleDelta().y() > 0 else -1)
@@ -273,80 +384,74 @@ class MainVideoPlayerWindowBase(QMainWindow):
         ## TODO:
         print(newProposedFrame)
 
-    # Playback Speed/Rate:
-    def speed_changed_handler(self, val):
-        print(val)
-        self.media_player.set_rate(val)
-        # self.media_player.set_rate(self.ui.doubleSpinBoxPlaybackSpeed.value())
-        # TODO: Fix playback speed. Print current playback rate (to a label or something, so the user can see).
-
-    def speed_up_handler(self):
-        self.modify_rate(0.1)
-
-    def slow_down_handler(self):
-        self.modify_rate(-0.1)
-
-    def modify_rate(self, delta_percent):
-        new_rate = self.media_player.get_rate() + delta_percent
-        if new_rate < 0.2 or new_rate > 2.0:
-            return
-        self.media_player.set_rate(new_rate)
-
+    # media_time_change_handler(...) is called on VLC's MediaPlayerTimeChanged event
+    @vlc.callbackmethod
     def media_time_change_handler(self, _):
+        # print('Time changed!')
+
+        if (not (self.media_player is None)):
+            currPos = self.media_player.get_position()
+            self.video_playback_position_updated.emit(currPos)
+
+        if (self.is_display_initial_frame_playback):
+            # self.is_display_initial_frame_playback: true to indicate that we're just trying to play the media long enough to get the first frame, so it's not a black square
+            # Pause
+            self.media_pause()
+            self.is_display_initial_frame_playback = False # Set the variable to false so it quits pausing
+
         if self.media_end_time == -1:
             return
         if self.media_player.get_time() > self.media_end_time:
             self.restart_needed = True
 
-    def update_slider_highlight(self):
-        if self.ui.list_timestamp.selectionModel().hasSelection():
-            selected_row = self.ui.list_timestamp.selectionModel(). \
-                selectedRows()[0]
-            self.media_start_time = self.ui.list_timestamp.model().data(
-                selected_row.model().index(selected_row.row(), 0),
-                Qt.UserRole
-            )
-            self.media_end_time = self.ui.list_timestamp.model().data(
-                selected_row.model().index(selected_row.row(), 1),
-                Qt.UserRole
-            )
-            duration = self.media_player.get_media().get_duration()
-            self.media_end_time = self.media_end_time \
-                if self.media_end_time != 0 else duration
-            if self.media_start_time > self.media_end_time:
-                raise ValueError("Start time cannot be later than end time")
-            if self.media_start_time > duration:
-                raise ValueError("Start time not within video duration")
-            if self.media_end_time > duration:
-                raise ValueError("End time not within video duration")
-            slider_start_pos = (self.media_start_time / duration) * \
-                               (self.ui.slider_progress.maximum() -
-                                self.ui.slider_progress.minimum())
-            slider_end_pos = (self.media_end_time / duration) * \
-                             (self.ui.slider_progress.maximum() -
-                              self.ui.slider_progress.minimum())
-            self.ui.slider_progress.setHighlight(
-                int(slider_start_pos), int(slider_end_pos)
-            )
+        
 
-        else:
-            self.media_start_time = 0
-            self.media_end_time = -1
+    # def update_slider_highlight(self):
+    #     if self.ui.list_timestamp.selectionModel().hasSelection():
+    #         selected_row = self.ui.list_timestamp.selectionModel(). \
+    #             selectedRows()[0]
+    #         self.media_start_time = self.ui.list_timestamp.model().data(
+    #             selected_row.model().index(selected_row.row(), 0),
+    #             Qt.UserRole
+    #         )
+    #         self.media_end_time = self.ui.list_timestamp.model().data(
+    #             selected_row.model().index(selected_row.row(), 1),
+    #             Qt.UserRole
+    #         )
+    #         duration = self.media_player.get_media().get_duration()
+    #         self.media_end_time = self.media_end_time \
+    #             if self.media_end_time != 0 else duration
+    #         if self.media_start_time > self.media_end_time:
+    #             raise ValueError("Start time cannot be later than end time")
+    #         if self.media_start_time > duration:
+    #             raise ValueError("Start time not within video duration")
+    #         if self.media_end_time > duration:
+    #             raise ValueError("End time not within video duration")
+    #         slider_start_pos = (self.media_start_time / duration) * \
+    #                            (self.ui.slider_progress.maximum() -
+    #                             self.ui.slider_progress.minimum())
+    #         slider_end_pos = (self.media_end_time / duration) * \
+    #                          (self.ui.slider_progress.maximum() -
+    #                           self.ui.slider_progress.minimum())
+    #         self.ui.slider_progress.setHighlight(
+    #             int(slider_start_pos), int(slider_end_pos)
+    #         )
+
+    #     else:
+    #         self.media_start_time = 0
+    #         self.media_end_time = -1
 
     def run(self):
         """
         Execute the loop
         """
-        if self.timestamp_filename is None:
-            self._show_error("No timestamp file chosen")
-            return
         if self.video_filename is None:
             self._show_error("No video file chosen")
             return
         try:
-            self.update_slider_highlight()
+            # self.update_slider_highlight()
             self.media_player.play()
-            self.media_player.set_time(self.media_start_time)
+            self.media_player.set_time(self.media_start_time) # Looks like the media playback time is actually being set from the slider.
             self.media_started_playing = True
             self.media_is_playing = True
             self.play_pause_model.setState(False)
@@ -354,6 +459,7 @@ class MainVideoPlayerWindowBase(QMainWindow):
             self._show_error(str(ex))
             print(traceback.format_exc())
 
+    # Toggles play/pause status:
     def play_pause(self):
         """Toggle play/pause status
         """
@@ -361,11 +467,73 @@ class MainVideoPlayerWindowBase(QMainWindow):
             self.run()
             return
         if self.media_is_playing:
-            self.media_player.pause()
+            self.media_pause()
+        else:
+            self.media_play()
+            
+    # Plays the media:
+    def media_play(self):
+        if not self.media_started_playing:
+            self.run()
+            return
+        if self.media_is_playing:
+            return # It's already playing, just return
         else:
             self.media_player.play()
+            self.post_playback_state_changed_update()
+
+    # Pauses the media:
+    def media_pause(self):
+        if not self.media_started_playing:
+            self.run()
+            return
+        if self.media_is_playing:
+            self.media_player.pause()
+            self.post_playback_state_changed_update()
+        else:
+            return # It's already paused, just return
+
+    # Stops the media:
+    def media_stop(self):
+        if not self.media_started_playing:
+            return # It's already stopped, just return
+        if self.media_is_playing:
+            self.media_player.pause()
+
+        self.media_player.stop()        
+        self.post_playback_state_changed_update()
+        
+    def post_playback_state_changed_update(self):
+        # Called after the play, pause, stop state changed
         self.media_is_playing = not self.media_is_playing
         self.play_pause_model.setState(not self.media_is_playing)
+        self.video_playback_state_changed.emit()
+
+    # Updates the window title with the filename
+    # TODO: doesn't work
+    def update_window_title(self):
+        print("update_window_title(): {0}".format(self.video_filename))
+        if (self.video_filename is None):
+            # self.setWindowFilePath(None)
+            self.setWindowTitle("Video Player: No Video")
+            pass
+        else:
+            # self.setWindowFilePath(self.video_filename)
+            self.setWindowTitle("Video Player: " + str(self.video_filename))
+            pass
+
+        
+    # This updates the text that is overlayed over the top of the video frame. It serves to temporarily display changes in state, like play, pause, stop, skip, etc to provide feedback and notifications to the user.
+    def update_video_frame_overlay_text(self):
+        #TODO: should display the message for a few seconds, and then timeout and disappear
+        self.ui.lblVideoStatusOverlay.setText("")
+
+    # After a new media has been set, this function is called to start playing for a short bit to display the first few frames of the video
+    def update_preview_frame(self):
+        # Updates the frame displayed in the media player
+        self.is_display_initial_frame_playback = True
+        self.media_play()
+        # Pause is called in the self.media_time_change_handler(...)
 
     # Info labels above the video that display the FPS/frame/time/etc info
     def update_video_file_play_labels(self):
@@ -385,7 +553,7 @@ class MainVideoPlayerWindowBase(QMainWindow):
         curr_percent_complete = self.media_player.get_position()  # Current percent complete between 0.0 and 1.0
 
         if curr_percent_complete >= 0:
-            self.ui.lblPlaybackPercent.setText(str(curr_percent_complete))
+            self.ui.lblPlaybackPercent.setText("{:.4f}".format(curr_percent_complete))
         else:
             self.ui.lblPlaybackPercent.setText("--")
 
@@ -454,20 +622,20 @@ class MainVideoPlayerWindowBase(QMainWindow):
 
     # Playback Navigation (Left/Right) Handlers:
     def step_left_handler(self):
-        print('seek: left')
-        self.seek_frames(-10 * self.get_frame_multipler())
-
+        print('step: left')
+        self.seek_frames(-1 * self.get_frame_multipler())
+        
     def skip_left_handler(self):
         print('skip: left')
-        self.seek_frames(-1 * self.get_frame_multipler())
+        self.seek_frames(-10 * self.get_frame_multipler())
 
     def step_right_handler(self):
-        print('seek: right')
-        self.seek_frames(10 * self.get_frame_multipler())
+        print('step: right')
+        self.seek_frames(1 * self.get_frame_multipler())
 
     def skip_right_handler(self):
         print('skip: right')
-        self.seek_frames(1 * self.get_frame_multipler())
+        self.seek_frames(10 * self.get_frame_multipler())
 
     # Other:
     def seek_frames(self, relativeFrameOffset):
@@ -536,13 +704,17 @@ class MainVideoPlayerWindowBase(QMainWindow):
 
 
     # File Loading:
+
     def set_video_filename(self, filename):
         """
         Set the video filename
         """
         if not os.path.isfile(filename):
-            self._show_error("Cannot access video file " + filename)
+            self._show_error("ERROR: Cannot access video file " + filename)
             return
+
+        # Close the previous file:
+        self.media_stop()
 
         self.startDirectory = os.path.pardir
         self.video_filename = filename
@@ -555,19 +727,27 @@ class MainVideoPlayerWindowBase(QMainWindow):
             self.video_filename = None
         else:
             self.media_player.set_media(media)
+
+            # The media player has to be 'connected' to the QFrame (otherwise the
+            # video would be displayed in it's own window). This is platform
+            # specific, so we must give the ID of the QFrame (or similar object) to
+            # vlc. Different platforms have different functions for this
             if sys.platform.startswith('linux'): # for Linux using the X Server
                 self.media_player.set_xwindow(self.ui.frame_video.winId())
             elif sys.platform == "win32": # for Windows
                 self.media_player.set_hwnd(self.ui.frame_video.winId())
             elif sys.platform == "darwin": # for MacOS
                 self.media_player.set_nsobject(self.ui.frame_video.winId())
-            self.ui.entry_video.setText(self.video_filename)
-
+            # self.ui.entry_video.setText(self.video_filename)
+            self.update_window_title()
             self.update_video_file_labels_on_file_change()
             self.media_started_playing = False
             self.media_is_playing = False
             # self.set_volume(self.ui.slider_volume.value())
             self.play_pause_model.setState(True)
+            self.update_preview_frame()
+
+        self.loaded_media_changed.emit()
 
     def browse_video_handler(self):
         """
@@ -584,3 +764,58 @@ class MainVideoPlayerWindowBase(QMainWindow):
     def _show_error(self, message, title="Error"):
         QMessageBox.warning(self, title, message)
 
+
+
+
+
+    # Playback Speed/Rate:
+    def speed_changed_handler(self, val):
+        # print(val)
+        self.media_player.set_rate(val)
+        # self.media_player.set_rate(self.ui.doubleSpinBoxPlaybackSpeed.value())
+        # TODO: Fix playback speed. Print current playback rate (to a label or something, so the user can see).
+
+    def speed_up_handler(self):
+        self.modify_rate(0.1)
+
+    def slow_down_handler(self):
+        self.modify_rate(-0.1)
+
+    def modify_rate(self, delta):
+        new_rate = self.media_player.get_rate() + delta
+        if new_rate < 0.2 or new_rate > 6.0:
+            return
+        self.media_player.set_rate(new_rate)
+
+
+    # Speed Burst Features:
+    def toggle_speed_burst(self):
+        curr_is_speed_burst_enabled = self.is_speed_burst_mode_active
+        updated_speed_burst_enabled = (not curr_is_speed_burst_enabled)
+        if (updated_speed_burst_enabled):
+            self.engage_speed_burst()
+        else:
+            self.disengage_speed_burst()
+
+    # Engages a temporary speed burst 
+    def engage_speed_burst(self):
+        print("Speed burst enabled!")
+        self.is_speed_burst_mode_active = True
+        # Set the playback speed temporarily to the burst speed
+        self.media_player.set_rate(self.speedBurstPlaybackRate)
+
+        self.ui.toolButton_SpeedBurstEnabled.setEnabled(True)
+        self.ui.doubleSpinBoxPlaybackSpeed.setEnabled(False)
+        self.ui.button_slow_down.setEnabled(False)
+        self.ui.button_speed_up.setEnabled(False)
+        
+    def disengage_speed_burst(self):
+        print("Speed burst disabled!")
+        self.is_speed_burst_mode_active = False
+        # restore the user specified playback speed
+        self.media_player.set_rate(self.ui.doubleSpinBoxPlaybackSpeed.value)
+
+        self.ui.toolButton_SpeedBurstEnabled.setEnabled(False)
+        self.ui.doubleSpinBoxPlaybackSpeed.setEnabled(True)
+        self.ui.button_slow_down.setEnabled(True)
+        self.ui.button_speed_up.setEnabled(True)
