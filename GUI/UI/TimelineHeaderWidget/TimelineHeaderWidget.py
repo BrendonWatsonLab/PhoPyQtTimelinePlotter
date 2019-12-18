@@ -93,11 +93,6 @@ class TimelineHeaderWidget(TrackConfigMixin, QFrame):
         # self.enableDynamicLabelUpdating: if True, automatically updates the labels from the config. Otherwise relies on the manually set labels
         self.enableDynamicLabelUpdating = True
         
-        # if track_name is None:
-        #     self.track_name = "track {0}".format(self.track_id)
-        # else:
-        #     self.track_name = track_name
-        
         # self.setAutoFillBackground(False)
         # self.setWindowFlags(Qt.FramelessWindowHint)
         # self.setAttribute(Qt.WA_TranslucentBackground)

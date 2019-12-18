@@ -15,6 +15,8 @@ from app.database.entry_models.db_model import Animal, BehavioralBox, Context, E
 from app.database.entry_models.db_model import StaticFileExtension, FileParentFolder
 # from app.database.entry_models.db_model_extension import ExVideoFile
 
+from app.filesystem.FilesystemRecordBase import *
+
 from GUI.Model.ModelViewContainer import ModelViewContainer
 
 from GUI.Model.TrackType import TrackType, TrackStorageArray
@@ -162,7 +164,6 @@ class TrackFilterBase(QObject):
     def get_track_storageArray_type(self):
         return self.get_track_type().get_storage_array_type()
 
-
     # matches(other_filter): returns True IFF behavioral_box_ids, experiment_ids, cohort_ids, and animal_ids all match other_filter
     def matches(self, other_filter):
         return ((self.behavioral_box_ids == other_filter.behavioral_box_ids) and (self.experiment_ids == other_filter.experiment_ids) and (self.cohort_ids == other_filter.cohort_ids) and (self.animal_ids == other_filter.animal_ids))
@@ -222,6 +223,10 @@ class TrackConfigurationBase(QObject):
     # get_track_storageArray_type(): returns GUI.Model.TrackStorageArray type object
     def get_track_storageArray_type(self):
         return self.get_filter().get_track_storageArray_type()
+
+    # get_track_default_height(): returns the default height for the timeline track
+    def get_track_default_height(self):
+        return self.get_filter().get_track_type().get_default_track_height()
 
     def filter_records(self, session):
         return self.get_filter().build_filter(session)

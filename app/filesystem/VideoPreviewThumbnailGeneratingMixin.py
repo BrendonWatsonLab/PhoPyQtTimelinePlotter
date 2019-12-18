@@ -49,14 +49,22 @@ class VideoPreviewThumbnailGenerator(QObject):
     targetVideoFilePathsUpdated = pyqtSignal()
 
     generatedThumbnailsUpdated = pyqtSignal()
+
+    # All video items
     thumbnailGenerationComplete = pyqtSignal()
 
 
-    def __init__(self, videoFilePaths, parent=None):
+    # Single Video Event Item:
+    videoThumbnailGenerationComplete = pyqtSignal(str, list) # filename, [VideoThumbnail]
+
+
+
+    def __init__(self, videoFilePaths, thumbnailSizes = [160, 80, 40], parent=None):
         super(VideoPreviewThumbnailGenerator, self).__init__(parent=parent) # Call the inherited classes __init__ method
         self.cache = dict()
         self.videoFilePaths = videoFilePaths
         self.loadedVideoFiles = []
+        self.desiredThumbnailSizes = thumbnailSizes
         self.pending_operation_status = PendingFilesystemOperation(OperationTypes.NoOperation, 0, 0, parent=self)
 
         # self.reload_on_video_paths_changed()
@@ -139,7 +147,7 @@ class VideoPreviewThumbnailGenerator(QObject):
 
         for (sub_index, aFoundVideoFile) in enumerate(active_video_paths):
             # Iterate through all found video-files in a given list (a list of VideoThumbnail objects: [VideoThumbnail])
-            generatedThumbnailObjsList = VideoPreviewThumbnailGenerator.generate_thumbnails_for_video_file(aFoundVideoFile, enable_debug_print=True)
+            generatedThumbnailObjsList = VideoPreviewThumbnailGenerator.generate_thumbnails_for_video_file(aFoundVideoFile, self.desiredThumbnailSizes, enable_debug_print=True)
             
             if (not (aFoundVideoFile in self.cache.keys())):
                 # Parent doesn't yet exist in cache
@@ -152,6 +160,7 @@ class VideoPreviewThumbnailGenerator(QObject):
 
             # Add the current video file path to the loaded files
             self.loadedVideoFiles.append(aFoundVideoFile)
+            self.videoThumbnailGenerationComplete.emit(aFoundVideoFile, generatedThumbnailObjsList)
 
             parsedFiles = parsedFiles + 1
             progress_callback.emit(active_video_paths, (parsedFiles*100/numFilesToGenerateThumbnailsFor))
@@ -177,7 +186,7 @@ class VideoPreviewThumbnailGenerator(QObject):
 
 
     @staticmethod
-    def generate_thumbnails_for_video_file(activeVideoFilePath, enable_debug_print):
+    def generate_thumbnails_for_video_file(activeVideoFilePath, thumbnailSizes, enable_debug_print=False):
         """Extract frames from the video and creates thumbnails for one of each"""
         # Extract frames from video
         if enable_debug_print:
@@ -188,7 +197,7 @@ class VideoPreviewThumbnailGenerator(QObject):
 
         # Generate and save thumbs
         for i in range(len(frames)):
-            thumbs = VideoPreviewThumbnailGenerator.image_to_thumbs(frames[i], enable_debug_print)
+            thumbs = VideoPreviewThumbnailGenerator.image_to_thumbs(frames[i], thumbnailSizes, enable_debug_print)
             currThumbnailObj = VideoThumbnail(i, thumbs)
             outputThumbnailObjsList.append(currThumbnailObj)
 
@@ -201,29 +210,48 @@ class VideoPreviewThumbnailGenerator(QObject):
 
 
 
+    """ video_to_desired_frames(...): 
+    TODO: currently hardcoded to return either 1 (the first) or 5 frames.
 
+    """
     @staticmethod
-    def video_to_frames(video_filename, enable_debug_print, use_OpenCV_method=True):
+    def video_to_desired_frames(video_filename, desired_frame_indexes, enable_debug_print, use_OpenCV_method=True):
         """Extract frames from video"""
         if enable_debug_print:
-            print("video_to_frames({0})...".format(str(video_filename)))
+            print("video_to_desired_frames({0})...".format(str(video_filename)))
 
         frames = []
 
         if use_OpenCV_method:
             if enable_debug_print:
-                print("    video_to_frames(...): using OpenCV method...")
+                print("    video_to_desired_frames(...): using OpenCV method...")
             cap = cv2.VideoCapture(video_filename)
             video_length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
 
             if cap.isOpened() and video_length > 0:
                 frame_ids = [0]
-                if video_length >= 4:
-                    frame_ids = [0,
-                                round(video_length * 0.25),
-                                round(video_length * 0.5),
-                                round(video_length * 0.75),
-                                video_length - 1]
+                # Check if desired_frame_indexes is None. If it is, use the default frames. Otherwise, use the user's specified frames
+                if desired_frame_indexes is None:
+                    frame_ids = [0]
+                    if video_length >= 4:
+                        frame_ids = [0,
+                                    round(video_length * 0.25),
+                                    round(video_length * 0.5),
+                                    round(video_length * 0.75),
+                                    video_length - 1]
+                else:
+                    # Non-None desired_frame_indicies:
+                    for aDesiredFrameID in desired_frame_indexes:
+                        if (0 <= aDesiredFrameID < video_length):
+                            frame_ids.append(aDesiredFrameID)
+                        elif (aDesiredFrameID >= video_length):
+                            # desired index is too big
+                            frame_ids.append(video_length - 1) # Get the last frame
+                        elif (aDesiredFrameID < 0):
+                            frame_ids.append(0) # Get the first frame
+                        else:
+                            print("WARNING: this shouldn't happen!")
+
                 count = 0
                 for aFrameNumber in frame_ids:
                     #The first argument of cap.set(), number 2 defines that parameter for setting the frame selection.
@@ -248,15 +276,9 @@ class VideoPreviewThumbnailGenerator(QObject):
             cap.release()
             cv2.destroyAllWindows()
 
-                # success, image = cap.read()
-                # while success:
-                #     if count in frame_ids:
-                #         frames.append(image)
-                #     success, image = cap.read()
-                #     count += 1
         else:
             # Use FFMPEG method:
-            print("    video_to_frames(...): using FFMPEG method...")
+            print("    video_to_desired_frames(...): using FFMPEG method...")
             """
             -ss: the start time
             -vframes:
@@ -267,10 +289,28 @@ class VideoPreviewThumbnailGenerator(QObject):
 
         if enable_debug_print:
             print("done. ({0} frames extracted)...".format(str(len(frames))))
+
         return frames
 
+
+
+
+    """ video_to_frames(...): 
+    TODO: currently hardcoded to return either 1 (the first) or 5 frames.
+
+    """
     @staticmethod
-    def image_to_thumbs(img, enable_debug_print):
+    def video_to_frames(video_filename, enable_debug_print, use_OpenCV_method=True):
+        """Extract frames from video"""
+        return VideoPreviewThumbnailGenerator.video_to_desired_frames(video_filename, None, enable_debug_print, use_OpenCV_method)
+
+
+    """ image_to_thumbs(img, ...): converts an image to a dictionary of different sized thumbnails
+        img: the image to compute the thumbnails for
+        thumbnailSizes: [int]: an array of the different thumbnail sizes to generate (in pixels)
+    """
+    @staticmethod
+    def image_to_thumbs(img, thumbnailSizes, enable_debug_print= False):
         """Create thumbs from image"""
         if enable_debug_print:
             print("image_to_thumbs(...)...")
@@ -281,8 +321,8 @@ class VideoPreviewThumbnailGenerator(QObject):
         # thumbs = {"original": img}
         thumbs = {"original": qImg}
         # sizes = [640, 320, 160]
-        sizes = [160, 80, 40]
-        for size in sizes:
+        # sizes = [160, 80, 40]
+        for size in thumbnailSizes:
             if (width >= size):
                 r = (size + 0.0) / width
                 max_size = (size, int(height * r))

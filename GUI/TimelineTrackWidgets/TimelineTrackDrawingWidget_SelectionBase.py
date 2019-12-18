@@ -77,8 +77,6 @@ class TimelineTrackDrawingWidget_SelectionBase(TimelineTrackDrawingWidgetBase):
 
     # Find the previous event
     def find_previous_event(self, preceeding_datetime):
-        # reversedDurationObjects = self.durationObjects.reversed()
-
         best_found_candidate_index = None
         best_found_candidate_object = None
 

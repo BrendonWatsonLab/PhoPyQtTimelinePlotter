@@ -163,7 +163,6 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
         # self.model = self.database_connection.get_table_model(VideoFile)
         # self.model = self.database_connection.get_table_model(BehavioralBox)
         
-
     def handle_add_new_record_pressed(self):
         print("handle_add_new_record_pressed(...)")
         self.create_new_record()
@@ -178,11 +177,9 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
 
         # print("done.")
 
-    
     def handle_export_all_records_pressed(self):
         print("handle_export_all_records_pressed(...)")
         self.export_records()
-
 
     def display_context_menu(self, pos):
         curr_active_tab_index = self.get_active_tab_index()
@@ -203,7 +200,6 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
 
         table_viewport = self.tables[curr_active_tab_index].viewport()
         self.menu.popup(table_viewport.mapToGlobal(pos))
-
 
     def delete_record(self):
         ## TODO: unimplemented
@@ -258,7 +254,6 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
     def get_active_tab_index(self):
         return self.tabs.currentIndex()
         
-
     def create_new_record(self):
         self.activeActionTabIndex = self.get_active_tab_index()
         dialog = QInputDialog(self)
@@ -289,10 +284,8 @@ class ExampleDatabaseTableWindow(AbstractDatabaseAccessingWindow):
         print("storing new record")
         self.models[self.activeActionTabIndex].refresh()
 
-
     def update_current_record(self, x, y):
         self.current_record = self.table_selection_models[self.get_active_tab_index()].currentIndex().data(Qt.EditRole)
-
 
     def export_records(self):
         print("export_records()...")

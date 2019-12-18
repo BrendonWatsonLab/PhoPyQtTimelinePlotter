@@ -28,6 +28,7 @@ from GUI.UI.ExtendedTracksContainerWidget import ExtendedTracksContainerWidget
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Videos import *
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Partition import TrackContextConfig, TimelineTrackDrawingWidget_Partition
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_AnnotationComments import *
+from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_DataFile import *
 
 # from app.database.SqliteEventsDatabase import load_video_events_from_database
 from app.database.SqlAlchemyDatabase import load_annotation_events_from_database, save_annotation_events_to_database, create_TimestampedAnnotation
@@ -48,6 +49,8 @@ from GUI.UI.TimelineHeaderWidget.TimelineHeaderWidget import TimelineHeaderWidge
 from GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, TrackCache, TrackFilterBase
 from GUI.Model.TrackConfigs.VideoTrackConfig import VideoTrackFilter, VideoTrackConfiguration
 from GUI.Model.TrackConfigs.PartitionTrackConfig import PartitionTrackFilter, PartitionTrackConfiguration
+from GUI.Model.TrackConfigs.DataFileTrackConfig import DataFileTrackFilter, DataFileTrackConfiguration
+
 
 from GUI.Model.ModelViewContainer import ModelViewContainer
 
@@ -139,7 +142,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
     # debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(False, True, True), VideoTrackGroupSettings(False, True, True)]
 
     debug_desiredVideoTracks = [1]
-    debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(True, True, True)]
+    debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(True, True, True, ["test"])]
 
     # debug_desiredVideoTracks = [5, 6, 8, 9]
 
@@ -172,6 +175,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
 
         self.labjackDataFilesystemLoader = LabjackFilesystemLoader([], parent=self)
         self.labjackDataFilesystemLoader.loadingLabjackDataFilesComplete.connect(self.on_labjack_files_loading_complete)
+        self.activeGlobalTimelineTimesChanged.connect(self.labjackDataFilesystemLoader.on_active_global_timeline_times_changed)
 
         # Update the data model, and set up the timeline totalStartTime, totalEndTime, totalDuration from the loaded videos if we're in that enum mode.
         self.reloadModelFromDatabase()
@@ -202,8 +206,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         # self.referenceManager.hoverDatetimeChanged.connect(self.on_reference_indicator_line_hover_changed)
         # self.referenceManager.selectedDatetimeChanged.connect(self.on_reference_indicator_line_selection_changed)
 
-
-
         self.activeZoomChanged.connect(self.referenceManager.on_active_zoom_changed)
         self.activeViewportChanged.connect(self.referenceManager.on_active_viewport_changed)
         self.activeGlobalTimelineTimesChanged.connect(self.referenceManager.on_active_global_timeline_times_changed)
@@ -211,7 +213,9 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
 
         # Video Thumbnail Generator:
         self.videoThumbnailGenerator = VideoPreviewThumbnailGenerator([], parent=self)
-        self.videoThumbnailGenerator.thumbnailGenerationComplete.connect(self.on_video_thumbnail_generation_complete)
+        self.videoThumbnailGenerator.thumbnailGenerationComplete.connect(self.on_all_videos_thumbnail_generation_complete)
+        self.videoThumbnailGenerator.videoThumbnailGenerationComplete.connect(self.on_video_event_thumbnail_generation_complete) # Single video file
+
 
         self.wantsCreateNewVideoPlayerWindowOnClose = False
         self.pendingCreateVideoPlayerSelectedItemReference = None # self.pendingCreateVideoPlayerSelectedItem: holds the URL of the video file that we currently want to load. Used to enable waiting for the previous video player to close before a new one is opened with this URL.
@@ -224,7 +228,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         self.setupWindow = None
         self.videoTreeWindow = None
         self.databaseBrowserUtilityWindow = None
-        self.activeVideoTrackConfigEditDialog = None
+        self.activeTrackConfigEditDialog = None
         self.activeTrackID_ConfigEditingIndex = None
     
 
@@ -232,7 +236,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         # self.minimumVideoTrackHeight = 25
 
         self.minimumEventTrackHeight = 50
-
 
         self.initUI()
         self.reload_tracks_from_track_configs()
@@ -361,7 +364,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
                 currTrackIndex = currTrackIndex + 1
 
                 currHelperTracksOptions = self.loadedVideoHelperTrackPreferences[index]
-                wantsLabeledVideoTrack, wantsAnnotationsTrack, wantsPartitionTrack = currHelperTracksOptions.get_helper_track_preferences()
+                wantsLabeledVideoTrack, wantsAnnotationsTrack, wantsPartitionTrack, wantedDataTracks = currHelperTracksOptions.get_helper_track_preferences()
                 # Add the tagged video track for the same box
                 if wantsLabeledVideoTrack:
                     currTrackConfig = VideoTrackConfiguration(currTrackIndex, "B{0:02}Labeled".format(currTrackBBID), "Labeled", False, True, [currTrackBBID+1], None, None, None, self)
@@ -400,6 +403,20 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
                     self.eventTrackWidgets.append(self.partitionsTrackWidget)
                     self.trackID_to_GroupIndexMap[currTrackIndex] = index
                     currTrackIndex = currTrackIndex + 1
+
+                # Data Tracks:
+                for aWantedDataTrack in wantedDataTracks:
+                    dataTrackName = aWantedDataTrack
+                    currTrackConfig = DataFileTrackConfiguration(currTrackIndex, "D_B{0:02}{1}".format(currTrackBBID, dataTrackName), dataTrackName, "", [currTrackBBID+1], None, None, None, self)
+                    self.trackConfigurationsDict[currTrackIndex] = currTrackConfig
+                    currDataTrackWidget = TimelineTrackDrawingWidget_DataFile(currTrackConfig, self.totalStartTime, self.totalEndTime, self.database_connection, parent=self, wantsKeyboardEvents=False, wantsMouseEvents=True)
+                    specific_storage_array_index = len(self.eventTrackWidgets)
+                    currGroup.append_dataTrackIndex(specific_storage_array_index)
+                    self.trackID_to_TrackWidgetLocatorTuple[currTrackIndex] = (currTrackConfig.get_track_storageArray_type(), specific_storage_array_index)
+                    self.eventTrackWidgets.append(currDataTrackWidget)
+                    self.trackID_to_GroupIndexMap[currTrackIndex] = index
+                    currTrackIndex = currTrackIndex + 1
+
 
                 self.trackGroups.append(currGroup)
 
@@ -448,8 +465,9 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             currHeaderIncludedContainer = QWidget(self)
 
             currHeaderTrackConfig = self.trackConfigurationsDict[currVideoTrackWidget.get_trackID()]
+            ## Track Header Widget:
             currHeaderWidget = TimelineHeaderWidget(currHeaderTrackConfig, parent=self)
-            currHeaderWidget.setMinimumSize(50, self.minimumVideoTrackHeight)
+            currHeaderWidget.setMinimumSize(50, currHeaderTrackConfig.get_track_default_height())
             currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
             currHeaderWidget.toggleCollapsed.connect(self.on_track_header_toggle_collapse_activated)
@@ -459,9 +477,9 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             currHeaderWidget.update_labels_dynamically()
             self.videoFileTrackWidgetHeaders[currVideoTrackWidget.get_trackID()] = currHeaderWidget
 
-            # Make the floating label as well
+            ## Floating Track Header Widget:
             currFloatingHeader = TimelineFloatingHeaderWidget(currHeaderTrackConfig, parent=self)
-            currFloatingHeader.setMinimumSize(25, (self.minimumVideoTrackHeight / 2.0))
+            currFloatingHeader.setMinimumSize(25, currHeaderTrackConfig.get_track_default_height())
             currFloatingHeader.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
             currFloatingHeader.update_labels_dynamically()
 
@@ -469,27 +487,23 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             currFloatingHeader.findNext.connect(self.on_jump_next_for_track)
             currFloatingHeader.showOptions.connect(self.on_track_header_show_options_activated)
             currFloatingHeader.refresh.connect(self.on_track_header_refresh_activated)
-
+            currFloatingHeader.setVisible(False)
+            
             self.trackFloatingWidgetHeaders[currVideoTrackWidget.get_trackID()] = currFloatingHeader
 
             # Set the minimum grid row height
             currFloatingHeaderGridRowID = currTrackConfigurationIndex + 1
-            self.timelineViewportLayout.setRowMinimumHeight(currFloatingHeaderGridRowID, self.minimumVideoTrackHeight)
-
+            self.timelineViewportLayout.setRowMinimumHeight(currFloatingHeaderGridRowID, currHeaderTrackConfig.get_track_default_height())
 
             currHeaderIncludedTrackLayout.addWidget(currVideoTrackWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
-            currVideoTrackWidget.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
+            currVideoTrackWidget.setMinimumSize(minimumWidgetWidth, currHeaderTrackConfig.get_track_default_height())
             currVideoTrackWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
             currHeaderIncludedTrackLayout.addWidget(currHeaderWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
 
             # Floating header track
             # currHeaderIncludedTrackLayout.addWidget(currFloatingHeader, 0, 0, Qt.AlignHCenter|Qt.AlignTop)
-
-
             currHeaderIncludedContainer.setLayout(currHeaderIncludedTrackLayout)
-
-            currHeaderIncludedContainer.setMinimumSize(minimumWidgetWidth, self.minimumVideoTrackHeight)
+            currHeaderIncludedContainer.setMinimumSize(minimumWidgetWidth, currHeaderTrackConfig.get_track_default_height())
             currHeaderIncludedContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
             self.extendedTracksContainerVboxLayout.addWidget(currHeaderIncludedContainer)
@@ -504,8 +518,10 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
 
             currHeaderTrackConfig = self.trackConfigurationsDict[currWidget.get_trackID()]
             
+            ## Track Header Widget:
             currHeaderWidget = TimelineHeaderWidget(currHeaderTrackConfig, parent=self)
-            currHeaderWidget.setMinimumSize(50, self.minimumEventTrackHeight)
+            
+            currHeaderWidget.setMinimumSize(50, currHeaderTrackConfig.get_track_default_height())
             currHeaderWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
             currHeaderWidget.toggleCollapsed.connect(self.on_track_header_toggle_collapse_activated)
@@ -515,9 +531,11 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             currHeaderWidget.update_labels_dynamically()
             self.eventTrackWidgetHeaders[currWidget.get_trackID()] = currHeaderWidget
 
+            ## Floating Track Header Widget:
             # Make the floating label as well
             currFloatingHeader = TimelineFloatingHeaderWidget(currHeaderTrackConfig, parent=self)
-            currFloatingHeader.setMinimumSize(25, (self.minimumEventTrackHeight / 2.0))
+            # currFloatingHeader.setMinimumSize(25, (currHeaderTrackConfig.get_track_default_height() / 2.0))
+            currFloatingHeader.setMinimumSize(25, currHeaderTrackConfig.get_track_default_height())
             currFloatingHeader.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
             currFloatingHeader.update_labels_dynamically()
 
@@ -525,22 +543,23 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             currFloatingHeader.findNext.connect(self.on_jump_next_for_track)
             currFloatingHeader.showOptions.connect(self.on_track_header_show_options_activated)
             currFloatingHeader.refresh.connect(self.on_track_header_refresh_activated)
+            currFloatingHeader.setVisible(False)
 
             self.trackFloatingWidgetHeaders[currWidget.get_trackID()] = currFloatingHeader
 
             # Set the minimum grid row height
             currFloatingHeaderGridRowID = currTrackConfigurationIndex + 1
-            self.timelineViewportLayout.setRowMinimumHeight(currFloatingHeaderGridRowID, self.minimumEventTrackHeight)
+            self.timelineViewportLayout.setRowMinimumHeight(currFloatingHeaderGridRowID, currHeaderTrackConfig.get_track_default_height())
 
             currHeaderIncludedTrackLayout.addWidget(currWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
-            currWidget.setMinimumSize(minimumWidgetWidth, self.minimumEventTrackHeight)
+            currWidget.setMinimumSize(minimumWidgetWidth, currHeaderTrackConfig.get_track_default_height())
             currWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
             currHeaderIncludedTrackLayout.addWidget(currHeaderWidget, 0, 0, Qt.AlignLeft|Qt.AlignTop)
 
             currHeaderIncludedContainer.setLayout(currHeaderIncludedTrackLayout)
 
-            currHeaderIncludedContainer.setMinimumSize(minimumWidgetWidth, self.minimumEventTrackHeight)
+            currHeaderIncludedContainer.setMinimumSize(minimumWidgetWidth, currHeaderTrackConfig.get_track_default_height())
             currHeaderIncludedContainer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
             self.extendedTracksContainerVboxLayout.addWidget(currHeaderIncludedContainer)
@@ -593,6 +612,14 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
                     initUI_setupEventTrackWidget(self, currWidget, currTrackConfigurationIndex)
                     currTrackConfigurationIndex = currTrackConfigurationIndex + 1
 
+                # Data Tracks:
+                for aWantedDataTrackIndex in currGroup.get_dataTrackIndicies():
+                    currWidget = self.eventTrackWidgets[aWantedDataTrackIndex]
+                    # Event track specific setup
+                    initUI_setupEventTrackWidget(self, currWidget, currTrackConfigurationIndex)
+                    currTrackConfigurationIndex = currTrackConfigurationIndex + 1
+
+                
 
             # General Layout:
             self.extendedTracksContainer.setLayout(self.extendedTracksContainerVboxLayout)
@@ -619,7 +646,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
                 # self.timelineViewportLayout.addWidget(aFloatingHeader, 0, 0, Qt.AlignHCenter|Qt.AlignTop)
                 self.timelineViewportLayout.addWidget(aFloatingHeader, currRowIndex, 0, Qt.AlignRight|Qt.AlignTop)
                 currRowIndex = currRowIndex + 1
-
 
             # Set the timelineViewportContainer's layout to the timeline viewport layout
             self.timelineViewportContainer.setLayout(self.timelineViewportLayout)
@@ -884,7 +910,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
     def keyPressEvent(self, event):
         print("TimelineDrawingWindow.keyPressEvent(): {0}".format(str(event.key())))
 
-
         if event.key() == Qt.Key_Space:
             try:
                 self.videoPlayerWindow.key_handler(event)
@@ -925,16 +950,12 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         self.cursorX = event.x()
         self.cursorY = event.y()
         
-        # track_offset_x = self.percent_offset_to_track_offset(self.get_viewport_percent_scrolled())
-        # duration_offset = self.offset_to_duration(self.cursorX)
-        # datetime = self.offset_to_datetime(self.cursorX)
-
         # Get scrollview x_offset from window x_offset
         self.timelineCursorX = self.viewport_offset_to_contents_offset(self.cursorX)
         self.timelineCursorDurationOffset = self.offset_to_duration(self.timelineCursorX)
         self.timelineCursorDatetime = self.offset_to_datetime(self.timelineCursorX)
 
-        text = "window x: {0}, contents_x: {1},  duration: {2}, datetime: {3}".format(self.cursorX, self.timelineCursorX, self.timelineCursorDurationOffset, str(datetime))
+        text = "window x: {0}, contents_x: {1},  duration: {2}, datetime: {3}".format(self.cursorX, self.timelineCursorX, self.timelineCursorDurationOffset, self.get_full_long_date_time_string(self.timelineCursorDatetime))
         # Call the on_mouse_moved handler for the video track which will update its .hovered_object property, which is then read and used for relative offsets
 
         for (anIndex, aTimelineVideoTrack) in enumerate(self.videoFileTrackWidgets):
@@ -1799,7 +1820,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
 
     @pyqtSlot(list)
     def on_reference_line_markers_updated(self, referenceLineList):
-        print("TimelineDrawingWindow.on_reference_line_markers_updated(...)")
+        # print("TimelineDrawingWindow.on_reference_line_markers_updated(...)")
         additional_data = []
         for aListItem in referenceLineList:
             # curr_view = aListItem.get_view()
@@ -1983,18 +2004,18 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             currVideoTrackHeader = self.videoFileTrackWidgetHeaders[trackID]
             currVideoTrackConfig = currVideoTrackHeader.get_config()
             self.activeTrackID_ConfigEditingIndex = trackID
-            self.activeVideoTrackConfigEditDialog = VideoTrackFilterEditDialog(currVideoTrackConfig, parent=self)
-            self.activeVideoTrackConfigEditDialog.on_commit.connect(self.try_update_video_track_filter)
-            self.activeVideoTrackConfigEditDialog.on_cancel.connect(self.track_config_dialog_canceled)
+            self.activeTrackConfigEditDialog = VideoTrackFilterEditDialog(currVideoTrackConfig, parent=self)
+            self.activeTrackConfigEditDialog.on_commit.connect(self.try_update_video_track_filter)
+            self.activeTrackConfigEditDialog.on_cancel.connect(self.track_config_dialog_canceled)
             pass
         elif trackID in self.eventTrackWidgetHeaders.keys():
             # event track
             currTrackHeader = self.eventTrackWidgetHeaders[trackID]
             currTrackConfig = currTrackHeader.get_config()
             self.activeTrackID_ConfigEditingIndex = trackID
-            self.activeVideoTrackConfigEditDialog = TrackFilterEditDialogBase(currTrackConfig, parent=self)
-            self.activeVideoTrackConfigEditDialog.on_commit.connect(self.try_update_event_track_filter)
-            self.activeVideoTrackConfigEditDialog.on_cancel.connect(self.track_config_dialog_canceled)
+            self.activeTrackConfigEditDialog = TrackFilterEditDialogBase(currTrackConfig, parent=self)
+            self.activeTrackConfigEditDialog.on_commit.connect(self.try_update_event_track_filter)
+            self.activeTrackConfigEditDialog.on_cancel.connect(self.track_config_dialog_canceled)
             pass
         else:
             print("WARNING: Couldn't find header with trackID: {0}".format(trackID))
@@ -2030,9 +2051,15 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             print("Error: unknown track type!")
             return
     
+    """ on_video_track_child_generate_thumbnails(self, trackID, videoDurationObj): called a particular video event for a track with trackID
+
+    """
     @pyqtSlot(int, object)
     def on_video_track_child_generate_thumbnails(self, trackID, videoDurationObj):
         print("TimelineDrawingWindow.on_video_track_child_generate_thumbnails({0}, {1})".format(str(trackID), str(videoDurationObj)))
+
+        # def after_video_track_thumbnails_generated(self, trackID, videoDurationObj):
+        #     print("after_video_track_thumbnails_generated(trackID: {0}, videoDurationObj: {1})".format(str(trackID), str(videoDurationObj)))
 
         currTrackConfig = self.trackConfigurationsDict[trackID]
         currFoundTrack = self.get_track_with_trackID(trackID)
@@ -2042,6 +2069,9 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         if (proposed_video_file_path is not None):
             # Have a valid video file path
             print("TimelineDrawingWindow.on_video_track_child_generate_thumbnails(...): starting thumbnail generation with video: {0}...".format(str(proposed_video_file_path)))
+            # register the video duration object as a receiver of the thumbnail generation finished event
+            self.get_video_thumbnail_generator().videoThumbnailGenerationComplete.connect(videoDurationObj.on_thumbnails_loaded)
+
             # Start thumbnail generation for this video file too:
             self.get_video_thumbnail_generator().add_video_path(str(proposed_video_file_path))
 
@@ -2394,7 +2424,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         self.totalTrackCount = len(self.videoFileTrackWidgets) + len(self.eventTrackWidgets)
         self.totalNumGroups = len(self.trackGroups)
 
-        # Loop through the groups to layout the tracks
+        # Loop through the groups 
         for currGroupIndex in range(0, self.totalNumGroups):
             currGroup = self.trackGroups[currGroupIndex]
             if currGroup.get_videoTrackIndex() is not None:
@@ -2428,17 +2458,19 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
     def get_video_thumbnail_generator(self):
         return self.videoThumbnailGenerator
 
-    # on_video_thumbnail_generation_complete(): Called when a thumbnail generation is complete for a given video
-    @pyqtSlot()
-    def on_video_thumbnail_generation_complete(self):
-        print("TimelineDrawingWindow.on_video_thumbnail_generation_complete()...")
-        # Clear the top-level nodes
+
+    # on_video_event_thumbnail_generation_complete(): Called when a thumbnail generation is complete for a given video
+    @pyqtSlot(str, list)
+    def on_video_event_thumbnail_generation_complete(self, videoFileName, generated_thumbnails_list):
+        print("TimelineDrawingWindow.on_video_event_thumbnail_generation_complete(videoFileName: {0})...".format(str(videoFileName)))
         self.video_thumbnail_popover_window = QDialog(self)
         # self.video_thumbnail_popover_window.setCentr
         # A vertical box layout
-        thumbnailsLayout = QVBoxLayout()
+        # thumbnailsLayout = QVBoxLayout()
+        thumbnailsLayout = QHBoxLayout()
 
-        desiredThumbnailSizeKey = "40"
+        # desiredThumbnailSizeKey = "40"
+        desiredThumbnailSizeKey = "160"
 
         # for (aSearchPathIndex, aSearchPath) in enumerate(self.searchPaths):
         for (key_path, cache_value) in self.get_video_thumbnail_generator().get_cache().items():
@@ -2452,9 +2484,37 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
                 w.setPixmap(QtGui.QPixmap.fromImage(currThumbnailImage))
                 thumbnailsLayout.addWidget(w)
 
-        
         self.video_thumbnail_popover_window.setLayout(thumbnailsLayout)
         self.video_thumbnail_popover_window.show()
+
+        self.update()
+
+    # on_video_thumbnail_generation_complete(): Called when a thumbnail generation is complete for a given video
+    @pyqtSlot()
+    def on_all_videos_thumbnail_generation_complete(self):
+        print("TimelineDrawingWindow.on_all_videos_thumbnail_generation_complete()...")
+        # self.video_thumbnail_popover_window = QDialog(self)
+        # # self.video_thumbnail_popover_window.setCentr
+        # # A vertical box layout
+        # thumbnailsLayout = QVBoxLayout()
+
+        # # desiredThumbnailSizeKey = "40"
+        # desiredThumbnailSizeKey = "160"
+
+        # # for (aSearchPathIndex, aSearchPath) in enumerate(self.searchPaths):
+        # for (key_path, cache_value) in self.get_video_thumbnail_generator().get_cache().items():
+        #     # key_path: the video file path that had the thumbnails generated for it
+        #     print("thumbnail generation complete for [{0}]: {1} frames".format(str(key_path), len(cache_value)))
+        #     for (index, aVideoThumbnailObj) in enumerate(cache_value):
+        #         currThumbsDict = aVideoThumbnailObj.get_thumbs_dict()
+        #         # currThumbnailImage: should be a QImage
+        #         currThumbnailImage = currThumbsDict[desiredThumbnailSizeKey]
+        #         w = QLabel()
+        #         w.setPixmap(QtGui.QPixmap.fromImage(currThumbnailImage))
+        #         thumbnailsLayout.addWidget(w)
+
+        # self.video_thumbnail_popover_window.setLayout(thumbnailsLayout)
+        # self.video_thumbnail_popover_window.show()
 
         self.update()
     
@@ -2473,8 +2533,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             return
         self.get_labjack_data_files_loader().add_labjack_file_path(importFilePath)
 
-
-    
     def get_labjack_data_files_loader(self):
         return self.labjackDataFilesystemLoader
 
@@ -2485,10 +2543,27 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         for (key_path, cache_value) in activeLoader.get_cache().items():
             # key_path: the labjack data file path that had the labjack events loaded from it
 
-            loaded_labjack_events = cache_value.get_labjack_events()
-            print("labjack event loading complete for [{0}]: {1} files".format(str(key_path), len(loaded_labjack_events)))
+            # loaded_labjack_events = cache_value.get_labjack_events()
+            # print("labjack event loading complete for [{0}]: {1} files".format(str(key_path), len(loaded_labjack_events)))
 
-            
-            # for (index, aVideoThumbnailObj) in enumerate(cache_value):
-            #     currThumbsDict = aVideoThumbnailObj.get_thumbs_dict()
-            pass
+            loaded_labjack_event_containers = cache_value.get_labjack_container_events()
+            print("labjack event container loading complete for [{0}]: {1} events".format(str(key_path), len(loaded_labjack_event_containers)))
+
+            # Loop through the groups 
+            for currGroupIndex in range(0, self.totalNumGroups):
+                currGroup = self.trackGroups[currGroupIndex]
+
+                # Get the data tracks for the current group
+                currGroupDataTrackIndicies = currGroup.get_dataTrackIndicies()
+
+                # Loop through the data tracks
+                for aDataTrackIndex in currGroupDataTrackIndicies:
+                    currDataTrackWidget = self.eventTrackWidgets[aDataTrackIndex]
+                    currContainerArray = currDataTrackWidget.get_cached_container_array()
+                    currDataTrackTrackID = currDataTrackWidget.get_trackID()
+
+                    # Get configuration:
+                    currTrackConfig = self.trackConfigurationsDict[currDataTrackTrackID]
+                    # Forcibily update the cache of the data track.
+                    currTrackConfig.update_cache(loaded_labjack_event_containers)
+                    # TODO: in the future, use the track's config and filter and stuff

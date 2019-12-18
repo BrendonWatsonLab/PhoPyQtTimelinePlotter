@@ -12,6 +12,8 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
 
 from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult, CachedFileSource
+from app.filesystem.VideoUtils import findDeeplabCutProducedOutputFiles, FoundDeeplabcutOutputFileResult
+
 # from app.filesystem.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
 # from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
 from app.filesystem.VideoMetadataWorkers import VideoMetadataWorker
@@ -29,6 +31,10 @@ class CachedVideoFileLoadingOptions(Enum):
         LoadOnlyFromDatabase = 1 # Only loads the video file records from the sqlite database. Doesn't search the disk for new video files or update existing ones
         LoadDatabaseAndSearchVideoFileSearchPaths = 2 #  Load the video file records from the sqlite database AND search the video file search paths for new or updated video files.
 
+class CachedDataFileLoadingOptions(Enum):
+        LoadOnlyFromDatabase = 1 # Only loads the video file records from the sqlite database. Doesn't search the disk for new video files or update existing ones
+        LoadDatabaseAndSearchVideoFileSearchPaths = 2 #  Load the video file records from the sqlite database AND search the video file search paths for new or updated video files.
+
 
 
 class ParentDirectoryCache(QObject):
@@ -41,9 +47,12 @@ class ParentDirectoryCache(QObject):
         self.database_video_files = []
         
         self.found_filesystem_video_files = []
+        self.found_filesystem_data_output_files = []
 
         self.finalOutputParsedVideoResultFileSources = dict()
         self.finalOutputParsedVideoResultFiles = []
+
+        self.final_output_matching_videoFileBaseName_DataFile_dict = dict() # A map from a videoFile's base name to a list of data files
 
     def get_full_path(self):
         return str(self.full_path)
@@ -72,6 +81,13 @@ class ParentDirectoryCache(QObject):
         self.found_filesystem_video_files = new_found_filesystem_video_files
         self.rebuild_combined_video_files()
         
+    def get_found_filesystem_data_output_files(self):
+        return self.found_filesystem_data_output_files
+
+    def set_found_filesystem_deeplabcut_data_output_files(self, new_found_filesystem_dlc_data_output_files):
+        self.found_filesystem_data_output_files = new_found_filesystem_dlc_data_output_files
+        self.rebuild_combined_data_files()
+
     def get_filesystem_video_files(self):
         return self.found_filesystem_video_files
 
@@ -91,6 +107,8 @@ class ParentDirectoryCache(QObject):
 
         finalOutputParsedVideoResultFilesDict = dict()
         finalOutputParsedVideoResultFilesList = []
+
+        self.final_output_matching_videoFileBaseName_DataFile_dict = dict()
 
         # Database:
         for aLoadedDatabaseVideoFileRecord in self.database_video_files:
@@ -149,6 +167,34 @@ class ParentDirectoryCache(QObject):
     def get_combined_video_files(self):
         return self.finalOutputParsedVideoResultFiles
 
+    # Called to rebuild the dictionary that maps from a video file to a data file
+    def rebuild_combined_data_files(self):
+        # Find matching video files for each data file
+        # final_output_matching_dataFile_videoFile_dict = dict()
+        self.final_output_matching_videoFileBaseName_DataFile_dict = dict()
+
+        for aVideoFile in self.get_combined_video_files():
+            currVideoFileBaseName = aVideoFile.get_base_name()
+            if currVideoFileBaseName not in self.final_output_matching_videoFileBaseName_DataFile_dict.keys():
+                # Create the new key with an empty list if it doesn't yet exist
+                self.final_output_matching_videoFileBaseName_DataFile_dict[currVideoFileBaseName] = []
+            
+            for aDataFile in self.get_found_filesystem_data_output_files():
+                if (currVideoFileBaseName == aDataFile.get_base_video_file_name()):
+                    # Add the data file to the existing list for that key
+                    self.final_output_matching_videoFileBaseName_DataFile_dict[currVideoFileBaseName].append(aDataFile)
+
+                # if currVideoFileBaseName in final_output_matching_videoFileBaseName_DataFile_dict.keys():
+                #     # Add the data file to the existing list for that key
+                #     final_output_matching_videoFileBaseName_DataFile_dict[currVideoFileBaseName].append(aDataFile)
+                # else:
+                #     # Create the new key with a list containing just this data file
+                #     final_output_matching_videoFileBaseName_DataFile_dict[currVideoFileBaseName] = [aDataFile]
+                
+                
+    def get_combined_video_file_basenames_to_data_file_list_map(self):
+        return self.final_output_matching_videoFileBaseName_DataFile_dict
+
 
 ## VideoFilesystemLoader: this object tries to find video files in the filesystem and add them to the database if they don't exist
 """
@@ -156,14 +202,17 @@ Loads the VideoFiles from the database (cached versions) and then tries to searc
 """
 class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
 
-    VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
-    # VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadOnlyFromDatabase
+    # VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
+    VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadOnlyFromDatabase
+    DataFileLoadingMode = CachedDataFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
 
 
     foundFilesUpdated = pyqtSignal()
 
     findMetadataComplete = pyqtSignal()
     findVideosComplete = pyqtSignal()
+
+    findFilesInSearchDirectoryComplete = pyqtSignal(str)
 
     def __init__(self, database_connection, videoFileSearchPaths, parent=None):
         super(VideoFilesystemLoader, self).__init__(database_connection, parent=parent) # Call the inherited classes __init__ method
@@ -183,7 +232,6 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
         print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
         self.reload_data()
 
-
     def get_cache(self):
         return self.cache
 
@@ -191,12 +239,17 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
     def reload_data(self, restricted_search_paths=None):
         print("VideoFilesystemLoader.reload_data(...)")
         # Load the video files depending on the setting.
-        if VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadOnlyFromDatabase:
-            print("Only loading video files from database. Ignoring search paths...")
-            self.reloadModelFromDatabase()
-        elif VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths:
+        if ((VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths) or (VideoFilesystemLoader.DataFileLoadingMode == CachedDataFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths)):
+            
+            if VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadOnlyFromDatabase:
+                print("Only loading video files from database. Ignoring search paths...")
+            else:
+                print("Loading video files from database and filesystem...")
+
             print("Loading video files from database and searching search paths...")
             self.reloadModelFromDatabase()
+            # Rebuild self.searchPaths from the database's parent folders
+            self.searchPaths = [str(aSearchPath) for aSearchPath in self.cache.keys()]
             if restricted_search_paths is None:
                 restricted_search_paths = self.searchPaths
 
@@ -226,7 +279,7 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
             aFinalSearchPath = aLoadedParentFolder.fullpath
 
             if (not (aFinalSearchPath in self.cache.keys())):
-                # Parent doesn't yet exist in cache
+                # Parent doesn't yet exist in cache, create it
                 self.cache[aFinalSearchPath] = ParentDirectoryCache(aFinalSearchPath, CachedFileSource.OnlyFromDatabase)
             else:
                 # Parent already exists
@@ -438,11 +491,19 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
 
         # Clear the top-level nodes
         for aSearchPath in active_search_paths:
-            curr_search_path_video_files = findVideoFiles(aSearchPath, shouldPrint=False)
-            # self.found_files_lists.append(curr_search_path_video_files)
-            self.cache[aSearchPath].set_found_filesystem_video_files(curr_search_path_video_files) ## TODO: Don't overwrite the previously cached/found video files
-            self.total_found_files = self.total_found_files + len(curr_search_path_video_files)
+
+            if (VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths):
+                curr_search_path_video_files = findVideoFiles(aSearchPath, shouldPrint=False)
+                self.cache[aSearchPath].set_found_filesystem_video_files(curr_search_path_video_files) ## TODO: Don't overwrite the previously cached/found video files
+                self.total_found_files = self.total_found_files + len(curr_search_path_video_files)
+
+            if (VideoFilesystemLoader.DataFileLoadingMode == CachedDataFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths):
+                curr_search_path_deeplabcut_data_files = findDeeplabCutProducedOutputFiles(aSearchPath, shouldPrint=False)
+                self.cache[aSearchPath].set_found_filesystem_deeplabcut_data_output_files(curr_search_path_deeplabcut_data_files)
+                self.total_found_files = self.total_found_files + len(curr_search_path_deeplabcut_data_files)
+            
             searchedSearchPaths = searchedSearchPaths + 1
+            self.findFilesInSearchDirectoryComplete.emit(aSearchPath)
             progress_callback.emit(active_search_paths, (searchedSearchPaths*100/self.total_search_paths))
 
         return "Done."

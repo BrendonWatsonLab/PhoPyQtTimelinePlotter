@@ -2,6 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import datetime as dt
+
+import sqlalchemy as db
+from sqlalchemy.exc import IntegrityError, OperationalError
+import sqlite3
 # from Testing.SqliteEventsDatabase import save_video_events_to_database, load_video_events_from_database
 
 from PyQt5 import QtGui, QtWidgets, uic
@@ -9,8 +13,6 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QStyle, QDockWidget
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon, QStandardItem
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QResource
-
-
 
 from GUI.Model.Events.PhoEvent import PhoEvent
 from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
@@ -35,7 +37,37 @@ class TimelineApplication(QApplication):
         # self.database_file_path = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
         # self.database_file_path = 'G:\Google Drive\Modern Behavior Box\Results - Data\BehavioralBoxDatabase.db'
         self.database_file_path = "C:/Users/halechr/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db"
-        self.database_connection = DatabaseConnectionRef(self.database_file_path)
+
+        try:
+            self.database_connection = DatabaseConnectionRef(self.database_file_path)
+            
+        except sqlite3.OperationalError as error:
+            fallback_string = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
+            print("databse{0} doesn't exist... trying {1}...".format(str(self.database_file_path), str(fallback_string)))
+            self.database_file_path = fallback_string
+            try:
+                self.database_connection = DatabaseConnectionRef(self.database_file_path)
+            except sqlite3.OperationalError as error:
+                print("file {0} doesn't exist either.".format(str(self.database_file_path)))
+
+        except OperationalError as error:
+            fallback_string = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
+            print("databse{0} doesn't exist... trying {1}...".format(str(self.database_file_path), str(fallback_string)))
+            self.database_file_path = fallback_string
+            try:
+                self.database_connection = DatabaseConnectionRef(self.database_file_path)
+            except sqlite3.OperationalError as error:
+                print("file {0} doesn't exist either.".format(str(self.database_file_path)))
+
+
+
+        # except expression as identifier:
+        #     pass
+        # else:
+        #     pass
+
+        print("done.")
+        
 
         # Show last 7 days worth of data
         self.earliestTime = dt.datetime.now() - dt.timedelta(days=7)

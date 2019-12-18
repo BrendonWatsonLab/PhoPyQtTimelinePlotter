@@ -19,6 +19,7 @@ class TrackType(Enum):
     Video = 2
     Annotation = 3
     Partition = 4
+    DataFile = 5
 
     def get_short_str(self):
         if self == TrackType.Unknown:
@@ -29,6 +30,8 @@ class TrackType(Enum):
             return 'A'
         elif self == TrackType.Partition:
             return 'P'
+        elif self == TrackType.DataFile:
+            return 'D'
         else:
             return '!'
 
@@ -41,6 +44,8 @@ class TrackType(Enum):
             return 'Note'
         elif self == TrackType.Partition:
             return 'Part'
+        elif self == TrackType.DataFile:
+            return 'Data'
         else:
             return 'ERR'
 
@@ -53,8 +58,11 @@ class TrackType(Enum):
             return 'Annotation'
         elif self == TrackType.Partition:
             return 'Partition'
+        elif self == TrackType.DataFile:
+            return 'DataFile'
         else:
             return 'ERROR'
+
 
     def get_storage_array_type(self):
         if self == TrackType.Unknown:
@@ -65,8 +73,31 @@ class TrackType(Enum):
             return TrackStorageArray.Event
         elif self == TrackType.Partition:
             return TrackStorageArray.Event
+        elif self == TrackType.DataFile:
+            return TrackStorageArray.Event
         else:
             return TrackStorageArray.Unknown
+
+
+
+    def get_default_track_height(self):
+        defaultMinimumVideoTrackHeight = 50
+        defaultMinimumEventTrackHeight = 50
+
+        if self == TrackType.Unknown:
+            return defaultMinimumEventTrackHeight
+        elif self == TrackType.Video:
+            return defaultMinimumVideoTrackHeight
+        elif self == TrackType.Annotation:
+            return defaultMinimumEventTrackHeight
+        elif self == TrackType.Partition:
+            return defaultMinimumEventTrackHeight
+        elif self == TrackType.DataFile:
+            return 25 # Data tracks are smaller
+        else:
+            return defaultMinimumEventTrackHeight
+
+
 
     def __str__(self):
         return self.get_long_str()
@@ -105,9 +136,6 @@ class TrackConfigDataCacheMixin(object):
     @pyqtSlot()
     def get_cached_duration_views(self):
         return self.durationObjects
-
-    
-
 
     # performReloadConfigCache(...): actually tells the config cache to update
     @pyqtSlot()

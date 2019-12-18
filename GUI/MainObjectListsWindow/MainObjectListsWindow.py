@@ -4,13 +4,14 @@
 import sys
 from datetime import datetime, timezone, timedelta
 import numpy as np
+import pandas as pd
 from enum import Enum
 
 from PyQt5 import QtGui, QtWidgets, uic
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea
 from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QAction, qApp, QApplication, QTreeWidgetItem, QFileDialog 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool
+from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool, QVariant
 
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWindow
 
@@ -24,6 +25,11 @@ from app.database.entry_models.db_model import FileParentFolder, StaticFileExten
 from app.filesystem.VideoConversionHelpers import HandbrakeConversionQueue, save_handbrake_conversion_queue
 
 from app.filesystem.VideoFilesystemLoadingMixin import CachedVideoFileLoadingOptions, ParentDirectoryCache, VideoFilesystemLoader
+from app.filesystem.DeeplabcutOutputFilesystemLoadingMixin import DeeplabCutOutputFileType, DeeplabcutEventFile, DeeplabcutFilesystemLoader
+
+# Pandas dataframe tables
+from GUI.Model.TableModels.PandasTableModel import PandasTableModel
+from GUI.UI.TableWidgets.PandasTableWidget import PandasTableWidget
 
 class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
@@ -44,17 +50,16 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     TreeItem_FilesystemNewer_Foreground = QBrush(Qt.darkGreen)
     TreeItem_DatabaseNewer_Foreground = QBrush(Qt.darkBlue)
 
-
-
-
     def __init__(self, database_connection, videoFileSearchPaths):
         super(MainObjectListsWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/MainObjectListsWindow/MainObjectListsWindow.ui", self) # Load the .ui file
         self.videoLoader = VideoFilesystemLoader(self.database_connection, videoFileSearchPaths, parent=self)
         self.videoLoader.foundFilesUpdated.connect(self.rebuild_from_found_files)
+        self.videoLoader.findFilesInSearchDirectoryComplete.connect(self.on_update_search_path)
         # self.reload_on_search_paths_changed()
 
         self.top_level_nodes = []
+        self.currentTablePreviewWidget = None
 
         self.setMouseTracking(True)
         self.initUI()
@@ -82,6 +87,11 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         # Setup the tree
         # self.ui.treeWidget_VideoFiles
         self.ui.treeWidget_VideoFiles.setHeaderLabels(MainObjectListsWindow.VideoFileTreeHeaderLabels)
+        # Connect the tree widget's contextmenu
+        self.ui.treeWidget_VideoFiles.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui.treeWidget_VideoFiles.customContextMenuRequested.connect(self.menuContextTree)
+
+
 
         self.ui.textBrowser_SelectedInfoBox.setText("Hi")
 
@@ -130,10 +140,14 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
             aNewGroupNode = QTreeWidgetItem([key_path, '', '', ''])
             # curr_search_path_video_files = cache_value.get_filesystem_video_files()
             curr_search_path_video_files = cache_value.get_combined_video_files()
+            curr_search_path_data_file_map = cache_value.get_combined_video_file_basenames_to_data_file_list_map()
+            curr_search_path_output_data_files = []
 
             print("ui loadedVideoFiles[{0}]: {1}".format(str(key_path), len(curr_search_path_video_files)))
 
             for aFoundVideoFile in curr_search_path_video_files:
+                aCurrVideoFileBasename = aFoundVideoFile.get_base_name()
+
                 potentially_computed_end_date = aFoundVideoFile.get_computed_end_date()
                 if potentially_computed_end_date:
                     computed_end_date = str(potentially_computed_end_date)
@@ -167,7 +181,48 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
                 aNewVideoNode.setForeground(0, currForeground)
                 aNewVideoNode.setFont(0, currFont)
                 
+                # Check for data files:
+                curr_video_file_output_data_files = []
+                if aCurrVideoFileBasename in curr_search_path_data_file_map.keys():
+                    curr_video_file_output_data_files = curr_search_path_data_file_map[aCurrVideoFileBasename]
+
+                # print("ui loadedVideoFiles[{0}]: {1}".format(str(key_path), len(curr_video_file_output_data_files)))
+                for aFoundDataFile in curr_video_file_output_data_files:
+                    aNewDataNode = QTreeWidgetItem([str(aFoundDataFile.full_name), str(aFoundDataFile.parsed_date), computed_end_date, str(aFoundDataFile.get_deeplabcut_info_string())])
+                    aNewDataNode.setData(0, Qt.UserRole, aFoundDataFile)
+
+                    # aNewVideoNode.setIcon(0,QIcon("your icon path or file name "))
+
+                    currSource = aFoundDataFile.get_source()
+                    currForeground = MainObjectListsWindow.TreeItem_Default_Foreground
+                    currFont = MainObjectListsWindow.TreeItem_Default_Font
+
+                    if currSource == CachedFileSource.OnlyFromDatabase:
+                        currForeground = MainObjectListsWindow.TreeItem_DatabaseOnly_Foreground
+                        pass
+                    elif currSource == CachedFileSource.OnlyFromFilesystem:
+                        currForeground = MainObjectListsWindow.TreeItem_FilesystemOnly_Foreground
+                        pass
+                    elif currSource == CachedFileSource.NewestFromDatabase:
+                        currForeground = MainObjectListsWindow.TreeItem_DatabaseNewer_Foreground
+                        pass
+                    elif currSource == CachedFileSource.NewestFromFilesystem:
+                        currForeground = MainObjectListsWindow.TreeItem_FilesystemNewer_Foreground
+                        pass
+                    elif currSource == CachedFileSource.Identical:
+                        currForeground =  MainObjectListsWindow.TreeItem_Default_Foreground
+                        pass
+                    else:
+                        pass
+
+                    aNewDataNode.setForeground(0, currForeground)
+                    aNewDataNode.setFont(0, currFont)
+                    
+                    aNewVideoNode.addChild(aNewDataNode)
+
+                # Add the new video node to the group
                 aNewGroupNode.addChild(aNewVideoNode)
+
 
             self.top_level_nodes.append(aNewGroupNode)
             
@@ -182,6 +237,131 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     def expand_top_level_nodes(self):
         for aTopLevelItem in self.top_level_nodes:
             self.ui.treeWidget_VideoFiles.expandItem(aTopLevelItem)
+
+
+    # Called on .findFilesInSearchDirectoryComplete
+    @pyqtSlot(str)
+    def on_update_search_path(self, updatedSearchPath):
+        if updatedSearchPath not in self.get_video_loader().get_cache().keys():
+            print("Error: on_update_search_path(updatedSearchPath: {0}) called but the item didn't exist in the cache!".format(str(updatedSearchPath)))
+            return
+
+        cache_value = self.get_video_loader().get_cache()[updatedSearchPath]
+        curr_search_path_video_files = cache_value.get_combined_video_files()
+        curr_search_path_data_file_map = cache_value.get_combined_video_file_basenames_to_data_file_list_map()
+        curr_search_path_output_data_files = []
+
+        # Try to get the relevant node:
+        foundTopLevelNode = None
+        for aTopLevelItem in self.top_level_nodes:
+            itemText = aTopLevelItem.text(0)
+            if (itemText != updatedSearchPath):
+                # Keep searching
+                continue
+            else:
+                # Found the item to update...
+                # aTopLevelItem.setText(int column, const QString &text)
+
+                numChildrenNodes = aTopLevelItem.childCount()
+                childrenNodes = aTopLevelItem.takeChildren() # Gets and removes the children nodes
+                # aTopLevelItem.child(childIndex)
+
+                for aFoundVideoFile in curr_search_path_video_files:
+                    aCurrVideoFileBasename = aFoundVideoFile.get_base_name()
+
+                    potentially_computed_end_date = aFoundVideoFile.get_computed_end_date()
+                    if potentially_computed_end_date:
+                        computed_end_date = str(potentially_computed_end_date)
+                    else:
+                        computed_end_date = 'Loading...'
+
+                    aNewVideoNode = QTreeWidgetItem([str(aFoundVideoFile.full_name), str(aFoundVideoFile.parsed_date), computed_end_date, str(aFoundVideoFile.is_deeplabcut_labeled_video)])
+                    # aNewVideoNode.setIcon(0,QIcon("your icon path or file name "))
+
+                    currSource = aFoundVideoFile.get_source()
+                    currForeground = MainObjectListsWindow.TreeItem_Default_Foreground
+                    currFont = MainObjectListsWindow.TreeItem_Default_Font
+
+                    if currSource == CachedFileSource.OnlyFromDatabase:
+                        currForeground = MainObjectListsWindow.TreeItem_DatabaseOnly_Foreground
+                        pass
+                    elif currSource == CachedFileSource.OnlyFromFilesystem:
+                        currForeground = MainObjectListsWindow.TreeItem_FilesystemOnly_Foreground
+                        pass
+                    elif currSource == CachedFileSource.NewestFromDatabase:
+                        currForeground = MainObjectListsWindow.TreeItem_DatabaseNewer_Foreground
+                        pass
+                    elif currSource == CachedFileSource.NewestFromFilesystem:
+                        currForeground = MainObjectListsWindow.TreeItem_FilesystemNewer_Foreground
+                        pass
+                    elif currSource == CachedFileSource.Identical:
+                        currForeground =  MainObjectListsWindow.TreeItem_Default_Foreground
+                        pass
+                    else:
+                        pass
+
+                    aNewVideoNode.setForeground(0, currForeground)
+                    aNewVideoNode.setFont(0, currFont)
+                    
+                    # Check for data files:
+                    curr_video_file_output_data_files = []
+                    if aCurrVideoFileBasename in curr_search_path_data_file_map.keys():
+                        curr_video_file_output_data_files = curr_search_path_data_file_map[aCurrVideoFileBasename]
+
+                    # print("ui loadedVideoFiles[{0}]: {1}".format(str(key_path), len(curr_video_file_output_data_files)))
+                    for aFoundDataFile in curr_video_file_output_data_files:
+                        aNewDataNode = QTreeWidgetItem([str(aFoundDataFile.full_name), str(aFoundDataFile.parsed_date), computed_end_date, str(aFoundDataFile.get_deeplabcut_info_string())])
+                        # aNewDataNode.setData(0, Qt.UserRole, QVariant(aFoundVideoFile))
+                        aNewDataNode.setData(0, Qt.UserRole, aFoundDataFile)
+
+                        # aNewVideoNode.setIcon(0,QIcon("your icon path or file name "))
+
+                        currSource = aFoundDataFile.get_source()
+                        currForeground = MainObjectListsWindow.TreeItem_Default_Foreground
+                        currFont = MainObjectListsWindow.TreeItem_Default_Font
+
+                        if currSource == CachedFileSource.OnlyFromDatabase:
+                            currForeground = MainObjectListsWindow.TreeItem_DatabaseOnly_Foreground
+                            pass
+                        elif currSource == CachedFileSource.OnlyFromFilesystem:
+                            currForeground = MainObjectListsWindow.TreeItem_FilesystemOnly_Foreground
+                            pass
+                        elif currSource == CachedFileSource.NewestFromDatabase:
+                            currForeground = MainObjectListsWindow.TreeItem_DatabaseNewer_Foreground
+                            pass
+                        elif currSource == CachedFileSource.NewestFromFilesystem:
+                            currForeground = MainObjectListsWindow.TreeItem_FilesystemNewer_Foreground
+                            pass
+                        elif currSource == CachedFileSource.Identical:
+                            currForeground =  MainObjectListsWindow.TreeItem_Default_Foreground
+                            pass
+                        else:
+                            pass
+
+                        aNewDataNode.setForeground(0, currForeground)
+                        aNewDataNode.setFont(0, currFont)
+
+                        aNewVideoNode.addChild(aNewDataNode)
+
+                    # Add the new video node to the group
+                    aTopLevelItem.addChild(aNewVideoNode)
+
+                print("Found matching top-level-node.")
+                foundTopLevelNode = aTopLevelItem
+                aTopLevelItem.setExpanded(True)
+                break
+
+
+        if foundTopLevelNode is not None:
+            # self.ui.treeWidget_VideoFiles.addTopLevelItems(self.top_level_nodes)
+            # Expand all items
+            self.expand_top_level_nodes()
+            self.ui.treeWidget_VideoFiles.resizeColumnToContents(0)
+            self.update()
+        else:
+            print("Failed to find a top-level node matching {0}".format(str(updatedSearchPath)))
+            return
+
 
 
     # TODO: update end_date without rebuilding the whole table
@@ -199,7 +379,6 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     def mouseMoveEvent(self, event):
         pass
 
-
     def handle_menu_load_event(self):
         print("actionLoad")
         pass
@@ -211,8 +390,8 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
     def handle_menu_refresh_event(self):
         print("actionRefresh")
+        self.reload_data()
         pass
-
 
     def handle_add_search_directory_activated(self):
         print("handle_add_search_directory_activated")
@@ -241,8 +420,6 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
             print("getting folder name: {0}".format(str(destDir)))
             self.videoLoader.add_search_path(destDir)
 
-
-
     def handle_save_selection_action(self):
         print("handle_save_selection_action()")
 
@@ -251,13 +428,8 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         unconvertedFiles = dict()
         convertedFiles = dict()
 
-
-        
         unconvertedParentPaths = dict()
         convertedParentPaths = dict()
-
-
-        
 
         needs_conversion_files = []
         handbrake_conversion_queue = []
@@ -321,8 +493,117 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     def handle_child_hover_event(self, trackIndex, trackObjectIndex):
         pass
 
+    # TODO: Unused. Decided to set the node's data (Qt.UserRole) instead
+    # Note: Doesn't work because the deeplabcut files are nested below their video file
+    def recover_full_path(self, tree_item):
+        accumulated_path = [tree_item.text(0)]
+        potentialParent = tree_item.parent()
+        while potentialParent is not None:
+            accumulated_path.append(potentialParent.text(0))
+            potentialParent = potentialParent.parent() # Get the parent's parent
+            pass
+
+        else:
+            # Otherwise we have the root-most item
+            accumulated_path.reverse()
+            print(str(accumulated_path))
+            pass
+
+        return accumulated_path
+
+
+    # Generates the menu to be displayed for a point in the tree.
+    def menuContextTree(self, point):
+
+        # Infos about the node selected.
+        index = self.ui.treeWidget_VideoFiles.indexAt(point)
+
+        if not index.isValid():
+            return
+
+        item = self.ui.treeWidget_VideoFiles.itemAt(point)
+        name = item.text(0)  # The text of the node.
+        # accumulated_array = self.recover_full_path(item)
+
+        user_data = item.data(0, Qt.UserRole)
+        active_item_full_path = user_data.get_full_path()
+        # print("user_data: {0}".format(str(user_data)))
+        # print("user_data: {0}".format(str(active_item_full_path)))
+
+        # We build the menu.
+        menu = QtWidgets.QMenu()
+        # action = menu.addAction("Open item")
+        # action = menu.addAction(name)
+
+        # See if it's a .csv, .h5, or .pickle file:
+        active_item_path = Path(active_item_full_path)
+        found_extension = active_item_path.suffix
+        print("found_extension: {0}".format(str(found_extension)))
+        found_output_format = DeeplabCutOutputFileType.get_from_extension(found_extension)
+        if found_output_format is not None:
+            # Specifically a deeplabcut output file
+            load_file_action = menu.addAction("Load DeeplabCut output file...")
+            output_event_file = DeeplabcutEventFile(active_item_path, found_output_format, parent=self)
+
+            load_file_action.setData(output_event_file)
+            # action = menu.addAction(name)
+            # load_file_action.triggered.connect(self.on_click_deeplabcut_file_menu_action_load)
+            menu.triggered.connect(self.on_click_deeplabcut_file_menu_action_load)
+
+            # 
+
+
+        else:
+            # Non DLC output file extension type
+            menu.addSeparator()
+            action_1 = menu.addAction("Option 1")
+            action_2 = menu.addAction("Option 2")
+            action_3 = menu.addAction("Option 3")
+
+
+        menu.exec_(self.ui.treeWidget_VideoFiles.mapToGlobal(point))
+
+
+
     def refresh_child_widget_display(self):
         pass
 
+
+    @pyqtSlot(str, DeeplabCutOutputFileType)
+    def load_deeplabcut_data_file(self, file_path, output_file_type):
+        output_event_file = DeeplabcutEventFile(file_path, output_file_type, parent=self)
+        output_event_file.dataReloaded.connect(self.on_data_reloaded)
+        output_event_file.load_data()
+
+
+
+    @pyqtSlot(pd.DataFrame)
+    def on_data_reloaded(self, df):
+        print("on_data_reloaded(df: {0})".format(str(df)))
+        frame_column_names = df.columns.names
+        frame_column_levels = df.columns.levels
+
+        dlc_command_info = df.columns.levels[0].values[0] # 'DLC_resnet50_ReachingSep27shuffle1_1030000'
+        body_parts_list = list(df.columns.levels[1].values) # ['earL' 'earR' 'nose' 'tail1' 'tailbase']
+        value_index_names = df.columns.levels[2].values # ['likelihood' 'x' 'y']
+
+        newModel = PandasTableModel(df, dlc_command_info)
+        self.currentTablePreviewWidget = PandasTableWidget([newModel], parent=None)
+        self.currentTablePreviewWidget.show()
+
+
+    @pyqtSlot(QtWidgets.QAction)
+    def on_click_deeplabcut_file_menu_action_load(self, action):
+        print("on_click_deeplabcut_file_menu_action_load(action: {0})".format(action.text()))
+        menu_action_name = action.text()
+        menu_action_data = action.data()
+        if menu_action_data is not None:
+            print("Found valid action: {0}".format(str(menu_action_name)))
+            menu_action_data.dataReloaded.connect(self.on_data_reloaded)
+            menu_action_data.load_data()
+
+        # self.load_deeplabcut_data_file()
+        # print('Action: ', action.text())
+    
 
     
