@@ -8,7 +8,7 @@ import traceback
 import qtawesome as qta
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox, QDataWidgetMapper, QPushButton
-from PyQt5.QtGui import QCursor
+from PyQt5.QtGui import QCursor, QIcon, QPixmap
 from PyQt5.QtCore import QDir, QTimer, Qt, QModelIndex, QSortFilterProxyModel, pyqtSignal, pyqtSlot
 
 from lib import vlc
@@ -18,6 +18,9 @@ from GUI.Model.Errors import SimpleErrorStatusMixin
 from GUI.Model.DataMovieLinkInfo import *
 
 from GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
+
+from app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoThumbnail, VideoPreviewThumbnailGenerator
+
 
 """
 The software displays/plays a video file with variable speed and navigation settings.
@@ -74,6 +77,42 @@ play_pause_model
 
 
 """
+
+
+""" HistoricalFrameRenderingMixin: renders previous and future frames to the left and the right of the main video
+frame_previousFrames
+
+# Frame Preview Buttons: (160 x 120 buttons that render previous video frames)
+btn_PreviousFrame_0
+btn_PreviousFrame_1
+btn_PreviousFrame_2
+"""
+class HistoricalFrameRenderingMixin(object):
+
+    def init_HistoricalFrameRenderingMixin(self):
+        frame_previousFrames
+        btn_PreviousFrame_0
+        btn_PreviousFrame_1
+        btn_PreviousFrame_2
+
+        self.previousFrameButtons = [self.ui.btn_PreviousFrame_0,self.ui.btn_PreviousFrame_1, self.ui.btn_PreviousFrame_2]
+        self.previousFrameButtonIcons = [None, None, None]
+
+    # Sets the rendered icon of the button with the specified button_index to the QPixmap specified by frame_pixmap
+    # see https://stackoverflow.com/questions/3137805/how-to-set-image-on-qpushbutton
+    def set_preview_frame(self, button_index, frame_pixmap):
+        curr_button = self.previousFrameButtons[button_index]
+        self.previousFrameButtonIcons[button_index] = QIcon(frame_pixmap)
+        curr_button.setIcon(self.previousFrameButtonIcons[button_index])
+        curr_button.setIconSize(frame_pixmap.rect().size())
+        pass
+
+
+    @pyqtSlot(int, VideoThumbnail)
+    def on_video_thumbnail_generated(self, frame_index, video_thumbnail_obj):
+        
+        pass
+
 
 """ MediaPlayerUpdatingMixin: used by MainVideoPlayerWindow to load/change media
         self._movieLink = None
@@ -423,7 +462,7 @@ class VLCVideoEventMixin(object):
         self.on_media_changed_VideoPlaybackRenderingWidgetMixin()
 
 
-class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdatingMixin, VLCVideoEventMixin, QMainWindow):
+class MainVideoPlayerWindow(HistoricalFrameRenderingMixin, VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdatingMixin, VLCVideoEventMixin, QMainWindow):
     """
     The main window class
     """
@@ -482,6 +521,7 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
         # self.ui.timestampSidebarWidget.
 
         self.init_VideoPlaybackRenderingWidgetMixin()
+        self.init_HistoricalFrameRenderingMixin()
 
         self.timer = QTimer(self)
         self.timer.setInterval(self.timer_period)
