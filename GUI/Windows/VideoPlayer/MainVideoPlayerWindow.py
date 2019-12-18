@@ -27,7 +27,7 @@ self.update_ui():
     - Updates the slider_progress (playback slider) when the video plays
     - Updates the video labels
 
-self.media_time_change_handler(...) is called on VLC's MediaPlayerTimeChanged event:
+self.vlc_event_media_time_change_handler(...) is called on VLC's MediaPlayerTimeChanged event:
     - 
 """
 
@@ -133,15 +133,14 @@ class MediaPlayerUpdatingMixin(SimpleErrorStatusMixin, object):
         self.startDirectory = os.path.pardir
         # self.video_filename = filename
 
-        media = self.vlc_instance.media_new(self.video_filename)
-        media.parse()
-        if not media.get_duration():
+        self.media = self.vlc_instance.media_new(self.video_filename)
+        self.media.parse()
+        if not self.media.get_duration():
             self.set_has_error("Cannot play this media file")
             self._show_error("Cannot play this media file")
             self.media_player.set_media(None)
-            # self.video_filename = None
         else:
-            self.media_player.set_media(media)
+            self.media_player.set_media(self.media)
 
             # The media player has to be 'connected' to the QFrame (otherwise the
             # video would be displayed in it's own window). This is platform
@@ -368,9 +367,65 @@ class VideoPlaybackRenderingWidgetMixin(DateTimeRenderMixin, object):
         self._copy_to_clipboard(buttonText)
 
 
+""" VLCVideoEventMixin: handles VLC callback events
+
+"""
+class VLCVideoEventMixin(object):
+    
+    # vlc_event_media_time_change_handler(...) is called on VLC's MediaPlayerTimeChanged event
+    @vlc.callbackmethod
+    def vlc_event_media_time_change_handler(self, _):
+        # print('Time changed!')
+
+        if (not (self.media_player is None)):
+            currPos = self.media_player.get_position()
+            self.video_playback_position_updated.emit(currPos)
+
+        if (self.is_display_initial_frame_playback):
+            # self.is_display_initial_frame_playback: true to indicate that we're just trying to play the media long enough to get the first frame, so it's not a black square
+            # Pause
+            self.media_pause()
+            self.is_display_initial_frame_playback = False # Set the variable to false so it quits pausing
+
+        if self.media_end_time == -1:
+            return
+        if self.media_player.get_time() > self.media_end_time:
+            self.restart_needed = True
+
+    # vlc_event_media_player_media_changed_handler(...) is called on VLC's MediaPlayerMediaChanged event
+    @vlc.callbackmethod
+    def vlc_event_media_player_media_changed_handler(self, _):
+        print("vlc_event_media_player_media_changed_handler()")
+        print("    - length: {0}, num_frames: {1}".format(str(self.media_player.get_length()), str(self.get_media_total_num_frames())))
+        self.update_video_file_labels_on_file_change()
+        self.on_media_changed_VideoPlaybackRenderingWidgetMixin()
+
+    # vlc_event_media_duration_changed_handler(...) is called on VLC's MediaDurationChanged event
+    @vlc.callbackmethod
+    def vlc_event_media_duration_changed_handler(self, _):
+        print("vlc_event_media_duration_changed_handler()")
+        print("    - length: {0}, num_frames: {1}".format(str(self.media_player.get_length()), str(self.get_media_total_num_frames())))
+        # self.update_video_file_labels_on_file_change()
+        # self.on_media_changed_VideoPlaybackRenderingWidgetMixin()
+
+    # vlc_event_media_player_parsed_changed_handler(...) is called on VLC's MediaParsedChanged event
+    @vlc.callbackmethod
+    def vlc_event_media_player_parsed_changed_handler(self, _):
+        print("vlc_event_media_player_parsed_changed_handler()")
+        print("    - length: {0}, num_frames: {1}".format(str(self.media_player.get_length()), str(self.get_media_total_num_frames())))
+        # self.update_video_file_labels_on_file_change()
+        # self.on_media_changed_VideoPlaybackRenderingWidgetMixin()
+
+    # vlc_event_media_player_length_changed_handler(...) is called on VLC's MediaPlayerLengthChanged event
+    @vlc.callbackmethod
+    def vlc_event_media_player_length_changed_handler(self, _):
+        print("vlc_event_media_player_length_changed_handler()")
+        print("    - length: {0}, num_frames: {1}".format(str(self.media_player.get_length()), str(self.get_media_total_num_frames())))
+        self.update_video_file_labels_on_file_change()
+        self.on_media_changed_VideoPlaybackRenderingWidgetMixin()
 
 
-class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdatingMixin, QMainWindow):
+class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdatingMixin, VLCVideoEventMixin, QMainWindow):
     """
     The main window class
     """
@@ -536,8 +591,30 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
 
         self.vlc_events = self.media_player.event_manager()
         self.vlc_events.event_attach(
-            vlc.EventType.MediaPlayerTimeChanged, self.media_time_change_handler
+            vlc.EventType.MediaPlayerTimeChanged, self.vlc_event_media_time_change_handler
         )
+        self.vlc_events.event_attach(
+            vlc.EventType.MediaPlayerMediaChanged, self.vlc_event_media_player_media_changed_handler
+        )
+
+        # Strangely never called.
+        self.vlc_events.event_attach(
+            vlc.EventType.MediaDurationChanged, self.vlc_event_media_duration_changed_handler
+        )
+
+        # Never called
+        self.vlc_events.event_attach(
+            vlc.EventType.MediaParsedChanged, self.vlc_event_media_player_parsed_changed_handler
+        )
+
+        # Successfully called after vlc_event_media_player_media_changed_handler()
+        self.vlc_events.event_attach(
+            vlc.EventType.MediaPlayerLengthChanged, self.vlc_event_media_player_length_changed_handler
+        )
+
+
+        
+            
 
         # Let our application handle mouse and key input instead of VLC
         self.media_player.video_set_mouse_input(False)
@@ -697,25 +774,7 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
         ## TODO:
         print(newProposedFrame)
 
-    # media_time_change_handler(...) is called on VLC's MediaPlayerTimeChanged event
-    @vlc.callbackmethod
-    def media_time_change_handler(self, _):
-        # print('Time changed!')
 
-        if (not (self.media_player is None)):
-            currPos = self.media_player.get_position()
-            self.video_playback_position_updated.emit(currPos)
-
-        if (self.is_display_initial_frame_playback):
-            # self.is_display_initial_frame_playback: true to indicate that we're just trying to play the media long enough to get the first frame, so it's not a black square
-            # Pause
-            self.media_pause()
-            self.is_display_initial_frame_playback = False # Set the variable to false so it quits pausing
-
-        if self.media_end_time == -1:
-            return
-        if self.media_player.get_time() > self.media_end_time:
-            self.restart_needed = True
 
         
     # TODO: REMOVE?? Check
@@ -850,7 +909,7 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
         # Updates the frame displayed in the media player
         self.is_display_initial_frame_playback = True
         self.media_play()
-        # Pause is called in the self.media_time_change_handler(...)
+        # Pause is called in the self.vlc_event_media_time_change_handler(...)
 
     # Info labels above the video that display the FPS/frame/time/etc info
     def update_video_file_play_labels(self):
