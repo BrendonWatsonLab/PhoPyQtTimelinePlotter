@@ -405,16 +405,14 @@ class VLCVideoEventMixin(object):
     def vlc_event_media_duration_changed_handler(self, _):
         print("vlc_event_media_duration_changed_handler()")
         print("    - length: {0}, num_frames: {1}".format(str(self.media_player.get_length()), str(self.get_media_total_num_frames())))
-        # self.update_video_file_labels_on_file_change()
-        # self.on_media_changed_VideoPlaybackRenderingWidgetMixin()
+
 
     # vlc_event_media_player_parsed_changed_handler(...) is called on VLC's MediaParsedChanged event
     @vlc.callbackmethod
     def vlc_event_media_player_parsed_changed_handler(self, _):
         print("vlc_event_media_player_parsed_changed_handler()")
         print("    - length: {0}, num_frames: {1}".format(str(self.media_player.get_length()), str(self.get_media_total_num_frames())))
-        # self.update_video_file_labels_on_file_change()
-        # self.on_media_changed_VideoPlaybackRenderingWidgetMixin()
+
 
     # vlc_event_media_player_length_changed_handler(...) is called on VLC's MediaPlayerLengthChanged event
     @vlc.callbackmethod
@@ -431,10 +429,12 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
     """
 
     SpeedBurstPlaybackRate = 16.0
+    EnableFrameSpinBox = False
 
     video_playback_position_updated = pyqtSignal(float) # video_playback_position_updated:  called when the playback position of the video changes. Either due to playing, or after a user event
     video_playback_state_changed = pyqtSignal() # video_playback_state_changed: called when play/pause state changes
     close_signal = pyqtSignal() # Called when the window is closing. 
+
 
     def __init__(self, parent=None):
         # QMainWindow.__init__(self, parent)
@@ -506,7 +506,10 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
         self.ui.lblCurrentFrame.setText("")
         self.ui.spinBoxCurrentFrame.setEnabled(False)
         self.ui.spinBoxCurrentFrame.setValue(1)
-        self.ui.spinBoxCurrentFrame.valueChanged.connect(self.handle_frame_value_changed)
+        self.ui.spinBoxCurrentFrame.setHidden(not MainVideoPlayerWindow.EnableFrameSpinBox)
+        if MainVideoPlayerWindow.EnableFrameSpinBox:
+            self.ui.spinBoxCurrentFrame.valueChanged.connect(self.handle_frame_value_changed)
+
         self.ui.lblTotalFrames.setText("")
 
         self.ui.lblCurrentTime.setText("")
@@ -622,7 +625,7 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
 
         self.timer.start()
 
-        self.update_video_frame_overlay_text()
+        self.update_video_frame_overlay_text("")
 
         self.ui.show()
 
@@ -900,9 +903,9 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
 
         
     # This updates the text that is overlayed over the top of the video frame. It serves to temporarily display changes in state, like play, pause, stop, skip, etc to provide feedback and notifications to the user.
-    def update_video_frame_overlay_text(self):
+    def update_video_frame_overlay_text(self, new_string):
         #TODO: should display the message for a few seconds, and then timeout and disappear
-        self.ui.lblVideoStatusOverlay.setText("")
+        self.ui.lblVideoStatusOverlay.setText(new_string)
 
     # After a new media has been set, this function is called to start playing for a short bit to display the first few frames of the video
     def update_preview_frame(self):
@@ -936,18 +939,19 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
         curr_frame = self.get_current_playhead_frame()
 
         # Disable frame change on spinBox update to prevent infinite loop
-        self.ui.spinBoxCurrentFrame.blockSignals(True)
-        if curr_frame is not None:
-            self.ui.lblCurrentFrame.setText(str(curr_frame))
-            #self.ui.spinBoxCurrentFrame.setValue(curr_frame)
-            #self.ui.spinBoxCurrentFrame.setEnabled(True)
-        else:
-            self.ui.lblCurrentFrame.setText("--")
-            #self.ui.spinBoxCurrentFrame.setEnabled(False)
-            #self.ui.spinBoxCurrentFrame.setValue(1)
+        if MainVideoPlayerWindow.EnableFrameSpinBox:
+            self.ui.spinBoxCurrentFrame.blockSignals(True)
+            if curr_frame is not None:
+                self.ui.lblCurrentFrame.setText(str(curr_frame))
+                #self.ui.spinBoxCurrentFrame.setValue(curr_frame)
+                #self.ui.spinBoxCurrentFrame.setEnabled(True)
+            else:
+                self.ui.lblCurrentFrame.setText("--")
+                #self.ui.spinBoxCurrentFrame.setEnabled(False)
+                #self.ui.spinBoxCurrentFrame.setValue(1)
 
-        # Re-enable signals from the frame spin box after update
-        self.ui.spinBoxCurrentFrame.blockSignals(False)
+            # Re-enable signals from the frame spin box after update
+            self.ui.spinBoxCurrentFrame.blockSignals(False)
 
         curr_playback_position_duration = self.get_current_playhead_duration_offset()
         if curr_playback_position_duration is not None:
@@ -969,12 +973,14 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
             totalNumFrames = self.get_media_total_num_frames()
             if totalNumFrames > 0:
                 self.ui.lblTotalFrames.setText(str(totalNumFrames))
-                self.ui.spinBoxCurrentFrame.setMaximum(totalNumFrames)
-                self.ui.spinBoxCurrentFrame.setEnabled(True)
+                if MainVideoPlayerWindow.EnableFrameSpinBox:
+                    self.ui.spinBoxCurrentFrame.setMaximum(totalNumFrames)
+                    self.ui.spinBoxCurrentFrame.setEnabled(True)
             else:
                 self.ui.lblTotalFrames.setText("--")
-                self.ui.spinBoxCurrentFrame.setEnabled(False)
-                self.ui.spinBoxCurrentFrame.setMaximum(1)
+                if MainVideoPlayerWindow.EnableFrameSpinBox:
+                    self.ui.spinBoxCurrentFrame.setEnabled(False)
+                    self.ui.spinBoxCurrentFrame.setMaximum(1)
 
             if curr_total_duration > 0:
                 self.ui.lblTotalDuration.setText(str(curr_total_duration)) # Gets duration in [ms]

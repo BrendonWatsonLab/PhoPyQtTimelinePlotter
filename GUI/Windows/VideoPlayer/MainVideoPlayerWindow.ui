@@ -174,7 +174,7 @@
           <item>
            <widget class="QSpinBox" name="spinBoxCurrentFrame">
             <property name="enabled">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="buttonSymbols">
              <enum>QAbstractSpinBox::UpDownArrows</enum>
@@ -653,6 +653,9 @@
               <property name="text">
                <string>Slow Down</string>
               </property>
+              <property name="shortcut">
+               <string>Ctrl+S</string>
+              </property>
              </widget>
             </item>
             <item row="0" column="0" colspan="20">
@@ -746,6 +749,9 @@
               </property>
               <property name="text">
                <string>Speed Up</string>
+              </property>
+              <property name="shortcut">
+               <string>Ctrl+=</string>
               </property>
              </widget>
             </item>
