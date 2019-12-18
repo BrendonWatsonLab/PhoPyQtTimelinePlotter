@@ -488,7 +488,7 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
         self.timer.timeout.connect(self.update_ui)
         self.timer.timeout.connect(self.timer_handler)
 
-
+        self.ui.frame_video.clicked.connect(self.play_pause)
         self.ui.frame_video.doubleClicked.connect(self.toggle_full_screen)
         self.ui.frame_video.wheel.connect(self.wheel_handler)
 

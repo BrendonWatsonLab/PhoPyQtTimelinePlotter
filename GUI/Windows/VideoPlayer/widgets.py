@@ -12,6 +12,7 @@ class VideoFrame(QFrame):
     """
     A frame used specifically for video/media purpose
     """
+    clicked = pyqtSignal()
     doubleClicked = pyqtSignal()
     wheel = pyqtSignal(QWheelEvent)
     keyPressed = pyqtSignal(QKeyEvent)
@@ -25,6 +26,10 @@ class VideoFrame(QFrame):
 
         self.setPalette(self.palette)
         self.setAutoFillBackground(True)
+
+
+    def mouseReleaseEvent(self, _):
+        self.clicked.emit()
 
     def mouseDoubleClickEvent(self, _):
         self.doubleClicked.emit()
