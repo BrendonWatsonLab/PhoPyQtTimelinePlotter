@@ -190,15 +190,25 @@ GUI:
 class VideoPlaybackRenderingWidgetMixin(DateTimeRenderMixin, object):
 
     def init_VideoPlaybackRenderingWidgetMixin(self):
+        are_buttons_initially_enabled = False
+
         # Duration Representations:
-        self.ui.lblPlayheadRelativeDuration
-        self.ui.lblTotalVideoDuration
+        self.ui.lblPlayheadRelativeDuration.setText("--")
+        self.ui.lblTotalVideoDuration.setText("--")
 
         # Frames Representations:
-        self.ui.lblPlayheadFrame
-        self.ui.lblTotalVideoFrames
+        self.ui.lblPlayheadFrame.setText("--")
+        self.ui.lblTotalVideoFrames.setText("--")
 
         # Datetime Representations:
+        self.ui.btn_VideoStartDatetime.setText("--")
+        self.ui.btn_PlayheadDatetime.setText("--")
+        self.ui.btn_VideoEndDatetime.setText("--")
+
+        self.ui.btn_VideoStartDatetime.setEnabled(are_buttons_initially_enabled)
+        self.ui.btn_PlayheadDatetime.setEnabled(are_buttons_initially_enabled)
+        self.ui.btn_VideoEndDatetime.setEnabled(are_buttons_initially_enabled)
+
         self.ui.btn_VideoStartDatetime.clicked.connect(lambda: self.on_date_button_click(self.ui.btn_VideoStartDatetime))
         self.ui.btn_PlayheadDatetime.clicked.connect(lambda: self.on_date_button_click(self.ui.btn_PlayheadDatetime))
         self.ui.btn_VideoEndDatetime.clicked.connect(lambda: self.on_date_button_click(self.ui.btn_VideoEndDatetime))
@@ -227,9 +237,9 @@ class VideoPlaybackRenderingWidgetMixin(DateTimeRenderMixin, object):
 
         curr_playback_position_duration = self.get_current_playhead_duration_offset()
         if curr_playback_position_duration is not None:
-            dynamic_curr_playhead_frame_text = (str(curr_playback_position_duration) + "[ms]")  # Gets time in [ms]
+            dynamic_curr_playhead_duration_text = (str(curr_playback_position_duration) + " [ms]")  # Gets time in [ms]
         else:
-            dynamic_curr_playhead_frame_text = "--"  # Gets time in [ms]
+            dynamic_curr_playhead_duration_text = "--"  # Gets time in [ms]
             are_buttons_enabled = False
 
         curr_video_movie_link = self.get_movie_link()
@@ -294,13 +304,13 @@ class VideoPlaybackRenderingWidgetMixin(DateTimeRenderMixin, object):
                 are_buttons_enabled = False
 
             if curr_total_duration > 0:
-                total_video_duration_text = (str(curr_total_duration) + "[ms]")  # Gets duration in [ms]
+                total_video_duration_text = (str(curr_total_duration) + " [ms]")  # Gets duration in [ms]
                 
                 curr_playback_position_duration = self.get_current_playhead_duration_offset()
                 if curr_playback_position_duration is not None:
-                    dynamic_curr_playhead_frame_text = (str(curr_playback_position_duration) + "[ms]")  # Gets time in [ms]
+                    dynamic_curr_playhead_duration_text = (str(curr_playback_position_duration) + " [ms]")  # Gets time in [ms]
                 else:
-                    dynamic_curr_playhead_frame_text = "--"  # Gets time in [ms]
+                    dynamic_curr_playhead_duration_text = "--"  # Gets time in [ms]
 
             else:
                 total_video_duration_text = "--"
