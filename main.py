@@ -20,7 +20,7 @@ from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
 from GUI.MainWindow.TimelineDrawingWindow import *
 from GUI.HelpWindow.HelpWindowFinal import *
 from GUI.MainObjectListsWindow.MainObjectListsWindow import *
-from GUI.ExampleDatabaseTableWindow import ExampleDatabaseTableWindow
+from GUI.Windows.ExampleDatabaseTableWindow import ExampleDatabaseTableWindow
 
 from app.database.DatabaseConnectionRef import DatabaseConnectionRef
 

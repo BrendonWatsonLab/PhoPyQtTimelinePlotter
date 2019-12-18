@@ -8,58 +8,35 @@ import traceback
 import qtawesome as qta
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, \
-    QMessageBox, QDataWidgetMapper, QWidget
+    QMessageBox, QDataWidgetMapper
 from PyQt5.QtGui import QCursor
-from PyQt5.QtCore import QDir, QTimer, Qt, QModelIndex, QSortFilterProxyModel, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QDir, QTimer, Qt, QModelIndex, QSortFilterProxyModel
 
 from lib import vlc
 from app.model import TimestampModel, ToggleButtonModel, TimestampDelta
 
-
-""" Classes belonging to the left sidebar (self.ui.timestampSidebarWidget)
-entry_timestamp
-button_timestamp_browse
-button_timestamp_create
-
-entry_video
-button_video_browse
-
-list_timestamp
-
-# Timestamp fields at bottom:
-entry_start_time
-entry_end_time
-entry_description
-button_add_entry
-button_remove_entry
-button_save
-button_run
-
-## DATA MODEL:
-timestamp_model
-
-
-self.mapper # Mapper between the table and the entry detail
-
-
 """
-class VideoPlayerWindow_TimestampSidebarWidget(QWidget):
+The software displays/plays a video file with variable speed and navigation settings.
+The software runs a timer.
+"""
+class MainVideoPlayerWindowBase(QMainWindow):
     """
     The main window class
     """
-
-    timestamp_file_changed_signal = pyqtSignal(tuple)
-    video_file_changed_signal = pyqtSignal(tuple)
-
-    ## TODO: Table Events
-    
-
     def __init__(self, parent=None):
-        super().__init__(self, parent)
-        self.ui = uic.loadUi("GUI/UI/VideoPlayer/VideoPlayerWindow_TimestampSidebarWidget.ui")
+        QMainWindow.__init__(self, parent)
+        self.ui = uic.loadUi("GUI/Windows/VideoPlayer/MainVideoPlayerWindow.ui")
 
         self.timestamp_filename = None
         self.video_filename = None
+        self.media_start_time = None
+        self.media_end_time = None
+        self.restart_needed = False
+        self.timer_period = 100
+        self.is_full_screen = False
+        self.media_started_playing = False
+        self.media_is_playing = False
+        self.original_geometry = None
 
         self.startDirectory = None
 
@@ -70,6 +47,40 @@ class VideoPlayerWindow_TimestampSidebarWidget(QWidget):
             lambda event: self.ui.list_timestamp.indexAt(event.pos()).isValid()
             and self.run()
         )
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_ui)
+        self.timer.timeout.connect(self.timer_handler)
+        self.timer.start(self.timer_period)
+
+        self.vlc_instance = vlc.Instance()
+        self.media_player = self.vlc_instance.media_player_new()
+        # if sys.platform == "darwin":  # for MacOS
+        #     self.ui.frame_video = QMacCocoaViewContainer(0)
+
+        self.ui.frame_video.doubleClicked.connect(self.toggle_full_screen)
+        self.ui.frame_video.wheel.connect(self.wheel_handler)
+        self.ui.frame_video.keyPressed.connect(self.key_handler)
+
+        # Set up Labels:
+        # self.ui.lblVideoName.
+
+        # self.displayed_video_title = bind("self.ui.lblVideoName", "text", str)
+        self.ui.lblVideoName.setText(self.video_filename)
+        self.ui.lblVideoSubtitle.setText("")
+        self.ui.dateTimeEdit.setHidden(True)
+        self.ui.lblCurrentFrame.setText("")
+        self.ui.spinBoxCurrentFrame.setEnabled(False)
+        self.ui.spinBoxCurrentFrame.setValue(1)
+        self.ui.spinBoxCurrentFrame.valueChanged.connect(self.handle_frame_value_changed)
+        self.ui.lblTotalFrames.setText("")
+
+        self.ui.lblCurrentTime.setText("")
+        self.ui.lblTotalDuration.setText("")
+
+        self.ui.lblFileFPS.setText("")
+
+        self.ui.spinBoxFrameJumpMultiplier.value = 1
 
         # Set up buttons
         self.ui.button_run.clicked.connect(self.run)
@@ -84,9 +95,75 @@ class VideoPlayerWindow_TimestampSidebarWidget(QWidget):
         )
 
 
+        # Set up directional buttons
+        self.ui.btnSkipLeft.clicked.connect(self.skip_left_handler)
+        self.ui.btnSkipRight.clicked.connect(self.skip_right_handler)
+        self.ui.btnLeft.clicked.connect(self.step_left_handler)
+        self.ui.btnRight.clicked.connect(self.step_right_handler)
+
+        self.play_pause_model = ToggleButtonModel(None, self)
+        self.play_pause_model.setStateMap(
+            {
+                True: {
+                    "text": "",
+                    "icon": qta.icon("fa.play", scale_factor=0.7)
+                },
+                False: {
+                    "text": "",
+                    "icon": qta.icon("fa.pause", scale_factor=0.7)
+                }
+            }
+        )
+        self.ui.button_play_pause.setModel(self.play_pause_model)
+        self.ui.button_play_pause.clicked.connect(self.play_pause)
+
+        self.ui.button_full_screen.setIcon(
+            qta.icon("ei.fullscreen", scale_factor=0.6)
+        )
+        self.ui.button_full_screen.setText("")
+        self.ui.button_full_screen.clicked.connect(self.toggle_full_screen)
+
+        # Playback Speed:
+        self.ui.doubleSpinBoxPlaybackSpeed.value = 1.0
+        self.ui.doubleSpinBoxPlaybackSpeed.valueChanged.connect(self.speed_changed_handler)
+
+        self.ui.button_speed_up.clicked.connect(self.speed_up_handler)
+        self.ui.button_speed_up.setIcon(
+            qta.icon("fa.arrow-circle-o-up", scale_factor=0.8)
+        )
+        self.ui.button_speed_up.setText("")
+        self.ui.button_slow_down.clicked.connect(self.slow_down_handler)
+        self.ui.button_slow_down.setIcon(
+            qta.icon("fa.arrow-circle-o-down", scale_factor=0.8)
+        )
+        self.ui.button_slow_down.setText("")
+
+        self.ui.button_mark_start.setIcon(
+            qta.icon("fa.quote-left", scale_factor=0.7)
+        )
+        self.ui.button_mark_start.setText("")
+        self.ui.button_mark_end.setIcon(
+            qta.icon("fa.quote-right", scale_factor=0.7)
+        )
+        self.ui.button_mark_end.setText("")
         self.ui.button_add_entry.clicked.connect(self.add_entry)
         self.ui.button_remove_entry.clicked.connect(self.remove_entry)
 
+        self.ui.button_mark_start.clicked.connect(
+            lambda: self.set_mark(start_time=int(
+                self.media_player.get_position() *
+                self.media_player.get_media().get_duration()))
+        )
+        self.ui.button_mark_end.clicked.connect(
+            lambda: self.set_mark(end_time=int(
+                self.media_player.get_position() *
+                self.media_player.get_media().get_duration()))
+        )
+
+        self.ui.slider_progress.setTracking(False)
+        self.ui.slider_progress.valueChanged.connect(self.set_media_position)
+
+        # self.ui.slider_volume.valueChanged.connect(self.set_volume)
         self.ui.entry_description.setReadOnly(True)
 
         # Mapper between the table and the entry detail
@@ -106,28 +183,7 @@ class VideoPlayerWindow_TimestampSidebarWidget(QWidget):
         self.media_player.video_set_mouse_input(False)
         self.media_player.video_set_key_input(False)
 
-        self.timer.start(self.timer_period)
         self.ui.show()
-
-    # Timestamp entries:
-    def add_entry(self):
-        if not self.timestamp_filename:
-            self._show_error("You haven't chosen a timestamp file yet")
-        row_num = self.timestamp_model.rowCount()
-        self.timestamp_model.insertRow(row_num)
-        start_cell = self.timestamp_model.index(row_num, 0)
-        end_cell = self.timestamp_model.index(row_num, 1)
-        self.timestamp_model.setData(start_cell, TimestampDelta.from_string(""))
-        self.timestamp_model.setData(end_cell, TimestampDelta.from_string(""))
-
-    def remove_entry(self):
-        if not self.timestamp_filename:
-            self._show_error("You haven't chosen a timestamp file yet")
-        selected = self.ui.list_timestamp.selectionModel().selectedIndexes()
-        if len(selected) == 0:
-            return
-        self.proxy_model.removeRow(selected[0].row()) and self.mapper.submit()
-
 
     def set_media_position(self, position):
         percentage = position / 10000.0
@@ -155,11 +211,7 @@ class VideoPlayerWindow_TimestampSidebarWidget(QWidget):
                                      TimestampDelta.string_from_int(
                                          end_time))
 
-    # self.update_ui(): called when the timer fires
     def update_ui(self):
-        if self.media_player is None:
-            return
-
         self.ui.slider_progress.blockSignals(True)
         self.ui.slider_progress.setValue(
             self.media_player.get_position() * 10000
@@ -168,14 +220,8 @@ class VideoPlayerWindow_TimestampSidebarWidget(QWidget):
 
         self.update_video_file_play_labels()
 
-
-        self.ui.slider_progress.blockSignals(False)
-
-        self.ui.doubleSpinBoxPlaybackSpeed.blockSignals(True)
-        self.ui.doubleSpinBoxPlaybackSpeed.setValue(self.media_player.get_rate())
-        self.ui.doubleSpinBoxPlaybackSpeed.blockSignals(False)
-
         # When the video finishes
+        self.ui.slider_progress.blockSignals(False)
         if self.media_started_playing and \
            self.media_player.get_media().get_state() == vlc.State.Ended:
             self.play_pause_model.setState(True)
@@ -188,8 +234,6 @@ class VideoPlayerWindow_TimestampSidebarWidget(QWidget):
             self.run()
 
     # Event Handlers:
-
-    # self.timer_handler(): called when the timer fires
     def timer_handler(self):
         """
         This is a workaround, because for some reason we can't call set_time()
@@ -200,8 +244,6 @@ class VideoPlayerWindow_TimestampSidebarWidget(QWidget):
             self.media_player.set_time(self.media_start_time)
             self.restart_needed = False
 
-
-    # Input Handelers:
     def key_handler(self, event):
         if event.key() == Qt.Key_Escape and self.is_full_screen:
             self.toggle_full_screen()
@@ -213,7 +255,6 @@ class VideoPlayerWindow_TimestampSidebarWidget(QWidget):
     def wheel_handler(self, event):
         # self.modify_volume(1 if event.angleDelta().y() > 0 else -1)
         self.set_media_position(1 if event.angleDelta().y() > 0 else -1)
-
 
     def modify_volume(self, delta_percent):
         new_volume = self.media_player.audio_get_volume() + delta_percent
@@ -245,22 +286,13 @@ class VideoPlayerWindow_TimestampSidebarWidget(QWidget):
     def slow_down_handler(self):
         self.modify_rate(-0.1)
 
-    def modify_rate(self, delta):
-        new_rate = self.media_player.get_rate() + delta
-        if new_rate < 0.2 or new_rate > 6.0:
+    def modify_rate(self, delta_percent):
+        new_rate = self.media_player.get_rate() + delta_percent
+        if new_rate < 0.2 or new_rate > 2.0:
             return
         self.media_player.set_rate(new_rate)
-        
 
-    # media_time_change_handler(...) is called on VLC's MediaPlayerTimeChanged event
     def media_time_change_handler(self, _):
-        print('Time changed!')
-        if (self.is_display_initial_frame_playback):
-            # self.is_display_initial_frame_playback: true to indicate that we're just trying to play the media long enough to get the first frame, so it's not a black square
-            # Pause
-            self.media_pause()
-            self.is_display_initial_frame_playback = False # Set the variable to false so it quits pausing
-
         if self.media_end_time == -1:
             return
         if self.media_player.get_time() > self.media_end_time:
@@ -301,7 +333,6 @@ class VideoPlayerWindow_TimestampSidebarWidget(QWidget):
             self.media_start_time = 0
             self.media_end_time = -1
 
-
     def run(self):
         """
         Execute the loop
@@ -323,7 +354,6 @@ class VideoPlayerWindow_TimestampSidebarWidget(QWidget):
             self._show_error(str(ex))
             print(traceback.format_exc())
 
-    # Toggles play/pause status:
     def play_pause(self):
         """Toggle play/pause status
         """
@@ -331,54 +361,11 @@ class VideoPlayerWindow_TimestampSidebarWidget(QWidget):
             self.run()
             return
         if self.media_is_playing:
-            self.media_pause()
-        else:
-            self.media_play()
-            
-    # Plays the media:
-    def media_play(self):
-        if not self.media_started_playing:
-            self.run()
-            return
-        if self.media_is_playing:
-            return # It's already playing, just return
+            self.media_player.pause()
         else:
             self.media_player.play()
-            self.post_playback_state_changed_update()
-
-    # Pauses the media:
-    def media_pause(self):
-        if not self.media_started_playing:
-            self.run()
-            return
-        if self.media_is_playing:
-            self.media_player.pause()
-            self.post_playback_state_changed_update()
-        else:
-            return # It's already paused, just return
-
-    # Stops the media:
-    def media_stop(self):
-        if not self.media_started_playing:
-            return # It's already stopped, just return
-        if self.media_is_playing:
-            self.media_player.pause()
-
-        self.media_player.stop()        
-        self.post_playback_state_changed_update()
-        
-    def post_playback_state_changed_update(self):
-        # Called after the play, pause, stop state changed
         self.media_is_playing = not self.media_is_playing
         self.play_pause_model.setState(not self.media_is_playing)
-
-
-    # After a new media has been set, this function is called to start playing for a short bit to display the first few frames of the video
-    def update_preview_frame(self):
-        # Updates the frame displayed in the media player
-        self.is_display_initial_frame_playback = True
-        self.media_play()
-        # Pause is called in the self.media_time_change_handler(...)
 
     # Info labels above the video that display the FPS/frame/time/etc info
     def update_video_file_play_labels(self):
@@ -398,7 +385,7 @@ class VideoPlayerWindow_TimestampSidebarWidget(QWidget):
         curr_percent_complete = self.media_player.get_position()  # Current percent complete between 0.0 and 1.0
 
         if curr_percent_complete >= 0:
-            self.ui.lblPlaybackPercent.setText("{:.4f}".format(curr_percent_complete))
+            self.ui.lblPlaybackPercent.setText(str(curr_percent_complete))
         else:
             self.ui.lblPlaybackPercent.setText("--")
 
@@ -467,20 +454,20 @@ class VideoPlayerWindow_TimestampSidebarWidget(QWidget):
 
     # Playback Navigation (Left/Right) Handlers:
     def step_left_handler(self):
-        print('step: left')
-        self.seek_frames(-1 * self.get_frame_multipler())
-        
-    def skip_left_handler(self):
-        print('skip: left')
+        print('seek: left')
         self.seek_frames(-10 * self.get_frame_multipler())
 
+    def skip_left_handler(self):
+        print('skip: left')
+        self.seek_frames(-1 * self.get_frame_multipler())
+
     def step_right_handler(self):
-        print('step: right')
-        self.seek_frames(1 * self.get_frame_multipler())
+        print('seek: right')
+        self.seek_frames(10 * self.get_frame_multipler())
 
     def skip_right_handler(self):
         print('skip: right')
-        self.seek_frames(10 * self.get_frame_multipler())
+        self.seek_frames(1 * self.get_frame_multipler())
 
     # Other:
     def seek_frames(self, relativeFrameOffset):
@@ -549,130 +536,6 @@ class VideoPlayerWindow_TimestampSidebarWidget(QWidget):
 
 
     # File Loading:
-    def browse_timestamp_handler(self):
-        """
-        Handler when the timestamp browser button is clicked
-        """
-        tmp_name, _ = QFileDialog.getOpenFileName(
-            self, "Choose Timestamp file", None,
-            "Timestamp File (*.tmsp);;All Files (*)"
-        )
-        if not tmp_name:
-            return
-        self.set_timestamp_filename(QDir.toNativeSeparators(tmp_name))
-
-    def create_timestamp_file_handler(self):
-        """
-        Handler when the timestamp file create button is clicked
-        """
-        tmp_name, _ = QFileDialog.getSaveFileName(
-            self, "Create New Timestamp file", None,
-            "Timestamp File (*.tmsp);;All Files (*)"
-        )
-        if not tmp_name:
-            return
-
-        try:
-            if (os.stat(QDir.toNativeSeparators(tmp_name)).st_size == 0):
-                    # File is empty, create a non-empty one:
-                    with open(QDir.toNativeSeparators(tmp_name), "w") as fh:
-                        fh.write("[]")  # Write the minimal valid JSON string to the file to allow it to be used
-            else:
-                pass
-
-            # with open(tmp_name, 'r') as fh:
-            #     if fh.__sizeof__()>0:
-            #         # File is not empty:
-            #         pass
-            #     else:
-            #         # File is empty, create a non-empty one:
-            #         fh.close()
-            #         with open(tmp_name, "w") as fh:
-            #             fh.write("[]")  # Write the minimal valid JSON string to the file to allow it to be used
-
-        except WindowsError:
-            with open(tmp_name, "w") as fh:
-                fh.write("[]") # Write the minimal valid JSON string to the file to allow it to be used
-
-
-        # Create new file:
-        self.set_timestamp_filename(QDir.toNativeSeparators(tmp_name))
-
-    def _sort_model(self):
-        self.ui.list_timestamp.sortByColumn(0, Qt.AscendingOrder)
-
-    def _select_blank_row(self, parent, start, end):
-        self.ui.list_timestamp.selectRow(start)
-
-    def set_timestamp_filename(self, filename):
-        """
-        Set the timestamp file name
-        """
-        if not os.path.isfile(filename):
-            self._show_error("Cannot access timestamp file " + filename)
-            return
-
-        try:
-            self.timestamp_model = TimestampModel(filename, self)
-            self.timestamp_model.timeParseError.connect(
-                lambda err: self._show_error(err)
-            )
-            self.proxy_model.setSortRole(Qt.UserRole)
-            self.proxy_model.dataChanged.connect(self._sort_model)
-            self.proxy_model.dataChanged.connect(self.update_slider_highlight)
-            self.proxy_model.setSourceModel(self.timestamp_model)
-            self.proxy_model.rowsInserted.connect(self._sort_model)
-            self.proxy_model.rowsInserted.connect(self._select_blank_row)
-            self.ui.list_timestamp.setModel(self.proxy_model)
-
-            self.timestamp_filename = filename
-            self.ui.entry_timestamp.setText(self.timestamp_filename)
-
-            self.mapper.setModel(self.proxy_model)
-            self.mapper.addMapping(self.ui.entry_start_time, 0)
-            self.mapper.addMapping(self.ui.entry_end_time, 1)
-            self.mapper.addMapping(self.ui.entry_description, 2)
-            self.ui.list_timestamp.selectionModel().selectionChanged.connect(
-                self.timestamp_selection_changed)
-            self._sort_model()
-
-            directory = os.path.dirname(self.timestamp_filename)
-            basename = os.path.basename(self.timestamp_filename)
-            timestamp_name_without_ext = os.path.splitext(basename)[0]
-            for file_in_dir in os.listdir(directory):
-                current_filename = os.path.splitext(file_in_dir)[0]
-                found_video = (current_filename == timestamp_name_without_ext
-                               and file_in_dir != basename)
-                if found_video:
-                    found_video_file = os.path.join(directory, file_in_dir)
-                    self.set_video_filename(found_video_file)
-                    break
-        except ValueError as err:
-            self._show_error("Timestamp file is invalid")
-
-    def timestamp_selection_changed(self, selected, deselected):
-        if len(selected) > 0:
-            self.mapper.setCurrentModelIndex(selected.indexes()[0])
-            self.ui.button_save.setEnabled(True)
-            self.ui.button_remove_entry.setEnabled(True)
-            self.ui.entry_start_time.setReadOnly(False)
-            self.ui.entry_end_time.setReadOnly(False)
-            self.ui.entry_description.setReadOnly(False)
-        else:
-            self.mapper.setCurrentModelIndex(QModelIndex())
-            self.ui.button_save.setEnabled(False)
-            self.ui.button_remove_entry.setEnabled(False)
-            self.ui.entry_start_time.clear()
-            self.ui.entry_end_time.clear()
-            self.ui.entry_description.clear()
-            self.ui.entry_start_time.setReadOnly(True)
-            self.ui.entry_end_time.setReadOnly(True)
-            self.ui.entry_description.setReadOnly(True)
-
-    
-
-
-
     def set_video_filename(self, filename):
         """
         Set the video filename
@@ -684,9 +547,6 @@ class VideoPlayerWindow_TimestampSidebarWidget(QWidget):
         self.startDirectory = os.path.pardir
         self.video_filename = filename
 
-        # Close the previous file:
-        self.media_stop()
-
         media = self.vlc_instance.media_new(self.video_filename)
         media.parse()
         if not media.get_duration():
@@ -695,11 +555,6 @@ class VideoPlayerWindow_TimestampSidebarWidget(QWidget):
             self.video_filename = None
         else:
             self.media_player.set_media(media)
-
-            # The media player has to be 'connected' to the QFrame (otherwise the
-            # video would be displayed in it's own window). This is platform
-            # specific, so we must give the ID of the QFrame (or similar object) to
-            # vlc. Different platforms have different functions for this
             if sys.platform.startswith('linux'): # for Linux using the X Server
                 self.media_player.set_xwindow(self.ui.frame_video.winId())
             elif sys.platform == "win32": # for Windows
@@ -713,7 +568,6 @@ class VideoPlayerWindow_TimestampSidebarWidget(QWidget):
             self.media_is_playing = False
             # self.set_volume(self.ui.slider_volume.value())
             self.play_pause_model.setState(True)
-            self.update_preview_frame()
 
     def browse_video_handler(self):
         """

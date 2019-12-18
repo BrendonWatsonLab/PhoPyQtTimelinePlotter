@@ -7,7 +7,7 @@ import traceback
 
 import qtawesome as qta
 from PyQt5 import uic
-from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox, QDataWidgetMapper
+from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox, QDataWidgetMapper, QPushButton
 from PyQt5.QtGui import QCursor
 from PyQt5.QtCore import QDir, QTimer, Qt, QModelIndex, QSortFilterProxyModel, pyqtSignal, pyqtSlot
 
@@ -17,6 +17,8 @@ from app.model import TimestampModel, ToggleButtonModel, TimestampDelta
 from GUI.Model.Errors import SimpleErrorStatusMixin
 from GUI.Model.DataMovieLinkInfo import *
 
+from GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
+
 """
 The software displays/plays a video file with variable speed and navigation settings.
 The software runs a timer, which calls both self.timer_handler() and self.update_ui().
@@ -25,7 +27,7 @@ self.update_ui():
     - Updates the slider_progress (playback slider) when the video plays
     - Updates the video labels
 
-self.media_time_change_handler(...) is called on VLC's MediaPlayerTimeChanged event:
+self.vlc_event_media_time_change_handler(...) is called on VLC's MediaPlayerTimeChanged event:
     - 
 """
 
@@ -131,15 +133,14 @@ class MediaPlayerUpdatingMixin(SimpleErrorStatusMixin, object):
         self.startDirectory = os.path.pardir
         # self.video_filename = filename
 
-        media = self.vlc_instance.media_new(self.video_filename)
-        media.parse()
-        if not media.get_duration():
+        self.media = self.vlc_instance.media_new(self.video_filename)
+        self.media.parse()
+        if not self.media.get_duration():
             self.set_has_error("Cannot play this media file")
             self._show_error("Cannot play this media file")
             self.media_player.set_media(None)
-            # self.video_filename = None
         else:
-            self.media_player.set_media(media)
+            self.media_player.set_media(self.media)
 
             # The media player has to be 'connected' to the QFrame (otherwise the
             # video would be displayed in it's own window). This is platform
@@ -164,22 +165,281 @@ class MediaPlayerUpdatingMixin(SimpleErrorStatusMixin, object):
 
         self.loaded_media_changed.emit()
 
+""" VideoPlaybackRenderingWidgetMixin: Renders the frame under the video that displays the current video playback information
+Implementor Requirements:
+    video_playback_position_updated = pyqtSignal(float)
+    loaded_media_changed = pyqtSignal()
 
-class MainVideoPlayerWindow(MediaPlayerUpdatingMixin, QMainWindow):
+GUI:
+    frame_CurrentVideoPlaybackInformation
+
+    # Duration Representations:
+    lblPlayheadRelativeDuration
+    lblTotalVideoDuration
+
+    # Frames Representation:
+    lblPlayheadFrame
+    lblTotalVideoFrames
+
+    # Datetime Representations:
+    btn_VideoStartDatetime
+    btn_PlayheadDatetime
+    btn_VideoEndDatetime
+"""
+class VideoPlaybackRenderingWidgetMixin(DateTimeRenderMixin, object):
+
+    def init_VideoPlaybackRenderingWidgetMixin(self):
+        are_buttons_initially_enabled = False
+
+        # Duration Representations:
+        self.ui.lblPlayheadRelativeDuration.setText("--")
+        self.ui.lblTotalVideoDuration.setText("--")
+
+        # Frames Representations:
+        self.ui.lblPlayheadFrame.setText("--")
+        self.ui.lblTotalVideoFrames.setText("--")
+
+        # Datetime Representations:
+        self.ui.btn_VideoStartDatetime.setText("--")
+        self.ui.btn_PlayheadDatetime.setText("--")
+        self.ui.btn_VideoEndDatetime.setText("--")
+
+        self.ui.btn_VideoStartDatetime.setEnabled(are_buttons_initially_enabled)
+        self.ui.btn_PlayheadDatetime.setEnabled(are_buttons_initially_enabled)
+        self.ui.btn_VideoEndDatetime.setEnabled(are_buttons_initially_enabled)
+
+        self.ui.btn_VideoStartDatetime.clicked.connect(lambda: self.on_date_button_click(self.ui.btn_VideoStartDatetime))
+        self.ui.btn_PlayheadDatetime.clicked.connect(lambda: self.on_date_button_click(self.ui.btn_PlayheadDatetime))
+        self.ui.btn_VideoEndDatetime.clicked.connect(lambda: self.on_date_button_click(self.ui.btn_VideoEndDatetime))
+
+
+        # Connect to signals ## TODO: Assumes it's connected to a video player widget
+        self.loaded_media_changed.connect(self.on_media_changed_VideoPlaybackRenderingWidgetMixin)
+        self.video_playback_position_updated.connect(self.on_playback_position_changed_VideoPlaybackRenderingWidgetMixin)
+
+
+    # Updates only the dynamic (playback-position-dependent) labels and buttons
+    @pyqtSlot(float)
+    def on_playback_position_changed_VideoPlaybackRenderingWidgetMixin(self, newPlaybackPosition):
+        # Dynamic info:
+        are_buttons_enabled = True
+        dynamic_curr_playhead_duration_text = "--"
+        dynamic_curr_playhead_frame_text = "--"
+        dynamic_curr_playhead_datetime_text = "--"
+
+        curr_playback_frame = self.get_current_playhead_frame()
+        if curr_playback_frame is not None:
+            dynamic_curr_playhead_frame_text = str(curr_playback_frame)
+        else:
+            dynamic_curr_playhead_frame_text = "--"
+            are_buttons_enabled = False
+
+        curr_playback_position_duration = self.get_current_playhead_duration_offset()
+        if curr_playback_position_duration is not None:
+            dynamic_curr_playhead_duration_text = (str(curr_playback_position_duration) + " [ms]")  # Gets time in [ms]
+        else:
+            dynamic_curr_playhead_duration_text = "--"  # Gets time in [ms]
+            are_buttons_enabled = False
+
+        curr_video_movie_link = self.get_movie_link()
+        if curr_video_movie_link is not None:
+            # curr_video_playback_datetime = curr_video_movie_link.get_active_absolute_datetime()
+            curr_video_playback_datetime = curr_video_movie_link.compute_absolute_time(newPlaybackPosition)
+            dynamic_curr_playhead_datetime_text = self.get_full_long_date_time_string(curr_video_playback_datetime)
+            pass
+        else:
+            dynamic_curr_playhead_datetime_text = "--"
+            are_buttons_enabled = False
+            pass
+        
+        # Duration Representations:
+        self.ui.lblPlayheadRelativeDuration.setText(dynamic_curr_playhead_duration_text)
+
+        # Frames Representations:
+        self.ui.lblPlayheadFrame.setText(dynamic_curr_playhead_frame_text)
+
+        # Datetime Representations:
+        self.ui.btn_PlayheadDatetime.setText(dynamic_curr_playhead_datetime_text)
+        self.ui.btn_PlayheadDatetime.setEnabled(are_buttons_enabled)
+            
+
+    # Updates the indicators when a new video is loaded or the movie link is changed
+    @pyqtSlot()
+    def on_media_changed_VideoPlaybackRenderingWidgetMixin(self):
+
+        are_buttons_enabled = True
+
+        # Static info:
+        total_video_duration_text = "--"
+        total_video_frames_text = "--"
+        video_start_datetime_text = "--"
+        video_end_datetime_text = "--"
+
+        # Dynamic info:
+        dynamic_curr_playhead_duration_text = "--"
+        dynamic_curr_playhead_frame_text = "--"
+        dynamic_curr_playhead_datetime_text = "--"
+        
+
+        if self.video_filename is None:
+            are_buttons_enabled = False
+        else:
+            # Only updated when the video file is changed:
+            curr_total_duration = self.media_player.get_length()
+            totalNumFrames = self.get_media_total_num_frames()
+            if totalNumFrames > 0:
+                total_video_frames_text = str(totalNumFrames)
+                dynamic_curr_playhead_frame_text = "--"
+
+                curr_playback_frame = self.get_current_playhead_frame()
+                if curr_playback_frame is not None:
+                    dynamic_curr_playhead_frame_text = str(curr_playback_frame)
+                else:
+                    dynamic_curr_playhead_frame_text = "--"
+                    
+            else:
+                total_video_frames_text = "--"
+                dynamic_curr_playhead_frame_text = "--"
+                are_buttons_enabled = False
+
+            if curr_total_duration > 0:
+                total_video_duration_text = (str(curr_total_duration) + " [ms]")  # Gets duration in [ms]
+                
+                curr_playback_position_duration = self.get_current_playhead_duration_offset()
+                if curr_playback_position_duration is not None:
+                    dynamic_curr_playhead_duration_text = (str(curr_playback_position_duration) + " [ms]")  # Gets time in [ms]
+                else:
+                    dynamic_curr_playhead_duration_text = "--"  # Gets time in [ms]
+
+            else:
+                total_video_duration_text = "--"
+                dynamic_curr_playhead_duration_text = "--"
+                are_buttons_enabled = False
+
+            # Get video start and end datetimes
+            curr_video_movie_link = self.get_movie_link()
+            if curr_video_movie_link is not None:
+                video_start_time = curr_video_movie_link.get_video_start_time()
+                video_start_datetime_text = self.get_full_long_date_time_string(video_start_time)
+                video_end_time = curr_video_movie_link.get_video_end_time()                
+                video_end_datetime_text = self.get_full_long_date_time_string(video_end_time)
+
+                # curr_video_playback_datetime = curr_video_movie_link.get_active_absolute_datetime()
+                curr_video_playback_datetime = video_start_time # Assume the playhead is at the starttime to start.
+                dynamic_curr_playhead_datetime_text = self.get_full_long_date_time_string(curr_video_playback_datetime)
+
+                pass
+            else:
+                video_start_datetime_text = "--"
+                video_end_datetime_text = "--"
+                dynamic_curr_playhead_datetime_text = "--"
+
+                are_buttons_enabled = False
+                pass
+
+        # Duration Representations:
+        self.ui.lblPlayheadRelativeDuration.setText(dynamic_curr_playhead_duration_text)
+        self.ui.lblTotalVideoDuration.setText(total_video_duration_text)
+
+        # Frames Representations:
+        self.ui.lblPlayheadFrame.setText(dynamic_curr_playhead_frame_text)
+        self.ui.lblTotalVideoFrames.setText(total_video_frames_text)
+
+        # Datetime Representations:
+        self.ui.btn_VideoStartDatetime.setText(video_start_datetime_text)
+        self.ui.btn_PlayheadDatetime.setText(dynamic_curr_playhead_datetime_text)
+        self.ui.btn_VideoEndDatetime.setText(video_end_datetime_text)
+
+        self.ui.btn_VideoStartDatetime.setEnabled(are_buttons_enabled)
+        self.ui.btn_PlayheadDatetime.setEnabled(are_buttons_enabled)
+        self.ui.btn_VideoEndDatetime.setEnabled(are_buttons_enabled)
+
+    # _copy_to_clipboard(clipboardText): sets the system's clipboard to clipboardText
+    def _copy_to_clipboard(self, clipboardText):
+        cb = QApplication.clipboard()
+        cb.clear(mode=cb.Clipboard )
+        cb.setText(clipboardText, mode=cb.Clipboard)
+
+    @pyqtSlot(QPushButton)
+    def on_date_button_click(self, button):
+        # Copy the button's text to clipboard
+        buttonText = button.text()
+        self._copy_to_clipboard(buttonText)
+
+
+""" VLCVideoEventMixin: handles VLC callback events
+
+"""
+class VLCVideoEventMixin(object):
+    
+    # vlc_event_media_time_change_handler(...) is called on VLC's MediaPlayerTimeChanged event
+    @vlc.callbackmethod
+    def vlc_event_media_time_change_handler(self, _):
+        # print('Time changed!')
+
+        if (not (self.media_player is None)):
+            currPos = self.media_player.get_position()
+            self.video_playback_position_updated.emit(currPos)
+
+        if (self.is_display_initial_frame_playback):
+            # self.is_display_initial_frame_playback: true to indicate that we're just trying to play the media long enough to get the first frame, so it's not a black square
+            # Pause
+            self.media_pause()
+            self.is_display_initial_frame_playback = False # Set the variable to false so it quits pausing
+
+        if self.media_end_time == -1:
+            return
+        if self.media_player.get_time() > self.media_end_time:
+            self.restart_needed = True
+
+    # vlc_event_media_player_media_changed_handler(...) is called on VLC's MediaPlayerMediaChanged event
+    @vlc.callbackmethod
+    def vlc_event_media_player_media_changed_handler(self, _):
+        print("vlc_event_media_player_media_changed_handler()")
+        print("    - length: {0}, num_frames: {1}".format(str(self.media_player.get_length()), str(self.get_media_total_num_frames())))
+        self.update_video_file_labels_on_file_change()
+        self.on_media_changed_VideoPlaybackRenderingWidgetMixin()
+
+    # vlc_event_media_duration_changed_handler(...) is called on VLC's MediaDurationChanged event
+    @vlc.callbackmethod
+    def vlc_event_media_duration_changed_handler(self, _):
+        print("vlc_event_media_duration_changed_handler()")
+        print("    - length: {0}, num_frames: {1}".format(str(self.media_player.get_length()), str(self.get_media_total_num_frames())))
+
+
+    # vlc_event_media_player_parsed_changed_handler(...) is called on VLC's MediaParsedChanged event
+    @vlc.callbackmethod
+    def vlc_event_media_player_parsed_changed_handler(self, _):
+        print("vlc_event_media_player_parsed_changed_handler()")
+        print("    - length: {0}, num_frames: {1}".format(str(self.media_player.get_length()), str(self.get_media_total_num_frames())))
+
+
+    # vlc_event_media_player_length_changed_handler(...) is called on VLC's MediaPlayerLengthChanged event
+    @vlc.callbackmethod
+    def vlc_event_media_player_length_changed_handler(self, _):
+        print("vlc_event_media_player_length_changed_handler()")
+        print("    - length: {0}, num_frames: {1}".format(str(self.media_player.get_length()), str(self.get_media_total_num_frames())))
+        self.update_video_file_labels_on_file_change()
+        self.on_media_changed_VideoPlaybackRenderingWidgetMixin()
+
+
+class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdatingMixin, VLCVideoEventMixin, QMainWindow):
     """
     The main window class
     """
 
     SpeedBurstPlaybackRate = 16.0
+    EnableFrameSpinBox = False
 
     video_playback_position_updated = pyqtSignal(float) # video_playback_position_updated:  called when the playback position of the video changes. Either due to playing, or after a user event
     video_playback_state_changed = pyqtSignal() # video_playback_state_changed: called when play/pause state changes
     close_signal = pyqtSignal() # Called when the window is closing. 
 
+
     def __init__(self, parent=None):
         # QMainWindow.__init__(self, parent)
         super().__init__(parent=parent)
-        self.ui = uic.loadUi("GUI/UI/VideoPlayer/MainVideoPlayerWindow.ui", self)
+        self.ui = uic.loadUi("GUI/Windows/VideoPlayer/MainVideoPlayerWindow.ui", self)
 
         self.timestamp_filename = None
         # self.video_filename = None
@@ -221,12 +481,14 @@ class MainVideoPlayerWindow(MediaPlayerUpdatingMixin, QMainWindow):
         # TODO: bind the signals and such to self.ui.timestampSidebarWidget
         # self.ui.timestampSidebarWidget.
 
+        self.init_VideoPlaybackRenderingWidgetMixin()
+
         self.timer = QTimer(self)
         self.timer.setInterval(self.timer_period)
         self.timer.timeout.connect(self.update_ui)
         self.timer.timeout.connect(self.timer_handler)
 
-
+        self.ui.frame_video.clicked.connect(self.play_pause)
         self.ui.frame_video.doubleClicked.connect(self.toggle_full_screen)
         self.ui.frame_video.wheel.connect(self.wheel_handler)
 
@@ -244,7 +506,10 @@ class MainVideoPlayerWindow(MediaPlayerUpdatingMixin, QMainWindow):
         self.ui.lblCurrentFrame.setText("")
         self.ui.spinBoxCurrentFrame.setEnabled(False)
         self.ui.spinBoxCurrentFrame.setValue(1)
-        self.ui.spinBoxCurrentFrame.valueChanged.connect(self.handle_frame_value_changed)
+        self.ui.spinBoxCurrentFrame.setHidden(not MainVideoPlayerWindow.EnableFrameSpinBox)
+        if MainVideoPlayerWindow.EnableFrameSpinBox:
+            self.ui.spinBoxCurrentFrame.valueChanged.connect(self.handle_frame_value_changed)
+
         self.ui.lblTotalFrames.setText("")
 
         self.ui.lblCurrentTime.setText("")
@@ -329,8 +594,30 @@ class MainVideoPlayerWindow(MediaPlayerUpdatingMixin, QMainWindow):
 
         self.vlc_events = self.media_player.event_manager()
         self.vlc_events.event_attach(
-            vlc.EventType.MediaPlayerTimeChanged, self.media_time_change_handler
+            vlc.EventType.MediaPlayerTimeChanged, self.vlc_event_media_time_change_handler
         )
+        self.vlc_events.event_attach(
+            vlc.EventType.MediaPlayerMediaChanged, self.vlc_event_media_player_media_changed_handler
+        )
+
+        # Strangely never called.
+        self.vlc_events.event_attach(
+            vlc.EventType.MediaDurationChanged, self.vlc_event_media_duration_changed_handler
+        )
+
+        # Never called
+        self.vlc_events.event_attach(
+            vlc.EventType.MediaParsedChanged, self.vlc_event_media_player_parsed_changed_handler
+        )
+
+        # Successfully called after vlc_event_media_player_media_changed_handler()
+        self.vlc_events.event_attach(
+            vlc.EventType.MediaPlayerLengthChanged, self.vlc_event_media_player_length_changed_handler
+        )
+
+
+        
+            
 
         # Let our application handle mouse and key input instead of VLC
         self.media_player.video_set_mouse_input(False)
@@ -338,7 +625,7 @@ class MainVideoPlayerWindow(MediaPlayerUpdatingMixin, QMainWindow):
 
         self.timer.start()
 
-        self.update_video_frame_overlay_text()
+        self.update_video_frame_overlay_text("")
 
         self.ui.show()
 
@@ -490,25 +777,7 @@ class MainVideoPlayerWindow(MediaPlayerUpdatingMixin, QMainWindow):
         ## TODO:
         print(newProposedFrame)
 
-    # media_time_change_handler(...) is called on VLC's MediaPlayerTimeChanged event
-    @vlc.callbackmethod
-    def media_time_change_handler(self, _):
-        # print('Time changed!')
 
-        if (not (self.media_player is None)):
-            currPos = self.media_player.get_position()
-            self.video_playback_position_updated.emit(currPos)
-
-        if (self.is_display_initial_frame_playback):
-            # self.is_display_initial_frame_playback: true to indicate that we're just trying to play the media long enough to get the first frame, so it's not a black square
-            # Pause
-            self.media_pause()
-            self.is_display_initial_frame_playback = False # Set the variable to false so it quits pausing
-
-        if self.media_end_time == -1:
-            return
-        if self.media_player.get_time() > self.media_end_time:
-            self.restart_needed = True
 
         
     # TODO: REMOVE?? Check
@@ -547,8 +816,6 @@ class MainVideoPlayerWindow(MediaPlayerUpdatingMixin, QMainWindow):
             
         self.media_start_time = 0
         self.media_end_time = -1
-
-
 
     def run(self):
         """
@@ -636,16 +903,16 @@ class MainVideoPlayerWindow(MediaPlayerUpdatingMixin, QMainWindow):
 
         
     # This updates the text that is overlayed over the top of the video frame. It serves to temporarily display changes in state, like play, pause, stop, skip, etc to provide feedback and notifications to the user.
-    def update_video_frame_overlay_text(self):
+    def update_video_frame_overlay_text(self, new_string):
         #TODO: should display the message for a few seconds, and then timeout and disappear
-        self.ui.lblVideoStatusOverlay.setText("")
+        self.ui.lblVideoStatusOverlay.setText(new_string)
 
     # After a new media has been set, this function is called to start playing for a short bit to display the first few frames of the video
     def update_preview_frame(self):
         # Updates the frame displayed in the media player
         self.is_display_initial_frame_playback = True
         self.media_play()
-        # Pause is called in the self.media_time_change_handler(...)
+        # Pause is called in the self.vlc_event_media_time_change_handler(...)
 
     # Info labels above the video that display the FPS/frame/time/etc info
     def update_video_file_play_labels(self):
@@ -669,24 +936,26 @@ class MainVideoPlayerWindow(MediaPlayerUpdatingMixin, QMainWindow):
         else:
             self.ui.lblPlaybackPercent.setText("--")
 
-        curr_frame = int(round(curr_percent_complete * totalNumFrames))
+        curr_frame = self.get_current_playhead_frame()
 
         # Disable frame change on spinBox update to prevent infinite loop
-        self.ui.spinBoxCurrentFrame.blockSignals(True)
-        if curr_frame >= 0:
-            self.ui.lblCurrentFrame.setText(str(curr_frame))
-            #self.ui.spinBoxCurrentFrame.setValue(curr_frame)
-            #self.ui.spinBoxCurrentFrame.setEnabled(True)
-        else:
-            self.ui.lblCurrentFrame.setText("--")
-            #self.ui.spinBoxCurrentFrame.setEnabled(False)
-            #self.ui.spinBoxCurrentFrame.setValue(1)
+        if MainVideoPlayerWindow.EnableFrameSpinBox:
+            self.ui.spinBoxCurrentFrame.blockSignals(True)
+            if curr_frame is not None:
+                self.ui.lblCurrentFrame.setText(str(curr_frame))
+                #self.ui.spinBoxCurrentFrame.setValue(curr_frame)
+                #self.ui.spinBoxCurrentFrame.setEnabled(True)
+            else:
+                self.ui.lblCurrentFrame.setText("--")
+                #self.ui.spinBoxCurrentFrame.setEnabled(False)
+                #self.ui.spinBoxCurrentFrame.setValue(1)
 
-        # Re-enable signals from the frame spin box after update
-        self.ui.spinBoxCurrentFrame.blockSignals(False)
+            # Re-enable signals from the frame spin box after update
+            self.ui.spinBoxCurrentFrame.blockSignals(False)
 
-        if self.media_player.get_time() >= 0:
-            self.ui.lblCurrentTime.setText(str(self.media_player.get_time()) + "[ms]")  # Gets time in [ms]
+        curr_playback_position_duration = self.get_current_playhead_duration_offset()
+        if curr_playback_position_duration is not None:
+            self.ui.lblCurrentTime.setText(str(curr_playback_position_duration) + "[ms]")  # Gets time in [ms]
         else:
             self.ui.lblCurrentTime.setText("-- [ms]")  # Gets time in [ms]
 
@@ -704,12 +973,14 @@ class MainVideoPlayerWindow(MediaPlayerUpdatingMixin, QMainWindow):
             totalNumFrames = self.get_media_total_num_frames()
             if totalNumFrames > 0:
                 self.ui.lblTotalFrames.setText(str(totalNumFrames))
-                self.ui.spinBoxCurrentFrame.setMaximum(totalNumFrames)
-                self.ui.spinBoxCurrentFrame.setEnabled(True)
+                if MainVideoPlayerWindow.EnableFrameSpinBox:
+                    self.ui.spinBoxCurrentFrame.setMaximum(totalNumFrames)
+                    self.ui.spinBoxCurrentFrame.setEnabled(True)
             else:
                 self.ui.lblTotalFrames.setText("--")
-                self.ui.spinBoxCurrentFrame.setEnabled(False)
-                self.ui.spinBoxCurrentFrame.setMaximum(1)
+                if MainVideoPlayerWindow.EnableFrameSpinBox:
+                    self.ui.spinBoxCurrentFrame.setEnabled(False)
+                    self.ui.spinBoxCurrentFrame.setMaximum(1)
 
             if curr_total_duration > 0:
                 self.ui.lblTotalDuration.setText(str(curr_total_duration)) # Gets duration in [ms]
@@ -731,6 +1002,37 @@ class MainVideoPlayerWindow(MediaPlayerUpdatingMixin, QMainWindow):
 
     def get_media_total_num_frames(self):
         return int(self.media_player.get_length() * self.get_media_fps())
+
+    ## Current playhead functions
+    """ get_current_playhead_frame(): Gets the current frame position of the playhead
+    Returns: duration in [ms] or None
+    """
+    def get_current_playhead_frame(self):
+        if self.media_player is None:
+            return None
+
+        curr_percent_complete = self.media_player.get_position()  # Current percent complete between 0.0 and 1.0
+        totalNumFrames = self.get_media_total_num_frames()
+
+        if curr_percent_complete >= 0:
+            curr_frame = int(round(curr_percent_complete * totalNumFrames))
+            return curr_frame
+        else:
+            return None
+
+
+    """ get_current_playhead_duration_offset(): Gets the current duration since the start of the video
+    Returns: duration in [ms] or None
+    """
+    def get_current_playhead_duration_offset(self):
+        if self.media_player is None:
+            return None
+
+        if self.media_player.get_time() >= 0:
+            return self.media_player.get_time() # Gets time in [ms]
+        else:
+            return None 
+
 
     # Playback Navigation (Left/Right) Handlers:
     def step_left_handler(self):

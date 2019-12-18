@@ -18,7 +18,7 @@ from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWin
 
 from GUI.HelpWindow.HelpWindowFinal import *
 from GUI.MainObjectListsWindow.MainObjectListsWindow import *
-from GUI.ExampleDatabaseTableWindow import ExampleDatabaseTableWindow
+from GUI.Windows.ExampleDatabaseTableWindow import ExampleDatabaseTableWindow
 
 from GUI.Model.ReferenceLines.ReferenceLineManager import ReferenceMarkerManager, IndicatorLineMixin
 # from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget import *
@@ -33,8 +33,8 @@ from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_DataFile import *
 # from app.database.SqliteEventsDatabase import load_video_events_from_database
 from app.database.SqlAlchemyDatabase import load_annotation_events_from_database, save_annotation_events_to_database, create_TimestampedAnnotation
 
-from GUI.UI.VideoPlayer.VideoPlayerWidget import VideoPlayerWidget
-from GUI.UI.VideoPlayer.MainVideoPlayerWindow import *
+from GUI.Windows.VideoPlayer.VideoPlayerWidget import VideoPlayerWidget
+from GUI.Windows.VideoPlayer.MainVideoPlayerWindow import *
 from GUI.SetupWindow.SetupWindow import *
 
 

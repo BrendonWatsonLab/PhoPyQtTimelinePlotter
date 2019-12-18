@@ -7,11 +7,14 @@ from PyQt5.QtGui import QPalette, QColor, QWheelEvent, QKeyEvent, QPainter, \
     QPen
 from PyQt5.QtCore import pyqtSignal, QRect
 
+""" VideoFrame: the frame that contains the VLC video player
 
+"""
 class VideoFrame(QFrame):
     """
     A frame used specifically for video/media purpose
     """
+    clicked = pyqtSignal()
     doubleClicked = pyqtSignal()
     wheel = pyqtSignal(QWheelEvent)
     keyPressed = pyqtSignal(QKeyEvent)
@@ -25,6 +28,10 @@ class VideoFrame(QFrame):
 
         self.setPalette(self.palette)
         self.setAutoFillBackground(True)
+
+
+    def mouseReleaseEvent(self, _):
+        self.clicked.emit()
 
     def mouseDoubleClickEvent(self, _):
         self.doubleClicked.emit()
