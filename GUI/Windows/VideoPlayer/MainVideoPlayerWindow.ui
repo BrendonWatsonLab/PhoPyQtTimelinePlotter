@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1024</width>
+    <width>1005</width>
     <height>682</height>
    </rect>
   </property>
@@ -289,6 +289,9 @@
               <stylestrategy>PreferAntialias</stylestrategy>
              </font>
             </property>
+            <property name="styleSheet">
+             <string notr="true">color: rgb(241, 241, 241);</string>
+            </property>
             <property name="text">
              <string>No Video</string>
             </property>
@@ -296,6 +299,172 @@
              <set>Qt::NoTextInteraction</set>
             </property>
            </widget>
+          </widget>
+         </item>
+         <item>
+          <widget class="QFrame" name="frame_CurrentVideoPlaybackInformation">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>34</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>34</height>
+            </size>
+           </property>
+           <property name="baseSize">
+            <size>
+             <width>0</width>
+             <height>34</height>
+            </size>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <property name="spacing">
+             <number>6</number>
+            </property>
+            <property name="leftMargin">
+             <number>4</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>4</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_PlaybackDuration">
+              <property name="spacing">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="lblPlayheadRelativeDuration">
+                <property name="text">
+                 <string>00:00:00</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="lblTotalVideoDuration">
+                <property name="text">
+                 <string>00:00:00</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_Frames">
+              <property name="spacing">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="lblPlayheadFrame">
+                <property name="text">
+                 <string>0</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="lblTotalVideoFrames">
+                <property name="text">
+                 <string>2600</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_PlayheadDatetime">
+              <property name="text">
+               <string>12/12/19 12:12:12 AM</string>
+              </property>
+              <property name="flat">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_Datetimes">
+              <property name="spacing">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QPushButton" name="btn_VideoStartDatetime">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>17</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>17</height>
+                 </size>
+                </property>
+                <property name="baseSize">
+                 <size>
+                  <width>0</width>
+                  <height>17</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>12/12/19 12:12:12 AM</string>
+                </property>
+                <property name="flat">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btn_VideoEndDatetime">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>17</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>17</height>
+                 </size>
+                </property>
+                <property name="baseSize">
+                 <size>
+                  <width>0</width>
+                  <height>17</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>12/13/19 12:12:13 AM</string>
+                </property>
+                <property name="flat">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
           </widget>
          </item>
          <item>
@@ -328,119 +497,6 @@
             <number>0</number>
            </property>
            <layout class="QGridLayout" name="gridLayout_2">
-            <item row="1" column="2">
-             <widget class="QPushButton" name="button_slow_down">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="toolTip">
-               <string>Slow down the video</string>
-              </property>
-              <property name="text">
-               <string>Slow Down</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="5">
-             <widget class="QPushButton" name="button_speed_up">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="toolTip">
-               <string>Speed up the video</string>
-              </property>
-              <property name="text">
-               <string>Speed Up</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="11">
-             <widget class="QPushButton" name="button_full_screen">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="toolTip">
-               <string>Set the video to full screen</string>
-              </property>
-              <property name="text">
-               <string>Full Screen</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="3">
-             <widget class="QDoubleSpinBox" name="doubleSpinBoxPlaybackSpeed">
-              <property name="minimum">
-               <double>0.200000000000000</double>
-              </property>
-              <property name="maximum">
-               <double>6.000000000000000</double>
-              </property>
-              <property name="value">
-               <double>1.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="ToggleButton" name="button_play_pause">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="toolTip">
-               <string>Toggle Play/Pause</string>
-              </property>
-              <property name="text">
-               <string>Play/Pause</string>
-              </property>
-              <property name="checkable">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="15">
-             <widget class="QSpinBox" name="spinBoxFrameJumpMultiplier">
-              <property name="minimum">
-               <number>1</number>
-              </property>
-              <property name="maximum">
-               <number>1000</number>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="12">
-             <spacer name="horizontalSpacer">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="1" column="9">
-             <widget class="QPushButton" name="button_mark_end">
-              <property name="toolTip">
-               <string>Mark the end of the entry</string>
-              </property>
-              <property name="text">
-               <string>Mark End</string>
-              </property>
-             </widget>
-            </item>
             <item row="1" column="19">
              <widget class="QPushButton" name="btnHelp">
               <property name="text">
@@ -448,37 +504,21 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="16">
-             <widget class="QToolButton" name="btnRight">
+            <item row="1" column="17">
+             <widget class="QToolButton" name="btnSkipRight">
               <property name="toolTip">
-               <string>Step Frames Right</string>
+               <string>Skip Frames Right</string>
               </property>
               <property name="text">
-               <string>&gt;</string>
+               <string>-&gt;</string>
               </property>
               <property name="shortcut">
-               <string>Right</string>
-              </property>
-              <property name="arrowType">
-               <enum>Qt::RightArrow</enum>
+               <string>Ctrl+Right</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="18">
-             <spacer name="horizontalSpacer_3">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="1" column="1">
-             <spacer name="horizontalSpacer_5">
+            <item row="1" column="10">
+             <spacer name="horizontalSpacer_7">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
@@ -503,6 +543,118 @@
               </property>
              </widget>
             </item>
+            <item row="1" column="1">
+             <spacer name="horizontalSpacer_5">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="1" column="12">
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="1" column="18">
+             <spacer name="horizontalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="1" column="4">
+             <widget class="QToolButton" name="toolButton_SpeedBurstEnabled">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="statusTip">
+               <string>Trigger speedburst with the hotkey</string>
+              </property>
+              <property name="whatsThis">
+               <string>Trigger speedburst with the hotkey</string>
+              </property>
+              <property name="text">
+               <string>SpeedBurst</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="16">
+             <widget class="QToolButton" name="btnRight">
+              <property name="toolTip">
+               <string>Step Frames Right</string>
+              </property>
+              <property name="text">
+               <string>&gt;</string>
+              </property>
+              <property name="shortcut">
+               <string>Right</string>
+              </property>
+              <property name="arrowType">
+               <enum>Qt::RightArrow</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="ToggleButton" name="button_play_pause">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Toggle Play/Pause</string>
+              </property>
+              <property name="text">
+               <string>Play/Pause</string>
+              </property>
+              <property name="checkable">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QPushButton" name="button_slow_down">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Slow down the video</string>
+              </property>
+              <property name="text">
+               <string>Slow Down</string>
+              </property>
+             </widget>
+            </item>
             <item row="0" column="0" colspan="20">
              <widget class="HighlightedJumpSlider" name="slider_progress">
               <property name="maximum">
@@ -519,8 +671,41 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="10">
-             <spacer name="horizontalSpacer_7">
+            <item row="1" column="9">
+             <widget class="QPushButton" name="button_mark_end">
+              <property name="toolTip">
+               <string>Mark the end of the entry</string>
+              </property>
+              <property name="text">
+               <string>Mark End</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="8">
+             <widget class="QPushButton" name="button_mark_start">
+              <property name="toolTip">
+               <string>Mark the start of the entry</string>
+              </property>
+              <property name="text">
+               <string>Mark Start</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3">
+             <widget class="QDoubleSpinBox" name="doubleSpinBoxPlaybackSpeed">
+              <property name="minimum">
+               <double>0.200000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>6.000000000000000</double>
+              </property>
+              <property name="value">
+               <double>1.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="7">
+             <spacer name="horizontalSpacer_6">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
@@ -548,61 +733,45 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="7">
-             <spacer name="horizontalSpacer_6">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
+            <item row="1" column="5">
+             <widget class="QPushButton" name="button_speed_up">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
               </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="1" column="8">
-             <widget class="QPushButton" name="button_mark_start">
               <property name="toolTip">
-               <string>Mark the start of the entry</string>
+               <string>Speed up the video</string>
               </property>
               <property name="text">
-               <string>Mark Start</string>
+               <string>Speed Up</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="17">
-             <widget class="QToolButton" name="btnSkipRight">
-              <property name="toolTip">
-               <string>Skip Frames Right</string>
+            <item row="1" column="15">
+             <widget class="QSpinBox" name="spinBoxFrameJumpMultiplier">
+              <property name="minimum">
+               <number>1</number>
               </property>
-              <property name="text">
-               <string>-&gt;</string>
-              </property>
-              <property name="shortcut">
-               <string>Ctrl+Right</string>
+              <property name="maximum">
+               <number>1000</number>
               </property>
              </widget>
             </item>
-            <item row="1" column="4">
-             <widget class="QToolButton" name="toolButton_SpeedBurstEnabled">
-              <property name="enabled">
-               <bool>false</bool>
+            <item row="1" column="11">
+             <widget class="QPushButton" name="button_full_screen">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
               </property>
-              <property name="statusTip">
-               <string>Trigger speedburst with the hotkey</string>
-              </property>
-              <property name="whatsThis">
-               <string>Trigger speedburst with the hotkey</string>
+              <property name="toolTip">
+               <string>Set the video to full screen</string>
               </property>
               <property name="text">
-               <string>SpeedBurst</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
+               <string>Full Screen</string>
               </property>
              </widget>
             </item>
