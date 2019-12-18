@@ -487,7 +487,8 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             currFloatingHeader.findNext.connect(self.on_jump_next_for_track)
             currFloatingHeader.showOptions.connect(self.on_track_header_show_options_activated)
             currFloatingHeader.refresh.connect(self.on_track_header_refresh_activated)
-
+            currFloatingHeader.setVisible(False)
+            
             self.trackFloatingWidgetHeaders[currVideoTrackWidget.get_trackID()] = currFloatingHeader
 
             # Set the minimum grid row height
@@ -542,6 +543,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             currFloatingHeader.findNext.connect(self.on_jump_next_for_track)
             currFloatingHeader.showOptions.connect(self.on_track_header_show_options_activated)
             currFloatingHeader.refresh.connect(self.on_track_header_refresh_activated)
+            currFloatingHeader.setVisible(False)
 
             self.trackFloatingWidgetHeaders[currWidget.get_trackID()] = currFloatingHeader
 
