@@ -111,7 +111,7 @@ class VideoPreviewThumbnailGenerator(QObject):
     def __init__(self, videoFilePaths, thumbnailSizes = [160, 80, 40], parent=None):
         super(VideoPreviewThumbnailGenerator, self).__init__(parent=parent) # Call the inherited classes __init__ method
         self.cache = dict() # a [str:VideoSpecificThumbnailCache] dict that holds the VideoSpecificThumbnailCache object for each video file
-        self.videoFilePaths = videoFilePaths
+        self.pendingVideoFilePaths = videoFilePaths
         self.loadedVideoFiles = []
 
         self.desiredVideoFrames = None
@@ -142,14 +142,15 @@ class VideoPreviewThumbnailGenerator(QObject):
     def reload_data(self, restricted_video_file_paths, desired_frame_indicies):
         print("VideoPreviewThumbnailGenerator.reload_data(...)")
         if restricted_video_file_paths is None:
-            restricted_video_file_paths = self.videoFilePaths
+            restricted_video_file_paths = self.pendingVideoFilePaths
 
         final_paths = []
         for aPath in restricted_video_file_paths:
-            if aPath not in self.videoFilePaths:
+            if aPath not in self.pendingVideoFilePaths:
                 print("Warning: {0} isn't in self.videoFilePath. Add it using add_video_path(...) before calling reload_data(...)".format(str(aPath)))
                 continue
             else:
+                # self.pendingVideoFilePaths.append(aPath) # Add the path to the pending paths again.
                 final_paths.append(aPath)
 
         self.generate_video_thumbnails(restricted_video_file_paths, desired_frame_indicies, self.desiredThumbnailSizes)
@@ -159,7 +160,7 @@ class VideoPreviewThumbnailGenerator(QObject):
 
     # Called to add a new video path to generate thumbnails for
     def add_video_path(self, newVideoFilePath):
-        if (newVideoFilePath in self.videoFilePaths):
+        if (newVideoFilePath in self.pendingVideoFilePaths):
             print("WARNING: {0} is already in videoFilePaths! Not adding again.".format(str(newVideoFilePath)))
             return False
         
@@ -169,15 +170,16 @@ class VideoPreviewThumbnailGenerator(QObject):
             return False
 
         # Otherwise we can add it
-        self.videoFilePaths.append(newVideoFilePath)
+        self.pendingVideoFilePaths.append(newVideoFilePath)
         self.reload_on_video_paths_changed()
         # self.reload_data()
+        return True
 
 
     def reload_on_video_paths_changed(self):
         print("VideoPreviewThumbnailGenerator.reload_on_video_paths_changed(...)")
-        if (len(self.videoFilePaths)>0):
-            self.generate_video_thumbnails(self.videoFilePaths, self.desiredVideoFrames, self.desiredThumbnailSizes)
+        if (len(self.pendingVideoFilePaths)>0):
+            self.generate_video_thumbnails(self.pendingVideoFilePaths, self.desiredVideoFrames, self.desiredThumbnailSizes)
     
         self.targetVideoFilePathsUpdated.emit()
 
@@ -248,7 +250,8 @@ class VideoPreviewThumbnailGenerator(QObject):
         # The finished_video_files are paths that have already been added to self.loadedVideoFiles. We just need to remove them from self.videoFilePaths
         
         for aFinishedVideoFilePath in finished_video_files:
-            self.videoFilePaths.remove(aFinishedVideoFilePath)
+            if aFinishedVideoFilePath in self.pendingVideoFilePaths:
+                self.pendingVideoFilePaths.remove(aFinishedVideoFilePath)
 
         # self.loadedVideoFiles.extend(finished_video_files)
         self.thumbnailGenerationComplete.emit()
