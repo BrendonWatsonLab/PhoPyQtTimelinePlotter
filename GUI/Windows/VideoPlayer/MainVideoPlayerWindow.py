@@ -125,7 +125,7 @@ class HistoricalFrameRenderingMixin(object):
         currPixmap = QPixmap.fromImage(currThumbnailImage)
         self.set_preview_frame(0, currPixmap)
 
-    # Updates only the dynamic (playback-position-dependent) labels and buttons
+    # Note that this is called when the playback position changes AND every X seconds in the update_ui() function.
     @pyqtSlot(float)
     def on_playback_position_changed_HistoricalFrameRenderingMixin(self, newPlaybackPosition):
         # Dynamic info:
@@ -802,7 +802,7 @@ class MainVideoPlayerWindow(HistoricalFrameRenderingMixin, VideoPlaybackRenderin
         self.ui.doubleSpinBoxPlaybackSpeed.blockSignals(False)
 
         currPos = self.media_player.get_position()
-        self.video_playback_position_updated.emit(currPos)
+        self.video_playback_position_updated.emit(currPos) # TODO: It's strange to emit this here, when we don't know if it actually changed.
         
         # When the video finishes
         if self.media_started_playing and \

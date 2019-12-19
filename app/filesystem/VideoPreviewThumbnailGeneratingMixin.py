@@ -66,16 +66,25 @@ class VideoSpecificThumbnailCache(QObject):
     def get_frames_results_dict(self):
         return self._frameResultsDict
 
-    # reserve_frame_results(pending_desired_frame_indices): adds the pending_desired_frame_indices as keys with a value of None to the results dictionary if they don't already exist.
+    """ reserve_frame_results(pending_desired_frame_indices): adds the pending_desired_frame_indices as keys with a value of None to the results dictionary if they don't already exist.
+    Returns:
+    a tuple containing (the already loaded or currently loading frames, the unique desired frame indicies to actually load)
+    """
     def reserve_frame_results(self, pending_desired_frame_indices):
+        already_loaded_frames = []
+        new_desired_frames_to_load = []
         for aFrame in pending_desired_frame_indices:
             # Get only the frames that haven't already been generated.
             if aFrame in self.get_generated_frame_indicies():
                 # Skip the already loaded or pending item
+                already_loaded_frames.append(aFrame)
                 continue
             else:
                 # Otherwise reserve it by setting it to None
                 self.get_frames_results_dict()[aFrame] = None
+                new_desired_frames_to_load.append(aFrame)
+            
+        return (already_loaded_frames, new_desired_frames_to_load)
             
 
     def update_frame_thumbnail_results(self, updatedThumbnailResultsList):
@@ -146,14 +155,14 @@ class VideoPreviewThumbnailGenerator(QObject):
 
         final_paths = []
         for aPath in restricted_video_file_paths:
-            if aPath not in self.pendingVideoFilePaths:
-                print("Warning: {0} isn't in self.videoFilePath. Add it using add_video_path(...) before calling reload_data(...)".format(str(aPath)))
-                continue
-            else:
+            if ((aPath in self.loadedVideoFiles) or (aPath in self.pendingVideoFilePaths)):
                 # self.pendingVideoFilePaths.append(aPath) # Add the path to the pending paths again.
                 final_paths.append(aPath)
+            else:
+                print("Warning: {0} isn't in self.videoFilePath. Add it using add_video_path(...) before calling reload_data(...)".format(str(aPath)))
+                continue
 
-        self.generate_video_thumbnails(restricted_video_file_paths, desired_frame_indicies, self.desiredThumbnailSizes)
+        self.generate_video_thumbnails(final_paths, desired_frame_indicies, self.desiredThumbnailSizes)
 
         self.targetVideoFilePathsUpdated.emit()
 
@@ -222,17 +231,27 @@ class VideoPreviewThumbnailGenerator(QObject):
                 self.cache[aFoundVideoFile] = VideoSpecificThumbnailCache(aFoundVideoFile, parent=self)
                 self.cache[aFoundVideoFile].frame_thumbnails_updated.connect(self.on_cache_frame_thumbnails_updated)
 
+            
+            new_desired_frame_indicies = None
             if desired_frame_indicies is not None:
                 # Add the remaining desired_frame_indicies to the cache with None values to indicate that they are pending
-                self.cache[aFoundVideoFile].reserve_frame_results(desired_frame_indicies)
+                # the function returns the actually unique indicies to load
+                already_loaded_frames, new_desired_frame_indicies = self.cache[aFoundVideoFile].reserve_frame_results(desired_frame_indicies)
+
+                curr_frames_result_dict = self.cache[aFoundVideoFile].get_frames_results_dict()
+                # Emit the thumbnails updated signal for the data for the already loaded frames
+                for anAlreadyLoadedFrame in already_loaded_frames:
+                    videoThumbnailResultObj = curr_frames_result_dict[anAlreadyLoadedFrame]
+                    self.videoFrameThumbnailsUpdated.emit(aFoundVideoFile, videoThumbnailResultObj)
             
             # Iterate through all found video-files in a given list (a list of VideoThumbnail objects: [VideoThumbnail])
-            generatedThumbnailObjsList = self.generate_thumbnails_for_video_file(aFoundVideoFile, desired_frame_indicies, desired_thumbnail_sizes, enable_debug_print=False)
-
+            generatedThumbnailObjsList = self.generate_thumbnails_for_video_file(aFoundVideoFile, new_desired_frame_indicies, desired_thumbnail_sizes, enable_debug_print=False)
             self.cache[aFoundVideoFile].update_frame_thumbnail_results(generatedThumbnailObjsList)
 
             # Add the current video file path to the loaded files
-            self.loadedVideoFiles.append(aFoundVideoFile)
+            if aFoundVideoFile not in self.loadedVideoFiles:
+                self.loadedVideoFiles.append(aFoundVideoFile)
+            
             self.videoThumbnailGenerationComplete.emit(aFoundVideoFile, generatedThumbnailObjsList)
 
             parsedFiles = parsedFiles + 1
