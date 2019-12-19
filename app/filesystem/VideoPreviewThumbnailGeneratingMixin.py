@@ -242,7 +242,8 @@ class VideoPreviewThumbnailGenerator(QObject):
                 # Emit the thumbnails updated signal for the data for the already loaded frames
                 for anAlreadyLoadedFrame in already_loaded_frames:
                     videoThumbnailResultObj = curr_frames_result_dict[anAlreadyLoadedFrame]
-                    self.videoFrameThumbnailsUpdated.emit(aFoundVideoFile, videoThumbnailResultObj)
+                    if videoThumbnailResultObj is not None:
+                        self.videoFrameThumbnailsUpdated.emit(aFoundVideoFile, videoThumbnailResultObj)
             
             # Iterate through all found video-files in a given list (a list of VideoThumbnail objects: [VideoThumbnail])
             generatedThumbnailObjsList = self.generate_thumbnails_for_video_file(aFoundVideoFile, new_desired_frame_indicies, desired_thumbnail_sizes, enable_debug_print=False)
@@ -288,7 +289,6 @@ class VideoPreviewThumbnailGenerator(QObject):
             print("generate_thumbnails_for_video_file({0})...".format(str(activeVideoFilePath)))
 
         outputThumbnailObjsList = []
-        # frames = VideoPreviewThumbnailGenerator.video_to_frames(activeVideoFilePath, enable_debug_print)
         frames = VideoPreviewThumbnailGenerator.video_to_desired_frames(activeVideoFilePath, desired_frame_indicies, enable_debug_print)
 
         # Generate and save thumbs
