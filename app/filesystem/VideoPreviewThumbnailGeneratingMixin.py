@@ -90,8 +90,8 @@ class VideoSpecificThumbnailCache(QObject):
     def update_frame_thumbnail_results(self, updatedThumbnailResultsList):
         for aThumbnailResult in updatedThumbnailResultsList:
             curr_frame_index = aThumbnailResult.get_frame_index()
-            curr_frame_index_key = str(curr_frame_index)
-            self.get_frames_results_dict()[curr_frame_index_key] = aThumbnailResult
+            # curr_frame_index_key = curr_frame_index
+            self.get_frames_results_dict()[curr_frame_index] = aThumbnailResult
             # Emit the signal
             self.frame_thumbnails_updated.emit(self.get_video_file_name(), aThumbnailResult)
 
@@ -236,7 +236,9 @@ class VideoPreviewThumbnailGenerator(QObject):
             if desired_frame_indicies is not None:
                 # Add the remaining desired_frame_indicies to the cache with None values to indicate that they are pending
                 # the function returns the actually unique indicies to load
-                already_loaded_frames, new_desired_frame_indicies = self.cache[aFoundVideoFile].reserve_frame_results(desired_frame_indicies)
+                result_tuple = self.cache[aFoundVideoFile].reserve_frame_results(desired_frame_indicies)
+                already_loaded_frames = result_tuple[0]
+                new_desired_frame_indicies = result_tuple[1]
 
                 curr_frames_result_dict = self.cache[aFoundVideoFile].get_frames_results_dict()
                 # Emit the thumbnails updated signal for the data for the already loaded frames
@@ -266,7 +268,7 @@ class VideoPreviewThumbnailGenerator(QObject):
         
     @pyqtSlot(list)
     def on_generate_video_thumbnails_thread_complete(self, finished_video_files):
-        print("THREAD on_generate_video_thumbnails_thread_complete(...)! {0}".format(str(finished_video_files)))
+        # print("THREAD on_generate_video_thumbnails_thread_complete(...)! {0}".format(str(finished_video_files)))
         # The finished_video_files are paths that have already been added to self.loadedVideoFiles. We just need to remove them from self.videoFilePaths
         
         for aFinishedVideoFilePath in finished_video_files:

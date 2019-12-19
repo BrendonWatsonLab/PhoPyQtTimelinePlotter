@@ -95,6 +95,8 @@ class HistoricalFrameRenderingMixin(object):
         # btn_PreviousFrame_1
         # btn_PreviousFrame_2
 
+        self.last_requested_thumbnail_playhead_index = None
+
         self.desired_thumbnail_display_size_key = "160"
 
         self.previousFrameButtons = [self.ui.btn_PreviousFrame_0, self.ui.btn_PreviousFrame_1, self.ui.btn_PreviousFrame_2]
@@ -135,6 +137,12 @@ class HistoricalFrameRenderingMixin(object):
         if curr_video_movie_link is not None:
             curr_playback_frame = self.get_current_playhead_frame()
             if curr_playback_frame is not None:
+                # Check and see if the updated position is identical to the previous one
+                if self.last_requested_thumbnail_playhead_index is not None:
+                    if curr_playback_frame == self.last_requested_thumbnail_playhead_index:
+                        return # Do nothing, the index hasn't changed
+
+                    
                 # Use the current playback frame to update the thumbnails
                 # updated_thumbnail_indicies = [curr_playback_frame]
                 previousFrames = 5
@@ -150,13 +158,17 @@ class HistoricalFrameRenderingMixin(object):
                 # desired_thumbnail_indicies.append(curr_playback_frame)
 
                 self.generate_thumbnails(desired_thumbnail_indicies)
+                
+                # Set the last requested index
+                self.last_requested_thumbnail_playhead_index = curr_playback_frame
+                
             else:
                 are_buttons_enabled = False
             pass
         else:
             are_buttons_enabled = False
             pass
-        
+
 
 
 
