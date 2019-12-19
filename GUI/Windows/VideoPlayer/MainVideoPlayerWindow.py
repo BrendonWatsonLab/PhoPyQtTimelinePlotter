@@ -149,7 +149,7 @@ class HistoricalFrameRenderingMixin(object):
                 # desired_thumbnail_indicies = list(range(earliest_desired_thumbnail_frame, curr_playback_frame, num_frames_step))
                 # desired_thumbnail_indicies.append(curr_playback_frame)
 
-                # self.generate_thumbnails(desired_thumbnail_indicies)
+                self.generate_thumbnails(desired_thumbnail_indicies)
             else:
                 are_buttons_enabled = False
             pass
