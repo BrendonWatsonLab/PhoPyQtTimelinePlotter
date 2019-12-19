@@ -131,8 +131,6 @@ class HistoricalFrameRenderingMixin(object):
         # Dynamic info:
         are_buttons_enabled = True
 
-
-
         curr_video_movie_link = self.get_movie_link()
         if curr_video_movie_link is not None:
             curr_playback_frame = self.get_current_playhead_frame()
@@ -151,11 +149,9 @@ class HistoricalFrameRenderingMixin(object):
                 # desired_thumbnail_indicies = list(range(earliest_desired_thumbnail_frame, curr_playback_frame, num_frames_step))
                 # desired_thumbnail_indicies.append(curr_playback_frame)
 
-                self.generate_thumbnails(desired_thumbnail_indicies)
+                # self.generate_thumbnails(desired_thumbnail_indicies)
             else:
                 are_buttons_enabled = False
-
-
             pass
         else:
             are_buttons_enabled = False
