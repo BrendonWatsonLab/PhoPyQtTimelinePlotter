@@ -126,7 +126,7 @@ class VideoPreviewThumbnailGenerator(QObject):
 
         if (len(videoFilePaths) > 0):
             self.reload_on_video_paths_changed()
-        # self.reload_data()
+
 
     # Called by the cache's update_frame_thumbnail_results(...) function to indicate that a thumbnail has been generated for a given frame
     @pyqtSlot(str, VideoThumbnail)
@@ -139,12 +139,20 @@ class VideoPreviewThumbnailGenerator(QObject):
         return self.cache
 
     ## DATABASE Functions:
-    def reload_data(self, restricted_video_file_paths=None):
+    def reload_data(self, restricted_video_file_paths, desired_frame_indicies):
         print("VideoPreviewThumbnailGenerator.reload_data(...)")
         if restricted_video_file_paths is None:
             restricted_video_file_paths = self.videoFilePaths
 
-        self.generate_video_thumbnails(restricted_video_file_paths, self.desiredVideoFrames, self.desiredThumbnailSizes)
+        final_paths = []
+        for aPath in restricted_video_file_paths:
+            if aPath not in self.videoFilePaths:
+                print("Warning: {0} isn't in self.videoFilePath. Add it using add_video_path(...) before calling reload_data(...)".format(str(aPath)))
+                continue
+            else:
+                final_paths.append(aPath)
+
+        self.generate_video_thumbnails(restricted_video_file_paths, desired_frame_indicies, self.desiredThumbnailSizes)
 
         self.targetVideoFilePathsUpdated.emit()
 
@@ -207,14 +215,7 @@ class VideoPreviewThumbnailGenerator(QObject):
             ## TODO: should the cache initialization be outside the execute thread function? like in self.generate_video_thumbnails(...)??
 
             # Check to see if a given file already has a cache in the cache
-            if (aFoundVideoFile in self.cache.keys()):
-                # Current cache exists already
-                # previously_generated_frames = self.cache[aFoundVideoFile].get_generated_frames()
-                # # Get only the frames that haven't already been generated.
-                # desired_frame_indicies = _setdiff_sorted(desired_frame_indicies, previously_generated_frames)
-                pass
-
-            else:
+            if (aFoundVideoFile not in self.cache.keys()):
                 # Create the cache.
                 self.cache[aFoundVideoFile] = VideoSpecificThumbnailCache(aFoundVideoFile, parent=self)
                 self.cache[aFoundVideoFile].frame_thumbnails_updated.connect(self.on_cache_frame_thumbnails_updated)
@@ -227,14 +228,6 @@ class VideoPreviewThumbnailGenerator(QObject):
             generatedThumbnailObjsList = VideoPreviewThumbnailGenerator.generate_thumbnails_for_video_file(aFoundVideoFile, desired_frame_indicies, desired_thumbnail_sizes, enable_debug_print=True)
 
             self.cache[aFoundVideoFile].update_frame_thumbnail_results(generatedThumbnailObjsList)
-            # if (not (aFoundVideoFile in self.cache.keys())):
-            #     # Parent doesn't yet exist in cache
-            #     self.cache[aFoundVideoFile] = generatedThumbnailObjsList
-            # else:
-            #     # Parent already exists
-            #     print("WARNING: video path {0} already exists in the cache. Updating its thumbnail objects list...".format(str(aFoundVideoFile)))
-            #     self.cache[aFoundVideoFile] = generatedThumbnailObjsList
-            #     pass
 
             # Add the current video file path to the loaded files
             self.loadedVideoFiles.append(aFoundVideoFile)

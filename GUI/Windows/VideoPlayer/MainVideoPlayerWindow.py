@@ -100,6 +100,8 @@ class HistoricalFrameRenderingMixin(object):
         self.previousFrameButtons = [self.ui.btn_PreviousFrame_0, self.ui.btn_PreviousFrame_1, self.ui.btn_PreviousFrame_2]
         self.previousFrameButtonIcons = [None, None, None]
 
+        self.video_playback_position_updated.connect(self.on_playback_position_changed_HistoricalFrameRenderingMixin)
+
     # Sets the rendered icon of the button with the specified button_index to the QPixmap specified by frame_pixmap
     # see https://stackoverflow.com/questions/3137805/how-to-set-image-on-qpushbutton
     def set_preview_frame(self, button_index, frame_pixmap):
@@ -110,6 +112,9 @@ class HistoricalFrameRenderingMixin(object):
         pass
 
 
+    def generate_thumbnails(self, frame_indicies):
+        self.get_movie_link().generate_thumbnails(frame_indicies)
+
     @pyqtSlot(VideoThumbnail)
     def on_video_thumbnail_generated(self, video_thumbnail_obj):
         frame_index = video_thumbnail_obj.get_frame_index()
@@ -119,6 +124,43 @@ class HistoricalFrameRenderingMixin(object):
         currThumbnailImage = currThumbsDict[self.desired_thumbnail_display_size_key]
         currPixmap = QPixmap.fromImage(currThumbnailImage)
         self.set_preview_frame(0, currPixmap)
+
+    # Updates only the dynamic (playback-position-dependent) labels and buttons
+    @pyqtSlot(float)
+    def on_playback_position_changed_HistoricalFrameRenderingMixin(self, newPlaybackPosition):
+        # Dynamic info:
+        are_buttons_enabled = True
+
+
+
+        curr_video_movie_link = self.get_movie_link()
+        if curr_video_movie_link is not None:
+            curr_playback_frame = self.get_current_playhead_frame()
+            if curr_playback_frame is not None:
+                # Use the current playback frame to update the thumbnails
+                # updated_thumbnail_indicies = [curr_playback_frame]
+                previousFrames = 5
+                # followingFrames = 0
+                num_frames_step = 1
+
+                earliest_desired_thumbnail_frame = min((curr_playback_frame - previousFrames), 0)
+
+                # note, this excludes curr_playback_frame because it excludes the end value
+                desired_thumbnail_indicies = range(earliest_desired_thumbnail_frame, curr_playback_frame, num_frames_step)
+                desired_thumbnail_indicies.append(curr_playback_frame)
+
+                self.generate_thumbnails(desired_thumbnail_indicies)
+            else:
+                are_buttons_enabled = False
+
+
+            pass
+        else:
+            are_buttons_enabled = False
+            pass
+        
+
+
 
 
 """ MediaPlayerUpdatingMixin: used by MainVideoPlayerWindow to load/change media

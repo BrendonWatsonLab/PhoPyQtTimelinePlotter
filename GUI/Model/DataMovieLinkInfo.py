@@ -84,11 +84,11 @@ class DataMovieLinkInfo(SimpleErrorStatusMixin, QObject):
         # Connect signal to the video player window
         self.thumbnail_generated.connect(self.videoPlayerWindow.on_video_thumbnail_generated)
 
-        self.generate_thumbnails()
+        self.initially_generate_thumbnails()
 
 
     # TODO: Thumbnail generation
-    def generate_thumbnails(self):
+    def initially_generate_thumbnails(self):
         proposed_video_file_path = self.get_video_url()
         if (proposed_video_file_path is not None):
             # Have a valid video file path
@@ -99,6 +99,12 @@ class DataMovieLinkInfo(SimpleErrorStatusMixin, QObject):
             # Start thumbnail generation for this video file too:
             self.get_video_thumbnail_generator().add_video_path(str(proposed_video_file_path))
 
+    def generate_thumbnails(self, desired_frame_indicies):
+        proposed_video_file_path = self.get_video_url()
+        if (proposed_video_file_path is not None):
+            self.get_video_thumbnail_generator().reload_data([str(proposed_video_file_path)], desired_frame_indicies)
+        else:
+            print("WARNING: generate_thumbnails(...) called but video path is invalid!")
 
     # Returns the TrackChildReference reference type object
     def get_video_event_reference(self):
