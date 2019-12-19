@@ -227,7 +227,7 @@ class VideoPreviewThumbnailGenerator(QObject):
                 self.cache[aFoundVideoFile].reserve_frame_results(desired_frame_indicies)
             
             # Iterate through all found video-files in a given list (a list of VideoThumbnail objects: [VideoThumbnail])
-            generatedThumbnailObjsList = VideoPreviewThumbnailGenerator.generate_thumbnails_for_video_file(aFoundVideoFile, desired_frame_indicies, desired_thumbnail_sizes, enable_debug_print=True)
+            generatedThumbnailObjsList = self.generate_thumbnails_for_video_file(aFoundVideoFile, desired_frame_indicies, desired_thumbnail_sizes, enable_debug_print=False)
 
             self.cache[aFoundVideoFile].update_frame_thumbnail_results(generatedThumbnailObjsList)
 
@@ -262,8 +262,7 @@ class VideoPreviewThumbnailGenerator(QObject):
     Returns:
         A list of "VideoThumbnail" objects, one for each frame index in desired_frame_indicies
     """
-    @staticmethod
-    def generate_thumbnails_for_video_file(activeVideoFilePath, desired_frame_indicies, thumbnailSizes, enable_debug_print=False):
+    def generate_thumbnails_for_video_file(self, activeVideoFilePath, desired_frame_indicies, thumbnailSizes, enable_debug_print=False):
         """Extract frames from the video and creates thumbnails for one of each"""
         # Extract frames from video
         if enable_debug_print:
@@ -276,7 +275,7 @@ class VideoPreviewThumbnailGenerator(QObject):
         # Generate and save thumbs
         for i in range(len(frames)):
             thumbs = VideoPreviewThumbnailGenerator.image_to_thumbs(frames[i], thumbnailSizes, enable_debug_print)
-            currThumbnailObj = VideoThumbnail(i, thumbs)
+            currThumbnailObj = VideoThumbnail(i, thumbs, parent=self)
             outputThumbnailObjsList.append(currThumbnailObj)
 
             # os.makedirs('frames/%d' % i)
@@ -338,7 +337,8 @@ class VideoPreviewThumbnailGenerator(QObject):
                     cap.set(1, aFrameNumber)
                     success, image = cap.read()
                     if success:
-                        print("frame_number[{0}]: SUCCESS!".format(str(aFrameNumber)))
+                        if enable_debug_print:
+                            print("frame_number[{0}]: SUCCESS!".format(str(aFrameNumber)))
                         # Set grayscale colorspace for the frame.
                         # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
                         # Cut the video extension to have the name of the video
@@ -347,7 +347,8 @@ class VideoPreviewThumbnailGenerator(QObject):
                         frames.append(image)
                         count += 1
                     else:
-                        print("frame_number[{0}] failed".format(str(aFrameNumber)))
+                        if enable_debug_print:
+                            print("frame_number[{0}] failed".format(str(aFrameNumber)))
                         continue
 
             # When everything done, release the capture (from https://stackoverflow.com/questions/33650974/opencv-python-read-specific-frame-using-videocapture) not sure if I need to do this.
@@ -356,7 +357,8 @@ class VideoPreviewThumbnailGenerator(QObject):
 
         else:
             # Use FFMPEG method:
-            print("    video_to_desired_frames(...): using FFMPEG method...")
+            if enable_debug_print:
+                print("    video_to_desired_frames(...): using FFMPEG method...")
             """
             -ss: the start time
             -vframes:
