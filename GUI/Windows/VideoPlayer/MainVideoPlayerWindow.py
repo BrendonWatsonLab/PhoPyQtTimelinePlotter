@@ -143,11 +143,13 @@ class HistoricalFrameRenderingMixin(object):
                 # followingFrames = 0
                 num_frames_step = 1
 
-                earliest_desired_thumbnail_frame = min((curr_playback_frame - previousFrames), 0)
+                desired_thumbnail_indicies = [curr_playback_frame]
 
-                # note, this excludes curr_playback_frame because it excludes the end value
-                desired_thumbnail_indicies = list(range(earliest_desired_thumbnail_frame, curr_playback_frame, num_frames_step))
-                desired_thumbnail_indicies.append(curr_playback_frame)
+                # earliest_desired_thumbnail_frame = min((curr_playback_frame - previousFrames), 0)
+
+                # # note, this excludes curr_playback_frame because it excludes the end value
+                # desired_thumbnail_indicies = list(range(earliest_desired_thumbnail_frame, curr_playback_frame, num_frames_step))
+                # desired_thumbnail_indicies.append(curr_playback_frame)
 
                 self.generate_thumbnails(desired_thumbnail_indicies)
             else:
