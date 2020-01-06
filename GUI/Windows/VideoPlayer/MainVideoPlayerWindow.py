@@ -8,7 +8,7 @@ import traceback
 import qtawesome as qta
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox, QDataWidgetMapper, QPushButton
-from PyQt5.QtGui import QCursor
+from PyQt5.QtGui import QCursor, QIcon, QPixmap
 from PyQt5.QtCore import QDir, QTimer, Qt, QModelIndex, QSortFilterProxyModel, pyqtSignal, pyqtSlot
 
 from lib import vlc
@@ -18,6 +18,9 @@ from GUI.Model.Errors import SimpleErrorStatusMixin
 from GUI.Model.DataMovieLinkInfo import *
 
 from GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
+
+from app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoThumbnail, VideoPreviewThumbnailGenerator
+
 
 """
 The software displays/plays a video file with variable speed and navigation settings.
@@ -74,6 +77,101 @@ play_pause_model
 
 
 """
+
+
+""" HistoricalFrameRenderingMixin: renders previous and future frames to the left and the right of the main video
+frame_previousFrames
+
+# Frame Preview Buttons: (160 x 120 buttons that render previous video frames)
+btn_PreviousFrame_0
+btn_PreviousFrame_1
+btn_PreviousFrame_2
+"""
+class HistoricalFrameRenderingMixin(object):
+
+    def init_HistoricalFrameRenderingMixin(self):
+        # frame_previousFrames
+        # btn_PreviousFrame_0
+        # btn_PreviousFrame_1
+        # btn_PreviousFrame_2
+
+        self.last_requested_thumbnail_playhead_index = None
+
+        self.desired_thumbnail_display_size_key = "160"
+
+        self.previousFrameButtons = [self.ui.btn_PreviousFrame_0, self.ui.btn_PreviousFrame_1, self.ui.btn_PreviousFrame_2]
+        self.previousFrameButtonIcons = [None, None, None]
+
+        self.video_playback_position_updated.connect(self.on_playback_position_changed_HistoricalFrameRenderingMixin)
+
+    # Sets the rendered icon of the button with the specified button_index to the QPixmap specified by frame_pixmap
+    # see https://stackoverflow.com/questions/3137805/how-to-set-image-on-qpushbutton
+    def set_preview_frame(self, button_index, frame_pixmap):
+        curr_button = self.previousFrameButtons[button_index]
+        self.previousFrameButtonIcons[button_index] = QIcon(frame_pixmap)
+        curr_button.setIcon(self.previousFrameButtonIcons[button_index])
+        curr_button.setIconSize(frame_pixmap.rect().size())
+        pass
+
+
+    def generate_thumbnails(self, frame_indicies):
+        self.get_movie_link().generate_thumbnails(frame_indicies)
+
+    @pyqtSlot(VideoThumbnail)
+    def on_video_thumbnail_generated(self, video_thumbnail_obj):
+        frame_index = video_thumbnail_obj.get_frame_index()
+        print("MainVideoPlayerWindow.on_video_thumbnail_generated(...): for frame index {0}".format(str(frame_index)))
+        currThumbsDict = video_thumbnail_obj.get_thumbs_dict()
+        # currThumbnailImage: should be a QImage
+        currThumbnailImage = currThumbsDict[self.desired_thumbnail_display_size_key]
+        currPixmap = QPixmap.fromImage(currThumbnailImage)
+        self.set_preview_frame(0, currPixmap)
+
+    # Note that this is called when the playback position changes AND every X seconds in the update_ui() function.
+    @pyqtSlot(float)
+    def on_playback_position_changed_HistoricalFrameRenderingMixin(self, newPlaybackPosition):
+        # Dynamic info:
+        are_buttons_enabled = True
+
+        curr_video_movie_link = self.get_movie_link()
+        if curr_video_movie_link is not None:
+            curr_playback_frame = self.get_current_playhead_frame()
+            if curr_playback_frame is not None:
+                # Check and see if the updated position is identical to the previous one
+                if self.last_requested_thumbnail_playhead_index is not None:
+                    if curr_playback_frame == self.last_requested_thumbnail_playhead_index:
+                        return # Do nothing, the index hasn't changed
+
+                    
+                # Use the current playback frame to update the thumbnails
+                # updated_thumbnail_indicies = [curr_playback_frame]
+                previousFrames = 5
+                # followingFrames = 0
+                num_frames_step = 1
+
+                desired_thumbnail_indicies = [curr_playback_frame]
+
+                # earliest_desired_thumbnail_frame = min((curr_playback_frame - previousFrames), 0)
+
+                # # note, this excludes curr_playback_frame because it excludes the end value
+                # desired_thumbnail_indicies = list(range(earliest_desired_thumbnail_frame, curr_playback_frame, num_frames_step))
+                # desired_thumbnail_indicies.append(curr_playback_frame)
+
+                self.generate_thumbnails(desired_thumbnail_indicies)
+                
+                # Set the last requested index
+                self.last_requested_thumbnail_playhead_index = curr_playback_frame
+                
+            else:
+                are_buttons_enabled = False
+            pass
+        else:
+            are_buttons_enabled = False
+            pass
+
+
+
+
 
 """ MediaPlayerUpdatingMixin: used by MainVideoPlayerWindow to load/change media
         self._movieLink = None
@@ -423,7 +521,7 @@ class VLCVideoEventMixin(object):
         self.on_media_changed_VideoPlaybackRenderingWidgetMixin()
 
 
-class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdatingMixin, VLCVideoEventMixin, QMainWindow):
+class MainVideoPlayerWindow(HistoricalFrameRenderingMixin, VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdatingMixin, VLCVideoEventMixin, QMainWindow):
     """
     The main window class
     """
@@ -482,6 +580,7 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
         # self.ui.timestampSidebarWidget.
 
         self.init_VideoPlaybackRenderingWidgetMixin()
+        self.init_HistoricalFrameRenderingMixin()
 
         self.timer = QTimer(self)
         self.timer.setInterval(self.timer_period)
@@ -715,7 +814,7 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
         self.ui.doubleSpinBoxPlaybackSpeed.blockSignals(False)
 
         currPos = self.media_player.get_position()
-        self.video_playback_position_updated.emit(currPos)
+        self.video_playback_position_updated.emit(currPos) # TODO: It's strange to emit this here, when we don't know if it actually changed.
         
         # When the video finishes
         if self.media_started_playing and \
