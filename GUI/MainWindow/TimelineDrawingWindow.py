@@ -2531,7 +2531,10 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         if importFilePath == '':
             print("User canceled the import!")
             return
-        self.get_labjack_data_files_loader().add_labjack_file_path(importFilePath)
+        else:
+            print("Importing data file at path {}...".format(importFilePath))
+            self.get_labjack_data_files_loader().add_labjack_file_path(importFilePath)
+
 
     def get_labjack_data_files_loader(self):
         return self.labjackDataFilesystemLoader
@@ -2540,6 +2543,8 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
     def on_labjack_files_loading_complete(self):
         print("TimelineDrawingWindow.on_labjack_files_loading_complete()...")
         activeLoader = self.get_labjack_data_files_loader()
+
+        # Loop through all loaded files (with path provided in by key_path) and cache_value of type LabjackEventFile.
         for (key_path, cache_value) in activeLoader.get_cache().items():
             # key_path: the labjack data file path that had the labjack events loaded from it
 
@@ -2549,7 +2554,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             loaded_labjack_event_containers = cache_value.get_labjack_container_events()
             print("labjack event container loading complete for [{0}]: {1} events".format(str(key_path), len(loaded_labjack_event_containers)))
 
-            # Loop through the groups 
+            # Loop through the groups
             for currGroupIndex in range(0, self.totalNumGroups):
                 currGroup = self.trackGroups[currGroupIndex]
 

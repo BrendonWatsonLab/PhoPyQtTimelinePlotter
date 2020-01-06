@@ -1,6 +1,7 @@
 # Loads a .mat file that has been saved out by the PhoLabjackCSVHelper MATLAB scripts
 # It contains the result of the 'labjackTimeTable' variable
 
+import pathlib
 import numpy as np
 import scipy.io as sio
 import h5py as h5py
@@ -72,6 +73,145 @@ class LabjackEventsLoader(object):
     rx_csv_data_line = re.compile(r'^(?P<milliseconds_since_epoch>\d{13}),(?P<DIO0>[10]),(?P<DIO1>[10]),(?P<DIO2>[10]),(?P<DIO3>[10]),(?P<DIO4>[10]),(?P<DIO5>[10]),(?P<DIO6>[10]),(?P<DIO7>[10]),(?P<MIO0>[10])')
     rx_stdout_dict = {'data':rx_stdout_data_line}
     rx_csv_dict = {'data':rx_csv_data_line}
+
+    """
+    out_file_s470017560_1562601911545.csv  
+    
+    out_file_s470017560_46Combined.csv
+    out_file_s470017560_20190911-20190820_46Combined.csv
+    
+    # Combined MATLAB output format:
+    out_file_s{LabjackSerialNumber}_{YYYYMMDD_LATEST}-{YYYYMMDD_EARLIEST}_{NumberOfCSVFilesConcatenated}Combined.csv
+    
+    "I:\EventData\BB01\Subject_02"
+      
+    "I:\EventData\BB01\Subject_02\out_file_s470017560_20190911-20190820_46Combined.csv"
+      
+    
+    \d{9}
+    BB(?P<bb_id>\d{2})
+    (?P<latest_year>\d{4})(?P<latest_month>\d{2})(?P<latest_day>\d{2})
+    (?P<earliest_year>\d{4})(?P<earliest_month>\d{2})(?P<earliest_day>\d{2})
+    
+    (?P<latest_date>\d{4}\d{2}\d{2})
+    (?P<earliest_date>\d{4}\d{2}\d{2})
+    
+    (?_(?P<latest_date>\d{4}\d{2}\d{2})-(?P<earliest_date>\d{4}\d{2}\d{2}))?
+    
+    """
+    # Parses the "out_file_s470017560_20190911-20190820_46Combined" part out of "I:\EventData\BB01\Subject_02\out_file_s470017560_20190911-20190820_46Combined.csv"
+    # rx_combined_csv_file_name = re.compile(r'^out_file_s(?P<labjack_serial_number>\d{9})_(?P<latest_year>\d{4})(?P<latest_month>\d{2})(?P<latest_day>\d{2})-(?P<earliest_year>\d{4})(?P<earliest_month>\d{2})(?P<earliest_day>\d{2})_(?P<number_of_CSV_files_concatenated>\d+)Combined$')
+    rx_combined_csv_file_name = re.compile(r'^out_file_s(?P<labjack_serial_number>\d{9})(?P<date_ranges>_(?P<latest_date>\d{4}\d{2}\d{2})-(?P<earliest_date>\d{4}\d{2}\d{2}))?_(?P<number_of_CSV_files_concatenated>\d+)Combined')
+
+    # Parses the "BB01" part out of the file path "I:\EventData\BB01\Subject_02"
+    rx_combined_csv_file_path_name_bb_id = re.compile(r'^BB(?P<bb_id>\d{2})$')
+
+    # Parses the "Subject_02" part out of the file path "I:\EventData\BB01\Subject_02"
+    rx_combined_csv_file_path_name_subject_name = re.compile(r'^Subject_(?P<subject_id>\d+)$')
+
+    @staticmethod
+    def parsePhoServerFormatFilepath(filePathString):
+        # Expects path in format: "I:\EventData\BB01\Subject_02\out_file_s470017560_20190911-20190820_46Combined.csv"
+
+        parsedResult = dict()
+
+        filePath = pathlib.Path(filePathString)
+        filePath = filePath.resolve(strict=True)
+
+        # fileName: "out_file_s470017560_20190911-20190820_46Combined.csv"
+        fileName = filePath.name
+        fileBaseName = filePath.stem
+
+        # parentPath: "I:\EventData\BB01\Subject_02\"
+        # parentDirName: "Subject_02"
+        parentPath = filePath.parent
+        parentDirName = parentPath.name
+
+        # Should be "Subject_02" part
+
+        # grandparentPath: "I:\EventData\BB01\"
+        # grandparentDirName: "BB01"
+        grandparentPath = parentPath.parent
+        grandparentDirName = grandparentPath.name
+
+        # Perform regex parsing:
+        did_encounter_issue = False
+
+        behavioral_box_id = None
+        subject_id = None
+        labjack_serial_number = None
+
+        date_range_earliest = None
+        date_range_latest = None
+
+        # Filename matching:
+        filename_matches = LabjackEventsLoader.rx_combined_csv_file_name.search(fileBaseName)
+        if ((filename_matches is not None)):
+            # Filename matches:
+            if filename_matches.group('date_ranges'):
+                if filename_matches.group('latest_date'):
+                    # latest/earliest date format
+                    tempParsableDateString = filename_matches.group('latest_date')
+                    date_range_latest = dt.datetime.strptime(tempParsableDateString, '%Y%m%d') # YYYYMMDD
+                    date_range_latest = date_range_latest.replace(tzinfo=dt.timezone.utc)
+                else:
+                    print("found valid date_ranges, but no valid latest_date... fileBaseName: {}".format(fileBaseName))
+
+
+                if filename_matches.group('earliest_date'):
+                    # earliest_date
+                    tempParsableDateString = filename_matches.group('earliest_date')
+                    date_range_earliest = dt.datetime.strptime(tempParsableDateString, '%Y%m%d') # YYYYMMDD
+                    date_range_earliest = date_range_earliest.replace(tzinfo=dt.timezone.utc)
+                else:
+                    print("found valid date_ranges, but no valid earliest_date... fileBaseName: {}".format(fileBaseName))
+
+            else:
+                # No date ranges provided...
+                print("couldn't find valid date_ranges: No date ranges provided... fileBaseName: {}".format(fileBaseName))
+
+        else:
+            print("Failed to match!!! fileBaseName: {}".format(fileBaseName))
+
+        # Parent dir name:
+        parent_dir_matches = LabjackEventsLoader.rx_combined_csv_file_path_name_subject_name.search(parentDirName)
+        if ((parent_dir_matches is not None)):
+            if parent_dir_matches.group('subject_id'):
+                subject_id = int(parent_dir_matches.group('subject_id'))
+            else:
+                print("couldn't find valid subject_id: parent dir: {}".format(parentDirName))
+        else:
+            print("Failed to match parent dir: {}".format(parentDirName))
+
+        # Grandparent dir name:
+        grandparent_dir_matches = LabjackEventsLoader.rx_combined_csv_file_path_name_bb_id.search(grandparentDirName)
+        if ((grandparent_dir_matches is not None)):
+            if grandparent_dir_matches.group('bb_id'):
+                behavioral_box_id = int(grandparent_dir_matches.group('bb_id'))
+            else:
+                print("couldn't find valid bb_id: grandparent dir: {}".format(grandparentDirName))
+        else:
+            print("Failed to match grandparent dir: {}".format(grandparentDirName))
+
+        did_encounter_issue = ((behavioral_box_id is None) or (subject_id is None) or (labjack_serial_number is None) or (date_range_earliest is None) or (date_range_latest is None))
+        if (did_encounter_issue):
+            print("encountered issue parsing path: {}".format(filePathString))
+        else:
+            print("parsed successfully!")
+            pass
+
+        # build output dictionary
+        parsedResult['filePathString'] = filePathString
+
+        parsedResult['behavioral_box_id'] = behavioral_box_id
+        parsedResult['subject_id'] = subject_id
+        parsedResult['labjack_serial_number'] = labjack_serial_number
+        parsedResult['date_range_earliest'] = date_range_earliest
+        parsedResult['date_range_latest'] = date_range_latest
+
+        parsedResult['did_encounter_issue'] = did_encounter_issue
+
+        return parsedResult
 
     @staticmethod
     def loadLabjackDataFromPhoServerFormat(filePath, shouldUseStdOutFormat=True):

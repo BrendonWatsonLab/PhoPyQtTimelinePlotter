@@ -31,7 +31,7 @@ from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
 
 # from app.filesystem.LabjackFilesystemLoadingMixin import LabjackEventFile, LabjackFilesystemLoader
 
-""" LabjackEventFile: a file
+""" LabjackEventFile: a single imported data file containing one or more labjack events.
 
 """
 class LabjackEventFile(QObject):
@@ -44,6 +44,8 @@ class LabjackEventFile(QObject):
 
         self.labjackContainerEvents = []
         # self.labjackEvents = []
+
+        self.parsedFileInfoDict = None
 
     def get_file_path(self):
         return self.filePath
@@ -61,18 +63,25 @@ class LabjackEventFile(QObject):
         return self.labjackContainerEvents
 
 
+    def get_parsed_dict(self):
+        return self.parsedFileInfoDict
+
+
+
+
     # def set_loaded_values(self, dateTimes, onesEventFormatDataArray, variableData, labjackEvents):
     #     self.dateTimes = dateTimes
     #     self.onesEventFormatDataArray = onesEventFormatDataArray
     #     self.variableData = variableData
     #     self.labjackEvents = labjackEvents
 
-    def set_loaded_values(self, dateTimes, onesEventFormatDataArray, variableData, labjackEventsContainerArray):
+    def set_loaded_values(self, dateTimes, onesEventFormatDataArray, variableData, labjackEventsContainerArray, parsedFileInfoDict):
         self.dateTimes = dateTimes
         self.onesEventFormatDataArray = onesEventFormatDataArray
         self.variableData = variableData
         # self.labjackEvents = labjackEvents
         self.labjackContainerEvents = labjackEventsContainerArray
+        self.parsedFileInfoDict = parsedFileInfoDict
 
 
 
@@ -314,7 +323,8 @@ class LabjackFilesystemLoader(QObject):
         return (dateTimes, onesEventFormatDataArray, variableData, labjackEvents)
 
     """ loadLabjackEventsFile_loadFromFile(...): Just loads the file
-
+        Calls the static LabjackEventsLoader functions for the appropriate file format (phoServer format or Matlab format).
+        Returns a onesEventFormatDataArray.
     """
     @staticmethod
     def loadLabjackEventsFile_loadFromFile(labjackFilePath, usePhoServerFormat=False, phoServerFormatIsStdOut=True):
@@ -322,12 +332,16 @@ class LabjackFilesystemLoader(QObject):
         # If shouldLimitEventsToVideoDates is True then only events that fall between the earliest video start date and the latest video finish date are included
         # If shouldLimitEventsToVariables is not None, then only events that are of type of the variable with the name in the array are included
         ## TODO: shouldLimitEventsToVideoDates should also affect the returned dateTimes, dataArray, etc.
+        parsedFileInfoDict = None
+
         if usePhoServerFormat:
+            parsedFileInfoDict = LabjackEventsLoader.parsePhoServerFormatFilepath(labjackFilePath)
             (relevantFileLines, relevantDateTimes, dateTimes, onesEventFormatDataArray) = LabjackEventsLoader.loadLabjackDataFromPhoServerFormat(labjackFilePath, shouldUseStdOutFormat=phoServerFormatIsStdOut)
+            
         else:
             (dateNums, dateTimes, onesEventFormatDataArray) = LabjackEventsLoader.loadLabjackDataFromMatlabFormat(labjackFilePath)
 
-        return (dateTimes, onesEventFormatDataArray)
+        return (dateTimes, onesEventFormatDataArray, parsedFileInfoDict)
 
     """ loadLabjackEventsFile(...): new.
 
@@ -338,13 +352,14 @@ class LabjackFilesystemLoader(QObject):
         # If shouldLimitEventsToVideoDates is True then only events that fall between the earliest video start date and the latest video finish date are included
         # If shouldLimitEventsToVariables is not None, then only events that are of type of the variable with the name in the array are included
         ## TODO: shouldLimitEventsToVideoDates should also affect the returned dateTimes, dataArray, etc.
-        (dateTimes, onesEventFormatDataArray) = LabjackFilesystemLoader.loadLabjackEventsFile_loadFromFile(labjackFilePath, usePhoServerFormat, phoServerFormatIsStdOut)
+        (dateTimes, onesEventFormatDataArray, parsedFileInfoDict) = LabjackFilesystemLoader.loadLabjackEventsFile_loadFromFile(labjackFilePath, usePhoServerFormat, phoServerFormatIsStdOut)
 
         ## Pre-process the data
         if limitedVariablesToCreateEventsFor is not None:
             active_labjack_variable_names = limitedVariablesToCreateEventsFor
 
         else:
+            # Otherwise load for all variables
             active_labjack_variable_names = LabjackEventsLoader.labjack_variable_names
 
         numVariables = len(active_labjack_variable_names)
@@ -372,7 +387,7 @@ class LabjackFilesystemLoader(QObject):
             labjackVariableSpecificRecords = []
             # labjackVariableSpecificEvents = []
             ## Find times within video ranges:
-            # activeVideoIndicies: contains an int index or None for each timestamp to indiciate which video (if any) the timestamp occured within
+            # activeVideoIndicies: contains an int index or None for each timestamp to indicate which video (if any) the timestamp occurred within
             activeVideoIndicies = np.empty_like(activeTimestamps)
             for index, anActiveTimestamp in enumerate(activeTimestamps):
                 shouldCreateEvent = True
@@ -421,6 +436,7 @@ class LabjackFilesystemLoader(QObject):
 
 
         # Build the corresponding GUI objects
+        ## TODO: defer until needed? Some might be filtered out anyway.
         built_model_view_container_array = []
         for (index, aRecord) in enumerate(labjackEventRecords):
             aGuiView = aRecord.get_gui_view(aRecord, parent=None)
@@ -508,7 +524,7 @@ class LabjackFilesystemLoader(QObject):
         #     print('done.')
 
         # return (dateTimes, onesEventFormatDataArray, variableData, labjackEvents)
-        return (dateTimes, built_model_view_container_array)
+        return (dateTimes, built_model_view_container_array, parsedFileInfoDict)
 
     def load_labjack_data_files(self, labjackDataFilePaths):
         print("LabjackFilesystemLoader.load_labjack_data_files(labjackDataFilePaths: {0})".format(str(labjackDataFilePaths)))
@@ -529,20 +545,29 @@ class LabjackFilesystemLoader(QObject):
         self.labjackDataFileLoaded.emit()
         print("%d%% done" % n)
 
+    """
+    The main execution function
+    """
     def on_load_labjack_data_files_execute_thread(self, active_labjack_data_file_paths, progress_callback):
         currProgress = 0.0
         parsedFiles = 0
         numPendingFiles = len(active_labjack_data_file_paths)
         self.pending_operation_status.restart(OperationTypes.FilesystemLabjackFileLoad, numPendingFiles)
 
+        # Loop through all the labjack data file paths and parse the files into a LabjackEventFile object.
         for (sub_index, aFoundLabjackDataFile) in enumerate(active_labjack_data_file_paths):
 
+            # LabjackEventFile: this serves as a container to hold the loaded events
             outEventFileObj = LabjackEventFile(aFoundLabjackDataFile)
+
+            # Call the static "loadLabjackEventsFile(...) function:
+
             # (dateTimes, onesEventFormatDataArray, variableData, labjackEvents) = LabjackFilesystemLoader.loadLabjackFiles(aFoundLabjackDataFile, self.videoStartDates, self.videoEndDates, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
             # (dateTimes, onesEventFormatDataArray, variableData, labjackEvents) = LabjackFilesystemLoader.loadLabjackEventsFile(aFoundLabjackDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
-            
-            (dateTimes, labjackEventContainers) = LabjackFilesystemLoader.loadLabjackEventsFile(aFoundLabjackDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
-            outEventFileObj.set_loaded_values(dateTimes, [], [], labjackEventContainers)
+            (dateTimes, labjackEventContainers, parsedFileInfoDict) = LabjackFilesystemLoader.loadLabjackEventsFile(aFoundLabjackDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
+
+            # Cache the loaded values into the LabjackEventFile object.
+            outEventFileObj.set_loaded_values(dateTimes, [], [], labjackEventContainers, parsedFileInfoDict)
             
             if (not (aFoundLabjackDataFile in self.cache.keys())):
                 # Parent doesn't yet exist in cache

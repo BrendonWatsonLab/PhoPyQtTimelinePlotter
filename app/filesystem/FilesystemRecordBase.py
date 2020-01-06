@@ -12,7 +12,7 @@ from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent, PhoEvent
 # from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemLabjackEvent_Record
 
 
-""" FilesystemRecordBase: an attempt to make a "record" like object for the filesystem analagous to the records loaded from the database
+""" FilesystemRecordBase: an attempt to make a "record" like object for events loaded from filesystem files analagous to the records loaded from the database
 
 """
 class FilesystemRecordBase(QObject):
@@ -25,6 +25,10 @@ class FilesystemRecordBase(QObject):
         super().__init__(parent=parent)
 
 
+
+""" FilesystemLabjackEvent_Record: for labjack events loaded from a labjack data file
+
+"""
 class FilesystemLabjackEvent_Record(FilesystemRecordBase):
 
     def __init__(self, start_date, end_date, variable_name, variable_color, extended_info_dict, parent=None):
