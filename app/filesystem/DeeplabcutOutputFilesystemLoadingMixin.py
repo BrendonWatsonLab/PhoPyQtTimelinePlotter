@@ -25,7 +25,9 @@ from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
 
 # from app.filesystem.DeeplabcutOutputFilesystemLoadingMixin import DeeplabCutOutputFileType, DeeplabcutEventFile, DeeplabcutFilesystemLoader
 
+""" DeeplabCutOutputFileType: the different possible types of deeplabcut produced data files
 
+"""
 class DeeplabCutOutputFileType(Enum):
     CSV = 1
     HDF = 2

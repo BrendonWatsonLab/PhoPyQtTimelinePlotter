@@ -19,6 +19,10 @@ from app.database.SqlAlchemyDatabase import create_TimestampedAnnotation, conver
 
 from GUI.Model.TrackType import TrackType, TrackConfigMixin, TrackConfigDataCacheMixin
 
+
+"""
+    This track draws a data file (.csv labjack file, for example) as a series of events along the timeline.
+"""
 class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfigMixin, TimelineTrackDrawingWidget_SelectionBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
     default_shouldDismissSelectionUponMouseButtonRelease = True

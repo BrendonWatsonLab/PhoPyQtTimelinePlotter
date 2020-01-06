@@ -77,7 +77,7 @@ class LabjackEventFile(QObject):
 
 
 
-## LabjackFilesystemLoader: this object tries to find video files in the filesystem and add them to the database if they don't exist
+## LabjackFilesystemLoader: this object tries to find Labjack-exported data files in the filesystem and make them accessible in memory
 """
 Loads the Labjack event files
 """
