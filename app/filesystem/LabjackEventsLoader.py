@@ -122,23 +122,8 @@ class LabjackEventsLoader(object):
         fileName = filePath.name
         fileBaseName = filePath.stem
 
-        # parentPath: "I:\EventData\BB01\Subject_02\"
-        # parentDirName: "Subject_02"
-        parentPath = filePath.parent
-        parentDirName = parentPath.name
-
-        # Should be "Subject_02" part
-
-        # grandparentPath: "I:\EventData\BB01\"
-        # grandparentDirName: "BB01"
-        grandparentPath = parentPath.parent
-        grandparentDirName = grandparentPath.name
-
         # Perform regex parsing:
         did_encounter_issue = False
-
-        behavioral_box_id = None
-        subject_id = None
         labjack_serial_number = None
 
         date_range_earliest = None
@@ -148,6 +133,13 @@ class LabjackEventsLoader(object):
         filename_matches = LabjackEventsLoader.rx_combined_csv_file_name.search(fileBaseName)
         if ((filename_matches is not None)):
             # Filename matches:
+            if filename_matches.group('labjack_serial_number'):
+                labjack_serial_number = filename_matches.group('labjack_serial_number')
+
+            else:
+                print("WARNING: failed to find labjack_serial_number in fileBaseName: {}".format(fileBaseName))
+
+
             if filename_matches.group('date_ranges'):
                 if filename_matches.group('latest_date'):
                     # latest/earliest date format
@@ -156,7 +148,6 @@ class LabjackEventsLoader(object):
                     date_range_latest = date_range_latest.replace(tzinfo=dt.timezone.utc)
                 else:
                     print("found valid date_ranges, but no valid latest_date... fileBaseName: {}".format(fileBaseName))
-
 
                 if filename_matches.group('earliest_date'):
                     # earliest_date
@@ -170,28 +161,77 @@ class LabjackEventsLoader(object):
                 # No date ranges provided...
                 print("couldn't find valid date_ranges: No date ranges provided... fileBaseName: {}".format(fileBaseName))
 
+
+
         else:
             print("Failed to match!!! fileBaseName: {}".format(fileBaseName))
 
-        # Parent dir name:
-        parent_dir_matches = LabjackEventsLoader.rx_combined_csv_file_path_name_subject_name.search(parentDirName)
-        if ((parent_dir_matches is not None)):
-            if parent_dir_matches.group('subject_id'):
-                subject_id = int(parent_dir_matches.group('subject_id'))
-            else:
-                print("couldn't find valid subject_id: parent dir: {}".format(parentDirName))
-        else:
-            print("Failed to match parent dir: {}".format(parentDirName))
 
-        # Grandparent dir name:
-        grandparent_dir_matches = LabjackEventsLoader.rx_combined_csv_file_path_name_bb_id.search(grandparentDirName)
-        if ((grandparent_dir_matches is not None)):
-            if grandparent_dir_matches.group('bb_id'):
-                behavioral_box_id = int(grandparent_dir_matches.group('bb_id'))
-            else:
-                print("couldn't find valid bb_id: grandparent dir: {}".format(grandparentDirName))
-        else:
-            print("Failed to match grandparent dir: {}".format(grandparentDirName))
+        # remaining_identifier_regexes = [LabjackEventsLoader.rx_combined_csv_file_path_name_subject_name, LabjackEventsLoader.rx_combined_csv_file_path_name_bb_id]
+        behavioral_box_id = None
+        subject_id = None
+
+        # parentPath: "I:\EventData\BB01\Subject_02\"
+        # parentDirName: "Subject_02"
+        # parentPath = filePath.parent
+        # parentDirName = parentPath.name
+
+        # Should be "Subject_02" part
+
+        # grandparentPath: "I:\EventData\BB01\"
+        # grandparentDirName: "BB01"
+        # grandparentPath = parentPath.parent
+        # grandparentDirName = grandparentPath.name
+
+        # Get all ancestors of filePath
+        parentFolderPaths = filePath.parents
+        # Iterate through all parents
+        for aParentPath in parentFolderPaths:
+            # Try to match
+            curr_parent_path_name = aParentPath.name
+
+            # Subject ID:
+            if subject_id is None:
+                subject_id_matches = LabjackEventsLoader.rx_combined_csv_file_path_name_subject_name.search(curr_parent_path_name)
+                if ((subject_id_matches is not None)):
+                    if subject_id_matches.group('subject_id'):
+                        subject_id = int(subject_id_matches.group('subject_id'))
+                        continue # found subject_id: Move on to the next part of the path
+                
+            # BB ID:
+            if behavioral_box_id is None:
+                bb_id_matches = LabjackEventsLoader.rx_combined_csv_file_path_name_bb_id.search(curr_parent_path_name)
+                if ((bb_id_matches is not None)):
+                    if bb_id_matches.group('bb_id'):
+                        behavioral_box_id = int(bb_id_matches.group('bb_id'))
+                        continue # Found bb_id:  Move on to the next part of the path
+
+
+        
+
+
+
+
+
+        # # Parent dir name:
+        # parent_dir_matches = LabjackEventsLoader.rx_combined_csv_file_path_name_subject_name.search(parentDirName)
+        # if ((parent_dir_matches is not None)):
+        #     if parent_dir_matches.group('subject_id'):
+        #         subject_id = int(parent_dir_matches.group('subject_id'))
+        #     else:
+        #         print("couldn't find valid subject_id: parent dir: {}".format(parentDirName))
+        # else:
+        #     print("Failed to match parent dir: {}".format(parentDirName))
+
+        # # Grandparent dir name:
+        # grandparent_dir_matches = LabjackEventsLoader.rx_combined_csv_file_path_name_bb_id.search(grandparentDirName)
+        # if ((grandparent_dir_matches is not None)):
+        #     if grandparent_dir_matches.group('bb_id'):
+        #         behavioral_box_id = int(grandparent_dir_matches.group('bb_id'))
+        #     else:
+        #         print("couldn't find valid bb_id: grandparent dir: {}".format(grandparentDirName))
+        # else:
+        #     print("Failed to match grandparent dir: {}".format(grandparentDirName))
 
         did_encounter_issue = ((behavioral_box_id is None) or (subject_id is None) or (labjack_serial_number is None) or (date_range_earliest is None) or (date_range_latest is None))
         if (did_encounter_issue):
@@ -211,6 +251,7 @@ class LabjackEventsLoader(object):
 
         parsedResult['did_encounter_issue'] = did_encounter_issue
 
+        print("Finished parsing {}. Result: {}".format(filePathString, parsedResult))
         return parsedResult
 
     @staticmethod
