@@ -9,6 +9,9 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
 
+from pyqtgraph import PlotWidget, plot
+import pyqtgraph as pg
+
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import TimelineTrackDrawingWidgetBase, ItemSelectionOptions
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_SelectionBase import TimelineTrackDrawingWidget_SelectionBase
 
@@ -48,10 +51,16 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
         self.itemSelectionMode = TimelineTrackDrawingWidget_DataFile.default_itemSelectionMode
         self.itemHoverMode = TimelineTrackDrawingWidget_SelectionBase.default_itemHoverMode
 
+        # Setup Layout
+        self.setLayout(QVBoxLayout())
+        self.graphWidget = pg.PlotWidget()
+        self.layout().addWidget(self.graphWidget)
+
         self.setMouseTracking(True)
 
         self.trackConfig.cacheUpdated.connect(self.on_reloadModelFromConfigCache)
         self.reloadModelFromDatabase()
+        self.update_child_graph_widget()
         
 
     # Override: TrackConfigDataCacheMixin
@@ -95,6 +104,19 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
 
         self.update()
         
+
+    @pyqtSlot()
+    def update_child_graph_widget(self):
+        
+        hour = [1,2,3,4,5,6,7,8,9,10]
+        temperature = [30,32,34,32,33,31,29,32,35,45]
+
+        # plot data: x, y values
+        self.graphWidget.plot(hour, temperature)
+
+
+
+
 
     # overrides
     def reset_hovered(self):
