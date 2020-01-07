@@ -2,6 +2,8 @@
 # Contains EventTrackDrawingWidget which draws several PhoEvent objects as rectangles or lines within a single track.
 
 import sys
+from enum import Enum
+
 import time
 from datetime import datetime, timezone, timedelta
 import numpy as np
@@ -10,9 +12,22 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
 
+# from pyqtgraph import PlotWidget, plot, widgets
+# from pyqtgraph.widgets import MatplotlibWidget
 from pyqtgraph import PlotWidget, plot
+# from pyqtgraph.widgets import MatplotlibWidget
+
+# from pyqtgraph.widgets import pg.widgets.MatplotlibWidget
+from pyqtgraph.widgets import MatplotlibWidget
+
 import pyqtgraph as pg
 from lib.pg_time_axis import DateAxisItem
+
+
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import matplotlib.colors as mcolors
+
 
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import TimelineTrackDrawingWidgetBase, ItemSelectionOptions
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_SelectionBase import TimelineTrackDrawingWidget_SelectionBase
@@ -25,6 +40,22 @@ from app.database.SqlAlchemyDatabase import create_TimestampedAnnotation, conver
 from GUI.Model.TrackType import TrackType, TrackConfigMixin, TrackConfigDataCacheMixin
 
 
+class DataTrackDisplayMode(Enum):
+    standardEventDrawing = 0
+    pyQtGraph = 1
+    matplotlibGraph = 2
+
+    def should_paint_events(self):
+        return (self == DataTrackDisplayMode.standardEventDrawing)
+
+    def should_build_event_views(self):
+        return (self == DataTrackDisplayMode.standardEventDrawing)
+
+    def should_use_child_graph(self):
+        return ((self is DataTrackDisplayMode.pyQtGraph) or (self is DataTrackDisplayMode.matplotlibGraph))
+
+
+
 """
     This track draws a data file (.csv labjack file, for example) as a series of events along the timeline.
 """
@@ -32,6 +63,9 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
     default_shouldDismissSelectionUponMouseButtonRelease = True
     default_itemSelectionMode = ItemSelectionOptions.SingleSelection
+
+    # default_dataDisplayMode = DataTrackDisplayMode.pyQtGraph
+    default_dataDisplayMode = DataTrackDisplayMode.matplotlibGraph
 
     def __init__(self, trackConfig, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=False, wantsMouseEvents=True):
         self.trackConfig = trackConfig
@@ -54,14 +88,18 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
         self.itemHoverMode = TimelineTrackDrawingWidget_SelectionBase.default_itemHoverMode
 
         # Setup Layout
-        self.setLayout(QVBoxLayout())
-        self.build_child_graph_widget()
+        self.dataDisplayMode = TimelineTrackDrawingWidget_DataFile.default_dataDisplayMode
+        if self.dataDisplayMode.should_use_child_graph():
+            self.setLayout(QVBoxLayout())
+            self.build_child_graph_widget()
 
         self.setMouseTracking(True)
 
         self.trackConfig.cacheUpdated.connect(self.on_reloadModelFromConfigCache)
         self.reloadModelFromDatabase()
-        self.update_child_graph_widget()
+
+        if self.dataDisplayMode.should_use_child_graph():
+            self.update_child_graph_widget()
         
 
     # Override: TrackConfigDataCacheMixin
@@ -99,59 +137,110 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
         # durationRecords should be of type: FilesystemLabjackEvent_Record
         for aContainerObj in active_model_view_array:
             self.durationRecords.append(aContainerObj.get_record())
-            newAnnotationIndex = len(self.durationObjects)
-            newAnnotationView = aContainerObj.get_view()
-            newAnnotationView.setAccessibleName(str(newAnnotationIndex))
-            self.durationObjects.append(newAnnotationView)
 
-        self.update_child_graph_widget()
+            # Note: self.durationObjects is empty if we aren't in standardEventDrawing dataDisplayMode
+            if self.dataDisplayMode.should_build_event_views():
+                newAnnotationIndex = len(self.durationObjects)
+                newAnnotationView = aContainerObj.get_view()
+                newAnnotationView.setAccessibleName(str(newAnnotationIndex))
+                self.durationObjects.append(newAnnotationView)
+
+
+        if self.dataDisplayMode.should_use_child_graph():
+            self.update_child_graph_widget()
+    
         self.update()
         
 
     def build_child_graph_widget(self):
-        self.graphWidget = pg.PlotWidget()
+        self.graphWidget = None
+        if (self.dataDisplayMode is DataTrackDisplayMode.pyQtGraph):
+            self.graphWidget = pg.PlotWidget()
+            
+        elif (self.dataDisplayMode is DataTrackDisplayMode.matplotlibGraph):
+            # self.graphWidget = widgets.MatplotlibWidget()
+            # self.graphWidget = pg.widgets.MatplotlibWidget
+            self.graphWidget = MatplotlibWidget.MatplotlibWidget(size=(5.0, 4.0), dpi=120)
+
+
+        else:
+            print("ERROR: wrong mode!")
+            return
+        
         self.layout().addWidget(self.graphWidget)
 
         # Configure the plot:
+        if (self.dataDisplayMode is DataTrackDisplayMode.pyQtGraph):
 
-        # Add the Date-time axis
-        axis = DateAxisItem(orientation='bottom')
-        axis.attachToPlotItem(self.graphWidget.getPlotItem())
+            # Add the Date-time axis
+            axis = DateAxisItem(orientation='bottom')
+            axis.attachToPlotItem(self.graphWidget.getPlotItem())
 
-        #Add Background colour to white
-        self.graphWidget.setBackground('w')
+            #Add Background colour to white
+            clear_color = pg.mkColor(0, 0, 0, 0)
+            self.graphWidget.setBackground(clear_color)
 
-        #Add Axis Labels
-        self.graphWidget.setLabel('left', 'Temperature (°C)', color='red', size=30)
-        # self.graphWidget.setLabel('bottom', 'Hour (H)', color='red', size=30)
+            #Add Axis Labels
+            self.graphWidget.setLabel('left', 'Temperature (°C)', color='red', size=30)
+            # self.graphWidget.setLabel('bottom', 'Hour (H)', color='red', size=30)
+            
+            #Add legend
+            self.graphWidget.addLegend()
+
+            self.graphWidget.showGrid(x=True, y=True)
+
+            curr_global_min_x_val = time.mktime(self.totalStartTime.timetuple())
+            curr_global_max_x_val = time.mktime(self.totalEndTime.timetuple())
+
+            self.graphWidget.setXRange(curr_global_min_x_val, curr_global_max_x_val, padding=0)
+            self.graphWidget.setYRange(0, 1.1, padding=0)
+            
+
+            
+        elif (self.dataDisplayMode is DataTrackDisplayMode.matplotlibGraph):
+            # TODO: configure the matplotlib plot:
+
+            pass
+
+
         
-        #Add legend
-        self.graphWidget.addLegend()
-
-        self.graphWidget.showGrid(x=True, y=True)
-
-        # self.graphWidget.setXRange(5, 20, padding=0)
-        # self.graphWidget.setYRange(30, 40, padding=0)
 
 
     def plot(self, x, y, plotname, color):
-        pen = pg.mkPen(color=color)
-        self.graphWidget.plot(x, y, name=plotname, pen=pen, symbol='+', symbolSize=30, symbolBrush=(color))
+        if (self.dataDisplayMode is DataTrackDisplayMode.pyQtGraph):
+            pen = pg.mkPen(color=color)
+            self.graphWidget.plot(x, y, name=plotname, pen=pen, symbol='+', symbolSize=30, symbolBrush=(color))
+            pass
+
+        elif (self.dataDisplayMode is DataTrackDisplayMode.matplotlibGraph):
+            subplot = self.graphWidget.getFigure().add_subplot(111)
+            subplot.plot(x,y)
+            self.graphWidget.draw()
+            pass
+
+        else:
+            print("ERROR: wrong mode!")
+            return
+
+
+
 
 
     @pyqtSlot()
     def update_child_graph_widget(self):
-        
-        # hour = [1,2,3,4,5,6,7,8,9,10]
-        # x_vals = hour
-
         out_data_series = dict()
 
         all_variable_timestamps = []
         for aDurationRecord in self.durationRecords:
             # Add x-value
-            # curr_x_val = aDurationRecord.start_date
-            curr_x_val = time.mktime(aDurationRecord.start_date.timetuple())
+            curr_x_val = None
+            if (self.dataDisplayMode is DataTrackDisplayMode.pyQtGraph):
+                curr_x_val = time.mktime(aDurationRecord.start_date.timetuple())
+                pass
+            elif (self.dataDisplayMode is DataTrackDisplayMode.matplotlibGraph):
+                curr_x_val = aDurationRecord.start_date
+                pass
+
 
             all_variable_timestamps.append(curr_x_val)
             curr_var_name = aDurationRecord.variable_name
@@ -175,44 +264,17 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
                 
         else:
             print('WARNING: out_data_series is empty!')
-            # plot some random data with timestamps in the last hour
-            # # now = time.time()
-            # # timestamps = numpy.linspace(now - 3600, now, 100)
 
-
-            # # Looks like we want relative timestamp offsets.
-            # # self.totalStartTime = totalStartTime
-            # # self.totalEndTime = totalEndTime
-            # # self.totalDuration = (self.totalEndTime - self.totalStartTime)
-            # # self.fixedWidth = 800.0
-
-            # # Draw the instantaneous event objects
-            # # for (index, obj) in enumerate(self.instantaneousObjects):
-            # #     self.instantaneousEventRect[index] = obj.paint(qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
-            # # self.offset_to_datetime()
-            # x_vals = timestamps
-
-
-            # temperature_1 = [30,32,34,32,33,31,29,32,35,45]
-            # temperature_2 = [50,35,44,22,38,32,27,38,32,44]
-
-            # # plot data: x, y values
-            # self.plot(x_vals, temperature_1, "Sensor1", 'r')
-            # self.plot(x_vals, temperature_2, "Sensor2", 'b')
-
-            # self.graphWidget.plot(hour, temperature)
             
-            self.graphWidget.clear()
+            if (self.dataDisplayMode is DataTrackDisplayMode.pyQtGraph):
+                self.graphWidget.clear()
+                pass
+            elif (self.dataDisplayMode is DataTrackDisplayMode.matplotlibGraph):
+                self.graphWidget.getFigure().clear()
+                pass
+
 
             pass
-
-
-
-
-
-
-
-
 
 
 
@@ -226,24 +288,33 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
 
 
     def paintEvent( self, event ):
-        qp = QtGui.QPainter()
-        qp.begin( self )
-        # TODO: minor speedup by re-using the array of QRect objects if the size doesn't change
-        self.eventRect = np.repeat(QRect(0,0,0,0), len(self.durationObjects))
-        self.instantaneousEventRect = np.repeat(QRect(0, 0, 0, 0), len(self.instantaneousObjects))
 
-        ## TODO: Use viewport information to only draw the currently displayed rectangles instead of having to draw it all at once.
-        drawRect = self.rect()
+        if self.dataDisplayMode.should_paint_events():
+            qp = QtGui.QPainter()
+            qp.begin( self )
+            # TODO: minor speedup by re-using the array of QRect objects if the size doesn't change
+            self.eventRect = np.repeat(QRect(0,0,0,0), len(self.durationObjects))
+            self.instantaneousEventRect = np.repeat(QRect(0, 0, 0, 0), len(self.instantaneousObjects))
 
-        # Draw the duration objects
-        for (index, obj) in enumerate(self.durationObjects):
-            self.eventRect[index] = obj.paint( qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
-            
-        # Draw the instantaneous event objects
-        for (index, obj) in enumerate(self.instantaneousObjects):
-            self.instantaneousEventRect[index] = obj.paint(qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
+            ## TODO: Use viewport information to only draw the currently displayed rectangles instead of having to draw it all at once.
+            drawRect = self.rect()
 
-        qp.end()
+            # Draw the duration objects
+            for (index, obj) in enumerate(self.durationObjects):
+                self.eventRect[index] = obj.paint( qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
+                
+            # Draw the instantaneous event objects
+            for (index, obj) in enumerate(self.instantaneousObjects):
+                self.instantaneousEventRect[index] = obj.paint(qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
+
+            qp.end()
+
+
+        # Note: An efficient pyqtgraph function that returns a QPainterPath from pairs of points that should be connected in the most efficient way possible. This seems like a good way to draw spikes.
+        # qpPath = pg.arrayToQPath(x, y, connect='pairs')
+
+
+
 
     def set_active_filter(self, start_datetime, end_datetime):
         # Draw the duration objects
