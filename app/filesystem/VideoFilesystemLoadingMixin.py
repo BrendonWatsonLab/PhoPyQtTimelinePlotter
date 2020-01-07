@@ -14,10 +14,10 @@ from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQOb
 from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult, CachedFileSource
 from app.filesystem.VideoUtils import findDeeplabCutProducedOutputFiles, FoundDeeplabcutOutputFileResult
 
-# from app.filesystem.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
-# from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
-from app.filesystem.VideoMetadataWorkers import VideoMetadataWorker
-from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker
+# from app.filesystem.Workers.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
+# from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
+from app.filesystem.Workers.VideoMetadataWorkers import VideoMetadataWorker
+from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
 
 from pathlib import Path
 

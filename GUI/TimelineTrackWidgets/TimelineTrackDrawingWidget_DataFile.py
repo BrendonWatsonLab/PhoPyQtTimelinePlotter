@@ -72,8 +72,8 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
     default_shouldDismissSelectionUponMouseButtonRelease = True
     default_itemSelectionMode = ItemSelectionOptions.SingleSelection
 
-    # default_dataDisplayMode = DataTrackDisplayMode.pyQtGraph
-    default_dataDisplayMode = DataTrackDisplayMode.matplotlibGraph
+    default_dataDisplayMode = DataTrackDisplayMode.pyQtGraph
+    # default_dataDisplayMode = DataTrackDisplayMode.matplotlibGraph
 
     def __init__(self, trackConfig, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=False, wantsMouseEvents=True):
         self.trackConfig = trackConfig

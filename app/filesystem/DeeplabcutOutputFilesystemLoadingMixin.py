@@ -14,7 +14,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
 
-from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker
+from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
 
 from pathlib import Path
 

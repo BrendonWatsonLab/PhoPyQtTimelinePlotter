@@ -13,7 +13,11 @@ from PyQt5.QtCore import Qt, QObject, QEvent, pyqtSignal, pyqtSlot, QRunnable
 
 
 ## IMPORT:
-# from app.filesystem.VideoWorkersBase import VideoWorkersBase, VideoWorkersBaseSignals
+# from app.filesystem.Workers.VideoFilesystemWorkers import VideoWorkersBase, VideoWorkersBaseSignals
+
+
+# https://doc.qt.io/archives/qq/qq27-responsive-guis.html#solvingaproblemstepbystep
+
 
 ## VideoWorkersBase
 class VideoWorkersBaseSignals(QObject):

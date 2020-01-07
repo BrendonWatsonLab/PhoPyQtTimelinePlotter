@@ -2521,6 +2521,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
 
     @pyqtSlot()
     def on_user_labjack_data_load(self):
+
         # Called when the user selects "Import Labjack data..." from the main menu.
         print("TimelineDrawingWindow.on_user_labjack_data_load()")
         # Show a dialog that asks the user for their export path

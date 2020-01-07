@@ -14,10 +14,10 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
 
 from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult, CachedFileSource
-# from app.filesystem.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
-# from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
-from app.filesystem.VideoMetadataWorkers import VideoMetadataWorker
-from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker
+# from app.filesystem.Workers.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
+# from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
+from app.filesystem.Workers.VideoMetadataWorkers import VideoMetadataWorker
+from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
 
 from pathlib import Path
 
@@ -30,6 +30,25 @@ from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, Filesystem
 from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
 
 # from app.filesystem.LabjackFilesystemLoadingMixin import LabjackEventFile, LabjackFilesystemLoader
+
+
+from pyqtgraph import ProgressDialog
+import pyqtgraph as pg
+class ProgressDialogDisplayingMixin(QObject):
+
+    def __init__(self, filePath, parent=None):
+        super().__init__(parent=parent)
+
+        with ProgressDialog("Processing..", 0, 100, cancelText='Cancel', parent=self, busyCursor=True) as dlg:
+            # do stuff
+            self.get_labjack_data_files_loader().add_labjack_file_path(importFilePath)
+            # dlg.setValue(i)   ## could also use dlg += 1
+            dlg += 1
+            if dlg.wasCanceled():
+                raise Exception("Processing canceled by user")
+
+
+
 
 """ LabjackEventFile: a single imported data file containing one or more labjack events.
 
@@ -84,7 +103,7 @@ class LabjackEventFile(QObject):
         self.parsedFileInfoDict = parsedFileInfoDict
 
 
-
+# QThreadPool
 
 ## LabjackFilesystemLoader: this object tries to find Labjack-exported data files in the filesystem and make them accessible in memory
 """
@@ -141,7 +160,6 @@ class LabjackFilesystemLoader(QObject):
     
         self.targetLabjackDataFilePathsUpdated.emit()
 
-
     def reload_data(self, restricted_labjack_file_paths=None):
         print("VideoPreviewThumbnailGenerator.reload_data(...)")
         if restricted_labjack_file_paths is None:
@@ -152,7 +170,6 @@ class LabjackFilesystemLoader(QObject):
 
         self.targetLabjackDataFilePathsUpdated.emit()
 
-
     # # TODO: Integrate with the cache
     # def loadLabjackFile(self, aLabjackFilePath, videoStartDates, videoEndDates):
     #     print("LabjackFilesystemLoader.loadLabjackFile({0})".format(str(aLabjackFilePath)))
@@ -161,6 +178,103 @@ class LabjackFilesystemLoader(QObject):
     #     outEventFileObj.set_loaded_values(dateTimes, onesEventFormatDataArray, variableData, labjackEvents)
     #     # Return the created object
     #     return outEventFileObj
+
+    # The main function that starts the threads.
+    def load_labjack_data_files(self, labjackDataFilePaths):
+        print("LabjackFilesystemLoader.load_labjack_data_files(labjackDataFilePaths: {0})".format(str(labjackDataFilePaths)))
+        # Pass the function to execute
+        self.labjackFilesystemWorker = VideoMetadataWorker(labjackDataFilePaths, self.on_load_labjack_data_files_execute_thread) # Any other args, kwargs are passed to the run function
+        self.labjackFilesystemWorker.signals.result.connect(self.on_load_labjack_data_files_print_output)
+        self.labjackFilesystemWorker.signals.finished.connect(self.on_load_labjack_data_files_thread_complete)
+        self.labjackFilesystemWorker.signals.progress.connect(self.on_load_labjack_data_files_progress_fn)
+        
+        # Execute
+        self.threadpool.start(self.labjackFilesystemWorker) 
+
+
+    ## Threads:
+    @pyqtSlot(list, int)
+    def on_load_labjack_data_files_progress_fn(self, active_labjack_data_file_paths, n):
+        self.pending_operation_status.update(n)
+        self.labjackDataFileLoaded.emit()
+        print("%d%% done" % n)
+
+    """
+    The main execution function
+    """
+    def on_load_labjack_data_files_execute_thread(self, active_labjack_data_file_paths, progress_callback):
+        currProgress = 0.0
+        parsedFiles = 0
+        numPendingFiles = len(active_labjack_data_file_paths)
+        self.pending_operation_status.restart(OperationTypes.FilesystemLabjackFileLoad, numPendingFiles)
+
+        # Loop through all the labjack data file paths and parse the files into a LabjackEventFile object.
+        for (sub_index, aFoundLabjackDataFile) in enumerate(active_labjack_data_file_paths):
+
+            # LabjackEventFile: this serves as a container to hold the loaded events
+            outEventFileObj = LabjackEventFile(aFoundLabjackDataFile)
+
+            # Call the static "loadLabjackEventsFile(...) function:
+
+            # (dateTimes, onesEventFormatDataArray, variableData, labjackEvents) = LabjackFilesystemLoader.loadLabjackFiles(aFoundLabjackDataFile, self.videoStartDates, self.videoEndDates, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
+            # (dateTimes, onesEventFormatDataArray, variableData, labjackEvents) = LabjackFilesystemLoader.loadLabjackEventsFile(aFoundLabjackDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
+            (dateTimes, labjackEventContainers, parsedFileInfoDict) = LabjackFilesystemLoader.loadLabjackEventsFile(aFoundLabjackDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
+
+            # Cache the loaded values into the LabjackEventFile object.
+            outEventFileObj.set_loaded_values(dateTimes, [], [], labjackEventContainers, parsedFileInfoDict)
+            
+            if (not (aFoundLabjackDataFile in self.cache.keys())):
+                # Parent doesn't yet exist in cache
+                self.cache[aFoundLabjackDataFile] = outEventFileObj
+            else:
+                # Parent already exists
+                print("WARNING: video path {0} already exists in the cache. Updating its thumbnail objects list...".format(str(aFoundLabjackDataFile)))
+                self.cache[aFoundLabjackDataFile] = outEventFileObj
+                pass
+
+            # Add the current video file path to the loaded files
+            self.loadedLabjackFiles.append(aFoundLabjackDataFile)
+
+            parsedFiles = parsedFiles + 1
+            progress_callback.emit(active_labjack_data_file_paths, (parsedFiles*100/numPendingFiles))
+
+        return "Done."
+ 
+    @pyqtSlot(list, object)
+    def on_load_labjack_data_files_print_output(self, active_video_paths, s):
+        print(s)
+        
+    @pyqtSlot(list)
+    def on_load_labjack_data_files_thread_complete(self, finished_loaded_labjack_data_files):
+        print("THREAD on_load_labjack_data_files_thread_complete(...)! {0}".format(str(finished_loaded_labjack_data_files)))
+        # The finished_loaded_labjack_data_files are paths that have already been added to self.loadedLabjackFiles. We just need to remove them from self.labjackFilePaths
+        for aFinishedVideoFilePath in finished_loaded_labjack_data_files:
+            self.labjackFilePaths.remove(aFinishedVideoFilePath)
+
+        self.loadingLabjackDataFilesComplete.emit()
+
+
+
+
+
+
+    @pyqtSlot(datetime, datetime)
+    def set_start_end_video_file_dates(self, new_start_dates, new_end_dates):
+        self.videoStartDates = np.array(new_start_dates)
+        self.videoEndDates = np.array(new_end_dates)
+        self.reload_on_labjack_paths_changed()
+
+
+    @pyqtSlot(datetime, datetime, timedelta)
+    def on_active_global_timeline_times_changed(self, totalStartTime, totalEndTime, totalDuration):
+        # print("ReferenceMarkerManager.on_active_global_timeline_times_changed({0}, {1}, {2})".format(str(totalStartTime), str(totalEndTime), str(totalDuration)))
+        # self.totalStartTime = totalStartTime
+        # self.totalEndTime = totalEndTime
+        # self.totalDuration = totalDuration
+        return
+
+
+    ## Static Methods:
 
     @staticmethod
     def loadLabjackFiles(labjackFilePath, videoDates, videoEndDates, shouldLimitEventsToVideoDates=True, limitedVariablesToCreateEventsFor=None, usePhoServerFormat=False, phoServerFormatIsStdOut=True):
@@ -525,96 +639,3 @@ class LabjackFilesystemLoader(QObject):
 
         # return (dateTimes, onesEventFormatDataArray, variableData, labjackEvents)
         return (dateTimes, built_model_view_container_array, parsedFileInfoDict)
-
-    def load_labjack_data_files(self, labjackDataFilePaths):
-        print("LabjackFilesystemLoader.load_labjack_data_files(labjackDataFilePaths: {0})".format(str(labjackDataFilePaths)))
-        # Pass the function to execute
-        self.labjackFilesystemWorker = VideoMetadataWorker(labjackDataFilePaths, self.on_load_labjack_data_files_execute_thread) # Any other args, kwargs are passed to the run function
-        self.labjackFilesystemWorker.signals.result.connect(self.on_load_labjack_data_files_print_output)
-        self.labjackFilesystemWorker.signals.finished.connect(self.on_load_labjack_data_files_thread_complete)
-        self.labjackFilesystemWorker.signals.progress.connect(self.on_load_labjack_data_files_progress_fn)
-        
-        # Execute
-        self.threadpool.start(self.labjackFilesystemWorker) 
-
-
-    # Threads:
-    @pyqtSlot(list, int)
-    def on_load_labjack_data_files_progress_fn(self, active_labjack_data_file_paths, n):
-        self.pending_operation_status.update(n)
-        self.labjackDataFileLoaded.emit()
-        print("%d%% done" % n)
-
-    """
-    The main execution function
-    """
-    def on_load_labjack_data_files_execute_thread(self, active_labjack_data_file_paths, progress_callback):
-        currProgress = 0.0
-        parsedFiles = 0
-        numPendingFiles = len(active_labjack_data_file_paths)
-        self.pending_operation_status.restart(OperationTypes.FilesystemLabjackFileLoad, numPendingFiles)
-
-        # Loop through all the labjack data file paths and parse the files into a LabjackEventFile object.
-        for (sub_index, aFoundLabjackDataFile) in enumerate(active_labjack_data_file_paths):
-
-            # LabjackEventFile: this serves as a container to hold the loaded events
-            outEventFileObj = LabjackEventFile(aFoundLabjackDataFile)
-
-            # Call the static "loadLabjackEventsFile(...) function:
-
-            # (dateTimes, onesEventFormatDataArray, variableData, labjackEvents) = LabjackFilesystemLoader.loadLabjackFiles(aFoundLabjackDataFile, self.videoStartDates, self.videoEndDates, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
-            # (dateTimes, onesEventFormatDataArray, variableData, labjackEvents) = LabjackFilesystemLoader.loadLabjackEventsFile(aFoundLabjackDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
-            (dateTimes, labjackEventContainers, parsedFileInfoDict) = LabjackFilesystemLoader.loadLabjackEventsFile(aFoundLabjackDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
-
-            # Cache the loaded values into the LabjackEventFile object.
-            outEventFileObj.set_loaded_values(dateTimes, [], [], labjackEventContainers, parsedFileInfoDict)
-            
-            if (not (aFoundLabjackDataFile in self.cache.keys())):
-                # Parent doesn't yet exist in cache
-                self.cache[aFoundLabjackDataFile] = outEventFileObj
-            else:
-                # Parent already exists
-                print("WARNING: video path {0} already exists in the cache. Updating its thumbnail objects list...".format(str(aFoundLabjackDataFile)))
-                self.cache[aFoundLabjackDataFile] = outEventFileObj
-                pass
-
-            # Add the current video file path to the loaded files
-            self.loadedLabjackFiles.append(aFoundLabjackDataFile)
-
-            parsedFiles = parsedFiles + 1
-            progress_callback.emit(active_labjack_data_file_paths, (parsedFiles*100/numPendingFiles))
-
-        return "Done."
- 
-    @pyqtSlot(list, object)
-    def on_load_labjack_data_files_print_output(self, active_video_paths, s):
-        print(s)
-        
-    @pyqtSlot(list)
-    def on_load_labjack_data_files_thread_complete(self, finished_loaded_labjack_data_files):
-        print("THREAD on_load_labjack_data_files_thread_complete(...)! {0}".format(str(finished_loaded_labjack_data_files)))
-        # The finished_loaded_labjack_data_files are paths that have already been added to self.loadedLabjackFiles. We just need to remove them from self.labjackFilePaths
-        for aFinishedVideoFilePath in finished_loaded_labjack_data_files:
-            self.labjackFilePaths.remove(aFinishedVideoFilePath)
-
-        self.loadingLabjackDataFilesComplete.emit()
-
-
-
-
-    @pyqtSlot(datetime, datetime)
-    def set_start_end_video_file_dates(self, new_start_dates, new_end_dates):
-        self.videoStartDates = np.array(new_start_dates)
-        self.videoEndDates = np.array(new_end_dates)
-        self.reload_on_labjack_paths_changed()
-
-
-    @pyqtSlot(datetime, datetime, timedelta)
-    def on_active_global_timeline_times_changed(self, totalStartTime, totalEndTime, totalDuration):
-        # print("ReferenceMarkerManager.on_active_global_timeline_times_changed({0}, {1}, {2})".format(str(totalStartTime), str(totalEndTime), str(totalDuration)))
-        # self.totalStartTime = totalStartTime
-        # self.totalEndTime = totalEndTime
-        # self.totalDuration = totalDuration
-        return
-
-
