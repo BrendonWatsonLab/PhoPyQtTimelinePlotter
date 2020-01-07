@@ -2,6 +2,7 @@
 # Contains EventTrackDrawingWidget which draws several PhoEvent objects as rectangles or lines within a single track.
 
 import sys
+import time
 from datetime import datetime, timezone, timedelta
 import numpy as np
 from PyQt5 import QtGui, QtWidgets
@@ -11,6 +12,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, 
 
 from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
+from lib.pg_time_axis import DateAxisItem
 
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import TimelineTrackDrawingWidgetBase, ItemSelectionOptions
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_SelectionBase import TimelineTrackDrawingWidget_SelectionBase
@@ -53,8 +55,7 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
 
         # Setup Layout
         self.setLayout(QVBoxLayout())
-        self.graphWidget = pg.PlotWidget()
-        self.layout().addWidget(self.graphWidget)
+        self.build_child_graph_widget()
 
         self.setMouseTracking(True)
 
@@ -95,6 +96,7 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
         self.durationRecords = []
         self.durationObjects = []
 
+        # durationRecords should be of type: FilesystemLabjackEvent_Record
         for aContainerObj in active_model_view_array:
             self.durationRecords.append(aContainerObj.get_record())
             newAnnotationIndex = len(self.durationObjects)
@@ -102,17 +104,113 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
             newAnnotationView.setAccessibleName(str(newAnnotationIndex))
             self.durationObjects.append(newAnnotationView)
 
+        self.update_child_graph_widget()
         self.update()
         
+
+    def build_child_graph_widget(self):
+        self.graphWidget = pg.PlotWidget()
+        self.layout().addWidget(self.graphWidget)
+
+        # Configure the plot:
+
+        # Add the Date-time axis
+        axis = DateAxisItem(orientation='bottom')
+        axis.attachToPlotItem(self.graphWidget.getPlotItem())
+
+        #Add Background colour to white
+        self.graphWidget.setBackground('w')
+
+        #Add Axis Labels
+        self.graphWidget.setLabel('left', 'Temperature (°C)', color='red', size=30)
+        # self.graphWidget.setLabel('bottom', 'Hour (H)', color='red', size=30)
+        
+        #Add legend
+        self.graphWidget.addLegend()
+
+        self.graphWidget.showGrid(x=True, y=True)
+
+        # self.graphWidget.setXRange(5, 20, padding=0)
+        # self.graphWidget.setYRange(30, 40, padding=0)
+
+
+    def plot(self, x, y, plotname, color):
+        pen = pg.mkPen(color=color)
+        self.graphWidget.plot(x, y, name=plotname, pen=pen, symbol='+', symbolSize=30, symbolBrush=(color))
+
 
     @pyqtSlot()
     def update_child_graph_widget(self):
         
-        hour = [1,2,3,4,5,6,7,8,9,10]
-        temperature = [30,32,34,32,33,31,29,32,35,45]
+        # hour = [1,2,3,4,5,6,7,8,9,10]
+        # x_vals = hour
 
-        # plot data: x, y values
-        self.graphWidget.plot(hour, temperature)
+        out_data_series = dict()
+
+        all_variable_timestamps = []
+        for aDurationRecord in self.durationRecords:
+            # Add x-value
+            # curr_x_val = aDurationRecord.start_date
+            curr_x_val = time.mktime(aDurationRecord.start_date.timetuple())
+
+            all_variable_timestamps.append(curr_x_val)
+            curr_var_name = aDurationRecord.variable_name
+            curr_var_color = aDurationRecord.variable_color
+            # curr_extended_info_dict = aDurationRecord.extended_info_dict
+            
+            if curr_var_name not in out_data_series.keys():
+                # create a new series if needed
+                out_data_series[curr_var_name] = {'x': list(), 'y':list(), 'color':curr_var_color, 'name': curr_var_name}
+
+            out_data_series[curr_var_name]['x'].append(curr_x_val)
+            out_data_series[curr_var_name]['y'].append(1.0)
+
+
+        if len(out_data_series) > 0:
+            # Build the plots:
+            print('out_data_series contains {} items...'.format(len(out_data_series)))
+            for (aVariableName, aDictValue) in out_data_series.items():
+                # plot data: x, y values
+                self.plot(aDictValue['x'], aDictValue['y'], aDictValue['name'], aDictValue['color'])
+                
+        else:
+            print('WARNING: out_data_series is empty!')
+            # plot some random data with timestamps in the last hour
+            # # now = time.time()
+            # # timestamps = numpy.linspace(now - 3600, now, 100)
+
+
+            # # Looks like we want relative timestamp offsets.
+            # # self.totalStartTime = totalStartTime
+            # # self.totalEndTime = totalEndTime
+            # # self.totalDuration = (self.totalEndTime - self.totalStartTime)
+            # # self.fixedWidth = 800.0
+
+            # # Draw the instantaneous event objects
+            # # for (index, obj) in enumerate(self.instantaneousObjects):
+            # #     self.instantaneousEventRect[index] = obj.paint(qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
+            # # self.offset_to_datetime()
+            # x_vals = timestamps
+
+
+            # temperature_1 = [30,32,34,32,33,31,29,32,35,45]
+            # temperature_2 = [50,35,44,22,38,32,27,38,32,44]
+
+            # # plot data: x, y values
+            # self.plot(x_vals, temperature_1, "Sensor1", 'r')
+            # self.plot(x_vals, temperature_2, "Sensor2", 'b')
+
+            # self.graphWidget.plot(hour, temperature)
+            
+            self.graphWidget.clear()
+
+            pass
+
+
+
+
+
+
 
 
 
