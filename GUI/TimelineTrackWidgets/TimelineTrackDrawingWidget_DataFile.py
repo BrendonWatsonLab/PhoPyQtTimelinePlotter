@@ -12,6 +12,20 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
 
+
+import matplotlib
+# matplotlib.use("Qt5agg") # or "Qt5agg" depending on you version of Qt
+# from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import matplotlib.dates as mdates
+import matplotlib.colors as mcolors
+
+from pandas.plotting import register_matplotlib_converters
+register_matplotlib_converters()
+
+
 # from pyqtgraph import PlotWidget, plot, widgets
 # from pyqtgraph.widgets import MatplotlibWidget
 from pyqtgraph import PlotWidget, plot
@@ -22,17 +36,6 @@ from pyqtgraph.widgets import MatplotlibWidget
 
 import pyqtgraph as pg
 from lib.pg_time_axis import DateAxisItem
-
-
-import matplotlib
-matplotlib.use("Qt5agg") # or "Qt5agg" depending on you version of Qt
-# from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-import matplotlib.dates as mdates
-import matplotlib.colors as mcolors
-
 
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import TimelineTrackDrawingWidgetBase, ItemSelectionOptions
 from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_SelectionBase import TimelineTrackDrawingWidget_SelectionBase
@@ -165,14 +168,17 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
         elif (self.dataDisplayMode is DataTrackDisplayMode.matplotlibGraph):
             # self.graphWidget = widgets.MatplotlibWidget()
             # self.graphWidget = pg.widgets.MatplotlibWidget
-            self.graphWidget = MatplotlibWidget.MatplotlibWidget(size=(5.0, 4.0), dpi=120)
-
-
+            # self.graphWidget = MatplotlibWidget.MatplotlibWidget(size=(5.0, 4.0), dpi=120)
+            self.graphWidget = MatplotlibWidget.MatplotlibWidget()
+            
         else:
             print("ERROR: wrong mode!")
             return
         
         self.layout().addWidget(self.graphWidget)
+        # self.graphWidget.setMinimumSize(self.minimumWidth, self.minimumHeight)
+        self.graphWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        # self.graphWidget.size
 
         # Configure the plot:
         if (self.dataDisplayMode is DataTrackDisplayMode.pyQtGraph):
@@ -204,6 +210,16 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
             
         elif (self.dataDisplayMode is DataTrackDisplayMode.matplotlibGraph):
             # TODO: configure the matplotlib plot:
+            fig = self.graphWidget.getFigure()
+
+            fig.suptitle('Labjack Data')
+
+            # fig.set_facecolor(1,1,1)
+            fig.patch.set_facecolor((0.1, 0.2, 0.5, 0.3))
+
+            # fig.set_y
+            # Draw the widget:    
+            self.graphWidget.draw()
 
             pass
 
@@ -221,8 +237,6 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
             subplot = self.graphWidget.getFigure().add_subplot(111)
             subplot.plot(x,y)
             self.graphWidget.draw()
-
-            
             pass
 
         else:
@@ -236,6 +250,7 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
     @pyqtSlot()
     def update_child_graph_widget(self):
         out_data_series = dict()
+        out_variable_names = list()
 
         all_variable_timestamps = []
         for aDurationRecord in self.durationRecords:
@@ -248,7 +263,6 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
                 curr_x_val = aDurationRecord.start_date
                 pass
 
-
             all_variable_timestamps.append(curr_x_val)
             curr_var_name = aDurationRecord.variable_name
             curr_var_color = aDurationRecord.variable_color
@@ -256,13 +270,14 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
             
             if curr_var_name not in out_data_series.keys():
                 # create a new series if needed
+                out_variable_names.append(curr_var_name)
                 out_data_series[curr_var_name] = {'x': list(), 'y':list(), 'color':curr_var_color, 'name': curr_var_name}
 
             out_data_series[curr_var_name]['x'].append(curr_x_val)
             out_data_series[curr_var_name]['y'].append(1.0)
 
 
-        numVariables = len(out_data_series)
+        numVariables = len(out_variable_names)
         if numVariables > 0:
             # Build the plots:
             print('out_data_series contains {} items...'.format(numVariables))
@@ -282,19 +297,39 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
                 # subplot = self.graphWidget.getFigure().add_subplot(111)
 
                 fig = self.graphWidget.getFigure()
-                axarr = fig.subplots(numVariables+1, sharex=True, sharey=True)
+                # fig.set_facecolor(1,1,1)
+                # fig.patch.set_facecolor(0.1, 0.2, 0.5, 0.3)
 
-                fig.suptitle('Labjack Data')
+                axarr = fig.subplots(numVariables+1, sharex=True, sharey=True, )
 
-                curr_variable_index = 0
-                for (aVariableName, aDictValue) in out_data_series.items():
+                out_draw_objs_list = list()
+                # out_draw_objs = {'markerline': None, 'stemline': None, 'baseline': None}
+                # out_draw_objs = {'markerline': None, 'stemline': None, 'baseline': None}
+
+
+                for variableIndex in range(0, numVariables):
+                    aVariableName = out_variable_names[variableIndex]
+                    aDictValue = out_data_series[aVariableName]
+                    currAx = axarr[variableIndex]
+                    curr_timestamps = aDictValue['x']
+                    curr_values = aDictValue['y']
                     # plot data: x, y values
                     # self.plot(aDictValue['x'], aDictValue['y'], aDictValue['name'], aDictValue['color'])
-                    markerline, stemline, baseline = axarr[curr_variable_index].stem(aDictValue['x'], aDictValue['y'], use_line_collection=True)
+                    markerline, stemline, baseline = currAx.stem(curr_timestamps, curr_values, use_line_collection=True)
+                    out_draw_objs_list.append({'markerline': markerline, 'stemline': stemline, 'baseline': baseline})
 
-                    curr_variable_index = curr_variable_index + 1
+                    currAx.set_ylim(0.0, 1.1)
+                    currAx.set_title('test {}'.format(aVariableName))
+                    # currAx.set_xticks(numpy.arange(0, 1, 0.1))
+                    # currAx.set_yticks(numpy.arange(0, 1., 0.1))
+                    # plt.grid(True)
+                    # currAx.set_text
+                    # plt.show()
+                    self.graphWidget.draw()
+                    # plt.show()
 
-                # (fig, axarr) = TimelineTrackDrawingWidget_DataFile.plot_labjackData_Timeline(x, y, variable_names)
+
+
 
                 # Bring subplots close to each other.
                 fig.subplots_adjust(hspace=0)
@@ -316,7 +351,7 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
                 self.graphWidget.clear()
                 pass
             elif (self.dataDisplayMode is DataTrackDisplayMode.matplotlibGraph):
-                self.graphWidget.getFigure().clear()
+                # self.graphWidget.getFigure().clear()
                 pass
 
 
