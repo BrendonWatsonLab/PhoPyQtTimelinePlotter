@@ -24,7 +24,12 @@ import pyqtgraph as pg
 from lib.pg_time_axis import DateAxisItem
 
 
+import matplotlib
+matplotlib.use("Qt5agg") # or "Qt5agg" depending on you version of Qt
+# from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 import matplotlib.dates as mdates
 import matplotlib.colors as mcolors
 
@@ -216,6 +221,8 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
             subplot = self.graphWidget.getFigure().add_subplot(111)
             subplot.plot(x,y)
             self.graphWidget.draw()
+
+            
             pass
 
         else:
@@ -255,17 +262,56 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
             out_data_series[curr_var_name]['y'].append(1.0)
 
 
-        if len(out_data_series) > 0:
+        numVariables = len(out_data_series)
+        if numVariables > 0:
             # Build the plots:
-            print('out_data_series contains {} items...'.format(len(out_data_series)))
-            for (aVariableName, aDictValue) in out_data_series.items():
-                # plot data: x, y values
-                self.plot(aDictValue['x'], aDictValue['y'], aDictValue['name'], aDictValue['color'])
+            print('out_data_series contains {} items...'.format(numVariables))
+
+            if (self.dataDisplayMode is DataTrackDisplayMode.pyQtGraph):
+                for (aVariableName, aDictValue) in out_data_series.items():
+                    # plot data: x, y values
+                    self.plot(aDictValue['x'], aDictValue['y'], aDictValue['name'], aDictValue['color'])
+
+                pass
+
+            elif (self.dataDisplayMode is DataTrackDisplayMode.matplotlibGraph):
+                # Create figure and plot a stem plot with the date
+                # labjackDataLabels = out_data_series.items()
+                
+                # fig, axarr = plt.subplots(numVariables+1, sharex=True, sharey=True)
+                # subplot = self.graphWidget.getFigure().add_subplot(111)
+
+                fig = self.graphWidget.getFigure()
+                axarr = fig.subplots(numVariables+1, sharex=True, sharey=True)
+
+                fig.suptitle('Labjack Data')
+
+                curr_variable_index = 0
+                for (aVariableName, aDictValue) in out_data_series.items():
+                    # plot data: x, y values
+                    # self.plot(aDictValue['x'], aDictValue['y'], aDictValue['name'], aDictValue['color'])
+                    markerline, stemline, baseline = axarr[curr_variable_index].stem(aDictValue['x'], aDictValue['y'], use_line_collection=True)
+
+                    curr_variable_index = curr_variable_index + 1
+
+                # (fig, axarr) = TimelineTrackDrawingWidget_DataFile.plot_labjackData_Timeline(x, y, variable_names)
+
+                # Bring subplots close to each other.
+                fig.subplots_adjust(hspace=0)
+                # Hide x labels and tick labels for all but bottom plot.
+                for ax in axarr:
+                    ax.label_outer()
+
+                # Draw the widget:    
+                self.graphWidget.draw()
+
+                pass
+
+
+
                 
         else:
             print('WARNING: out_data_series is empty!')
-
-            
             if (self.dataDisplayMode is DataTrackDisplayMode.pyQtGraph):
                 self.graphWidget.clear()
                 pass
@@ -341,3 +387,264 @@ class TimelineTrackDrawingWidget_DataFile(TrackConfigDataCacheMixin, TrackConfig
     def on_mouse_moved(self, event):
         super().on_mouse_moved(event)
 
+    @staticmethod
+    def plot_labjackData_Timeline(datetimes, labjackData, labjackDataLabels):
+        # Create figure and plot a stem plot with the date
+        numVariables = len(labjackDataLabels)
+        numSamples = len(datetimes)
+        print('numVariables: ', numVariables, " numSamples: ", numSamples)
+        fig, axarr = plt.subplots(numVariables+1, sharex=True, sharey=True)
+        fig.suptitle('Labjack Data')
+
+        for variableIndex in range(0, numVariables):
+            currValues = labjackData[:, variableIndex]
+            nonZeroEntries = np.nonzero(currValues)
+            activeValues = currValues[nonZeroEntries]
+            activeTimestamps = datetimes[nonZeroEntries]
+
+            # markerline, stemline, baseline = axarr[variableIndex].stem(datetimes, labjackData[:, variableIndex], linefmt="C3-", basefmt="k-", use_line_collection=True)
+
+            markerline, stemline, baseline = axarr[variableIndex].stem(activeTimestamps, activeValues, use_line_collection=True)
+            #plt.setp(markerline, mec="k", mfc="w", zorder=3)
+
+            # Shift the markers to the baseline by replacing the y-data by zeros.
+            #markerline.set_ydata(np.zeros(numSamples))
+
+
+        # Bring subplots close to each other.
+        fig.subplots_adjust(hspace=0)
+        # Hide x labels and tick labels for all but bottom plot.
+        for ax in axarr:
+            ax.label_outer()
+
+        return (fig, axarr)
+
+
+    @staticmethod
+    def plot_combined_timeline(eventDatetimes, eventValues, eventLabels, videoStartTimes, videoEndTimes, videoLabels):
+        def enter_axes(event):
+            # print('enter_axes', event.inaxes)
+            event.inaxes.patch.set_facecolor('wheat')
+            event.canvas.draw()
+
+        def leave_axes(event):
+            # print('leave_axes', event.inaxes)
+            event.inaxes.patch.set_facecolor('white')
+            event.canvas.draw()
+
+        def enter_figure(event):
+            # print('enter_figure', event.canvas.figure)
+            event.canvas.figure.patch.set_facecolor('salmon')
+            event.canvas.draw()
+
+        def leave_figure(event):
+            # print('leave_figure', event.canvas.figure)
+            event.canvas.figure.patch.set_facecolor('grey')
+            event.canvas.draw()
+
+        # def onpick(event):
+        #     thisline = event.artist
+        #     xdata = thisline.get_xdata()
+        #     ydata = thisline.get_ydata()
+        #     ind = event.ind
+        #     points = tuple(zip(xdata[ind], ydata[ind]))
+        #     print('onpick points:', points)
+
+
+        # Create figure and plot a stem plot with the date
+        numVariables = len(eventLabels)
+        numSamples = len(eventDatetimes)
+        #numSubplots = numVariables + 1
+        numSubplots = int((numVariables/2) + 1)
+        #print('numVariables: ', numVariables, " numSamples: ", numSamples)
+        fig, axarr = plt.subplots(numSubplots, sharex=True, sharey=True)
+        fig.suptitle('Combined Data')
+
+        # ax_colors = ['aqua','blue','aquamarine','darkblue','coral','crimson','magenta','maroon']
+        ax_colors = ['aqua', 'aquamarine', 'coral', 'magenta', 'blue', 'darkblue', 'crimson', 'maroon']
+
+        ## Iterate through the event variables and plot them on the appropriate subplots
+        for variableIndex in range(0, numVariables):
+            currValues = eventValues[:, variableIndex]
+            nonZeroEntries = np.nonzero(currValues)
+            activeValues = currValues[nonZeroEntries]
+            activeTimestamps = eventDatetimes[nonZeroEntries]
+
+            # markerline, stemline, baseline = axarr[variableIndex].stem(datetimes, labjackData[:, variableIndex], linefmt="C3-", basefmt="k-", use_line_collection=True)
+            # markerline, stemline, baseline = axarr[variableIndex].stem(activeTimestamps, activeValues, use_line_collection=True)
+            # Make taller for dispense events
+            activeOffset = 0
+            activeLineLength = 1
+            if variableIndex > 3:
+                activeValues = activeValues * 2
+                activeOffset = 1
+                activeLineLength = 3
+
+            # markerline, stemline, baseline = axarr[(variableIndex % 4)].stem(activeTimestamps, activeValues, use_line_collection=True, picker=5)
+            # #axarr[variableIndex].set(title=eventLabels[variableIndex])
+            # #plt.setp(markerline, mec="k", mfc="w", zorder=3)
+            # # Shift the markers to the baseline by replacing the y-data by zeros.
+            # markerline.set_ydata(np.zeros_like(activeValues))
+            #
+
+            #print('timestamps:', len(activeTimestamps), "  values: ", len(activeValues))
+            # axarr[(variableIndex % 4)].eventplot(activeTimestamps, orientation='horizontal', linelengths=activeValues)
+            # axarr[(variableIndex % 4)].eventplot(activeTimestamps, orientation='horizontal', linewidths=activeValues)
+            axarr[(variableIndex % 4)].eventplot(activeTimestamps, orientation='horizontal', lineoffsets=activeOffset, linelengths=activeLineLength, color=ax_colors[variableIndex], picker=5)
+
+            axarr[(variableIndex % 4)].get_yaxis().set_visible(False)
+            for spine in ["left", "top", "right"]:
+                axarr[(variableIndex % 4)].spines[spine].set_visible(False)
+
+        ## Plot the video variables
+        videoAx = axarr[-1]
+        # videoAx.set(title="Timeline HLines")
+        colors = np.tile(['red', 'green', 'blue', 'yellow'], int(np.ceil(len(videoStartTimes) / 4)))[:len(videoStartTimes)]
+        videoAx.grid(True)
+        # Format X-Axis:
+        myFmt = mdates.DateFormatter('%m-%d')
+        videoAx.xaxis.set_major_formatter(myFmt)
+
+        # Format Y-Axis:
+        # ax.set_yticklabels([])
+        # ax.set_yticks([])
+        # remove y axis and spines
+        videoAx.get_yaxis().set_visible(False)
+        for spine in ["left", "top", "right"]:
+            videoAx.spines[spine].set_visible(False)
+        videoAx.get_yaxis().grid(b=None)
+
+        # Interactivity:
+        annot = videoAx.annotate("", xy=(0, 0), xytext=(-20, 20), textcoords="offset points",
+                            bbox=dict(boxstyle="round", fc="white", ec="b", lw=2),
+                            arrowprops=dict(arrowstyle="->"))
+        annot.set_visible(False)
+        hlines_objs = []
+        for i in range(0, (len(videoStartTimes) - 1)):
+            # color = random.choice(['red', 'green', 'blue', 'yellow'])
+            currStartDate = videoStartTimes[i]
+            currEndDate = videoEndTimes[i]
+            currLabel = videoLabels[i]
+            hlines_objs.append(plt.hlines(1, currStartDate, currEndDate, colors=colors[i], lw=20, label=currLabel))
+            plt.text(currStartDate, 1.01, currLabel, horizontalalignment='left', rotation=45)
+
+        def update_annot_line(event, line, line_index, contained_object_index):
+            # Find which box or line we have clicked on
+            index = contained_object_index[0]
+            # Find the vertices of the object
+            verts = line.get_paths()[index].vertices
+            # Print the minimum and maximum extent of the object in x and y
+            # print("X = {}, {}".format(verts[:, 0].min(), verts[:, 0].max()))
+            # print("Y = {}, {}".format(verts[:, 1].min(), verts[:, 1].max()))
+            annot.xy = (verts[index, 0], verts[index, 1])
+            # Get the position from the event object
+            xOffset = event.xdata
+            #print(xOffset)
+            xDate = mdates.num2date(xOffset)
+            #print(xDate)
+            xDateString = xDate.strftime('%m-%d %I:%M:%S.%f %p')
+            #print(xDateString)
+            #xLimDateNums = event.inaxes.get_xlim()
+            #xLimRange = xLimDateNums[1] - xLimDateNums[0]
+
+
+            # Format the text to display on the annotation
+            text = "{}, {}\n{}".format(" ".join(list(map(str, contained_object_index))),
+                                " ".join([videoLabels[line_index]]),
+                                " ".join([xDateString]))
+                                # " ".join([np.format_float_positional(xOffset)]))
+            annot.set_text(text)
+            annot.get_bbox_patch().set_alpha(0.6)
+
+        def hover_line(event):
+            is_annot_visible = annot.get_visible()
+            # Only do this for the video axes
+            if event.inaxes == videoAx:
+                # Enumerate each video block
+                for lineIndex, lineObj in enumerate(hlines_objs):
+                    # Check if the event fell within the line object
+                    does_contain_event, ind = lineObj.contains(event)
+                    if does_contain_event:
+                        update_annot_line(event, lineObj, lineIndex, ind["ind"])
+                        annot.set_visible(True)
+                        fig.canvas.draw_idle()
+                        return
+
+            if is_annot_visible:
+                annot.set_visible(False)
+                fig.canvas.draw_idle()
+
+        def video_relative_timestamp(aTimestamp):
+            aDatetimeTimestamp = mdates.num2date(aTimestamp).replace(tzinfo=None)
+            foundVideoIndex = None
+            foundVideoRelativeTimestamp = None
+            for (videoIndex, videoStartDate) in enumerate(videoStartTimes):
+                videoEndDate = videoEndTimes[videoIndex]
+                if (videoStartDate <= aDatetimeTimestamp <= videoEndDate):
+                    foundVideoIndex = videoIndex
+                    foundVideoRelativeTimestamp = (aDatetimeTimestamp - videoStartDate)
+                    return (foundVideoIndex, foundVideoRelativeTimestamp)
+
+            return (foundVideoIndex, foundVideoRelativeTimestamp)
+
+        def onpick(event):
+            thisEventCollection = event.artist
+
+            print(str(event))
+            print(str(thisEventCollection))
+            # Find the vertices of the object
+            verts = thisEventCollection.get_paths()[0].vertices
+            print(str(verts))
+
+            xVal = verts[0, 0];
+            (foundVideoIndex, foundVideoRelativeTimestamp) = video_relative_timestamp(xVal)
+            if foundVideoRelativeTimestamp:
+                print(foundVideoRelativeTimestamp)
+                return
+            else:
+                print('No video.')
+                return
+
+
+            # for (anEventObjIndex, anEventObj) in enumerate(thisEventCollection):
+            #     # Check if the event fell within the line object
+            #     does_contain_event, ind = anEventObj.contains(event)
+            #     if does_contain_event:
+            #         print('Contains: ', ind["ind"])
+            #         # ind["ind"]
+            #         # update_annot_line(event, lineObj, lineIndex, ind["ind"])
+            #         # annot.set_visible(True)
+            #         # fig.canvas.draw_idle()
+            #         return
+
+
+            # # Check if the event fell within the line object
+            # does_contain_event, ind = thisEventCollection.contains(event)
+            # if does_contain_event:
+            #     print('Contains: ', ind["ind"])
+            #     # ind["ind"]
+            #     # update_annot_line(event, lineObj, lineIndex, ind["ind"])
+            #     # annot.set_visible(True)
+            #     # fig.canvas.draw_idle()
+            #     return
+
+            # xdata = thisline.get_xdata()
+            # ydata = thisline.get_ydata()
+            # ind = event.ind
+            # points = tuple(zip(xdata[ind], ydata[ind]))
+            # print('onpick points:', points)
+
+        fig.canvas.mpl_connect("motion_notify_event", hover_line)
+        fig.canvas.mpl_connect('figure_enter_event', enter_figure)
+        fig.canvas.mpl_connect('figure_leave_event', leave_figure)
+        fig.canvas.mpl_connect('axes_enter_event', enter_axes)
+        fig.canvas.mpl_connect('axes_leave_event', leave_axes)
+        fig.canvas.mpl_connect('pick_event', onpick)
+
+        # Bring subplots close to each other.
+        fig.subplots_adjust(hspace=0)
+        # Hide x labels and tick labels for all but bottom plot.
+        for ax in axarr:
+            ax.label_outer()
+
+        plt.show()
