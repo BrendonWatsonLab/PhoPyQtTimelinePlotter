@@ -21,11 +21,11 @@ fbs PyQt5 PyInstaller==3.4
 
 
 ## Exporting and importing:
-# conda list --explicit > "Requirements/spec-list-01-07-2020.txt"
-# conda env export > "Requirements/environment-01-07-2020.yml"
+# conda list --explicit > "EXTERNAL/Requirements/spec-list-01-07-2020.txt"
+# conda env export > "EXTERNAL/Requirements/environment-01-07-2020.yml"
 
 
 ## Restoring:
-# conda create  --name python-course --file "Requirements/spec-list-01-07-2020.txt"
-# conda env create -f "Requirements/environment-01-07-2020.yml"
+# conda create  --name python-course --file "EXTERNAL/Requirements/spec-list-01-07-2020.txt"
+# conda env create -f "EXTERNAL/Requirements/environment-01-07-2020.yml"
 
