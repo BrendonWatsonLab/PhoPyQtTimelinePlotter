@@ -76,29 +76,27 @@ class TimelineApplication(QApplication):
             self.database_connection = DatabaseConnectionRef(self.database_file_path_string)
             
         except sqlite3.OperationalError as error:
-            fallback_string = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
-            print("databse{0} doesn't exist... trying {1}...".format(str(self.database_file_path_string), str(fallback_string)))
-            self.database_file_path_string = fallback_string
-            try:
-                self.database_connection = DatabaseConnectionRef(self.database_file_path_string)
-            except sqlite3.OperationalError as error:
-                print("file {0} doesn't exist either.".format(str(self.database_file_path_string)))
+            print("ERROR: databse {0} doesn't exist...".format(self.database_file_path_string))
+            self.database_connection = None
+            # fallback_string = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
+            # print("databse {0} doesn't exist... trying {1}...".format(str(self.database_file_path_string), str(fallback_string)))
+            # self.database_file_path_string = fallback_string
+            # try:
+            #     self.database_connection = DatabaseConnectionRef(self.database_file_path_string)
+            # except sqlite3.OperationalError as error:
+            #     print("file {0} doesn't exist either.".format(str(self.database_file_path_string)))
 
         except OperationalError as error:
-            fallback_string = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
-            print("databse{0} doesn't exist... trying {1}...".format(str(self.database_file_path_string), str(fallback_string)))
-            self.database_file_path_string = fallback_string
-            try:
-                self.database_connection = DatabaseConnectionRef(self.database_file_path_string)
-            except sqlite3.OperationalError as error:
-                print("file {0} doesn't exist either.".format(str(self.database_file_path_string)))
+            print("ERROR: databse {0} doesn't exist...".format(self.database_file_path_string))
+            self.database_connection = None
+            # fallback_string = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
+            # print("databse {0} doesn't exist... trying {1}...".format(str(self.database_file_path_string), str(fallback_string)))
+            # self.database_file_path_string = fallback_string
+            # try:
+            #     self.database_connection = DatabaseConnectionRef(self.database_file_path_string)
+            # except sqlite3.OperationalError as error:
+            #     print("file {0} doesn't exist either.".format(str(self.database_file_path_string)))
 
-
-
-        # except expression as identifier:
-        #     pass
-        # else:
-        #     pass
 
         print("done.")
         
