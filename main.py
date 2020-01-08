@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import datetime as dt
+import pathlib
 
 import sqlalchemy as db
 from sqlalchemy.exc import IntegrityError, OperationalError
@@ -30,34 +31,67 @@ class TimelineApplication(QApplication):
     shouldShowGUIWindows = True
     shouldShowMainGUIWindow = True
     shouldShowListGUIWindow = False
-    shouldShowExampleWindow = False 
+    shouldShowExampleWindow = False
+
+    database_file_name = 'BehavioralBoxDatabase.db'
+
+    project_directory_windows = pathlib.Path("C:/Users/halechr/repo/PhoPyQtTimelinePlotter/")
+    project_directory_mac = pathlib.Path("/Users/pho/repo/PhoPyQtTimelinePlotter/")
+
+    @staticmethod
+    def get_project_directory():
+        if (TimelineApplication.project_directory_windows.exists()):
+            # platform is Windows
+            return TimelineApplication.project_directory_windows
+        
+        elif (TimelineApplication.project_directory_mac.exists()):
+            # platform is Mac
+            return TimelineApplication.project_directory_mac
+
+        else:
+            print("ERROR: none of the expected project directories exist!")
+            new_user_dir = None
+            # Todo: allow user to specify a dir
+            if new_user_dir is not None:
+                new_user_dir = new_user_dir.resolve()
+
+            return new_user_dir
+            
+
+
+
 
     def __init__(self, args):
         super(TimelineApplication, self).__init__(args)
         # self.database_file_path = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
         # self.database_file_path = 'G:\Google Drive\Modern Behavior Box\Results - Data\BehavioralBoxDatabase.db'
-        self.database_file_path = "C:/Users/halechr/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db"
+        # self.database_file_path = "C:/Users/halechr/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db"
+
+        self.project_directory_path = TimelineApplication.get_project_directory()
+        self.database_file_parent_path = self.project_directory_path.joinpath("EXTERNAL", "Databases")
+        self.database_file_path = self.database_file_parent_path.joinpath(TimelineApplication.database_file_name)
+        self.database_file_path_string = str(self.database_file_path)
 
         try:
-            self.database_connection = DatabaseConnectionRef(self.database_file_path)
+            self.database_connection = DatabaseConnectionRef(self.database_file_path_string)
             
         except sqlite3.OperationalError as error:
             fallback_string = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
-            print("databse{0} doesn't exist... trying {1}...".format(str(self.database_file_path), str(fallback_string)))
-            self.database_file_path = fallback_string
+            print("databse{0} doesn't exist... trying {1}...".format(str(self.database_file_path_string), str(fallback_string)))
+            self.database_file_path_string = fallback_string
             try:
-                self.database_connection = DatabaseConnectionRef(self.database_file_path)
+                self.database_connection = DatabaseConnectionRef(self.database_file_path_string)
             except sqlite3.OperationalError as error:
-                print("file {0} doesn't exist either.".format(str(self.database_file_path)))
+                print("file {0} doesn't exist either.".format(str(self.database_file_path_string)))
 
         except OperationalError as error:
             fallback_string = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
-            print("databse{0} doesn't exist... trying {1}...".format(str(self.database_file_path), str(fallback_string)))
-            self.database_file_path = fallback_string
+            print("databse{0} doesn't exist... trying {1}...".format(str(self.database_file_path_string), str(fallback_string)))
+            self.database_file_path_string = fallback_string
             try:
-                self.database_connection = DatabaseConnectionRef(self.database_file_path)
+                self.database_connection = DatabaseConnectionRef(self.database_file_path_string)
             except sqlite3.OperationalError as error:
-                print("file {0} doesn't exist either.".format(str(self.database_file_path)))
+                print("file {0} doesn't exist either.".format(str(self.database_file_path_string)))
 
 
 
