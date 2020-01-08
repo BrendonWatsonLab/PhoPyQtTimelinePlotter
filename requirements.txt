@@ -13,3 +13,19 @@ pyqtgraph==0.10.0
 
 # conda install qtmodern
 qtmodern==0.1.4
+
+
+
+# Building
+fbs PyQt5 PyInstaller==3.4
+
+
+## Exporting and importing:
+# conda list --explicit > "Requirements/spec-list-01-07-2020.txt"
+# conda env export > "Requirements/environment-01-07-2020.yml"
+
+
+## Restoring:
+# conda create  --name python-course --file "Requirements/spec-list-01-07-2020.txt"
+# conda env create -f "Requirements/environment-01-07-2020.yml"
+
