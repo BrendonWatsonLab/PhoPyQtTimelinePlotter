@@ -40,6 +40,10 @@ class FilesystemLabjackEvent_Record(FilesystemRecordBase):
         self.extended_info_dict = extended_info_dict
 
 
+    def get_extended_data(self):
+        return self.extended_info_dict
+
+        
     @staticmethod
     def get_gui_view(aRecord, parent=None):
         currExtraInfoDict = aRecord.extended_info_dict

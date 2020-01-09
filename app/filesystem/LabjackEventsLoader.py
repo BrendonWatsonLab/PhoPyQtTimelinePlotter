@@ -7,7 +7,10 @@ import scipy.io as sio
 import h5py as h5py
 import re
 import datetime as dt
+from enum import Enum
 
+from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent, PhoEvent
+from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemLabjackEvent_Record
 
 # Copied from "phoPythonVideoFileParser" project
 
@@ -24,6 +27,28 @@ class PhoServerFormatArgs(object):
         self.erroneousEventFreeCSVFilePath = erroneousEventFreeCSVFilePath
         self.parsedFileInfoDict = parsedFileInfoDict
 
+
+class LabjackEventType(Enum):
+    phoDurationEvent = 1
+    filesystemLabjackEvent_Record = 2
+
+    # def get_class(self):
+    #     if (self is LabjackEventType.phoDurationEvent):
+    #         return PhoDurationEvent.__class__
+    #     elif (self is LabjackEventType.filesystemLabjackEvent_Record):
+    #         return filesystemLabjackEvent_Record.__class__
+    #     else:
+    #         print("ERROR: Unknown Type")
+    #         return None
+
+    def get_variable_specific_items_key(self):
+        if (self is LabjackEventType.phoDurationEvent):
+            return 'variableSpecificEvents'
+        elif (self is LabjackEventType.filesystemLabjackEvent_Record):
+            return 'variableSpecificRecords'
+        else:
+            print("ERROR: Unknown Type")
+            return None
 
 
 class LabjackEventsLoader(object):
@@ -42,7 +67,7 @@ class LabjackEventsLoader(object):
                 2. valid_labjack_events_mask: a mask of the size of labjackEvents that can be used to filter out the invalid labjack events
     """
     @staticmethod
-    def find_invalid_events(labjackEvents):
+    def find_invalid_events(labjackEvents, labjackEventType):
         previousFoundDispenseEventTimestamp = {'Water1': None, 'Water2': None, 'Food1': None, 'Food2': None}
         previousFoundBeambreakEventTimestamp = {'Water1': None, 'Water2': None, 'Food1': None, 'Food2': None}
         invalidDispenseEventTimestamps = {'Water1': [], 'Water2': [], 'Food1': [], 'Food2': [], 'any': []}
@@ -50,31 +75,42 @@ class LabjackEventsLoader(object):
 
         for index, anActiveEvent in enumerate(labjackEvents):
 
-            if ((anActiveEvent.extended_data['event_type'] == 'BeamBreak')):
-                currFoundBeambreakEventTimestamp = anActiveEvent.start_date
-                previousFoundBeambreakEventTimestamp[anActiveEvent.extended_data['port']] = currFoundBeambreakEventTimestamp
+            # how the extended data dict is accessed depends on the labjackEventType
+            anActiveEvent_ExtendedData = None
+            if (labjackEventType is LabjackEventType.phoDurationEvent):
+                anActiveEvent_ExtendedData = anActiveEvent.extended_data
 
-            elif ((anActiveEvent.extended_data['event_type'] == 'Dispense')):
+            elif (labjackEventType is LabjackEventType.filesystemLabjackEvent_Record):
+                anActiveEvent_ExtendedData = anActiveEvent.get_extended_data()
+            else:
+                print("ERROR: Unknown Type!")
+                return None
+
+            if ((anActiveEvent_ExtendedData['event_type'] == 'BeamBreak')):
+                currFoundBeambreakEventTimestamp = anActiveEvent.start_date
+                previousFoundBeambreakEventTimestamp[anActiveEvent_ExtendedData['port']] = currFoundBeambreakEventTimestamp
+
+            elif ((anActiveEvent_ExtendedData['event_type'] == 'Dispense')):
                 currIsInvalidEvent = False
                 currFoundDispenseEventTimestamp = anActiveEvent.start_date
-                if (previousFoundBeambreakEventTimestamp[anActiveEvent.extended_data['port']] is None):
+                if (previousFoundBeambreakEventTimestamp[anActiveEvent_ExtendedData['port']] is None):
                     # If no beambreak preceeds it, it's invalid
                     currIsInvalidEvent = True
 
                 else:
-                    if (previousFoundDispenseEventTimestamp[anActiveEvent.extended_data['port']] is None):
+                    if (previousFoundDispenseEventTimestamp[anActiveEvent_ExtendedData['port']] is None):
                         #if no dispense event preceeds it there's no problem
                         pass
                     else:
-                        if (previousFoundDispenseEventTimestamp[anActiveEvent.extended_data['port']] > previousFoundBeambreakEventTimestamp[anActiveEvent.extended_data['port']]):
+                        if (previousFoundDispenseEventTimestamp[anActiveEvent_ExtendedData['port']] > previousFoundBeambreakEventTimestamp[anActiveEvent_ExtendedData['port']]):
                             # if the most recent dispense event is more recent then the last beambreak, there is a problem!
                             currIsInvalidEvent = True
 
-                previousFoundDispenseEventTimestamp[anActiveEvent.extended_data['port']] = currFoundDispenseEventTimestamp
+                previousFoundDispenseEventTimestamp[anActiveEvent_ExtendedData['port']] = currFoundDispenseEventTimestamp
 
                 if (currIsInvalidEvent):
                     valid_labjack_events_mask[index] = False
-                    invalidDispenseEventTimestamps[anActiveEvent.extended_data['port']].append(currFoundDispenseEventTimestamp)
+                    invalidDispenseEventTimestamps[anActiveEvent_ExtendedData['port']].append(currFoundDispenseEventTimestamp)
                     invalidDispenseEventTimestamps['any'].append(currFoundDispenseEventTimestamp)
 
             else:
@@ -89,8 +125,29 @@ class LabjackEventsLoader(object):
     """
     @staticmethod
     def filter_invalid_events(dateTimes, onesEventFormatDataArray, variableData, labjackEvents, phoServerFormatArgs=None):
+        num_labjack_events = len(labjackEvents)
+        if num_labjack_events <= 0:
+            print("WARNING: labjackEvents is empty!")
+            # return (dateTimes, onesEventFormatDataArray, variableData, labjackEvents, phoServerFormatArgs)
+            return None
+
+        active_labjack_event_type = None
+        first_labjack_event_obj = labjackEvents[0]
+        if (type(first_labjack_event_obj) is PhoDurationEvent):
+            active_labjack_event_type = LabjackEventType.phoDurationEvent
+
+        elif (type(first_labjack_event_obj) is FilesystemLabjackEvent_Record):
+            active_labjack_event_type = LabjackEventType.filesystemLabjackEvent_Record
+        else:
+            print("ERROR: Unknown Type!")
+            return None
+
+        # Get the key for the items (either events or records) that belong to a specific variable:
+        active_variableData_event_specific_key = active_labjack_event_type.get_variable_specific_items_key()
+
+
         # Produces invalidDispenseEventTimestamps
-        invalidDispenseEventTimestamps, valid_labjack_events_mask = LabjackEventsLoader.find_invalid_events(labjackEvents)
+        invalidDispenseEventTimestamps, valid_labjack_events_mask = LabjackEventsLoader.find_invalid_events(labjackEvents, active_labjack_event_type)
 
         # Filter the erroneous events from the individual arrays in each variableData
         for index, aPort in enumerate(LabjackEventsLoader.labjack_portNames):
@@ -105,7 +162,8 @@ class LabjackEventsLoader(object):
             mask[dispenseVariableInvalidIndicies] = False
             variableData[dispenseVariableIndex]['timestamps'] = variableData[dispenseVariableIndex]['timestamps'][mask]
             variableData[dispenseVariableIndex]['values'] = variableData[dispenseVariableIndex]['values'][mask]
-            variableData[dispenseVariableIndex]['variableSpecificEvents'] = np.array(variableData[dispenseVariableIndex]['variableSpecificEvents'])[mask]
+            # Issue with this key: variableSpecificEvents
+            variableData[dispenseVariableIndex][active_variableData_event_specific_key] = np.array(variableData[dispenseVariableIndex][active_variableData_event_specific_key])[mask]
             variableData[dispenseVariableIndex]['videoIndicies'] = variableData[dispenseVariableIndex]['videoIndicies'][mask]
 
 

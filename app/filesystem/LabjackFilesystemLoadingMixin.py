@@ -384,7 +384,7 @@ class LabjackFilesystemLoader(QObject):
         if should_filter_for_invalid_events:
             print('Filtering for invalid events...')
             ### Post-processing to detect erronious events, only for food2
-            dateTimes, onesEventFormatDataArray, variableData, labjackEventRecords, phoServerFormatArgs = LabjackFilesystemLoader.filter_invalid_events(dateTimes, onesEventFormatDataArray, variableData, labjackEventRecords, phoServerFormatArgs=phoServerFormatArgs)
+            dateTimes, onesEventFormatDataArray, variableData, labjackEventRecords, phoServerFormatArgs = LabjackEventsLoader.filter_invalid_events(dateTimes, onesEventFormatDataArray, variableData, labjackEventRecords, phoServerFormatArgs=phoServerFormatArgs)
 
         # Build the corresponding GUI objects
         ## TODO: defer until needed? Some might be filtered out anyway.
