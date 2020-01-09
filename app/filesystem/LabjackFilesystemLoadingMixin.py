@@ -3,6 +3,8 @@ import sys
 from datetime import datetime, timezone, timedelta
 from enum import Enum
 import numpy as np
+import pandas as pd
+
 import matplotlib.colors as mcolors
 
 from PyQt5 import QtGui, QtWidgets
@@ -121,12 +123,16 @@ class LabjackFilesystemLoader(QObject):
         self.videoStartDates = []
         self.videoEndDates = []
 
-        self.reload_on_labjack_paths_changed()
-        
         self.labjackFilesystemWorker = None
         self.threadpool = QThreadPool()
+        self.threadpool.setMaxThreadCount(2)
+        
         print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
+        
+        self.reload_on_labjack_paths_changed()
+        
         self.reload_data()
+
 
     def get_cache(self):
         return self.cache
@@ -330,7 +336,7 @@ class LabjackFilesystemLoader(QObject):
         return (dateTimes, onesEventFormatDataArray, phoServerFormatArgs)
 
     """ loadLabjackEventsFile(...): new.
-
+        labjackEventRecords: a sorted list of FilesystemLabjackEvent_Record type objects for all variable types
     """
     @staticmethod
     def loadLabjackEventsFile(labjackFilePath, videoDates, videoEndDates, shouldLimitEventsToVideoDates=True, limitedVariablesToCreateEventsFor=None, usePhoServerFormat=False, phoServerFormatIsStdOut=True, should_filter_for_invalid_events=True):
@@ -370,8 +376,8 @@ class LabjackFilesystemLoader(QObject):
             activeValues = currVariableDataValues[nonZeroEntries] # This is just all ones for 0/1 array
             activeTimestamps = dateTimes[nonZeroEntries]
 
+            # Acumulate records one variable at a time
             labjackVariableSpecificRecords = []
-            # labjackVariableSpecificEvents = []
             ## Find times within video ranges:
             # activeVideoIndicies: contains an int index or None for each timestamp to indicate which video (if any) the timestamp occurred within
             activeVideoIndicies = np.empty_like(activeTimestamps)
@@ -398,16 +404,15 @@ class LabjackFilesystemLoader(QObject):
                                             'dispense_type':LabjackEventsLoader.labjack_variable_event_type[dataArrayVariableIndex],
                                             'port': LabjackEventsLoader.labjack_variable_port_location[dataArrayVariableIndex],
                                             }
+                    # Create a new record object
+                    ## TODO: should this have a different parent?
                     currRecord = FilesystemLabjackEvent_Record(anActiveTimestamp.replace(tzinfo=None), None, currVariableName, currVariableColor, currExtendedInfoDict, parent=None)
                     labjackVariableSpecificRecords.append(currRecord)
-                    # currEvent = PhoDurationEvent(anActiveTimestamp.replace(tzinfo=None), None, currVariableName, currVariableColor, currExtendedInfoDict)
-                    # currEvent = FilesystemLabjackEvent_Record.get_gui_view(currRecord, parent=None)
-                    # labjackVariableSpecificEvents.append(currEvent)
+
 
             # Append the variable-specific events to the master list of events
             labjackEventRecords.extend(labjackVariableSpecificRecords)
-            # labjackEvents.extend(labjackVariableSpecificEvents)
-            # variableData.append({'timestamps': activeTimestamps, 'values': activeValues, 'videoIndicies': activeVideoIndicies, 'variableSpecificEvents': labjackVariableSpecificEvents})
+            # Add the value-dict for this variable to the 'variableData' list
             variableData.append({'timestamps': activeTimestamps, 'values': activeValues, 'videoIndicies': activeVideoIndicies, 'variableSpecificRecords': labjackVariableSpecificRecords})
 
 
