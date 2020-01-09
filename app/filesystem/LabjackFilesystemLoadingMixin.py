@@ -381,10 +381,32 @@ class LabjackFilesystemLoader(QObject):
         labjackEventRecords = np.array(labjackEventRecords)
         # labjackEvents = np.array(labjackEvents)
 
+        print('    done. {} total labjackEvents loaded'.format(str(len(labjackEventRecords))))
+        # 'Pre-Filter:' dateTimes.size, labjackEventRecords.size, onesEventFormatDataArray.shape
+        # 'Pre-Filter:' 76117, 41189, (76117, 9)
+        """
+        dateTimes: ndarray, shape (76117,)
+        labjackEventRecords: ndarray, shape (41189,)
+        onesEventFormatDataArray: ndarray, shape (76117, 9)
+        variableData: a list of 8 dicts defined by: {'timestamps': ndarray, 'values': ndarray, 'videoIndicies': ndarray, 'variableSpecificRecords': list} where each dict in the list corresponds to a variable with that index
+            - all fields have same shape (1433,)
+            - 'variableSpecificRecords' is a list of length 1433
+            
+        variable-specific lengths (in this file): (1433, 6717, 1496, 12422, 772, 3223, 851, 14275)
+        """
         if should_filter_for_invalid_events:
             print('Filtering for invalid events...')
             ### Post-processing to detect erronious events, only for food2
             dateTimes, onesEventFormatDataArray, variableData, labjackEventRecords, phoServerFormatArgs = LabjackEventsLoader.filter_invalid_events(dateTimes, onesEventFormatDataArray, variableData, labjackEventRecords, phoServerFormatArgs=phoServerFormatArgs)
+            print('Post-filtering: {} events remain'.format(str(len(labjackEventRecords))))
+            print('    done.')
+
+            """ Post-filtering:
+            dateTimes: ndarray, shape (68574,)
+            labjackEventRecords: ndarray, shape (33646,)
+            onesEventFormatDataArray: ndarray, shape (68574, 9)
+            variableData: counts match those printed in filter_invalid_events function
+            """
 
         # Build the corresponding GUI objects
         ## TODO: defer until needed? Some might be filtered out anyway.

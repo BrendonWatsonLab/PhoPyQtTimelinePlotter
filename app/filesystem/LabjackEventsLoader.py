@@ -149,14 +149,17 @@ class LabjackEventsLoader(object):
         # Produces invalidDispenseEventTimestamps
         invalidDispenseEventTimestamps, valid_labjack_events_mask = LabjackEventsLoader.find_invalid_events(labjackEvents, active_labjack_event_type)
 
+
+
         # Filter the erroneous events from the individual arrays in each variableData
         for index, aPort in enumerate(LabjackEventsLoader.labjack_portNames):
             #print('Invalid dispense events detected: ', invalidDispenseEventIndicies)
             dispenseVariableIndex = index+4
             dispenseVariableTimestamps = np.array(variableData[dispenseVariableIndex]['timestamps'])
             dispenseVariableInvalidTimestamps = np.array(invalidDispenseEventTimestamps[aPort])
-            print(aPort, ": ", len(dispenseVariableInvalidTimestamps), 'invalid dispense events out of', len(dispenseVariableTimestamps), 'events.')
-            print("Removing invalid events...")
+            # print(aPort, ": ", len(dispenseVariableInvalidTimestamps), 'invalid dispense events out of', len(dispenseVariableTimestamps), 'events.')
+            print(aPort, ": out of", len(dispenseVariableTimestamps), 'dispense events,', len(dispenseVariableInvalidTimestamps), 'are invalid.')
+            print("    Removing ", len(dispenseVariableInvalidTimestamps), " invalid events...")
             dispenseVariableInvalidIndicies = np.isin(dispenseVariableTimestamps, dispenseVariableInvalidTimestamps)
             mask = np.ones(len(dispenseVariableTimestamps), dtype=bool)
             mask[dispenseVariableInvalidIndicies] = False
@@ -165,12 +168,16 @@ class LabjackEventsLoader(object):
             # Issue with this key: variableSpecificEvents
             variableData[dispenseVariableIndex][active_variableData_event_specific_key] = np.array(variableData[dispenseVariableIndex][active_variableData_event_specific_key])[mask]
             variableData[dispenseVariableIndex]['videoIndicies'] = variableData[dispenseVariableIndex]['videoIndicies'][mask]
-
+            print("    done.", len(variableData[dispenseVariableIndex]['timestamps']), "events remain.")
 
         # Filter the erroneous events from dateTimes and onesEventFormatDataArray
+        num_total_invalid_events = len(invalidDispenseEventTimestamps['any'])
+        print('    found {} total invalid labjackEvents... removing...'.format(str(num_total_invalid_events)))
+
         dispenseVariableAnyInvalidIndicies = np.isin(dateTimes, invalidDispenseEventTimestamps['any'])
         dateTimes_mask = np.ones(len(dateTimes), dtype=bool)
         dateTimes_mask[dispenseVariableAnyInvalidIndicies] = False
+        print('    done. {} of {} total events remain.'.format(str(num_labjack_events - num_total_invalid_events), str(num_labjack_events)))
 
         # Filter the relevant datetimes to obtain the list of lines that contain invalid events. Save them to a new CSV if desired.
         ## TODO: ensure that non-food 2 events aren't also being removed by removing the entire line at this timestamp.
