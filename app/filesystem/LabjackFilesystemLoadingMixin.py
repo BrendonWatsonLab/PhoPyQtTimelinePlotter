@@ -265,8 +265,6 @@ class LabjackFilesystemLoader(QObject):
                 active_cache[aFoundLabjackDataFile] = outEventFileObj
                 pass
 
-            # Add the current video file path to the loaded files
-            self.loadedLabjackFiles.append(aFoundLabjackDataFile)
 
             parsedFiles = parsedFiles + 1
             # progress_callback.emit(active_labjack_data_file_paths, (parsedFiles*100/numPendingFiles))
