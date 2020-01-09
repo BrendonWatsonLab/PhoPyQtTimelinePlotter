@@ -197,8 +197,8 @@ class LabjackFilesystemLoader(QObject):
     """
     def on_load_labjack_data_files_execute_thread(self, active_labjack_data_file_paths, progress_callback):
 
-        should_filter_for_invalid_events = True
-        # should_filter_for_invalid_events = False
+        # should_filter_for_invalid_events = True
+        should_filter_for_invalid_events = False
         
         currProgress = 0.0
         parsedFiles = 0
@@ -217,15 +217,19 @@ class LabjackFilesystemLoader(QObject):
             # (dateTimes, onesEventFormatDataArray, variableData, labjackEvents) = LabjackFilesystemLoader.loadLabjackEventsFile(aFoundLabjackDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
             (dateTimes, labjackEventContainers, phoServerFormatArgs) = LabjackFilesystemLoader.loadLabjackEventsFile(aFoundLabjackDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False, should_filter_for_invalid_events=should_filter_for_invalid_events)
 
+            print('Loading complete... setting loaded values')
             # Cache the loaded values into the LabjackEventFile object.
-            outEventFileObj.set_loaded_values(dateTimes, [], [], labjackEventContainers, phoServerFormatArgs)
+            # outEventFileObj.set_loaded_values(dateTimes, [], [], labjackEventContainers, phoServerFormatArgs)
+            outEventFileObj.set_loaded_values(dateTimes, [], [], labjackEventContainers, None)
+            print('done updating cache...')
             
             if (not (aFoundLabjackDataFile in self.cache.keys())):
+                print('Creating new cache entry for {}...'.format(str(aFoundLabjackDataFile)))
                 # Parent doesn't yet exist in cache
                 self.cache[aFoundLabjackDataFile] = outEventFileObj
             else:
                 # Parent already exists
-                print("WARNING: labjack file path {0} already exists in the cache. Updating its values...".format(str(aFoundLabjackDataFile)))
+                print("WARNING: labjack file path {} already exists in the cache. Updating its values...".format(str(aFoundLabjackDataFile)))
                 self.cache[aFoundLabjackDataFile] = outEventFileObj
                 pass
 
@@ -403,13 +407,15 @@ class LabjackFilesystemLoader(QObject):
             dateTimes, onesEventFormatDataArray, variableData, labjackEventRecords, phoServerFormatArgs = LabjackEventsLoader.filter_invalid_events(dateTimes, onesEventFormatDataArray, variableData, labjackEventRecords, phoServerFormatArgs=phoServerFormatArgs)
             print('Post-filtering: {} events remain'.format(str(len(labjackEventRecords))))
             print('    done.')
+        else:
+            print('Skipping filtering...')
 
-            """ Post-filtering:
-            dateTimes: ndarray, shape (68574,)
-            labjackEventRecords: ndarray, shape (33646,)
-            onesEventFormatDataArray: ndarray, shape (68574, 9)
-            variableData: counts match those printed in filter_invalid_events function
-            """
+        """ Post-filtering:
+        dateTimes: ndarray, shape (68574,)
+        labjackEventRecords: ndarray, shape (33646,)
+        onesEventFormatDataArray: ndarray, shape (68574, 9)
+        variableData: counts match those printed in filter_invalid_events function
+        """
 
         # Build the corresponding GUI objects
         ## TODO: defer until needed? Some might be filtered out anyway.
@@ -420,7 +426,7 @@ class LabjackFilesystemLoader(QObject):
             built_model_view_container_array.append(aModelViewContainer)
 
         # labjackEvents = [FilesystemLabjackEvent_Record.get_gui_view(aRecord, parent=None) for aRecord in labjackEventRecords]
-
+        print('done building container array...')
 
         # return (dateTimes, onesEventFormatDataArray, variableData, labjackEvents)
         return (dateTimes, built_model_view_container_array, phoServerFormatArgs)
