@@ -196,6 +196,10 @@ class LabjackFilesystemLoader(QObject):
     The main execution function
     """
     def on_load_labjack_data_files_execute_thread(self, active_labjack_data_file_paths, progress_callback):
+
+        should_filter_for_invalid_events = True
+        # should_filter_for_invalid_events = False
+        
         currProgress = 0.0
         parsedFiles = 0
         numPendingFiles = len(active_labjack_data_file_paths)
@@ -211,7 +215,7 @@ class LabjackFilesystemLoader(QObject):
 
             # (dateTimes, onesEventFormatDataArray, variableData, labjackEvents) = LabjackFilesystemLoader.loadLabjackFiles(aFoundLabjackDataFile, self.videoStartDates, self.videoEndDates, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
             # (dateTimes, onesEventFormatDataArray, variableData, labjackEvents) = LabjackFilesystemLoader.loadLabjackEventsFile(aFoundLabjackDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
-            (dateTimes, labjackEventContainers, phoServerFormatArgs) = LabjackFilesystemLoader.loadLabjackEventsFile(aFoundLabjackDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False, should_filter_for_invalid_events=True)
+            (dateTimes, labjackEventContainers, phoServerFormatArgs) = LabjackFilesystemLoader.loadLabjackEventsFile(aFoundLabjackDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False, should_filter_for_invalid_events=should_filter_for_invalid_events)
 
             # Cache the loaded values into the LabjackEventFile object.
             outEventFileObj.set_loaded_values(dateTimes, [], [], labjackEventContainers, phoServerFormatArgs)
@@ -221,7 +225,7 @@ class LabjackFilesystemLoader(QObject):
                 self.cache[aFoundLabjackDataFile] = outEventFileObj
             else:
                 # Parent already exists
-                print("WARNING: video path {0} already exists in the cache. Updating its thumbnail objects list...".format(str(aFoundLabjackDataFile)))
+                print("WARNING: labjack file path {0} already exists in the cache. Updating its values...".format(str(aFoundLabjackDataFile)))
                 self.cache[aFoundLabjackDataFile] = outEventFileObj
                 pass
 

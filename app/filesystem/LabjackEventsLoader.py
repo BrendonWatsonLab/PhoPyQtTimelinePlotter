@@ -22,7 +22,7 @@ from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, Filesystem
 """
 class PhoServerFormatArgs(QObject):
     def __init__(self, relevantDateTimes, relevantFileLines, erroneousEventFreeCSVFilePath, parsedFileInfoDict, parent=None):
-        super(PhoServerFormatArgs, self).__init__(parent)
+        super(PhoServerFormatArgs, self).__init__(parent=parent)
         # self.usePhoServerFormat = usePhoServerFormat
         self.relevantDateTimes = relevantDateTimes
         self.relevantFileLines = relevantFileLines
@@ -129,10 +129,9 @@ class LabjackEventsLoader(object):
     def filter_invalid_events(dateTimes, onesEventFormatDataArray, variableData, labjackEvents, phoServerFormatArgs=None):
         num_labjack_events = len(labjackEvents)
         if num_labjack_events <= 0:
-            print("WARNING: labjackEvents is empty!")
-            # return (dateTimes, onesEventFormatDataArray, variableData, labjackEvents, phoServerFormatArgs)
-            return None
-
+            # print("WARNING: labjackEvents is empty!")
+            return (dateTimes, onesEventFormatDataArray, variableData, labjackEvents, phoServerFormatArgs)
+            
         active_labjack_event_type = None
         first_labjack_event_obj = labjackEvents[0]
         if (type(first_labjack_event_obj) is PhoDurationEvent):
