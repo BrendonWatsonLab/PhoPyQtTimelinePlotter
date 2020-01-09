@@ -9,6 +9,8 @@ import re
 import datetime as dt
 from enum import Enum
 
+from PyQt5.QtCore import Qt, QObject, QEvent, pyqtSignal
+
 from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent, PhoEvent
 from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemLabjackEvent_Record
 
@@ -18,9 +20,9 @@ from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, Filesystem
 # from app.filesystem.LabjackEventsLoader import LabjackEventsLoader, PhoServerFormatArgs
 """ class PhoServerFormatArgs: A simple wrapper class that holds the arguments to filter_invalid_events for phoServerFormat
 """
-class PhoServerFormatArgs(object):
-    def __init__(self, relevantDateTimes, relevantFileLines, erroneousEventFreeCSVFilePath, parsedFileInfoDict):
-        super(PhoServerFormatArgs, self).__init__()
+class PhoServerFormatArgs(QObject):
+    def __init__(self, relevantDateTimes, relevantFileLines, erroneousEventFreeCSVFilePath, parsedFileInfoDict, parent=None):
+        super(PhoServerFormatArgs, self).__init__(parent)
         # self.usePhoServerFormat = usePhoServerFormat
         self.relevantDateTimes = relevantDateTimes
         self.relevantFileLines = relevantFileLines

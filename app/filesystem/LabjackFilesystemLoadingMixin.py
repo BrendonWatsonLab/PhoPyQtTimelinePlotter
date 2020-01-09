@@ -281,7 +281,6 @@ class LabjackFilesystemLoader(QObject):
         phoServerFormatArgs = None
 
         if usePhoServerFormat:
-            parsedFileInfoDict = LabjackEventsLoader.parsePhoServerFormatFilepath(labjackFilePath)
             (phoServerFormatArgs, dateTimes, onesEventFormatDataArray) = LabjackEventsLoader.loadLabjackDataFromPhoServerFormat(labjackFilePath, shouldUseStdOutFormat=phoServerFormatIsStdOut)
             
         else:
