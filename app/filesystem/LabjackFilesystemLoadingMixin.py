@@ -1,5 +1,7 @@
 # LabjackFilesystemLoadingMixin.py
 import sys
+# import pickle
+# import cPickle
 from datetime import datetime, timezone, timedelta
 from enum import Enum
 import numpy as np
@@ -316,24 +318,6 @@ class LabjackFilesystemLoader(QObject):
 
     ## Static Methods:
 
-    """ loadLabjackEventsFile_loadFromFile(...): Just loads the file
-    Called by loadLabjackEventsFile(...)
-        Calls the static LabjackEventsLoader functions for the appropriate file format (phoServer format or Matlab format).
-        Returns a onesEventFormatDataArray.
-    """
-    @staticmethod
-    def loadLabjackEventsFile_loadFromFile(labjackFilePath, usePhoServerFormat=False, phoServerFormatIsStdOut=True):
-        ## Load the Labjack events data from an exported MATLAB file
-        # Used only for PhoServerFormat:
-        phoServerFormatArgs = None
-
-        if usePhoServerFormat:
-            (phoServerFormatArgs, dateTimes, onesEventFormatDataArray) = LabjackEventsLoader.loadLabjackDataFromPhoServerFormat(labjackFilePath, shouldUseStdOutFormat=phoServerFormatIsStdOut)
-            
-        else:
-            (dateNums, dateTimes, onesEventFormatDataArray) = LabjackEventsLoader.loadLabjackDataFromMatlabFormat(labjackFilePath)
-
-        return (dateTimes, onesEventFormatDataArray, phoServerFormatArgs)
 
     """ loadLabjackEventsFile(...): new.
         labjackEventRecords: a sorted list of FilesystemLabjackEvent_Record type objects for all variable types
@@ -344,7 +328,7 @@ class LabjackFilesystemLoader(QObject):
         # If shouldLimitEventsToVideoDates is True then only events that fall between the earliest video start date and the latest video finish date are included
         # If shouldLimitEventsToVariables is not None, then only events that are of type of the variable with the name in the array are included
         ## TODO: shouldLimitEventsToVideoDates should also affect the returned dateTimes, dataArray, etc.
-        (dateTimes, onesEventFormatDataArray, phoServerFormatArgs) = LabjackFilesystemLoader.loadLabjackEventsFile_loadFromFile(labjackFilePath, usePhoServerFormat, phoServerFormatIsStdOut)
+        (dateTimes, onesEventFormatDataArray, phoServerFormatArgs) = LabjackEventsLoader.loadLabjackEventsFile_loadFromFile(labjackFilePath, usePhoServerFormat, phoServerFormatIsStdOut)
 
         ## Pre-process the data
         if limitedVariablesToCreateEventsFor is not None:
@@ -455,22 +439,46 @@ class LabjackFilesystemLoader(QObject):
         variableData: counts match those printed in filter_invalid_events function
         """
 
+        """
+        converts the variableData list of dicts to a proper Pandas dataframe
+        """
+        def get_variables_as_dataframe(variableData, active_labjack_variable_names):
+            # Convert to dataframe:
+            variableDataFrames = dict()
+            # Loop through all variables and build a dataframe for each variable data in variableData
+                    # for aVariableIndex in range(0, numVariables):
+            for (aVariableIndex, currVariableName) in enumerate(active_labjack_variable_names):
+                # currVariableName = active_labjack_variable_names[aVariableIndex]
+                variableDataFrames[currVariableName] = pd.DataFrame.from_dict(variableData[aVariableIndex])
 
-        # Convert to dataframe:
-        variableDataFrames = dict()
-        # Loop through all variables and build a dataframe for each variable data in variableData
-        for variableIndex in range(0, numVariables):
-            currVariableName = active_labjack_variable_names[variableIndex]
-            variableDataFrames[currVariableName] = pd.DataFrame.from_dict(variableData[variableIndex])
-
-        pd.concat(variableDataFrames)
+            return pd.concat(variableDataFrames)
+            # return variableDataFrames
 
 
+        # """ Export Dataframe to file:
+        # Writing dataframe to file data/output/LabjackDataExport/output_dataframe_1-9-2020...
+        # C:\Users\halechr\repo\PhoPyQtTimelinePlotter\app\filesystem\LabjackFilesystemLoadingMixin.py:257: PerformanceWarning:
+        # your performance may suffer as PyTables will pickle object types that it cannot
+        # map directly to c-types [inferred_type->mixed-integer,key->block2_values] [items->['videoIndicies', 'variableSpecificRecords']]
+        # """
+
+        out_dataframe_export_path = 'data/output/LabjackDataExport/output_dataframe_1-9-2020'
+        print('Converting variableData to Pandas Dataframe...')
+        out_df = get_variables_as_dataframe(variableData, active_labjack_variable_names)
+        # out_df.to_json(orient='split')
+        print('Writing dataframe to file {}...'.format(str(out_dataframe_export_path)))
+        # out_df.to_pickle(out_dataframe_export_path)
+        store = pd.HDFStore('{}_store.h5'.format(str(out_dataframe_export_path)))
+        # to_hdf
+        store['variables_dataframe'] = out_df
+        store
+        print('done writing dataframe to file.')
         # for (aVariableIndex, aVariableData) in enumerate(variableData):
         #     aVariableData['']
             
 
         # Build the corresponding GUI objects
+        print('building container array...')
         ## TODO: defer until needed? Some might be filtered out anyway.
         built_model_view_container_array = []
         for (index, aRecord) in enumerate(labjackEventRecords):
@@ -479,7 +487,7 @@ class LabjackFilesystemLoader(QObject):
             built_model_view_container_array.append(aModelViewContainer)
 
         # labjackEvents = [FilesystemLabjackEvent_Record.get_gui_view(aRecord, parent=None) for aRecord in labjackEventRecords]
-        print('done building container array...')
+        print('done building container array.')
 
         # return (dateTimes, onesEventFormatDataArray, variableData, labjackEvents)
         return (dateTimes, built_model_view_container_array, phoServerFormatArgs)

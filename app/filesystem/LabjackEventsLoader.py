@@ -561,8 +561,28 @@ class LabjackEventsLoader(object):
         # return (relevantFileLines[falling_edges_row_indicies], outputDateTimes, dateTimes, onesEventFormatOutputData)
         return (outputPhoServerFormatArgs, dateTimes, onesEventFormatOutputData)
 
+    """ loadLabjackEventsFile_loadFromFile(...): Just loads the file
+    Called by loadLabjackEventsFile(...)
+        Calls the static LabjackEventsLoader functions for the appropriate file format (phoServer format or Matlab format).
+        Returns a onesEventFormatDataArray.
+    """
+    @staticmethod
+    def loadLabjackEventsFile_loadFromFile(labjackFilePath, usePhoServerFormat=False, phoServerFormatIsStdOut=True):
+        ## Load the Labjack events data from an exported MATLAB file
+        # Used only for PhoServerFormat:
+        phoServerFormatArgs = None
+
+        if usePhoServerFormat:
+            (phoServerFormatArgs, dateTimes, onesEventFormatDataArray) = LabjackEventsLoader.loadLabjackDataFromPhoServerFormat(labjackFilePath, shouldUseStdOutFormat=phoServerFormatIsStdOut)
+            
+        else:
+            (dateNums, dateTimes, onesEventFormatDataArray) = LabjackEventsLoader.loadLabjackDataFromMatlabFormat(labjackFilePath)
+
+        return (dateTimes, onesEventFormatDataArray, phoServerFormatArgs)
 
 
+
+    ## Data Export:
     @staticmethod
     def writeLinesToCsvFile(lines, filePath='results/output.csv'):
         # Open a text file to write the lines out to
