@@ -31,20 +31,20 @@ from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
 # from app.filesystem.LabjackFilesystemLoadingMixin import LabjackEventFile, LabjackFilesystemLoader
 
 
-from pyqtgraph import ProgressDialog
-import pyqtgraph as pg
-class ProgressDialogDisplayingMixin(QObject):
+# from pyqtgraph import ProgressDialog
+# import pyqtgraph as pg
+# class ProgressDialogDisplayingMixin(QObject):
 
-    def __init__(self, filePath, parent=None):
-        super().__init__(parent=parent)
+#     def __init__(self, filePath, parent=None):
+#         super().__init__(parent=parent)
 
-        with ProgressDialog("Processing..", 0, 100, cancelText='Cancel', parent=self, busyCursor=True) as dlg:
-            # do stuff
-            self.get_labjack_data_files_loader().add_labjack_file_path(importFilePath)
-            # dlg.setValue(i)   ## could also use dlg += 1
-            dlg += 1
-            if dlg.wasCanceled():
-                raise Exception("Processing canceled by user")
+#         with ProgressDialog("Processing..", 0, 100, cancelText='Cancel', parent=self, busyCursor=True) as dlg:
+#             # do stuff
+#             self.get_labjack_data_files_loader().add_labjack_file_path(importFilePath)
+#             # dlg.setValue(i)   ## could also use dlg += 1
+#             dlg += 1
+#             if dlg.wasCanceled():
+#                 raise Exception("Processing canceled by user")
 
 
 
@@ -186,11 +186,39 @@ class LabjackFilesystemLoader(QObject):
 
 
     ## Threads:
+    # @pyqtSlot(list, int)
+    # def on_load_labjack_data_files_progress_fn(self, active_labjack_data_file_paths, n):     
+    #     self.pending_operation_status.update(n)
+    #     self.labjackDataFileLoaded.emit()
+    #     print("%d%% done" % n)
+
     @pyqtSlot(list, int)
-    def on_load_labjack_data_files_progress_fn(self, active_labjack_data_file_paths, n):
+    def on_load_labjack_data_files_progress_fn(self, latest_labjack_file_result_list, n):
+        aFoundLabjackDataFile = latest_labjack_file_result_list[0] # The last loaded URL
+        outEventFileObj = latest_labjack_file_result_list[1] # outEventFileObj: LabjackEventFile type object
+        print('on_load_labjack_data_files_progress_fn(..., n: {}): file: {}'.format(str(n), str(aFoundLabjackDataFile)))
+
+        # Update our cache
+        if (not (aFoundLabjackDataFile in self.cache.keys())):
+            print('Creating new cache entry for {}...'.format(str(aFoundLabjackDataFile)))
+            # Parent doesn't yet exist in cache
+            self.cache[aFoundLabjackDataFile] = outEventFileObj
+        else:
+            # Parent already exists
+            print("WARNING: labjack file path {} already exists in the cache. Updating its values...".format(str(aFoundLabjackDataFile)))
+            self.cache[aFoundLabjackDataFile] = outEventFileObj
+            pass
+
+        # Add the current video file path to the loaded files
+        self.loadedLabjackFiles.append(aFoundLabjackDataFile)
+        
+        # updated!
         self.pending_operation_status.update(n)
         self.labjackDataFileLoaded.emit()
-        print("%d%% done" % n)
+        # print("%d%% done" % n)
+
+
+# LabjackEventFile
 
     """
     The main execution function
@@ -205,6 +233,10 @@ class LabjackFilesystemLoader(QObject):
         numPendingFiles = len(active_labjack_data_file_paths)
         self.pending_operation_status.restart(OperationTypes.FilesystemLabjackFileLoad, numPendingFiles)
 
+        new_cache = dict()
+        
+        # active_cache = self.cache
+        active_cache = new_cache
         # Loop through all the labjack data file paths and parse the files into a LabjackEventFile object.
         for (sub_index, aFoundLabjackDataFile) in enumerate(active_labjack_data_file_paths):
 
@@ -223,23 +255,26 @@ class LabjackFilesystemLoader(QObject):
             outEventFileObj.set_loaded_values(dateTimes, [], [], labjackEventContainers, None)
             print('done updating cache...')
             
-            if (not (aFoundLabjackDataFile in self.cache.keys())):
-                print('Creating new cache entry for {}...'.format(str(aFoundLabjackDataFile)))
+            if (not (aFoundLabjackDataFile in active_cache.keys())):
+                # print('Creating new cache entry for {}...'.format(str(aFoundLabjackDataFile)))
                 # Parent doesn't yet exist in cache
-                self.cache[aFoundLabjackDataFile] = outEventFileObj
+                active_cache[aFoundLabjackDataFile] = outEventFileObj
             else:
                 # Parent already exists
-                print("WARNING: labjack file path {} already exists in the cache. Updating its values...".format(str(aFoundLabjackDataFile)))
-                self.cache[aFoundLabjackDataFile] = outEventFileObj
+                print("WARNING: labjack file path {} already exists in the temporary cache. Updating its values...".format(str(aFoundLabjackDataFile)))
+                active_cache[aFoundLabjackDataFile] = outEventFileObj
                 pass
 
             # Add the current video file path to the loaded files
             self.loadedLabjackFiles.append(aFoundLabjackDataFile)
 
             parsedFiles = parsedFiles + 1
-            progress_callback.emit(active_labjack_data_file_paths, (parsedFiles*100/numPendingFiles))
+            # progress_callback.emit(active_labjack_data_file_paths, (parsedFiles*100/numPendingFiles))
+            progress_callback.emit([aFoundLabjackDataFile, outEventFileObj], (parsedFiles*100/numPendingFiles))
 
-        return "Done."
+        # return "Done."
+        # Returns the cache when done
+        return new_cache
  
     @pyqtSlot(list, object)
     def on_load_labjack_data_files_print_output(self, active_video_paths, s):
