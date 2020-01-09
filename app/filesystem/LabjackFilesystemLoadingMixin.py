@@ -455,6 +455,21 @@ class LabjackFilesystemLoader(QObject):
         variableData: counts match those printed in filter_invalid_events function
         """
 
+
+        # Convert to dataframe:
+        variableDataFrames = dict()
+        # Loop through all variables and build a dataframe for each variable data in variableData
+        for variableIndex in range(0, numVariables):
+            currVariableName = active_labjack_variable_names[variableIndex]
+            variableDataFrames[currVariableName] = pd.DataFrame.from_dict(variableData[variableIndex])
+
+        pd.concat(variableDataFrames)
+
+
+        # for (aVariableIndex, aVariableData) in enumerate(variableData):
+        #     aVariableData['']
+            
+
         # Build the corresponding GUI objects
         ## TODO: defer until needed? Some might be filtered out anyway.
         built_model_view_container_array = []
