@@ -55,6 +55,66 @@ class LabjackEventType(Enum):
 
 class LabjackEventsLoader(object):
 
+    # Defined constants
+    labjack_portNames = ['Water1', 'Water2', 'Food1', 'Food2']
+
+    labjack_variable_names = ['Water1_BeamBreak', 'Water2_BeamBreak', 'Food1_BeamBreak', 'Food2_BeamBreak', 'Water1_Dispense', 'Water2_Dispense', 'Food1_Dispense', 'Food2_Dispense']
+    labjack_variable_colors = ['aqua', 'aquamarine', 'coral', 'magenta', 'blue', 'darkblue', 'crimson', 'maroon']
+    labjack_variable_indicies = [0, 1, 2, 3, 4, 5, 6, 7]
+    labjack_variable_event_type = ['BeamBreak', 'BeamBreak', 'BeamBreak', 'BeamBreak', 'Dispense', 'Dispense', 'Dispense', 'Dispense']
+    labjack_variable_dispense_type = ['Water', 'Water', 'Food', 'Food', 'Water', 'Water', 'Food', 'Food']
+    labjack_variable_port_location = ['Water1', 'Water2', 'Food1', 'Food2', 'Water1', 'Water2', 'Food1', 'Food2']
+
+    labjack_csv_variable_names = ["milliseconds_since_epoch","DIO0","DIO1","DIO2","DIO3","DIO4","DIO5","DIO6","DIO7","MIO0"]
+
+
+    # Derived Dictionaries
+    labjack_variable_colors_dict = dict(zip(labjack_variable_names, labjack_variable_colors))
+    labjack_variable_indicies_dict = dict(zip(labjack_variable_names, labjack_variable_indicies))
+
+    ## TODO: Generalize to work with analog sensors (like the new 1-9-2020 running wheel absolute rotary encoder)
+    rx_stdout_data_line = re.compile(r'^(?P<milliseconds_since_epoch>\d{13}): (?P<DIO0>[10]), (?P<DIO1>[10]), (?P<DIO2>[10]), (?P<DIO3>[10]), (?P<DIO4>[10]), (?P<DIO5>[10]), (?P<DIO6>[10]), (?P<DIO7>[10]), (?P<MIO0>[10]),')
+    rx_csv_data_line = re.compile(r'^(?P<milliseconds_since_epoch>\d{13}),(?P<DIO0>[10]),(?P<DIO1>[10]),(?P<DIO2>[10]),(?P<DIO3>[10]),(?P<DIO4>[10]),(?P<DIO5>[10]),(?P<DIO6>[10]),(?P<DIO7>[10]),(?P<MIO0>[10])')
+    rx_stdout_dict = {'data':rx_stdout_data_line}
+    rx_csv_dict = {'data':rx_csv_data_line}
+
+    """
+    out_file_s470017560_1562601911545.csv  
+    
+    out_file_s470017560_46Combined.csv
+    out_file_s470017560_20190911-20190820_46Combined.csv
+    
+    # Combined MATLAB output format:
+    out_file_s{LabjackSerialNumber}_{YYYYMMDD_LATEST}-{YYYYMMDD_EARLIEST}_{NumberOfCSVFilesConcatenated}Combined.csv
+    
+    "I:\EventData\BB01\Subject_02"
+      
+    "I:\EventData\BB01\Subject_02\out_file_s470017560_20190911-20190820_46Combined.csv"
+      
+    
+    \d{9}
+    BB(?P<bb_id>\d{2})
+    (?P<latest_year>\d{4})(?P<latest_month>\d{2})(?P<latest_day>\d{2})
+    (?P<earliest_year>\d{4})(?P<earliest_month>\d{2})(?P<earliest_day>\d{2})
+    
+    (?P<latest_date>\d{4}\d{2}\d{2})
+    (?P<earliest_date>\d{4}\d{2}\d{2})
+    
+    (?_(?P<latest_date>\d{4}\d{2}\d{2})-(?P<earliest_date>\d{4}\d{2}\d{2}))?
+    
+    """
+    # Parses the "out_file_s470017560_20190911-20190820_46Combined" part out of "I:\EventData\BB01\Subject_02\out_file_s470017560_20190911-20190820_46Combined.csv"
+    # rx_combined_csv_file_name = re.compile(r'^out_file_s(?P<labjack_serial_number>\d{9})_(?P<latest_year>\d{4})(?P<latest_month>\d{2})(?P<latest_day>\d{2})-(?P<earliest_year>\d{4})(?P<earliest_month>\d{2})(?P<earliest_day>\d{2})_(?P<number_of_CSV_files_concatenated>\d+)Combined$')
+    rx_combined_csv_file_name = re.compile(r'^out_file_s(?P<labjack_serial_number>\d{9})(?P<date_ranges>_(?P<latest_date>\d{4}\d{2}\d{2})-(?P<earliest_date>\d{4}\d{2}\d{2}))?_(?P<number_of_CSV_files_concatenated>\d+)Combined')
+
+    # Parses the "BB01" part out of the file path "I:\EventData\BB01\Subject_02"
+    rx_combined_csv_file_path_name_bb_id = re.compile(r'^BB(?P<bb_id>\d{2})$')
+
+    # Parses the "Subject_02" part out of the file path "I:\EventData\BB01\Subject_02"
+    rx_combined_csv_file_path_name_subject_name = re.compile(r'^Subject_(?P<subject_id>\d+)$')
+
+
+
     # matPath = 'C:\Users\watsonlab\Documents\code\PhoLabjackCSVHelper\Output\LabjackTimeTable.mat'
     @staticmethod
     def matlab2datetime(matlab_datenum):
@@ -232,63 +292,10 @@ class LabjackEventsLoader(object):
         dataArray = np.array(data['dataArray']).T
         return (dateNums, dateTimes, dataArray)
 
-    # Defined constants
-    labjack_portNames = ['Water1', 'Water2', 'Food1', 'Food2']
 
-    labjack_variable_names = ['Water1_BeamBreak', 'Water2_BeamBreak', 'Food1_BeamBreak', 'Food2_BeamBreak', 'Water1_Dispense', 'Water2_Dispense', 'Food1_Dispense', 'Food2_Dispense']
-    labjack_variable_colors = ['aqua', 'aquamarine', 'coral', 'magenta', 'blue', 'darkblue', 'crimson', 'maroon']
-    labjack_variable_indicies = [0, 1, 2, 3, 4, 5, 6, 7]
-    labjack_variable_event_type = ['BeamBreak', 'BeamBreak', 'BeamBreak', 'BeamBreak', 'Dispense', 'Dispense', 'Dispense', 'Dispense']
-    labjack_variable_dispense_type = ['Water', 'Water', 'Food', 'Food', 'Water', 'Water', 'Food', 'Food']
-    labjack_variable_port_location = ['Water1', 'Water2', 'Food1', 'Food2', 'Water1', 'Water2', 'Food1', 'Food2']
-
-    labjack_csv_variable_names = ["milliseconds_since_epoch","DIO0","DIO1","DIO2","DIO3","DIO4","DIO5","DIO6","DIO7","MIO0"]
-
-
-    # Derived Dictionaries
-    labjack_variable_colors_dict = dict(zip(labjack_variable_names, labjack_variable_colors))
-    labjack_variable_indicies_dict = dict(zip(labjack_variable_names, labjack_variable_indicies))
-
-    rx_stdout_data_line = re.compile(r'^(?P<milliseconds_since_epoch>\d{13}): (?P<DIO0>[10]), (?P<DIO1>[10]), (?P<DIO2>[10]), (?P<DIO3>[10]), (?P<DIO4>[10]), (?P<DIO5>[10]), (?P<DIO6>[10]), (?P<DIO7>[10]), (?P<MIO0>[10]),')
-    rx_csv_data_line = re.compile(r'^(?P<milliseconds_since_epoch>\d{13}),(?P<DIO0>[10]),(?P<DIO1>[10]),(?P<DIO2>[10]),(?P<DIO3>[10]),(?P<DIO4>[10]),(?P<DIO5>[10]),(?P<DIO6>[10]),(?P<DIO7>[10]),(?P<MIO0>[10])')
-    rx_stdout_dict = {'data':rx_stdout_data_line}
-    rx_csv_dict = {'data':rx_csv_data_line}
-
+    """ def parsePhoServerFormatFilepath(filePathString)
+    Tries to determine metadata information from loaded labjack filepath
     """
-    out_file_s470017560_1562601911545.csv  
-    
-    out_file_s470017560_46Combined.csv
-    out_file_s470017560_20190911-20190820_46Combined.csv
-    
-    # Combined MATLAB output format:
-    out_file_s{LabjackSerialNumber}_{YYYYMMDD_LATEST}-{YYYYMMDD_EARLIEST}_{NumberOfCSVFilesConcatenated}Combined.csv
-    
-    "I:\EventData\BB01\Subject_02"
-      
-    "I:\EventData\BB01\Subject_02\out_file_s470017560_20190911-20190820_46Combined.csv"
-      
-    
-    \d{9}
-    BB(?P<bb_id>\d{2})
-    (?P<latest_year>\d{4})(?P<latest_month>\d{2})(?P<latest_day>\d{2})
-    (?P<earliest_year>\d{4})(?P<earliest_month>\d{2})(?P<earliest_day>\d{2})
-    
-    (?P<latest_date>\d{4}\d{2}\d{2})
-    (?P<earliest_date>\d{4}\d{2}\d{2})
-    
-    (?_(?P<latest_date>\d{4}\d{2}\d{2})-(?P<earliest_date>\d{4}\d{2}\d{2}))?
-    
-    """
-    # Parses the "out_file_s470017560_20190911-20190820_46Combined" part out of "I:\EventData\BB01\Subject_02\out_file_s470017560_20190911-20190820_46Combined.csv"
-    # rx_combined_csv_file_name = re.compile(r'^out_file_s(?P<labjack_serial_number>\d{9})_(?P<latest_year>\d{4})(?P<latest_month>\d{2})(?P<latest_day>\d{2})-(?P<earliest_year>\d{4})(?P<earliest_month>\d{2})(?P<earliest_day>\d{2})_(?P<number_of_CSV_files_concatenated>\d+)Combined$')
-    rx_combined_csv_file_name = re.compile(r'^out_file_s(?P<labjack_serial_number>\d{9})(?P<date_ranges>_(?P<latest_date>\d{4}\d{2}\d{2})-(?P<earliest_date>\d{4}\d{2}\d{2}))?_(?P<number_of_CSV_files_concatenated>\d+)Combined')
-
-    # Parses the "BB01" part out of the file path "I:\EventData\BB01\Subject_02"
-    rx_combined_csv_file_path_name_bb_id = re.compile(r'^BB(?P<bb_id>\d{2})$')
-
-    # Parses the "Subject_02" part out of the file path "I:\EventData\BB01\Subject_02"
-    rx_combined_csv_file_path_name_subject_name = re.compile(r'^Subject_(?P<subject_id>\d+)$')
-
     @staticmethod
     def parsePhoServerFormatFilepath(filePathString):
         # Expects path in format: "I:\EventData\BB01\Subject_02\out_file_s470017560_20190911-20190820_46Combined.csv"
@@ -434,6 +441,7 @@ class LabjackEventsLoader(object):
         print("Finished parsing {}. Result: {}".format(filePathString, parsedResult))
         return parsedResult
 
+    ## TODO: Generalize to work with analog sensors (like the new 1-9-2020 running wheel absolute rotary encoder)
     @staticmethod
     def loadLabjackDataFromPhoServerFormat(filePath, shouldUseStdOutFormat=True):
         # Loads from a txt file output by my PhoServer C++ program and returns (relevantFileLines, dateTimes, onesEventFormatOutputData)
