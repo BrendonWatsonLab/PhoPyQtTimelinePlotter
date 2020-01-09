@@ -23,8 +23,7 @@ from pathlib import Path
 
 from GUI.Model.ModelViewContainer import ModelViewContainer
 from app.filesystem.FilesystemOperations import OperationTypes, PendingFilesystemOperation
-# from app.filesystem.LabjackEventsLoader import loadLabjackDataFromPhoServerFormat, loadLabjackDataFromMatlabFormat, labjack_variable_names, labjack_variable_colors_dict, labjack_variable_indicies_dict, labjack_variable_event_type, labjack_variable_port_location, writeLinesToCsvFile
-from app.filesystem.LabjackEventsLoader import LabjackEventsLoader
+from app.filesystem.LabjackEventsLoader import LabjackEventsLoader, PhoServerFormatArgs
 
 from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemLabjackEvent_Record
 from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
@@ -64,7 +63,7 @@ class LabjackEventFile(QObject):
         self.labjackContainerEvents = []
         # self.labjackEvents = []
 
-        self.parsedFileInfoDict = None
+        self.phoServerFormatArgs = None
 
     def get_file_path(self):
         return self.filePath
@@ -83,24 +82,18 @@ class LabjackEventFile(QObject):
 
 
     def get_parsed_dict(self):
-        return self.parsedFileInfoDict
+        if self.phoServerFormatArgs is None:
+            return None
+        else:
+            return self.phoServerFormatArgs.parsedFileInfoDict
 
-
-
-
-    # def set_loaded_values(self, dateTimes, onesEventFormatDataArray, variableData, labjackEvents):
-    #     self.dateTimes = dateTimes
-    #     self.onesEventFormatDataArray = onesEventFormatDataArray
-    #     self.variableData = variableData
-    #     self.labjackEvents = labjackEvents
-
-    def set_loaded_values(self, dateTimes, onesEventFormatDataArray, variableData, labjackEventsContainerArray, parsedFileInfoDict):
+    def set_loaded_values(self, dateTimes, onesEventFormatDataArray, variableData, labjackEventsContainerArray, phoServerFormatArgs):
         self.dateTimes = dateTimes
         self.onesEventFormatDataArray = onesEventFormatDataArray
         self.variableData = variableData
         # self.labjackEvents = labjackEvents
         self.labjackContainerEvents = labjackEventsContainerArray
-        self.parsedFileInfoDict = parsedFileInfoDict
+        self.phoServerFormatArgs = phoServerFormatArgs
 
 
 # QThreadPool
@@ -218,10 +211,10 @@ class LabjackFilesystemLoader(QObject):
 
             # (dateTimes, onesEventFormatDataArray, variableData, labjackEvents) = LabjackFilesystemLoader.loadLabjackFiles(aFoundLabjackDataFile, self.videoStartDates, self.videoEndDates, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
             # (dateTimes, onesEventFormatDataArray, variableData, labjackEvents) = LabjackFilesystemLoader.loadLabjackEventsFile(aFoundLabjackDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
-            (dateTimes, labjackEventContainers, parsedFileInfoDict) = LabjackFilesystemLoader.loadLabjackEventsFile(aFoundLabjackDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
+            (dateTimes, labjackEventContainers, phoServerFormatArgs) = LabjackFilesystemLoader.loadLabjackEventsFile(aFoundLabjackDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False, should_filter_for_invalid_events=True)
 
             # Cache the loaded values into the LabjackEventFile object.
-            outEventFileObj.set_loaded_values(dateTimes, [], [], labjackEventContainers, parsedFileInfoDict)
+            outEventFileObj.set_loaded_values(dateTimes, [], [], labjackEventContainers, phoServerFormatArgs)
             
             if (not (aFoundLabjackDataFile in self.cache.keys())):
                 # Parent doesn't yet exist in cache
@@ -437,36 +430,35 @@ class LabjackFilesystemLoader(QObject):
         return (dateTimes, onesEventFormatDataArray, variableData, labjackEvents)
 
     """ loadLabjackEventsFile_loadFromFile(...): Just loads the file
+    Called by loadLabjackEventsFile(...)
         Calls the static LabjackEventsLoader functions for the appropriate file format (phoServer format or Matlab format).
         Returns a onesEventFormatDataArray.
     """
     @staticmethod
     def loadLabjackEventsFile_loadFromFile(labjackFilePath, usePhoServerFormat=False, phoServerFormatIsStdOut=True):
         ## Load the Labjack events data from an exported MATLAB file
-        # If shouldLimitEventsToVideoDates is True then only events that fall between the earliest video start date and the latest video finish date are included
-        # If shouldLimitEventsToVariables is not None, then only events that are of type of the variable with the name in the array are included
-        ## TODO: shouldLimitEventsToVideoDates should also affect the returned dateTimes, dataArray, etc.
-        parsedFileInfoDict = None
+        # Used only for PhoServerFormat:
+        phoServerFormatArgs = None
 
         if usePhoServerFormat:
             parsedFileInfoDict = LabjackEventsLoader.parsePhoServerFormatFilepath(labjackFilePath)
-            (relevantFileLines, relevantDateTimes, dateTimes, onesEventFormatDataArray) = LabjackEventsLoader.loadLabjackDataFromPhoServerFormat(labjackFilePath, shouldUseStdOutFormat=phoServerFormatIsStdOut)
+            (phoServerFormatArgs, dateTimes, onesEventFormatDataArray) = LabjackEventsLoader.loadLabjackDataFromPhoServerFormat(labjackFilePath, shouldUseStdOutFormat=phoServerFormatIsStdOut)
             
         else:
             (dateNums, dateTimes, onesEventFormatDataArray) = LabjackEventsLoader.loadLabjackDataFromMatlabFormat(labjackFilePath)
 
-        return (dateTimes, onesEventFormatDataArray, parsedFileInfoDict)
+        return (dateTimes, onesEventFormatDataArray, phoServerFormatArgs)
 
     """ loadLabjackEventsFile(...): new.
 
     """
     @staticmethod
-    def loadLabjackEventsFile(labjackFilePath, videoDates, videoEndDates, shouldLimitEventsToVideoDates=True, limitedVariablesToCreateEventsFor=None, usePhoServerFormat=False, phoServerFormatIsStdOut=True):
+    def loadLabjackEventsFile(labjackFilePath, videoDates, videoEndDates, shouldLimitEventsToVideoDates=True, limitedVariablesToCreateEventsFor=None, usePhoServerFormat=False, phoServerFormatIsStdOut=True, should_filter_for_invalid_events=True):
         ## Load the Labjack events data from an exported MATLAB file
         # If shouldLimitEventsToVideoDates is True then only events that fall between the earliest video start date and the latest video finish date are included
         # If shouldLimitEventsToVariables is not None, then only events that are of type of the variable with the name in the array are included
         ## TODO: shouldLimitEventsToVideoDates should also affect the returned dateTimes, dataArray, etc.
-        (dateTimes, onesEventFormatDataArray, parsedFileInfoDict) = LabjackFilesystemLoader.loadLabjackEventsFile_loadFromFile(labjackFilePath, usePhoServerFormat, phoServerFormatIsStdOut)
+        (dateTimes, onesEventFormatDataArray, phoServerFormatArgs) = LabjackFilesystemLoader.loadLabjackEventsFile_loadFromFile(labjackFilePath, usePhoServerFormat, phoServerFormatIsStdOut)
 
         ## Pre-process the data
         if limitedVariablesToCreateEventsFor is not None:
@@ -484,7 +476,7 @@ class LabjackFilesystemLoader(QObject):
         ## Iterate through the event variables and pre-process them
         variableData = []
         labjackEventRecords = []
-        labjackEvents = []
+        # labjackEvents = []
         # Can't check for invalid events in here because we do it variable by variable.
         for variableIndex in range(0, numVariables):
             currVariableName = active_labjack_variable_names[variableIndex]
@@ -539,15 +531,20 @@ class LabjackFilesystemLoader(QObject):
             variableData.append({'timestamps': activeTimestamps, 'values': activeValues, 'videoIndicies': activeVideoIndicies, 'variableSpecificRecords': labjackVariableSpecificRecords})
 
 
-        labjackEventRecords = np.array(labjackEventRecords)
-        # labjackEvents = np.array(labjackEvents)
-
         # Sort events by timestamp
         try: import operator
         except ImportError: keyfun = lambda x: x.start_date  # use a lambda if no operator module
         else: keyfun = operator.attrgetter("start_date")  # use operator since it's faster than lambda
         labjackEventRecords = sorted(labjackEventRecords, key=keyfun)
 
+        # Be sure to convert into a numpy array AFTER sorting
+        labjackEventRecords = np.array(labjackEventRecords)
+        # labjackEvents = np.array(labjackEvents)
+
+        if should_filter_for_invalid_events:
+            print('Filtering for invalid events...')
+            ### Post-processing to detect erronious events, only for food2
+            dateTimes, onesEventFormatDataArray, variableData, labjackEventRecords, phoServerFormatArgs = LabjackFilesystemLoader.filter_invalid_events(dateTimes, onesEventFormatDataArray, variableData, labjackEventRecords, phoServerFormatArgs=phoServerFormatArgs)
 
         # Build the corresponding GUI objects
         ## TODO: defer until needed? Some might be filtered out anyway.
@@ -560,82 +557,5 @@ class LabjackFilesystemLoader(QObject):
         # labjackEvents = [FilesystemLabjackEvent_Record.get_gui_view(aRecord, parent=None) for aRecord in labjackEventRecords]
 
 
-        # try: import operator
-        # except ImportError: keyfun = lambda x: x.startTime  # use a lambda if no operator module
-        # else: keyfun = operator.attrgetter("startTime")  # use operator since it's faster than lambda
-        # labjackEvents = sorted(labjackEvents, key=keyfun)
-        #sorted(labjackEvents, key=lambda i: i.startTime)
-
-        ### Post-processing to detect erronious events, only for food2
-        # portNames = ['Water1', 'Water2', 'Food1', 'Food2']
-        # previousFoundDispenseEventTimestamp = {'Water1': None, 'Water2': None, 'Food1': None, 'Food2': None}
-        # previousFoundBeambreakEventTimestamp = {'Water1': None, 'Water2': None, 'Food1': None, 'Food2': None}
-        # invalidDispenseEventTimestamps = {'Water1': [], 'Water2': [], 'Food1': [], 'Food2': []}
-
-        # allInvalidDispenseEventTimestamps = []
-        # for index, anActiveEvent in enumerate(labjackEvents):
-
-        #     if ((anActiveEvent.extended_data['event_type'] == 'BeamBreak')):
-        #         currFoundBeambreakEventTimestamp = anActiveEvent.startTime
-        #         previousFoundBeambreakEventTimestamp[anActiveEvent.extended_data['port']] = currFoundBeambreakEventTimestamp
-
-        #     elif ((anActiveEvent.extended_data['event_type'] == 'Dispense')):
-        #         currIsInvalidEvent = False
-        #         currFoundDispenseEventTimestamp = anActiveEvent.startTime
-        #         if (previousFoundBeambreakEventTimestamp[anActiveEvent.extended_data['port']] is None):
-        #             # If no beambreak preceeds it, it's invalid
-        #             currIsInvalidEvent = True
-
-        #         else:
-        #             if (previousFoundDispenseEventTimestamp[anActiveEvent.extended_data['port']] is None):
-        #                 #if no dispense event preceeds it there's no problem
-        #                 pass
-        #             else:
-        #                 if (previousFoundDispenseEventTimestamp[anActiveEvent.extended_data['port']] > previousFoundBeambreakEventTimestamp[anActiveEvent.extended_data['port']]):
-        #                     # if the most recent dispense event is more recent then the last beambreak, there is a problem!
-        #                     currIsInvalidEvent = True
-
-        #         previousFoundDispenseEventTimestamp[anActiveEvent.extended_data['port']] = currFoundDispenseEventTimestamp
-
-        #         if (currIsInvalidEvent):
-        #             invalidDispenseEventTimestamps[anActiveEvent.extended_data['port']].append(currFoundDispenseEventTimestamp)
-        #             allInvalidDispenseEventTimestamps.append(currFoundDispenseEventTimestamp)
-
-        #     else:
-        #         pass
-
-        # # Filter the erroneous events from the individual arrays in each variableData
-        # for index, aPort in enumerate(portNames):
-        #     #print('Invalid dispense events detected: ', invalidDispenseEventIndicies)
-        #     dispenseVariableIndex = index+4
-        #     dispenseVariableTimestamps = np.array(variableData[dispenseVariableIndex]['timestamps'])
-        #     dispenseVariableInvalidTimestamps = np.array(invalidDispenseEventTimestamps[aPort])
-        #     print(aPort, ": ", len(dispenseVariableInvalidTimestamps), 'invalid dispense events out of', len(dispenseVariableTimestamps), 'events.')
-        #     print("Removing invalid events...")
-        #     dispenseVariableInvalidIndicies = np.isin(dispenseVariableTimestamps, dispenseVariableInvalidTimestamps)
-        #     mask = np.ones(len(dispenseVariableTimestamps), dtype=bool)
-        #     mask[dispenseVariableInvalidIndicies] = False
-        #     variableData[dispenseVariableIndex]['timestamps'] = variableData[dispenseVariableIndex]['timestamps'][mask]
-        #     variableData[dispenseVariableIndex]['values'] = variableData[dispenseVariableIndex]['values'][mask]
-        #     variableData[dispenseVariableIndex]['variableSpecificEvents'] = np.array(variableData[dispenseVariableIndex]['variableSpecificEvents'])[mask]
-        #     variableData[dispenseVariableIndex]['videoIndicies'] = variableData[dispenseVariableIndex]['videoIndicies'][mask]
-        #
-        #
-        # # Filter the erroneous events from dateTimes and onesEventFormatDataArray
-        # dispenseVariableAnyInvalidIndicies = np.isin(dateTimes, allInvalidDispenseEventTimestamps)
-        # mask = np.ones(len(dateTimes), dtype=bool)
-        # mask[dispenseVariableAnyInvalidIndicies] = False
-        # dateTimes = dateTimes[mask]
-        # onesEventFormatDataArray = onesEventFormatDataArray[mask]
-        # if usePhoServerFormat:
-        #     dispenseVariableAnyInvalidIndicies = np.isin(relevantDateTimes, allInvalidDispenseEventTimestamps)
-        #     mask = np.ones(len(relevantDateTimes), dtype=bool)
-        #     mask[dispenseVariableAnyInvalidIndicies] = False
-        #     relevantFileLines = np.array(relevantFileLines)[mask]
-        #     erroneousEventFreeCSVFilePath = r'C:\Users\halechr\repo\PhoPyQtTimelinePlotter\data\output\erroneousEventsRemoved.csv'
-        #     print('Writing to CSV file:', erroneousEventFreeCSVFilePath)
-        #     LabjackEventsLoader.writeLinesToCsvFile(relevantFileLines, filePath=erroneousEventFreeCSVFilePath)
-        #     print('done.')
-
         # return (dateTimes, onesEventFormatDataArray, variableData, labjackEvents)
-        return (dateTimes, built_model_view_container_array, parsedFileInfoDict)
+        return (dateTimes, built_model_view_container_array, phoServerFormatArgs)

@@ -12,7 +12,19 @@ import datetime as dt
 # Copied from "phoPythonVideoFileParser" project
 
 # from app.filesystem.LabjackEventsLoader import loadLabjackDataFromPhoServerFormat, loadLabjackDataFromMatlabFormat, labjack_variable_names, labjack_variable_colors_dict, labjack_variable_indicies_dict, labjack_variable_event_type, labjack_variable_port_location, writeLinesToCsvFile
-# from app.filesystem.LabjackEventsLoader import LabjackEventsLoader
+# from app.filesystem.LabjackEventsLoader import LabjackEventsLoader, PhoServerFormatArgs
+""" class PhoServerFormatArgs: A simple wrapper class that holds the arguments to filter_invalid_events for phoServerFormat
+"""
+class PhoServerFormatArgs(object):
+    def __init__(self, relevantDateTimes, relevantFileLines, erroneousEventFreeCSVFilePath, parsedFileInfoDict):
+        super(PhoServerFormatArgs, self).__init__()
+        # self.usePhoServerFormat = usePhoServerFormat
+        self.relevantDateTimes = relevantDateTimes
+        self.relevantFileLines = relevantFileLines
+        self.erroneousEventFreeCSVFilePath = erroneousEventFreeCSVFilePath
+        self.parsedFileInfoDict = parsedFileInfoDict
+
+
 
 class LabjackEventsLoader(object):
 
@@ -24,6 +36,106 @@ class LabjackEventsLoader(object):
         return day + dayfrac
 
     helper_timenum_to_datetime = np.vectorize( lambda x: LabjackEventsLoader.matlab2datetime( x ) )
+
+    """ find_invalid_events(labjackEvents)
+        returns: 1. a dict of invalidDispenseEventTimestamps: {'Water1': list, 'Water2': list, 'Food1': list, 'Food2': list, 'any': list}
+                2. valid_labjack_events_mask: a mask of the size of labjackEvents that can be used to filter out the invalid labjack events
+    """
+    @staticmethod
+    def find_invalid_events(labjackEvents):
+        previousFoundDispenseEventTimestamp = {'Water1': None, 'Water2': None, 'Food1': None, 'Food2': None}
+        previousFoundBeambreakEventTimestamp = {'Water1': None, 'Water2': None, 'Food1': None, 'Food2': None}
+        invalidDispenseEventTimestamps = {'Water1': [], 'Water2': [], 'Food1': [], 'Food2': [], 'any': []}
+        valid_labjack_events_mask = np.ones(len(labjackEvents), dtype=bool)
+
+        for index, anActiveEvent in enumerate(labjackEvents):
+
+            if ((anActiveEvent.extended_data['event_type'] == 'BeamBreak')):
+                currFoundBeambreakEventTimestamp = anActiveEvent.startTime
+                previousFoundBeambreakEventTimestamp[anActiveEvent.extended_data['port']] = currFoundBeambreakEventTimestamp
+
+            elif ((anActiveEvent.extended_data['event_type'] == 'Dispense')):
+                currIsInvalidEvent = False
+                currFoundDispenseEventTimestamp = anActiveEvent.startTime
+                if (previousFoundBeambreakEventTimestamp[anActiveEvent.extended_data['port']] is None):
+                    # If no beambreak preceeds it, it's invalid
+                    currIsInvalidEvent = True
+
+                else:
+                    if (previousFoundDispenseEventTimestamp[anActiveEvent.extended_data['port']] is None):
+                        #if no dispense event preceeds it there's no problem
+                        pass
+                    else:
+                        if (previousFoundDispenseEventTimestamp[anActiveEvent.extended_data['port']] > previousFoundBeambreakEventTimestamp[anActiveEvent.extended_data['port']]):
+                            # if the most recent dispense event is more recent then the last beambreak, there is a problem!
+                            currIsInvalidEvent = True
+
+                previousFoundDispenseEventTimestamp[anActiveEvent.extended_data['port']] = currFoundDispenseEventTimestamp
+
+                if (currIsInvalidEvent):
+                    valid_labjack_events_mask[index] = False
+                    invalidDispenseEventTimestamps[anActiveEvent.extended_data['port']].append(currFoundDispenseEventTimestamp)
+                    invalidDispenseEventTimestamps['any'].append(currFoundDispenseEventTimestamp)
+
+            else:
+                pass
+
+        # Produces invalidDispenseEventTimestamps
+        return (invalidDispenseEventTimestamps, valid_labjack_events_mask)
+
+    """ filter_invalid_events(dateTimes, onesEventFormatDataArray, variableData, labjackEvents, phoServerFormatArgs):
+        Filters invalid events from the loaded data structures 
+        returns: filtered (dateTimes, onesEventFormatDataArray, variableData,  labjackEvents, phoServerFormatArgs)
+    """
+    @staticmethod
+    def filter_invalid_events(dateTimes, onesEventFormatDataArray, variableData, labjackEvents, phoServerFormatArgs=None):
+        # Produces invalidDispenseEventTimestamps
+        invalidDispenseEventTimestamps, valid_labjack_events_mask = LabjackEventsLoader.find_invalid_events(labjackEvents)
+
+        # Filter the erroneous events from the individual arrays in each variableData
+        for index, aPort in enumerate(LabjackEventsLoader.labjack_portNames):
+            #print('Invalid dispense events detected: ', invalidDispenseEventIndicies)
+            dispenseVariableIndex = index+4
+            dispenseVariableTimestamps = np.array(variableData[dispenseVariableIndex]['timestamps'])
+            dispenseVariableInvalidTimestamps = np.array(invalidDispenseEventTimestamps[aPort])
+            print(aPort, ": ", len(dispenseVariableInvalidTimestamps), 'invalid dispense events out of', len(dispenseVariableTimestamps), 'events.')
+            print("Removing invalid events...")
+            dispenseVariableInvalidIndicies = np.isin(dispenseVariableTimestamps, dispenseVariableInvalidTimestamps)
+            mask = np.ones(len(dispenseVariableTimestamps), dtype=bool)
+            mask[dispenseVariableInvalidIndicies] = False
+            variableData[dispenseVariableIndex]['timestamps'] = variableData[dispenseVariableIndex]['timestamps'][mask]
+            variableData[dispenseVariableIndex]['values'] = variableData[dispenseVariableIndex]['values'][mask]
+            variableData[dispenseVariableIndex]['variableSpecificEvents'] = np.array(variableData[dispenseVariableIndex]['variableSpecificEvents'])[mask]
+            variableData[dispenseVariableIndex]['videoIndicies'] = variableData[dispenseVariableIndex]['videoIndicies'][mask]
+
+
+        # Filter the erroneous events from dateTimes and onesEventFormatDataArray
+        dispenseVariableAnyInvalidIndicies = np.isin(dateTimes, invalidDispenseEventTimestamps['any'])
+        dateTimes_mask = np.ones(len(dateTimes), dtype=bool)
+        dateTimes_mask[dispenseVariableAnyInvalidIndicies] = False
+
+        # Filter the relevant datetimes to obtain the list of lines that contain invalid events. Save them to a new CSV if desired.
+        ## TODO: ensure that non-food 2 events aren't also being removed by removing the entire line at this timestamp.
+        if phoServerFormatArgs is not None:
+            dispenseVariableAnyInvalidIndicies = np.isin(phoServerFormatArgs.relevantDateTimes, invalidDispenseEventTimestamps['any'])
+            relevantDateTimes_mask = np.ones(len(phoServerFormatArgs.relevantDateTimes), dtype=bool)
+            relevantDateTimes_mask[dispenseVariableAnyInvalidIndicies] = False
+
+            phoServerFormatArgs.relevantDateTimes = phoServerFormatArgs.relevantDateTimes[relevantDateTimes_mask]
+            phoServerFormatArgs.relevantFileLines = np.array(phoServerFormatArgs.relevantFileLines)[relevantDateTimes_mask]
+            #r'C:\Users\halechr\repo\phoPythonVideoFileParser'
+            # erroneousEventFreeCSVFilePath = r'C:\Users\halechr\repo\phoPythonVideoFileParser\results\erroneousEventsRemoved.csv'
+            #erroneousEventFreeCSVFilePath = r'results\erroneousEventsRemoved.csv'
+            if phoServerFormatArgs.erroneousEventFreeCSVFilePath is not None:
+                print('Writing to CSV file:', phoServerFormatArgs.erroneousEventFreeCSVFilePath)
+                LabjackEventsLoader.writeLinesToCsvFile(phoServerFormatArgs.relevantFileLines, filePath=phoServerFormatArgs.erroneousEventFreeCSVFilePath)
+                print('    done.')
+            else:
+                print("erroneousEventFreeCSVFilePath is None, so skipping .CSV file output")
+
+        return (dateTimes[dateTimes_mask], onesEventFormatDataArray[dateTimes_mask], variableData,  labjackEvents[valid_labjack_events_mask], phoServerFormatArgs)
+        
+
 
     @staticmethod
     def loadLabjackData(matPath):
@@ -55,6 +167,8 @@ class LabjackEventsLoader(object):
         return (dateNums, dateTimes, dataArray)
 
     # Defined constants
+    labjack_portNames = ['Water1', 'Water2', 'Food1', 'Food2']
+
     labjack_variable_names = ['Water1_BeamBreak', 'Water2_BeamBreak', 'Food1_BeamBreak', 'Food2_BeamBreak', 'Water1_Dispense', 'Water2_Dispense', 'Food1_Dispense', 'Food2_Dispense']
     labjack_variable_colors = ['aqua', 'aquamarine', 'coral', 'magenta', 'blue', 'darkblue', 'crimson', 'maroon']
     labjack_variable_indicies = [0, 1, 2, 3, 4, 5, 6, 7]
@@ -337,8 +451,9 @@ class LabjackEventsLoader(object):
 
             return (np.array(relevantFileLines), np.array(parsedDateTimes), np.array(parsedDataArray))
 
+        parsedFileInfoDict = LabjackEventsLoader.parsePhoServerFormatFilepath(filePath)
         (relevantFileLines, dateTimes, dataArray) = parse_file(filePath)
-
+        
         # Parse to find the transitions ( "roll" rotates the array to left some step length)
         # A False followed by a True can then be expressed as: https://stackoverflow.com/questions/47750593/finding-false-true-transitions-in-a-numpy-array?rq=1
         # dataArrayTransitions = ~dataArray & np.roll(dataArray, -1)
@@ -351,8 +466,14 @@ class LabjackEventsLoader(object):
         # falling_edge_cells_result.shape: ((3995,), (3995,))
         falling_edges_row_indicies = falling_edge_cells_result[0]
         # falling_edges_row_indicies.shape: (3995,)
-        outputDateTimes = dateTimes[falling_edges_row_indicies]
+        # outputDateTimes = dateTimes[falling_edges_row_indicies]
         # outputDateTimes.shape: (3995,)
+        
+        # Build output object
+        # out_filtered_csv_path = r'C:\Users\halechr\repo\phoPythonVideoFileParser\results\erroneousEventsRemoved.csv'
+        out_filtered_csv_path = None
+        outputPhoServerFormatArgs = PhoServerFormatArgs(dateTimes[falling_edges_row_indicies], relevantFileLines[falling_edges_row_indicies], out_filtered_csv_path, parsedFileInfoDict)
+
 
         # outputData = np.zeros()
         # outputData = dataArray[falling_edges_row_indicies, :]
@@ -363,7 +484,8 @@ class LabjackEventsLoader(object):
         onesEventFormatOutputData[falling_edge_cells_result] = 1.0
         # outputData = dataArray[falling_edges_row_indicies, :]
         # return (outputDateTimes, outputData)
-        return (relevantFileLines[falling_edges_row_indicies], outputDateTimes, dateTimes, onesEventFormatOutputData)
+        # return (relevantFileLines[falling_edges_row_indicies], outputDateTimes, dateTimes, onesEventFormatOutputData)
+        return (outputPhoServerFormatArgs, dateTimes, onesEventFormatOutputData)
 
 
 
