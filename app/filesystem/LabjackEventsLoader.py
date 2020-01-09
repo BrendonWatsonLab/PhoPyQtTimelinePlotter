@@ -51,12 +51,12 @@ class LabjackEventsLoader(object):
         for index, anActiveEvent in enumerate(labjackEvents):
 
             if ((anActiveEvent.extended_data['event_type'] == 'BeamBreak')):
-                currFoundBeambreakEventTimestamp = anActiveEvent.startTime
+                currFoundBeambreakEventTimestamp = anActiveEvent.start_date
                 previousFoundBeambreakEventTimestamp[anActiveEvent.extended_data['port']] = currFoundBeambreakEventTimestamp
 
             elif ((anActiveEvent.extended_data['event_type'] == 'Dispense')):
                 currIsInvalidEvent = False
-                currFoundDispenseEventTimestamp = anActiveEvent.startTime
+                currFoundDispenseEventTimestamp = anActiveEvent.start_date
                 if (previousFoundBeambreakEventTimestamp[anActiveEvent.extended_data['port']] is None):
                     # If no beambreak preceeds it, it's invalid
                     currIsInvalidEvent = True
