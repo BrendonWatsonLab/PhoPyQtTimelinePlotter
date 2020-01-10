@@ -340,8 +340,17 @@ class LabjackFilesystemLoader(QObject):
 
         numVariables = len(active_labjack_variable_names)
 
-        earliestVideoTime = videoDates.min()
-        latestVideoTime = videoEndDates.max()
+        if ((videoDates is not None) and (len(videoDates) > 0)):
+            earliestVideoTime = videoDates.min()
+        else:
+            earliestVideoTime = datetime.min
+
+        if ((videoEndDates is not None) and (len(videoEndDates) > 0)):
+            latestVideoTime = videoEndDates.max()
+        else:
+            latestVideoTime = datetime.max
+
+        
 
         ## Iterate through the event variables and pre-process them
         variableData = []
@@ -442,17 +451,20 @@ class LabjackFilesystemLoader(QObject):
         """
         converts the variableData list of dicts to a proper Pandas dataframe
         """
-        def get_variables_as_dataframe(variableData, active_labjack_variable_names):
+        def get_variables_as_dict_of_dataframes(variableData, active_labjack_variable_names):
             # Convert to dataframe:
-            variableDataFrames = dict()
+            variableDataFramesDict = dict()
             # Loop through all variables and build a dataframe for each variable data in variableData
                     # for aVariableIndex in range(0, numVariables):
             for (aVariableIndex, currVariableName) in enumerate(active_labjack_variable_names):
                 # currVariableName = active_labjack_variable_names[aVariableIndex]
-                variableDataFrames[currVariableName] = pd.DataFrame.from_dict(variableData[aVariableIndex])
+                variableDataFramesDict[currVariableName] = pd.DataFrame.from_dict(variableData[aVariableIndex])
 
-            return pd.concat(variableDataFrames)
-            # return variableDataFrames
+            return variableDataFramesDict
+
+        def get_dict_of_dataframes_as_dataframe(variableDataFramesDict):
+            return pd.concat(variableDataFramesDict)
+            # return pd.concat(variableDataFramesDict, keys=['s1', 's2'],  names=['Series name', 'Row ID'])
 
 
         # """ Export Dataframe to file:
@@ -462,17 +474,38 @@ class LabjackFilesystemLoader(QObject):
         # map directly to c-types [inferred_type->mixed-integer,key->block2_values] [items->['videoIndicies', 'variableSpecificRecords']]
         # """
 
-        out_dataframe_export_path = 'data/output/LabjackDataExport/output_dataframe_1-9-2020'
+        out_dataframe_export_parent_path = Path('data/output/LabjackDataExport/')
+        out_dataframe_export_path_basic = out_dataframe_export_parent_path.joinpath('output_dataframe_1-9-2020_basic_store.h5') # Used for basic objects
+        out_dataframe_export_path_pandas = out_dataframe_export_parent_path.joinpath('output_dataframe_1-9-2020_pandas_store.h5') # Used for pandas Dataframe and Series objects
+
+        print('Converting variableData to dict of Pandas Dataframes...')
+        out_dict_of_df = get_variables_as_dict_of_dataframes(variableData, active_labjack_variable_names)
+
+
+        # # Write basic variables:
+        # print('Writing dataframe to file {}...'.format(str(out_dataframe_export_path_basic)))
+        # store_basic = pd.HDFStore(out_dataframe_export_path_basic)
+        # # store_basic['variableData'] = variableData
+        # # store_basic['active_labjack_variable_names'] = active_labjack_variable_names
+        # # store_basic['variables_dict_of_dataframes'] = out_dict_of_df
+        # store_basic.close()
+        # print('    done writing basic variables to HDF file.')
+
         print('Converting variableData to Pandas Dataframe...')
-        out_df = get_variables_as_dataframe(variableData, active_labjack_variable_names)
+        # out_df = get_variables_as_dataframe(variableData, active_labjack_variable_names)
+        out_df = get_dict_of_dataframes_as_dataframe(out_dict_of_df)
+        out_series = pd.Series(out_dict_of_df)
+
         # out_df.to_json(orient='split')
-        print('Writing dataframe to file {}...'.format(str(out_dataframe_export_path)))
+        print('Writing dataframe to file {}...'.format(str(out_dataframe_export_path_pandas)))
         # out_df.to_pickle(out_dataframe_export_path)
-        store = pd.HDFStore('{}_store.h5'.format(str(out_dataframe_export_path)))
-        # to_hdf
-        store['variables_dataframe'] = out_df
-        store
-        print('done writing dataframe to file.')
+        store_pandas = pd.HDFStore(out_dataframe_export_path_pandas)
+        # store.get_storer('df').attrs.my_attribute = dict(A = 10)
+        store_pandas['variables_dataframe'] = out_df
+        store_pandas['variables_series_of_dataframes'] = out_series
+        store_pandas.close()
+        
+        print('    done writing pandas variables to HDF file.')
         # for (aVariableIndex, aVariableData) in enumerate(variableData):
         #     aVariableData['']
             
