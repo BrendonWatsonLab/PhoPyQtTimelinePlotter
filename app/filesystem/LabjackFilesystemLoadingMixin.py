@@ -226,15 +226,14 @@ class LabjackFilesystemLoader(QObject):
         # print("%d%% done" % n)
 
 
-# LabjackEventFile
 
     """
     The main execution function
     """
     def on_load_labjack_data_files_execute_thread(self, active_labjack_data_file_paths, progress_callback):
 
-        # should_filter_for_invalid_events = True
-        should_filter_for_invalid_events = False
+        should_filter_for_invalid_events = True
+        # should_filter_for_invalid_events = False
         
         currProgress = 0.0
         parsedFiles = 0
@@ -473,10 +472,11 @@ class LabjackFilesystemLoader(QObject):
         # your performance may suffer as PyTables will pickle object types that it cannot
         # map directly to c-types [inferred_type->mixed-integer,key->block2_values] [items->['videoIndicies', 'variableSpecificRecords']]
         # """
-
+        base_name = 'output_dataframe_1-9-2020'
         out_dataframe_export_parent_path = Path('data/output/LabjackDataExport/')
-        out_dataframe_export_path_basic = out_dataframe_export_parent_path.joinpath('output_dataframe_1-9-2020_basic_store.h5') # Used for basic objects
-        out_dataframe_export_path_pandas = out_dataframe_export_parent_path.joinpath('output_dataframe_1-9-2020_pandas_store.h5') # Used for pandas Dataframe and Series objects
+        out_dataframe_export_path_basic = out_dataframe_export_parent_path.joinpath('{}_basic_store.h5'.format(str(base_name))) # Used for basic objects
+        out_dataframe_export_path_pandas = out_dataframe_export_parent_path.joinpath('{}_pandas_store.h5'.format(str(base_name))) # Used for pandas Dataframe and Series objects
+        out_records_dataframe_CSV_export_path = out_dataframe_export_parent_path.joinpath('{}_records.csv'.format(str(base_name))) # Exported CSV
 
         print('Converting variableData to dict of Pandas Dataframes...')
         out_dict_of_df = get_variables_as_dict_of_dataframes(variableData, active_labjack_variable_names)
@@ -495,16 +495,9 @@ class LabjackFilesystemLoader(QObject):
         # out_df = get_variables_as_dataframe(variableData, active_labjack_variable_names)
         out_df = get_dict_of_dataframes_as_dataframe(out_dict_of_df)
         out_series = pd.Series(out_dict_of_df)
-
-        # out_record_dfs = pd.DataFrame.from_dict(labjackEventRecords)
-        # out_record_dfs = pd.DataFrame.from_dict(labjackEventRecords.__dict__)
-
-        # variables = labjackEventRecords[0].keys()
-        # out_record_dfs = pd.DataFrame([[getattr(i,j) for j in variables] for i in labjackEventRecords], columns = variables)
-
-        out_record_dfs = pd.DataFrame.from_records([s.to_dict() for s in labjackEventRecords])
-
-        # from_records        
+        out_record_df = LabjackEventsLoader.build_records_dataframe(labjackEventRecords)
+        # can save it out to CSV here if we want to:
+        LabjackEventsLoader.writeRecordsDataframeToCsvFile(out_record_df, filePath=out_records_dataframe_CSV_export_path)
 
         # out_df.to_json(orient='split')
         print('Writing dataframe to file {}...'.format(str(out_dataframe_export_path_pandas)))
@@ -514,7 +507,7 @@ class LabjackFilesystemLoader(QObject):
         store_pandas['variables_dataframe'] = out_df
         store_pandas['variables_series_of_dataframes'] = out_series
 
-        store_pandas['records_dataframe'] = out_record_dfs
+        store_pandas['records_dataframe'] = out_record_df
         store_pandas.close()
         
         print('    done writing pandas variables to HDF file.')

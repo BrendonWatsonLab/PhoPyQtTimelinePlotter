@@ -30,7 +30,7 @@ class TimelineApplication(QApplication):
 
     shouldShowGUIWindows = True
     shouldShowMainGUIWindow = True
-    shouldShowListGUIWindow = False
+    shouldShowListGUIWindow = True
     shouldShowExampleWindow = False
 
     database_file_name = 'BehavioralBoxDatabase.db'

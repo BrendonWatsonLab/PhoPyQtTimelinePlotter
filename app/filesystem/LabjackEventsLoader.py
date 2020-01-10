@@ -8,6 +8,7 @@ import h5py as h5py
 import re
 import datetime as dt
 from enum import Enum
+import pandas as pd
 
 from PyQt5.QtCore import Qt, QObject, QEvent, pyqtSignal
 
@@ -584,7 +585,7 @@ class LabjackEventsLoader(object):
 
     ## Data Export:
     @staticmethod
-    def writeLinesToCsvFile(lines, filePath='results/output.csv'):
+    def writeLinesToCsvFile(lines, filePath='data/output/LabjackDataExport/output.csv'):
         # Open a text file to write the lines out to
         with open(filePath, 'w', newline='') as csvfile:
             csvfile.write(', '.join(LabjackEventsLoader.labjack_csv_variable_names) + '\n')
@@ -604,3 +605,26 @@ class LabjackEventsLoader(object):
         return combinedFileLines
 
 
+
+    @staticmethod
+    def writeRecordsDataframeToCsvFile(records_dataframe, filePath='results/export.csv'):
+        records_dataframe.to_csv(filePath)
+
+
+
+    """
+        Builds a records dataframe out of the list of labjackEventRecords
+    """
+    @staticmethod
+    def build_records_dataframe(labjackEventRecords):
+        # Build the records dataframe from the labjackEventRecords
+        records_dataframe = pd.DataFrame.from_records([s.to_dict() for s in labjackEventRecords])
+
+        # Filters the records_dataframe to only the relevant fields that we'd want to export.
+        ## Choose just the columns we care about. See https://stackoverflow.com/questions/11285613/selecting-multiple-columns-in-a-pandas-dataframe
+        # https://stackoverflow.com/questions/38231591/splitting-dictionary-list-inside-a-pandas-column-into-separate-columns
+        # https://stackoverflow.com/questions/34997174/how-to-convert-list-of-model-objects-to-pandas-dataframe/41762270
+
+        # pd.concat([in_records_df.drop(['b'], axis=1), in_records_df['b'].apply(pd.Series)], axis=1)
+        # final_out_df = pd.concat([in_records_df[['start_date', 'end_date', 'variable_name']], in_records_df.extended_info_dict.apply(pd.Series)[['event_type', 'dispense_type', 'port']]], axis=1)
+        return pd.concat([records_dataframe[['start_date', 'variable_name']], records_dataframe.extended_info_dict.apply(pd.Series)[['event_type', 'port']]], axis=1)
