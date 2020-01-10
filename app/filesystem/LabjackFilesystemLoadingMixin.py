@@ -496,6 +496,16 @@ class LabjackFilesystemLoader(QObject):
         out_df = get_dict_of_dataframes_as_dataframe(out_dict_of_df)
         out_series = pd.Series(out_dict_of_df)
 
+        # out_record_dfs = pd.DataFrame.from_dict(labjackEventRecords)
+        # out_record_dfs = pd.DataFrame.from_dict(labjackEventRecords.__dict__)
+
+        # variables = labjackEventRecords[0].keys()
+        # out_record_dfs = pd.DataFrame([[getattr(i,j) for j in variables] for i in labjackEventRecords], columns = variables)
+
+        out_record_dfs = pd.DataFrame.from_records([s.to_dict() for s in labjackEventRecords])
+
+        # from_records        
+
         # out_df.to_json(orient='split')
         print('Writing dataframe to file {}...'.format(str(out_dataframe_export_path_pandas)))
         # out_df.to_pickle(out_dataframe_export_path)
@@ -503,6 +513,8 @@ class LabjackFilesystemLoader(QObject):
         # store.get_storer('df').attrs.my_attribute = dict(A = 10)
         store_pandas['variables_dataframe'] = out_df
         store_pandas['variables_series_of_dataframes'] = out_series
+
+        store_pandas['records_dataframe'] = out_record_dfs
         store_pandas.close()
         
         print('    done writing pandas variables to HDF file.')

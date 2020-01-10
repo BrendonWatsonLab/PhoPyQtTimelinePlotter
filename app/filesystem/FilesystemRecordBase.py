@@ -71,13 +71,17 @@ class FilesystemLabjackEvent_Record(DataFileTrackTypeMixin, QObject):
     # trying https://stackoverflow.com/questions/48325757/how-to-prevent-a-runtimeerror-when-unpickling-a-qobject
     def __setstate__(self, state):
         # Restore attributes
-        print('__setstate__(state: {})'.format(str(state)))
+        # print('__setstate__(state: {})'.format(str(state)))
         self.__dict__.update(state)   # update attributes
         
         # Call the superclass __init__()
         super(FilesystemLabjackEvent_Record, self).__init__()
         
 
+
+    def to_dict(self):
+        return self.__dict__
+        
     # def __repr__(self):
     #     import json
     #     return json.dumps({
