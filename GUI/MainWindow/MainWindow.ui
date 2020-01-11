@@ -168,6 +168,10 @@
             <property name="text">
              <string>||&lt;</string>
             </property>
+            <property name="icon">
+             <iconset resource="../../data/PhoPyQtTimelinePlotterResourceFile.qrc">
+              <normaloff>:/fugue/fugue/icons-shadowless/arrow-stop-180.png</normaloff>:/fugue/fugue/icons-shadowless/arrow-stop-180.png</iconset>
+            </property>
            </widget>
           </item>
           <item>
@@ -183,6 +187,10 @@
             </property>
             <property name="text">
              <string>|&lt;</string>
+            </property>
+            <property name="icon">
+             <iconset resource="../../data/PhoPyQtTimelinePlotterResourceFile.qrc">
+              <normaloff>:/fugue/fugue/icons-shadowless/arrow-transition-180.png</normaloff>:/fugue/fugue/icons-shadowless/arrow-transition-180.png</iconset>
             </property>
            </widget>
           </item>
@@ -204,6 +212,10 @@
             <property name="text">
              <string>&gt;|</string>
             </property>
+            <property name="icon">
+             <iconset resource="../../data/PhoPyQtTimelinePlotterResourceFile.qrc">
+              <normaloff>:/fugue/fugue/icons-shadowless/arrow-transition.png</normaloff>:/fugue/fugue/icons-shadowless/arrow-transition.png</iconset>
+            </property>
            </widget>
           </item>
           <item>
@@ -216,6 +228,10 @@
             </property>
             <property name="text">
              <string>&gt;||</string>
+            </property>
+            <property name="icon">
+             <iconset resource="../../data/PhoPyQtTimelinePlotterResourceFile.qrc">
+              <normaloff>:/fugue/fugue/icons-shadowless/arrow-stop.png</normaloff>:/fugue/fugue/icons-shadowless/arrow-stop.png</iconset>
             </property>
            </widget>
           </item>
@@ -311,6 +327,10 @@
             <property name="text">
              <string>-</string>
             </property>
+            <property name="icon">
+             <iconset resource="../../data/PhoPyQtTimelinePlotterResourceFile.qrc">
+              <normaloff>:/fugue/fugue/bonus/icons-24/magnifier-zoom-out.png</normaloff>:/fugue/fugue/bonus/icons-24/magnifier-zoom-out.png</iconset>
+            </property>
            </widget>
           </item>
           <item>
@@ -330,6 +350,10 @@
             </property>
             <property name="text">
              <string>+</string>
+            </property>
+            <property name="icon">
+             <iconset resource="../../data/PhoPyQtTimelinePlotterResourceFile.qrc">
+              <normaloff>:/fugue/fugue/bonus/icons-24/magnifier-zoom-in.png</normaloff>:/fugue/fugue/bonus/icons-24/magnifier-zoom-in.png</iconset>
             </property>
            </widget>
           </item>
@@ -493,6 +517,8 @@
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="../../data/PhoPyQtTimelinePlotterResourceFile.qrc"/>
+ </resources>
  <connections/>
 </ui>
