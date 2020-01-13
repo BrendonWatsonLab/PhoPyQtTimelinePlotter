@@ -23,15 +23,18 @@ from GUI.HelpWindow.HelpWindowFinal import *
 from GUI.MainObjectListsWindow.MainObjectListsWindow import *
 from GUI.Windows.ExampleDatabaseTableWindow import ExampleDatabaseTableWindow
 
+from GUI.Windows.ImportCSVWindow.ImportCSVWindow import ImportCSVWindow
+
 from app.database.DatabaseConnectionRef import DatabaseConnectionRef
 
 # The main application
 class TimelineApplication(QApplication):
 
     shouldShowGUIWindows = True
-    shouldShowMainGUIWindow = True
-    shouldShowListGUIWindow = True
+    shouldShowMainGUIWindow = False
+    shouldShowListGUIWindow = False
     shouldShowExampleWindow = False
+    shouldShowImportWindow = True
 
     database_file_name = 'BehavioralBoxDatabase.db'
 
@@ -99,6 +102,11 @@ class TimelineApplication(QApplication):
 
 
         print("done.")
+
+        if TimelineApplication.shouldShowImportWindow:
+            print('Showing import window...')
+            self.importCSVWindow = ImportCSVWindow()
+            self.importCSVWindow.show()
         
 
         # Show last 7 days worth of data

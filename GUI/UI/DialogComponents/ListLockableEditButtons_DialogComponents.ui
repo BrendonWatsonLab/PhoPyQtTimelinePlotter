@@ -59,7 +59,7 @@
       <string>Add Record</string>
      </property>
      <property name="text">
-      <string>...</string>
+      <string/>
      </property>
      <property name="icon">
       <iconset resource="../../../data/PhoPyQtTimelinePlotterResourceFile.qrc">
@@ -73,7 +73,7 @@
       <string>Remove Selected Record</string>
      </property>
      <property name="text">
-      <string>...</string>
+      <string/>
      </property>
      <property name="icon">
       <iconset resource="../../../data/PhoPyQtTimelinePlotterResourceFile.qrc">
@@ -100,7 +100,7 @@
       <string>Re-lock to prevent editing</string>
      </property>
      <property name="text">
-      <string>...</string>
+      <string/>
      </property>
      <property name="icon">
       <iconset resource="../../../data/PhoPyQtTimelinePlotterResourceFile.qrc">

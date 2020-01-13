@@ -14,7 +14,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 ## IMPORTS:
 # from GUI.UI.DialogComponents.ListLockableEditButtons_DialogComponents import ListLockableEditButtons_DialogComponents
 
-"""
+""" ListLockableEditButtons_DialogComponents: a row of buttons that are visible/hidden based on whether the row is locked/unlocked.
 
 btnAdd
 btnToggleLocked
@@ -24,7 +24,7 @@ When the btnToggledLocked is:
 	unchecked: Locked
 	checked: Unlocked
 """
-class ListLockableEditButtons_DialogComponents(QWidget):
+class ListLockableEditButtons_DialogComponents(QFrame):
 
 	isLockedChanged = pyqtSignal(bool)
 	action_plus_pressed = pyqtSignal()
@@ -41,7 +41,7 @@ class ListLockableEditButtons_DialogComponents(QWidget):
 	def initUI(self):
 		self.action_buttons_list = [self.btnAdd, self.btnMinus]
 
-		self.btnToggledLocked.toggled.connect(self.handle_lock_toggled)
+		self.btnToggleLocked.toggled.connect(self.handle_lock_toggled)
 
 		for aButton in self.action_buttons_list:
 			# Make sure that changing the state of the lock/unlock button hides/unhides the widget
@@ -62,13 +62,13 @@ class ListLockableEditButtons_DialogComponents(QWidget):
 
 	@pyqtSlot()
 	def handle_plus_button_pressed(self):
-        print("handle_plus_button_pressed()")
-        self.action_plus_pressed.emit()
+		print("handle_plus_button_pressed()")
+		self.action_plus_pressed.emit()
 	
 	@pyqtSlot()
-    def handle_minus_button_pressed(self):
-        print("handle_minus_button_pressed()")
-        self.action_minus_pressed.emit()
+	def handle_minus_button_pressed(self):
+		print("handle_minus_button_pressed()")
+		self.action_minus_pressed.emit()
 
 	@pyqtSlot(bool)
 	def handle_lock_toggled(self, is_checked):
@@ -83,5 +83,5 @@ class ListLockableEditButtons_DialogComponents(QWidget):
 			
 
 
-	def __str__(self):
- 		return 
+	# def __str__(self):
+ 	# 	return 
