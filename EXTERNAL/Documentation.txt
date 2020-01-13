@@ -41,6 +41,8 @@ Upon modifying the .qrc resource (containing icons and stuff), it will need to b
 See https://doc.qt.io/qt-5/resources.html for more info.
 
 
+rcc -binary "C:\Users\halechr\repo\PhoPyQtTimelinePlotter\data\PhoPyQtTimelinePlotterResourceFile.qrc" -o "C:\Users\halechr\repo\PhoPyQtTimelinePlotter\data\PhoPyQtTimelinePlotterResourceFile.rcc"
+
 
 ## FFMPEG Experimentation:
         "//10.17.158.49/ServerInternal-01/Transcoded Videos/BB00/BehavioralBox_B00_T20190812-1348550224.mp4"
