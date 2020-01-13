@@ -105,7 +105,7 @@ class TimelineApplication(QApplication):
 
         if TimelineApplication.shouldShowImportWindow:
             print('Showing import window...')
-            self.importCSVWindow = ImportCSVWindow()
+            self.importCSVWindow = ImportCSVWindow(self.database_connection)
             self.importCSVWindow.show()
         
 

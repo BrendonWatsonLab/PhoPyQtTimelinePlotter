@@ -12,6 +12,8 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
 
+from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWidget
+
 from GUI.UI.DialogComponents.ListLockableEditButtons_DialogComponents import ListLockableEditButtons_DialogComponents
 
 ## IMPORTS:
@@ -21,11 +23,10 @@ from GUI.UI.DialogComponents.ListLockableEditButtons_DialogComponents import Lis
 importContextMain: ListLockableEditButtons_DialogComponents
 
 """
-class ImportCSVWidget(QWidget):
+class ImportCSVWidget(AbstractDatabaseAccessingWidget):
 	def __init__(self, parent=None):
-		super().__init__(parent=parent) # Call the inherited classes __init__ method
+		super().__init__(None, parent=parent) # Call the inherited classes __init__ method
 		self.ui = uic.loadUi("GUI/UI/ImportCSVWidget/ImportCSVWidget.ui", self) # Load the .ui file
-
 
 		self.initUI()
 		self.show() # Show the GUI
@@ -34,6 +35,13 @@ class ImportCSVWidget(QWidget):
 	def initUI(self):
 		# self.importContextMain
 		pass
+
+
+	# Override:
+	def set_database_connection(self, new_db_connection_ref):
+		self.database_connection = new_db_connection_ref
+		# Set children's database connection too:
+		self.ui.importContextMain.set_database_connection(new_db_connection_ref)
 
 
 	# def __str__(self):
