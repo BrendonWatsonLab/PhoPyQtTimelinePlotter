@@ -39,9 +39,8 @@ fixes the VLC cache errors that appear in the terminal that result in slow video
 
 Upon modifying the .qrc resource (containing icons and stuff), it will need to be re-build using "rcc -binary myresource.qrc -o myresource.rcc". This .rcc file is loaded in the main.py and without it icons would be broken.
 See https://doc.qt.io/qt-5/resources.html for more info.
-
-
-rcc -binary "C:\Users\halechr\repo\PhoPyQtTimelinePlotter\data\PhoPyQtTimelinePlotterResourceFile.qrc" -o "C:\Users\halechr\repo\PhoPyQtTimelinePlotter\data\PhoPyQtTimelinePlotterResourceFile.rcc"
+        For example:
+                rcc -binary "C:\Users\halechr\repo\PhoPyQtTimelinePlotter\data\PhoPyQtTimelinePlotterResourceFile.qrc" -o "C:\Users\halechr\repo\PhoPyQtTimelinePlotter\data\PhoPyQtTimelinePlotterResourceFile.rcc"
 
 
 ## FFMPEG Experimentation:
