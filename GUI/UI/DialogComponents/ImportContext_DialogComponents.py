@@ -39,9 +39,9 @@ class ImportContext_DialogComponents(AbstractDatabaseAccessingWidget):
 		# self.locklist_Animal.set_list_label('Animal')
 		# self.locklist_Cohort.set_list_label('Cohort')
 
-		self.locklist_Box.set_record_class(BehavioralBox, 'Box')
-		self.locklist_Animal.set_record_class(Animal, 'Animal')
-		self.locklist_Cohort.set_record_class(Cohort, 'Cohort')
+		self.locklist_Box.set_record_class(BehavioralBox, 'Box', ['Name'])
+		self.locklist_Animal.set_record_class(Animal, 'Animal', ['Name'])
+		self.locklist_Cohort.set_record_class(Cohort, 'Cohort', ['Name'])
 
 		pass
 
@@ -53,9 +53,9 @@ class ImportContext_DialogComponents(AbstractDatabaseAccessingWidget):
 		self.ui.locklist_Animal.set_database_connection(new_db_connection_ref)
 		self.ui.locklist_Cohort.set_database_connection(new_db_connection_ref)
 
-		self.locklist_Box.set_record_class(BehavioralBox, 'Box')
-		self.locklist_Animal.set_record_class(Animal, 'Animal')
-		self.locklist_Cohort.set_record_class(Cohort, 'Cohort')
+		self.locklist_Box.set_record_class(BehavioralBox, 'Box', ['Name'])
+		self.locklist_Animal.set_record_class(Animal, 'Animal', ['Name'])
+		self.locklist_Cohort.set_record_class(Cohort, 'Cohort', ['Name'])
 
 
 	# def __str__(self):

@@ -65,6 +65,7 @@ class LockableList(AbstractDatabaseAccessingWidget):
 		# Set model and selection model
 		self.active_record_class = None
 		self.active_record_class_string = ''
+		self.active_record_class_column_names = None
 		
 		self.model = None
 		self.selection_model = None
@@ -108,9 +109,10 @@ class LockableList(AbstractDatabaseAccessingWidget):
 
 
 	# Called to setup the record class
-	def set_record_class(self, new_record_class, new_record_class_string):
+	def set_record_class(self, new_record_class, new_record_class_string, included_column_names):
 		self.active_record_class = new_record_class
 		self.active_record_class_string = new_record_class_string
+		self.active_record_class_column_names = included_column_names
 
 		# Clear the old models
 		self.model = None
@@ -136,7 +138,7 @@ class LockableList(AbstractDatabaseAccessingWidget):
 	def reloadModelFromDatabase(self):
 		if self.active_record_class is not None:
 			if self.database_connection is not None:
-				new_model = self.database_connection.get_table_model(self.active_record_class)
+				new_model = self.database_connection.get_table_model(self.active_record_class, self.active_record_class_column_names)
 				self.update_table_model(new_model)
 			 
 			else:

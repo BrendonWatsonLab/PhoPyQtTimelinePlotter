@@ -560,14 +560,38 @@ class DatabaseConnectionRef(QObject):
 
     ## Model Generation:
     # get_table_model(cls): should work for any record class with a ".getTableMapping()" function defined
-    def get_table_model(self, cls):
+    def get_table_model(self, cls, included_columns=None):
         if (self.enable_debug_printing):
             print("get_table_model({0}) from database:".format(str(cls)))
         session = self.get_session()
+
+        all_columns = cls.getTableMapping()
+        active_columns = None
+
+        if included_columns is not None:
+            active_columns = []
+
+            for aColumnTuple in all_columns:
+                column_human_string = aColumnTuple[0]
+                column_variable = aColumnTuple[1]
+                column_table_id = aColumnTuple[2]
+
+                # Check if the included_columns list includes the human_readable string
+                if included_columns.__contains__(column_human_string):
+                    active_columns.append(aColumnTuple)
+                elif included_columns.__contains__(column_table_id):
+                    active_columns.append(aColumnTuple)
+                else:
+                    print('omitting column: {}'.format(str(column_human_string)))
+
+        else:
+            active_columns = all_columns
+            
+
         model = SqlAlchemyTableModel(
             session,
             cls, #sql alchemy mapped object
-            cls.getTableMapping())
+            active_columns)
         return model
 
     def get_animal_table_model(self):
