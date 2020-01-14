@@ -32,6 +32,9 @@
       <item>
        <widget class="LockableList" name="locklist_Cohort" native="true"/>
       </item>
+      <item>
+       <widget class="LockableList" name="locklist_Labjack" native="true"/>
+      </item>
      </layout>
     </widget>
    </item>

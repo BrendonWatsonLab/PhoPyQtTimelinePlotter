@@ -271,15 +271,12 @@ class LockableList(AbstractDatabaseAccessingWidget):
 		dialog.exec()
 
 	def store_new_record(self, name):
-		self.currClass = ExampleDatabaseTableWindow.ActiveTableTabs[self.activeActionTabIndex]
-		self.currClassString = ExampleDatabaseTableWindow.ActiveTableTabStrings[self.activeActionTabIndex]
-		
 		# rec = BehavioralBox()
-		rec = self.currClass()
+		rec = self.active_record_class()
 		rec.name = name
 		
 		try:
-			self.database_connection.save_to_database([rec], self.currClassString)
+			self.database_connection.save_to_database([rec], self.active_record_class_string)
 
 		except IntegrityError as e:
 			print("ERROR: Failed to commit changes! Rolling back", e)

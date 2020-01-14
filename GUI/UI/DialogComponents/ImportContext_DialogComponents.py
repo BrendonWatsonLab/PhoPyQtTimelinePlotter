@@ -23,6 +23,7 @@ from GUI.UI.DialogComponents.LockableList import LockableList
 locklist_Box
 locklist_Animal
 locklist_Cohort
+locklist_Labjack
 
 """
 class ImportContext_DialogComponents(AbstractDatabaseAccessingWidget):
@@ -39,10 +40,7 @@ class ImportContext_DialogComponents(AbstractDatabaseAccessingWidget):
 		# self.locklist_Animal.set_list_label('Animal')
 		# self.locklist_Cohort.set_list_label('Cohort')
 
-		self.locklist_Box.set_record_class(BehavioralBox, 'Box', ['Name'])
-		self.locklist_Animal.set_record_class(Animal, 'Animal', ['Name'])
-		self.locklist_Cohort.set_record_class(Cohort, 'Cohort', ['Name'])
-
+		self.setup_locklists()
 		pass
 
 	# Override:
@@ -52,11 +50,15 @@ class ImportContext_DialogComponents(AbstractDatabaseAccessingWidget):
 		self.ui.locklist_Box.set_database_connection(new_db_connection_ref)
 		self.ui.locklist_Animal.set_database_connection(new_db_connection_ref)
 		self.ui.locklist_Cohort.set_database_connection(new_db_connection_ref)
+		self.ui.locklist_Labjack.set_database_connection(new_db_connection_ref)
 
+		self.setup_locklists()
+
+	def setup_locklists(self):
 		self.locklist_Box.set_record_class(BehavioralBox, 'Box', ['Name'])
 		self.locklist_Animal.set_record_class(Animal, 'Animal', ['Name'])
 		self.locklist_Cohort.set_record_class(Cohort, 'Cohort', ['Name'])
-
+		self.locklist_Labjack.set_record_class(Labjack, 'Labjack', None)
 
 	# def __str__(self):
  	# 	return 
