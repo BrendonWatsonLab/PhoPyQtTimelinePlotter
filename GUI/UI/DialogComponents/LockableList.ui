@@ -124,6 +124,9 @@
                 <height>120</height>
                </size>
               </property>
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
+              </property>
              </widget>
             </item>
            </layout>

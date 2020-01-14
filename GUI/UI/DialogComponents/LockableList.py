@@ -85,6 +85,7 @@ class LockableList(AbstractDatabaseAccessingWidget):
 			self.ui.tableView.setVisible(True)
 
 			# Setup table
+			self.ui.tableView.setEditTriggers(QAbstractItemView.NoEditTriggers)
 			self.ui.tableView.setSelectionBehavior(QAbstractItemView.SelectRows)
 			self.ui.tableView.setContextMenuPolicy(Qt.CustomContextMenu)
 			self.ui.tableView.customContextMenuRequested.connect(self.display_context_menu)
@@ -191,6 +192,13 @@ class LockableList(AbstractDatabaseAccessingWidget):
 		print("LockableList.handle_lock_toggled(is_checked: {})".format(str(is_checked)))
 		is_locked = (not is_checked)
 		is_editing = (not is_locked)
+
+		if is_editing:
+			self.ui.tableView.setEditTriggers(QAbstractItemView.AllEditTriggers)
+		else:
+			self.ui.tableView.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+
 		self.isEditingChanged.emit(is_editing)
 
 
