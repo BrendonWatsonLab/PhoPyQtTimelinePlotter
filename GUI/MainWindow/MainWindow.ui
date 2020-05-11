@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>1008</width>
-    <height>815</height>
+    <height>824</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -47,7 +47,7 @@
      <x>0</x>
      <y>0</y>
      <width>1008</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -59,6 +59,7 @@
     <addaction name="actionSave_As"/>
     <addaction name="separator"/>
     <addaction name="actionImport_Labjack_Data"/>
+    <addaction name="actionImport_Actigraphy_Data"/>
     <addaction name="separator"/>
     <addaction name="actionExport_to"/>
     <addaction name="separator"/>
@@ -169,7 +170,7 @@
              <string>||&lt;</string>
             </property>
             <property name="icon">
-             <iconset resource="../../data/PhoPyQtTimelinePlotterResourceFile.qrc">
+             <iconset>
               <normaloff>:/fugue/fugue/icons-shadowless/arrow-stop-180.png</normaloff>:/fugue/fugue/icons-shadowless/arrow-stop-180.png</iconset>
             </property>
            </widget>
@@ -189,7 +190,7 @@
              <string>|&lt;</string>
             </property>
             <property name="icon">
-             <iconset resource="../../data/PhoPyQtTimelinePlotterResourceFile.qrc">
+             <iconset>
               <normaloff>:/fugue/fugue/icons-shadowless/arrow-transition-180.png</normaloff>:/fugue/fugue/icons-shadowless/arrow-transition-180.png</iconset>
             </property>
            </widget>
@@ -213,7 +214,7 @@
              <string>&gt;|</string>
             </property>
             <property name="icon">
-             <iconset resource="../../data/PhoPyQtTimelinePlotterResourceFile.qrc">
+             <iconset>
               <normaloff>:/fugue/fugue/icons-shadowless/arrow-transition.png</normaloff>:/fugue/fugue/icons-shadowless/arrow-transition.png</iconset>
             </property>
            </widget>
@@ -230,7 +231,7 @@
              <string>&gt;||</string>
             </property>
             <property name="icon">
-             <iconset resource="../../data/PhoPyQtTimelinePlotterResourceFile.qrc">
+             <iconset>
               <normaloff>:/fugue/fugue/icons-shadowless/arrow-stop.png</normaloff>:/fugue/fugue/icons-shadowless/arrow-stop.png</iconset>
             </property>
            </widget>
@@ -328,7 +329,7 @@
              <string>-</string>
             </property>
             <property name="icon">
-             <iconset resource="../../data/PhoPyQtTimelinePlotterResourceFile.qrc">
+             <iconset>
               <normaloff>:/fugue/fugue/bonus/icons-24/magnifier-zoom-out.png</normaloff>:/fugue/fugue/bonus/icons-24/magnifier-zoom-out.png</iconset>
             </property>
            </widget>
@@ -352,7 +353,7 @@
              <string>+</string>
             </property>
             <property name="icon">
-             <iconset resource="../../data/PhoPyQtTimelinePlotterResourceFile.qrc">
+             <iconset>
               <normaloff>:/fugue/fugue/bonus/icons-24/magnifier-zoom-in.png</normaloff>:/fugue/fugue/bonus/icons-24/magnifier-zoom-in.png</iconset>
             </property>
            </widget>
@@ -514,6 +515,11 @@
   <action name="actionImport_Labjack_Data">
    <property name="text">
     <string>Import Labjack Data...</string>
+   </property>
+  </action>
+  <action name="actionImport_Actigraphy_Data">
+   <property name="text">
+    <string>Import Actigraphy Data...</string>
    </property>
   </action>
  </widget>

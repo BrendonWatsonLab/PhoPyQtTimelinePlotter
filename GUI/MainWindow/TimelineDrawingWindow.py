@@ -173,6 +173,12 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         self.totalEndTime = totalEndTime
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
 
+        # TODO: Need to finish implementing for the actigraphy files loader:
+        self.actigraphyDataFilesystemLoader = LabjackFilesystemLoader([], parent=self)
+        self.actigraphyDataFilesystemLoader.loadingLabjackDataFilesComplete.connect(self.on_labjack_files_loading_complete)
+        self.activeGlobalTimelineTimesChanged.connect(self.actigraphyDataFilesystemLoader.on_active_global_timeline_times_changed)
+
+
         self.labjackDataFilesystemLoader = LabjackFilesystemLoader([], parent=self)
         self.labjackDataFilesystemLoader.loadingLabjackDataFilesComplete.connect(self.on_labjack_files_loading_complete)
         self.activeGlobalTimelineTimesChanged.connect(self.labjackDataFilesystemLoader.on_active_global_timeline_times_changed)
@@ -291,6 +297,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             
 
             ## Import:
+            self.ui.actionImport_Actigraphy_Data.triggered.connect(self.on_user_actigraphy_data_load)
             self.ui.actionImport_Labjack_Data.triggered.connect(self.on_user_labjack_data_load)
 
             ## Export:
@@ -2519,6 +2526,39 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         self.update()
     
 
+
+    # actionImport_Actigraphy_Data
+    @pyqtSlot()
+    def on_user_actigraphy_data_load(self):
+
+        # Called when the user selects "Import Actigraphy data..." from the main menu.
+        print("TimelineDrawingWindow.on_user_actigraphy_data_load()")
+        # Show a dialog that asks the user for their export path
+        # exportFilePath = self.on_exportFile_selected()
+
+        path = QFileDialog.getOpenFileName(self, 'Open Actigraphy Data File', os.getenv('HOME'), 'MAT(*.mat)')
+        importFilePath = path[0]
+        if importFilePath == '':
+            print("User canceled the import!")
+            return
+        else:
+            print("Importing data file at path {}...".format(importFilePath))
+            self.get_actigraphy_data_files_loader().add_actigraphy_file_path(importFilePath)
+
+    # TODO: MAke a general "data_files_loader" out of labjack_data_files_loader
+
+    def get_actigraphy_data_files_loader(self):
+        return self.actigraphyDataFilesystemLoader
+
+    @pyqtSlot()
+    def on_actigraphy_files_loading_complete(self):
+        print("TimelineDrawingWindow.on_actigraphy_files_loading_complete()...")
+        activeLoader = self.get_actigraphy_data_files_loader()
+        ## UNIMPLEMENTED!
+
+
+
+
     @pyqtSlot()
     def on_user_labjack_data_load(self):
 
@@ -2535,7 +2575,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         else:
             print("Importing data file at path {}...".format(importFilePath))
             self.get_labjack_data_files_loader().add_labjack_file_path(importFilePath)
-
 
     def get_labjack_data_files_loader(self):
         return self.labjackDataFilesystemLoader
