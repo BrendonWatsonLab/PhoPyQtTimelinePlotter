@@ -358,7 +358,7 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
                     # Add the video file record
                     self.database_connection.save_video_file_info_to_database([aNewVideoFileRecord])
 
-    # Creates new "FileParentFolder" entries in the databse if existing ones can't be found
+    # Creates new "FileParentFolder" entries in the database if existing ones can't be found
     def rebuildParentFolders(self):
         print("VideoFilesystemLoader.rebuildParentFolders(...)")
         unresolvedSearchPaths = self.searchPaths

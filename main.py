@@ -34,7 +34,7 @@ class TimelineApplication(QApplication):
     shouldShowMainGUIWindow = True
     shouldShowListGUIWindow = False
     shouldShowExampleWindow = False
-    shouldShowImportWindow = False # TODO: this is what I was working on last
+    shouldShowImportWindow = True # TODO: this is what I was working on last
 
     database_file_name = 'BehavioralBoxDatabase.db'
 
@@ -60,10 +60,6 @@ class TimelineApplication(QApplication):
 
             return new_user_dir
             
-
-
-
-
     def __init__(self, args):
         super(TimelineApplication, self).__init__(args)
         # self.database_file_path = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
