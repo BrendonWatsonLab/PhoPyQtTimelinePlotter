@@ -31,10 +31,10 @@ from app.database.DatabaseConnectionRef import DatabaseConnectionRef
 class TimelineApplication(QApplication):
 
     shouldShowGUIWindows = True
-    shouldShowMainGUIWindow = False
+    shouldShowMainGUIWindow = True
     shouldShowListGUIWindow = False
     shouldShowExampleWindow = False
-    shouldShowImportWindow = True
+    shouldShowImportWindow = False # TODO: this is what I was working on last
 
     database_file_name = 'BehavioralBoxDatabase.db'
 
