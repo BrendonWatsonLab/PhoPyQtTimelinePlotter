@@ -141,8 +141,11 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
     # debug_desiredVideoTracks = [0, 1]
     # debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(False, True, True), VideoTrackGroupSettings(False, True, True)]
 
-    debug_desiredVideoTracks = [1]
-    debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(True, True, True, ["test"])]
+    # debug_desiredVideoTracks = [1]
+    # debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(True, True, True, ["test"])]
+
+    debug_desiredVideoTracks = [2]
+    debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(True, True, True, [])]
 
     # debug_desiredVideoTracks = [5, 6, 8, 9]
 
