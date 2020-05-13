@@ -26,39 +26,41 @@ from GUI.Windows.ExampleDatabaseTableWindow import ExampleDatabaseTableWindow
 from GUI.Windows.ImportCSVWindow.ImportCSVWindow import ImportCSVWindow
 
 from app.database.DatabaseConnectionRef import DatabaseConnectionRef
+from app.Platform import PlatformOperatingSystem, PlatformConfiguration
+
+
+##!! IMPORTANT/CONFIGURATION: See app/Platform.py for project and ffprobe path settings
+
 
 # The main application
 class TimelineApplication(QApplication):
 
     shouldShowGUIWindows = True
     shouldShowMainGUIWindow = True
-    shouldShowListGUIWindow = False
+    shouldShowListGUIWindow = True
     shouldShowExampleWindow = False
-    shouldShowImportWindow = True # TODO: this is what I was working on last
+    shouldShowImportWindow = False # TODO: this is what I was working on last
 
-    database_file_name = 'BehavioralBoxDatabase.db'
+    # database_file_name = 'BehavioralBoxDatabase.db'
+    database_file_name = 'BehavioralBoxDatabase_Paul.db'
 
-    project_directory_windows = pathlib.Path("C:/Users/halechr/repo/PhoPyQtTimelinePlotter/")
-    project_directory_mac = pathlib.Path("/Users/pho/repo/PhoPyQtTimelinePlotter/")
+    # project_directory_windows = pathlib.Path("C:/Users/halechr/repo/PhoPyQtTimelinePlotter/")
+    # project_directory_mac = pathlib.Path("/Users/pho/repo/PhoPyQtTimelinePlotter/")
+
+    # project_directory_windows = PlatformOperatingSystem.Windows.get_project_directory()
+    # project_directory_mac = PlatformOperatingSystem.Mac.get_project_directory()
+
+    platformConfig = PlatformConfiguration()
+
 
     @staticmethod
     def get_project_directory():
-        if (TimelineApplication.project_directory_windows.exists()):
-            # platform is Windows
-            return TimelineApplication.project_directory_windows
-        
-        elif (TimelineApplication.project_directory_mac.exists()):
-            # platform is Mac
-            return TimelineApplication.project_directory_mac
+        return TimelineApplication.platformConfig.get_project_directory()
 
-        else:
-            print("ERROR: none of the expected project directories exist!")
-            new_user_dir = None
-            # Todo: allow user to specify a dir
-            if new_user_dir is not None:
-                new_user_dir = new_user_dir.resolve()
+    @staticmethod
+    def get_ffprobe_executable_path_string():
+        return TimelineApplication.platformConfig.get_ffprobe_executable_path_string()
 
-            return new_user_dir
             
     def __init__(self, args):
         super(TimelineApplication, self).__init__(args)
@@ -129,9 +131,11 @@ class TimelineApplication(QApplication):
     
         if TimelineApplication.shouldShowListGUIWindow:
             # self.video_file_search_paths = ["O:/Transcoded Videos/BB00", "O:/Transcoded Videos/BB01", "O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]     
-            self.video_file_search_paths = ["O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]     
+            # self.video_file_search_paths = ["O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]
             # self.video_file_search_paths = ["O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]
-            self.mainListWindow = MainObjectListsWindow(self.database_connection, self.video_file_search_paths)
+            self.video_file_search_paths = ["/Users/pho/Desktop/Videos/BB02"]
+
+            self.mainListWindow = MainObjectListsWindow(self.database_connection, self.video_file_search_paths, TimelineApplication.platformConfig)
 
 
         self.desktop = QtWidgets.QApplication.desktop()
