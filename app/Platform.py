@@ -27,28 +27,36 @@ class PlatformOperatingSystem(Enum):
 
 
 # PlatformConfiguration: contains parameters specific to the current running instance of the program, like the project path, the OS it's running on (Mac/Win/Linux), etc.
-class PlatformConfiguration(QObject):
+class PlatformConfiguration(object):
+    
+    operatingSystem = PlatformOperatingSystem.Unknown
+    project_directory = None
+    ffmpeg_directory = None
+    ffprobe_executable_path_string = None
+
+    is_determined = False
+
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
-        self.operatingSystem = PlatformOperatingSystem.Unknown
-        self.project_directory = None
-        self.determineOS()
 
+    # def __init__(self, parent=None):
+    #     super().__init__(parent=parent)
 
-    def determineOS(self):
+    @staticmethod
+    def determineOS():
         project_directory_windows = PlatformOperatingSystem.Windows.get_project_directory()
         project_directory_mac = PlatformOperatingSystem.Mac.get_project_directory()
 
         if (project_directory_windows.exists()):
             # platform is Windows
-            self.operatingSystem = PlatformOperatingSystem.Windows
-            self.project_directory = project_directory_windows
+            PlatformConfiguration.operatingSystem = PlatformOperatingSystem.Windows
+            PlatformConfiguration.project_directory = project_directory_windows
         
         elif (project_directory_mac.exists()):
             # platform is Mac
-            self.operatingSystem = PlatformOperatingSystem.Mac
-            self.project_directory = project_directory_mac
+            PlatformConfiguration.operatingSystem = PlatformOperatingSystem.Mac
+            PlatformConfiguration.project_directory = project_directory_mac
 
         else:
             print("ERROR: none of the expected project directories exist!")
@@ -57,15 +65,36 @@ class PlatformConfiguration(QObject):
             if new_user_dir is not None:
                 new_user_dir = new_user_dir.resolve()
 
-            self.operatingSystem = PlatformOperatingSystem.Unknown
-            self.project_directory = new_user_dir
+            PlatformConfiguration.operatingSystem = PlatformOperatingSystem.Unknown
+            PlatformConfiguration.project_directory = new_user_dir
 
-    def get_ffmpeg_directory(self):
-        return self.get_project_directory().joinpath("EXTERNAL", "Dependencies", "ffmpeg", "bin")
+        # Using relative ffmpeg path:
+        PlatformConfiguration.ffmpeg_directory = PlatformConfiguration.project_directory.joinpath("EXTERNAL", "Dependencies", "ffmpeg", "bin")
+        if (PlatformConfiguration.ffmpeg_directory.exists()):
+            PlatformConfiguration.ffprobe_executable_path_string = str(PlatformConfiguration.ffmpeg_directory.joinpath("ffprobe"))
+        else:
+            print("ERROR: the ffmpeg path {} doesn't exist! Did you download it from https://ffmpeg.zeranoe.com/builds/ and install it in ./EXTERNAL/Dependencies/ffmpeg?".format(PlatformConfiguration.ffmpeg_directory))
+            PlatformConfiguration.ffprobe_executable_path_string = None
+            raise FileNotFoundError
 
-    def get_ffprobe_executable_path_string(self):
-        return str(self.get_ffmpeg_directory().joinpath("ffprobe"))
+        PlatformConfiguration.is_determined = True
 
-    def get_project_directory(self):
-        return self.project_directory
+    @staticmethod
+    def get_ffmpeg_directory():
+        if not PlatformConfiguration.is_determined:
+            PlatformConfiguration.determineOS()
+        
+        return PlatformConfiguration.ffmpeg_directory
+
+    @staticmethod
+    def get_ffprobe_executable_path_string():
+        if not PlatformConfiguration.is_determined:
+            PlatformConfiguration.determineOS()
+        return PlatformConfiguration.ffprobe_executable_path_string
+
+    @staticmethod
+    def get_project_directory():
+        if not PlatformConfiguration.is_determined:
+            PlatformConfiguration.determineOS()
+        return PlatformConfiguration.project_directory
 

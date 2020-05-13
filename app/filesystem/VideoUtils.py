@@ -25,6 +25,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 # from hachoir.metadata import extractMetadata
 
 ## IMPORT:
+from app.Platform import PlatformOperatingSystem, PlatformConfiguration
 # from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult
 # from app.filesystem.VideoUtils import findDeeplabCutProducedOutputFiles, FoundDeeplabcutOutputFileResult
 
@@ -58,7 +59,10 @@ def video_probe(vid_file_path):
         raise Exception('Give ffprobe a full file path of the video')
         return
 
-    command = ["C:/Common/bin/ffmpeg/bin/ffprobe",
+    ffprobe_path_string = PlatformConfiguration.get_ffprobe_executable_path_string()
+
+    # command = ["C:/Common/bin/ffmpeg/bin/ffprobe",
+    command = [ffprobe_path_string,
             "-loglevel",  "quiet",
             "-print_format", "json",
             "-show_format",

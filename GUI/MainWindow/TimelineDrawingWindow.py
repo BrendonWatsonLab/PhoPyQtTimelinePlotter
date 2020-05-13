@@ -1247,7 +1247,13 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
     # Returns the current perent scrolled the viewport is through the entire timeline.
     def get_viewport_percent_scrolled(self):
         # TODO: check that this is correct. I think it is.
-        return (float(self.timelineScroll.horizontalScrollBar().value()) / (float(self.timelineScroll.horizontalScrollBar().maximum()) - float(self.timelineScroll.horizontalScrollBar().minimum())))
+        try:
+            return (float(self.timelineScroll.horizontalScrollBar().value()) / (float(self.timelineScroll.horizontalScrollBar().maximum()) - float(self.timelineScroll.horizontalScrollBar().minimum())))
+        except ZeroDivisionError:
+            print("ERROR: ZeroDivisionError in get_viewport_percent_scrolled()!")
+            return 0.0
+        except:
+            raise
 
     # Scrolls the viewport to the desired percent_scrolled of entire timeline.
     def set_viewport_percent_scrolled(self, percent_scrolled):

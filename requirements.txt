@@ -1,7 +1,7 @@
 PyQt5==5.4.1
 QtAwesome==0.1.8
 orange-canvas-core==0.1.9
-# Requires ffprobe binary installed in C:\Common\bin\ffmpeg\bin\ffprobe. Obtainable from https://ffmpeg.zeranoe.com/builds/
+# Requires ffprobe binary installed in ./EXTERNAL/Dependencies/ffmpeg/bin/ffprobe. Obtainable from https://ffmpeg.zeranoe.com/builds/
 #conda install pillow
 pillow==6.2.1
 #conda install av -c conda-forge

@@ -50,16 +50,13 @@ class TimelineApplication(QApplication):
     # project_directory_windows = PlatformOperatingSystem.Windows.get_project_directory()
     # project_directory_mac = PlatformOperatingSystem.Mac.get_project_directory()
 
-    platformConfig = PlatformConfiguration()
-
-
     @staticmethod
     def get_project_directory():
-        return TimelineApplication.platformConfig.get_project_directory()
+        return PlatformConfiguration.get_project_directory()
 
     @staticmethod
     def get_ffprobe_executable_path_string():
-        return TimelineApplication.platformConfig.get_ffprobe_executable_path_string()
+        return PlatformConfiguration.get_ffprobe_executable_path_string()
 
             
     def __init__(self, args):
@@ -135,7 +132,7 @@ class TimelineApplication(QApplication):
             # self.video_file_search_paths = ["O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]
             self.video_file_search_paths = ["/Users/pho/Desktop/Videos/BB02"]
 
-            self.mainListWindow = MainObjectListsWindow(self.database_connection, self.video_file_search_paths, TimelineApplication.platformConfig)
+            self.mainListWindow = MainObjectListsWindow(self.database_connection, self.video_file_search_paths)
 
 
         self.desktop = QtWidgets.QApplication.desktop()
