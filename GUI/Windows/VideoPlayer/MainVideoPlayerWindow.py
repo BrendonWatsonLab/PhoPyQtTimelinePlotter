@@ -536,8 +536,19 @@ class MainVideoPlayerWindow(HistoricalFrameRenderingMixin, VideoPlaybackRenderin
 
     def __init__(self, parent=None):
         # QMainWindow.__init__(self, parent)
-        super().__init__(parent=parent)
-        self.ui = uic.loadUi("GUI/Windows/VideoPlayer/MainVideoPlayerWindow.ui", self)
+        QMainWindow.__init__(self, parent=parent)
+        # super().__init__(parent=parent)
+
+
+        import pathlib
+        # gui_path_string = "GUI/Windows/VideoPlayer/MainVideoPlayerWindow.ui"
+        # gui_path_string = "GUI/Windows/VideoPlayer/MainVideoPlayerWindow_Old.ui"
+        gui_path_string = "GUI/Windows/VideoPlayer/MainVideoPlayerWindow_no_sidebar.ui"
+        gui_path = pathlib.Path(gui_path_string)
+        if gui_path.exists():
+            self.ui = uic.loadUi(gui_path, self)
+        else:
+            raise FileNotFoundError
 
         self.timestamp_filename = None
         # self.video_filename = None

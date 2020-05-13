@@ -1,4 +1,4 @@
-# Requires ffprobe binary installed in C:\Common\bin\ffmpeg\bin\ffprobe. Obtainable from https://ffmpeg.zeranoe.com/builds/. Tested with 4.2.1
+# Requires ffprobe binary installed in ./EXTERNAL/Dependencies/ffmpeg/bin/ffprobe. Obtainable from https://ffmpeg.zeranoe.com/builds/. Tested with 4.2.1
 
 
 In general each track widget has the following setup:

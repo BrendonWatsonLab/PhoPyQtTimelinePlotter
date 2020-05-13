@@ -1,4 +1,5 @@
 PyQt5==5.4.1
+# SystemError: <built-in function connectSlotsByName> returned a result with an error set>
 QtAwesome==0.1.8
 orange-canvas-core==0.1.9
 # Requires ffprobe binary installed in ./EXTERNAL/Dependencies/ffmpeg/bin/ffprobe. Obtainable from https://ffmpeg.zeranoe.com/builds/
@@ -21,11 +22,10 @@ fbs PyQt5 PyInstaller==3.4
 
 
 ## Exporting and importing:
-# conda list --explicit > "EXTERNAL/Requirements/spec-list-01-07-2020.txt"
-# conda env export > "EXTERNAL/Requirements/environment-01-07-2020.yml"
-
+# conda list --explicit > "EXTERNAL/Requirements/spec-list-05-11-2020.txt"
+# conda env export --from-history > "EXTERNAL/Requirements/environment-05-11-2020.yml"
 
 ## Restoring:
-# conda create  --name python-course --file "EXTERNAL/Requirements/spec-list-01-07-2020.txt"
-# conda env create -f "EXTERNAL/Requirements/environment-01-07-2020.yml"
+# conda create  --name python-course --file "EXTERNAL/Requirements/spec-list-05-11-2020.txt"
+# conda env create -f "EXTERNAL/Requirements/environment-05-11-2020.yml"
 
