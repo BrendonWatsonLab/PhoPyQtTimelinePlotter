@@ -82,7 +82,10 @@ class ViewportScaleAdjustmentOptions(Enum):
         MaintainDesiredViewportZoomFactor = 1 # keeps the self.activeScaleMultiplier the same, and adjusts the self.activeViewportDuration to match upon window resize
         MaintainDesiredViewportDisplayDuration = 2 #  keeps the self.activeViewportDuration the same, and adjusts the self.activeScaleMultiplier to match upon window resize
 
-
+# ViewportJumpToOptions: Enum used in the "jumpTo" functions to determine how jumps occur
+class ViewportJumpToOptions(Enum):
+    JumpToNextFromStartOfViewport = 1 # Aligns the start of the viewport with the start of the first video following the original start of the viewport.
+    JumpToNextOutsideViewport = 2 # Jumps to the next view following the original end of the viewport
 
 """
 self.activeScaleMultiplier: this multipler determines how many times longer the contents of the scrollable viewport are than the viewport width itself.
@@ -154,6 +157,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         self.ui = uic.loadUi("GUI/MainWindow/MainWindow.ui", self) # Load the .ui file
 
         self.shouldUseTrackHeaders = True
+        self.currentViewportJumpToOption = ViewportJumpToOptions.JumpToNextOutsideViewport
 
         self.partitionTrackContextsArray = [TrackContextConfig('Behavior'), TrackContextConfig('Unknown')]
 
@@ -177,9 +181,9 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         self.totalDuration = (self.totalEndTime - self.totalStartTime)
 
         # TODO: Need to finish implementing for the actigraphy files loader:
-        self.actigraphyDataFilesystemLoader = LabjackFilesystemLoader([], parent=self)
-        self.actigraphyDataFilesystemLoader.loadingLabjackDataFilesComplete.connect(self.on_labjack_files_loading_complete)
-        self.activeGlobalTimelineTimesChanged.connect(self.actigraphyDataFilesystemLoader.on_active_global_timeline_times_changed)
+        # self.actigraphyDataFilesystemLoader = LabjackFilesystemLoader([], parent=self)
+        # self.actigraphyDataFilesystemLoader.loadingLabjackDataFilesComplete.connect(self.on_labjack_files_loading_complete)
+        # self.activeGlobalTimelineTimesChanged.connect(self.actigraphyDataFilesystemLoader.on_active_global_timeline_times_changed)
 
 
         self.labjackDataFilesystemLoader = LabjackFilesystemLoader([], parent=self)
@@ -754,7 +758,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             except KeyError as e:
                 print("Error: still failed even after trying to add sample records to database!!!")
 
-
+        ## TODO: The databse is allowing duplicate video files to be added.
         # Video file objects for video tracks
         self.videoFileRecords = self.database_connection.load_video_file_info_from_database()
         self.videoInfoObjects = []
@@ -769,7 +773,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             videoFileStartDates.append(aVideoFileRecord.get_start_date())
             videoFileEndDates.append(aVideoFileRecord.get_end_date())
 
-        
+        # Update the labjack (matplotlib) graph for the new start and end video dates. This probably shouldn't happen, they should be updated for the timeline's global start/end times
         self.get_labjack_data_files_loader().set_start_end_video_file_dates(videoFileStartDates, videoFileEndDates)
 
         self.update()
@@ -813,6 +817,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             # Otherwise filter the videos
             ## TODO: Filter the videoEvents, self.videoDates, self.videoEndDates, and labels if we need them to the global self.totalStartTime and self.totalEndTime range
             print("UNIMPLEMENTED TIME ADJUST MODE!!")
+            raise NotImplementedError
             pass
         elif TimelineDrawingWindow.GlobalTimelineConstraintOptions is GlobalTimeAdjustmentOptions.ConstantOffsetFromMostRecentVideo:
             # Otherwise filter the videos
@@ -823,6 +828,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             # Set an "isInViewport" option or something
         else:
             print('INVALID ENUM VALUE!!!')
+            raise NotImplementedError
 
     def reload_tracks_from_track_configs(self):
         self.reload_videos_from_track_configs()
@@ -1282,6 +1288,11 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         offset_datetime = self.offset_to_datetime(track_offset_x)
         return offset_datetime
 
+    # Gets the end datetime of the current viewport (aligned with the right edge of the viewport)
+    def get_viewport_active_end_time(self):
+        # get the viewport's end time
+        return self.get_viewport_active_start_time() + self.get_active_viewport_duration()
+
     # Moves the current viewport's position such that it's start position is aligned with a specific start_time
     def sync_active_viewport_start_to_datetime(self, start_time):
         # get the viewport's end time
@@ -1289,6 +1300,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         return self.sync_active_viewport_end_to_datetime(end_time)
 
     # Moves the current viewport's position such that it's end position is aligned with a specific end_time
+    ## TODO: Is this logic right? It seems like it's aligning its left edge still.
     def sync_active_viewport_end_to_datetime(self, end_time):
         safe_end_time = end_time
         if end_time > self.totalEndTime:
@@ -1439,32 +1451,67 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
 
         currFoundTrack = self.get_track_with_trackID(trackID)
 
-        offset_datetime = self.get_viewport_active_start_time()
-        # next_event_tuple: (index, eventDurationObj) pair
+        if self.currentViewportJumpToOption is ViewportJumpToOptions.JumpToNextOutsideViewport:
+            offset_datetime = self.get_viewport_active_end_time()
+        else:
+            offset_datetime = self.get_viewport_active_start_time()
+
+        # next_event_tuple: (index, videoObj) pair
         next_event_tuple = currFoundTrack.find_next_event(offset_datetime)
         if next_event_tuple is None:
-            print("next_event_tuple is none!")
-            return
-        else:
-            print("next_event_tuple is {0}".format(next_event_tuple[0]))
+            if self.currentViewportJumpToOption is ViewportJumpToOptions.JumpToNextOutsideViewport:
+                # Try the other mode and see if one exists:
+                offset_datetime = self.get_viewport_active_start_time()
+                next_event_tuple = currFoundTrack.find_next_event(offset_datetime)
+                if next_event_tuple is None:
+                    print("next_event_tuple is none!")
+                    return
+            else:
+                print("next_event_tuple is none!")
+                return
 
+        print("next_event_tuple is {0}".format(next_event_tuple[0]))
+
+        # offset_datetime = self.get_viewport_active_start_time()
+        # # next_event_tuple: (index, eventDurationObj) pair
+        # next_event_tuple = currFoundTrack.find_next_event(offset_datetime)
+        # if next_event_tuple is None:
+        #     print("next_event_tuple is none!")
+        #     return
+        # else:
+        #     print("next_event_tuple is {0}".format(next_event_tuple[0]))
+        #
         found_start_date = next_event_tuple[1].startTime
         self.sync_active_viewport_start_to_datetime(found_start_date)
         return
 
+    ## TODO: Jump to the next video that's NOT IN THE CURRENT VIEWPORT (it currently jumps the start of the viewport to the start of the next video)
     def on_jump_next(self):
         # Jump to the next available video in the video track
         # TODO: could highlight the video that's being jumped to.
         print("on_jump_next()")
-        offset_datetime = self.get_viewport_active_start_time()
+        if self.currentViewportJumpToOption is ViewportJumpToOptions.JumpToNextOutsideViewport:
+            offset_datetime = self.get_viewport_active_end_time()
+        else:
+            offset_datetime = self.get_viewport_active_start_time()
+
+
         # next_video_tuple: (index, videoObj) pair
         next_video_tuple = self.videoFileTrackWidgets[0].find_next_event(offset_datetime)
         if next_video_tuple is None:
-            print("next_video_tuple is none!")
-            return
-        else:
-            print("next_video_tuple is {0}".format(next_video_tuple[0]))
+            if self.currentViewportJumpToOption is ViewportJumpToOptions.JumpToNextOutsideViewport:
+                # Try the other mode and see if one exists:
+                offset_datetime = self.get_viewport_active_start_time()
+                next_video_tuple = self.videoFileTrackWidgets[0].find_next_event(offset_datetime)
+                if next_video_tuple is None:
+                    print("next_video_tuple is none!")
+                    return
+            else:
+                print("next_video_tuple is none!")
+                return
 
+
+        print("next_video_tuple is {0}".format(next_video_tuple[0]))
         found_start_date = next_video_tuple[1].startTime
         self.sync_active_viewport_start_to_datetime(found_start_date)
         return
