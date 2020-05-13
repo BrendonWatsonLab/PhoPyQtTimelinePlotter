@@ -1,0 +1,13 @@
+name: Py3Qt5
+channels:
+  - defaults
+dependencies:
+  - python=3.7
+  - anaconda
+  - pyqt
+  - opencv
+  - orange-canvas-core
+  - pyqtgraph
+  - configparser
+prefix: /Users/pho/opt/anaconda3/envs/Py3Qt5
+

@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import datetime as dt
+import pathlib
 
 import sqlalchemy as db
 from sqlalchemy.exc import IntegrityError, OperationalError
@@ -22,51 +23,110 @@ from GUI.HelpWindow.HelpWindowFinal import *
 from GUI.MainObjectListsWindow.MainObjectListsWindow import *
 from GUI.Windows.ExampleDatabaseTableWindow import ExampleDatabaseTableWindow
 
+from GUI.Windows.ImportCSVWindow.ImportCSVWindow import ImportCSVWindow
+
 from app.database.DatabaseConnectionRef import DatabaseConnectionRef
+from app.Platform import PlatformOperatingSystem, PlatformConfiguration
+
+
+##!! IMPORTANT/CONFIGURATION: See app/Platform.py for project and ffprobe path settings
+
 
 # The main application
 class TimelineApplication(QApplication):
 
+
     shouldShowGUIWindows = True
     shouldShowMainGUIWindow = True
     shouldShowListGUIWindow = False
-    shouldShowExampleWindow = False 
+    shouldShowExampleWindow = False
+    shouldShowImportWindow = False # TODO: this is what I was working on last
 
+    # database_file_name = 'BehavioralBoxDatabase.db'
+    database_file_name = 'BehavioralBoxDatabase_Paul.db'
+    # should_purge_database = False
+    should_purge_database = False # Prompts the user to delete the database
+
+
+
+    
+
+    # project_directory_windows = pathlib.Path("C:/Users/halechr/repo/PhoPyQtTimelinePlotter/")
+    # project_directory_mac = pathlib.Path("/Users/pho/repo/PhoPyQtTimelinePlotter/")
+
+    # project_directory_windows = PlatformOperatingSystem.Windows.get_project_directory()
+    # project_directory_mac = PlatformOperatingSystem.Mac.get_project_directory()
+
+    @staticmethod
+    def get_project_directory():
+        return PlatformConfiguration.get_project_directory()
+
+    @staticmethod
+    def get_ffprobe_executable_path_string():
+        return PlatformConfiguration.get_ffprobe_executable_path_string()
+
+            
     def __init__(self, args):
         super(TimelineApplication, self).__init__(args)
         # self.database_file_path = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
         # self.database_file_path = 'G:\Google Drive\Modern Behavior Box\Results - Data\BehavioralBoxDatabase.db'
-        self.database_file_path = "C:/Users/halechr/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db"
+        # self.database_file_path = "C:/Users/halechr/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db"
+
+        self.project_directory_path = TimelineApplication.get_project_directory()
+        self.database_file_parent_path = self.project_directory_path.joinpath("EXTERNAL", "Databases")
+        self.database_file_path = self.database_file_parent_path.joinpath(TimelineApplication.database_file_name)
+        self.database_file_path_string = str(self.database_file_path)
+
+        if TimelineApplication.should_purge_database:
+            print('Warning: Database purging is on!')
+            user_response = input("Type 'y' to delete the database, or anything else to continue without deleting it: ")
+            if user_response == 'y' or user_response == 'Y':
+                if self.database_file_path.exists():
+                    self.database_file_path.unlink()
+                    print('The database at {} has been purged! Remember to turn it off in main.py if you do not want to be prompted again.'.format(self.database_file_path))
+
+                else:
+                    # file didn't exist
+                    print("File {} does not exist, so it could not be removed!".format(self.database_file_path))
+            else:
+                print('Skipping database purge.')
+
+            TimelineApplication.should_purge_database = False
+
+
 
         try:
-            self.database_connection = DatabaseConnectionRef(self.database_file_path)
+            self.database_connection = DatabaseConnectionRef(self.database_file_path_string)
             
         except sqlite3.OperationalError as error:
-            fallback_string = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
-            print("databse{0} doesn't exist... trying {1}...".format(str(self.database_file_path), str(fallback_string)))
-            self.database_file_path = fallback_string
-            try:
-                self.database_connection = DatabaseConnectionRef(self.database_file_path)
-            except sqlite3.OperationalError as error:
-                print("file {0} doesn't exist either.".format(str(self.database_file_path)))
+            print("ERROR: databse {0} doesn't exist...".format(self.database_file_path_string))
+            self.database_connection = None
+            # fallback_string = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
+            # print("databse {0} doesn't exist... trying {1}...".format(str(self.database_file_path_string), str(fallback_string)))
+            # self.database_file_path_string = fallback_string
+            # try:
+            #     self.database_connection = DatabaseConnectionRef(self.database_file_path_string)
+            # except sqlite3.OperationalError as error:
+            #     print("file {0} doesn't exist either.".format(str(self.database_file_path_string)))
 
         except OperationalError as error:
-            fallback_string = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
-            print("databse{0} doesn't exist... trying {1}...".format(str(self.database_file_path), str(fallback_string)))
-            self.database_file_path = fallback_string
-            try:
-                self.database_connection = DatabaseConnectionRef(self.database_file_path)
-            except sqlite3.OperationalError as error:
-                print("file {0} doesn't exist either.".format(str(self.database_file_path)))
+            print("ERROR: databse {0} doesn't exist...".format(self.database_file_path_string))
+            self.database_connection = None
+            # fallback_string = '/Users/pho/repo/PhoPyQtTimelinePlotter/BehavioralBoxDatabase.db'
+            # print("databse {0} doesn't exist... trying {1}...".format(str(self.database_file_path_string), str(fallback_string)))
+            # self.database_file_path_string = fallback_string
+            # try:
+            #     self.database_connection = DatabaseConnectionRef(self.database_file_path_string)
+            # except sqlite3.OperationalError as error:
+            #     print("file {0} doesn't exist either.".format(str(self.database_file_path_string)))
 
-
-
-        # except expression as identifier:
-        #     pass
-        # else:
-        #     pass
 
         print("done.")
+
+        if TimelineApplication.shouldShowImportWindow:
+            print('Showing import window...')
+            self.importCSVWindow = ImportCSVWindow(self.database_connection)
+            self.importCSVWindow.show()
         
 
         # Show last 7 days worth of data
@@ -93,8 +153,11 @@ class TimelineApplication(QApplication):
     
         if TimelineApplication.shouldShowListGUIWindow:
             # self.video_file_search_paths = ["O:/Transcoded Videos/BB00", "O:/Transcoded Videos/BB01", "O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]     
-            self.video_file_search_paths = ["O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]     
+            # self.video_file_search_paths = ["O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]
             # self.video_file_search_paths = ["O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]
+            # self.video_file_search_paths = ["/Users/pho/Desktop/Videos/BB02"]
+            self.video_file_search_paths = ["/Volumes/Speakhard/Temp/Videos/BB02"]
+
             self.mainListWindow = MainObjectListsWindow(self.database_connection, self.video_file_search_paths)
 
 

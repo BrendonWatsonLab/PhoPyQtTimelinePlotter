@@ -77,6 +77,14 @@
     <file>Zafiro-Icons-Ligth/index.theme</file>
   </qresource>
   <qresource prefix="fugue">
+    <file>fugue/icons-shadowless/blue-document-export.png</file>
+    <file>fugue/icons-shadowless/database-export.png</file>
+    <file>fugue/icons-shadowless/document-export.png</file>
+    <file>fugue/icons-shadowless/blue-document-import.png</file>
+    <file>fugue/icons-shadowless/database-import.png</file>
+    <file>fugue/icons-shadowless/document-import.png</file>
+    <file alias="lock-locked">fugue/icons/lock.png</file>
+    <file alias="lock-unlocked">fugue/icons/lock-unlock.png</file>
     <file>fugue/icons-shadowless/layers.png</file>
     <file>fugue/icons-shadowless/layers-alignment-left.png</file>
     <file>fugue/icons-shadowless/layers-alignment-right.png</file>
@@ -173,10 +181,10 @@
     <file>fugue/bonus/icons-24/magnifier-zoom-in.png</file>
     <file>fugue/bonus/icons-24/magnifier-zoom-out.png</file>
     <file>fugue/bonus/icons-24/marker.png</file>
-    <file>fugue/bonus/icons-24/minus.png</file>
+    <file alias="minus">fugue/bonus/icons-24/minus.png</file>
     <file>fugue/bonus/icons-24/minus-circle.png</file>
     <file>fugue/bonus/icons-24/pencil.png</file>
-    <file>fugue/bonus/icons-24/plus.png</file>
+    <file alias="plus">fugue/bonus/icons-24/plus.png</file>
     <file>fugue/bonus/icons-24/plus-circle.png</file>
     <file>fugue/bonus/icons-24/prohibition.png</file>
     <file>fugue/bonus/icons-24/question.png</file>
@@ -200,7 +208,7 @@
     <file>fugue/bonus/icons-24/target.png</file>
     <file>fugue/bonus/icons-24/thumb.png</file>
     <file>fugue/bonus/icons-24/thumb-up.png</file>
-    <file>fugue/bonus/icons-24/tick.png</file>
+    <file alias="checkmark">fugue/bonus/icons-24/tick.png</file>
     <file>fugue/bonus/icons-24/ui-tab.png</file>
     <file>fugue/bonus/icons-24/ui-toolbar.png</file>
     <file>fugue/bonus/icons-24/user-business.png</file>
@@ -347,7 +355,7 @@
     <file>fugue/icons-shadowless/control-stop-270-small.png</file>
     <file>fugue/icons-shadowless/control-stop-square.png</file>
     <file>fugue/icons-shadowless/control-stop-square-small.png</file>
-    <file>fugue/icons-shadowless/cutter.png</file>
+    <file alias="cutter">fugue/icons-shadowless/cutter.png</file>
     <file>fugue/icons-shadowless/cutter--arrow.png</file>
     <file>fugue/icons-shadowless/cutter--exclamation.png</file>
     <file>fugue/icons-shadowless/cutter--minus.png</file>

@@ -14,10 +14,10 @@ from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQOb
 from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult, CachedFileSource
 from app.filesystem.VideoUtils import findDeeplabCutProducedOutputFiles, FoundDeeplabcutOutputFileResult
 
-# from app.filesystem.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
-# from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
-from app.filesystem.VideoMetadataWorkers import VideoMetadataWorker
-from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker
+# from app.filesystem.Workers.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
+# from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
+from app.filesystem.Workers.VideoMetadataWorkers import VideoMetadataWorker
+from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
 
 from pathlib import Path
 
@@ -202,8 +202,8 @@ Loads the VideoFiles from the database (cached versions) and then tries to searc
 """
 class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
 
-    # VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
-    VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadOnlyFromDatabase
+    VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
+    # VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadOnlyFromDatabase
     DataFileLoadingMode = CachedDataFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
 
 
@@ -221,7 +221,7 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
         self.loadedVideoFiles = []
         self.pending_operation_status = PendingFilesystemOperation(OperationTypes.NoOperation, 0, 0, parent=self)
 
-        self.shouldEnableFilesystemMetadataUpdate = False
+        self.shouldEnableFilesystemMetadataUpdate = True
 
         self.searchPaths = videoFileSearchPaths
         self.reload_on_search_paths_changed()
@@ -358,7 +358,7 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
                     # Add the video file record
                     self.database_connection.save_video_file_info_to_database([aNewVideoFileRecord])
 
-    # Creates new "FileParentFolder" entries in the databse if existing ones can't be found
+    # Creates new "FileParentFolder" entries in the database if existing ones can't be found
     def rebuildParentFolders(self):
         print("VideoFilesystemLoader.rebuildParentFolders(...)")
         unresolvedSearchPaths = self.searchPaths

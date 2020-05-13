@@ -16,8 +16,8 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWindow
 
 from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult, CachedFileSource
-# from app.filesystem.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
-# from app.filesystem.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
+# from app.filesystem.Workers.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
+# from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
 
 from pathlib import Path
 
@@ -277,6 +277,8 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
                     aNewVideoNode = QTreeWidgetItem([str(aFoundVideoFile.full_name), str(aFoundVideoFile.parsed_date), computed_end_date, str(aFoundVideoFile.is_deeplabcut_labeled_video)])
                     # aNewVideoNode.setIcon(0,QIcon("your icon path or file name "))
+                    aNewVideoNode.setData(0, Qt.UserRole, QVariant(aFoundVideoFile)) # NEW: set the data of the item to the actual found video file object
+
 
                     currSource = aFoundVideoFile.get_source()
                     currForeground = MainObjectListsWindow.TreeItem_Default_Foreground
@@ -312,7 +314,7 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
                     for aFoundDataFile in curr_video_file_output_data_files:
                         aNewDataNode = QTreeWidgetItem([str(aFoundDataFile.full_name), str(aFoundDataFile.parsed_date), computed_end_date, str(aFoundDataFile.get_deeplabcut_info_string())])
                         # aNewDataNode.setData(0, Qt.UserRole, QVariant(aFoundVideoFile))
-                        aNewDataNode.setData(0, Qt.UserRole, aFoundDataFile)
+                        aNewDataNode.setData(0, Qt.UserRole, aFoundDataFile) # Set the user-data of the QTreeWidgetItem to be the actual found data file.
 
                         # aNewVideoNode.setIcon(0,QIcon("your icon path or file name "))
 
@@ -525,12 +527,19 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         name = item.text(0)  # The text of the node.
         # accumulated_array = self.recover_full_path(item)
 
+        # TODO: List items crash on right click, because user_data is NONE
         user_data = item.data(0, Qt.UserRole)
-        active_item_full_path = user_data.get_full_path()
+        if user_data is not None:
+            active_item_full_path = user_data.get_full_path()
+        else:
+            print('WARNING, TODO: Item has no user_data, check the assumptions about the item type (I assert that it is a root-path node)')
+            # I believe the item's text should be the full path (because now the user data is only None for the "top-level" nodes which indicate the search path)
+            active_item_full_path = name
+
         # print("user_data: {0}".format(str(user_data)))
         # print("user_data: {0}".format(str(active_item_full_path)))
 
-        # We build the menu.
+        # We build the (context?) menu.
         menu = QtWidgets.QMenu()
         # action = menu.addAction("Open item")
         # action = menu.addAction(name)

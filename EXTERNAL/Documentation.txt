@@ -1,4 +1,4 @@
-# Requires ffprobe binary installed in C:\Common\bin\ffmpeg\bin\ffprobe. Obtainable from https://ffmpeg.zeranoe.com/builds/. Tested with 4.2.1
+# Requires ffprobe binary installed in ./EXTERNAL/Dependencies/ffmpeg/bin/ffprobe. Obtainable from https://ffmpeg.zeranoe.com/builds/. Tested with 4.2.1
 
 
 In general each track widget has the following setup:
@@ -39,7 +39,8 @@ fixes the VLC cache errors that appear in the terminal that result in slow video
 
 Upon modifying the .qrc resource (containing icons and stuff), it will need to be re-build using "rcc -binary myresource.qrc -o myresource.rcc". This .rcc file is loaded in the main.py and without it icons would be broken.
 See https://doc.qt.io/qt-5/resources.html for more info.
-
+        For example:
+                rcc -binary "C:\Users\halechr\repo\PhoPyQtTimelinePlotter\data\PhoPyQtTimelinePlotterResourceFile.qrc" -o "C:\Users\halechr\repo\PhoPyQtTimelinePlotter\data\PhoPyQtTimelinePlotterResourceFile.rcc"
 
 
 ## FFMPEG Experimentation:

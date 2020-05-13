@@ -69,6 +69,8 @@ class ExtendedTracksContainerWidget(TickedTimelineDrawingBaseWidget):
         path.addRect(self.rect().x(), self.rect().y(), self.rect().width(), self.rect().height())
         qp.setClipPath(path)
 
+        # qp.setClipPath(event.exposedRect)
+
         qp.end()
 
 
