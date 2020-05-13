@@ -202,8 +202,8 @@ Loads the VideoFiles from the database (cached versions) and then tries to searc
 """
 class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
 
-    # VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
-    VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadOnlyFromDatabase
+    VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
+    # VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadOnlyFromDatabase
     DataFileLoadingMode = CachedDataFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
 
 
@@ -221,7 +221,7 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
         self.loadedVideoFiles = []
         self.pending_operation_status = PendingFilesystemOperation(OperationTypes.NoOperation, 0, 0, parent=self)
 
-        self.shouldEnableFilesystemMetadataUpdate = False
+        self.shouldEnableFilesystemMetadataUpdate = True
 
         self.searchPaths = videoFileSearchPaths
         self.reload_on_search_paths_changed()
