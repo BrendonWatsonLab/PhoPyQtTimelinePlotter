@@ -51,6 +51,7 @@ class LabjackEventType(Enum):
             return 'variableSpecificRecords'
         else:
             print("ERROR: Unknown Type")
+            raise NotImplementedError
             return None
 
 
