@@ -162,7 +162,7 @@ class LabjackFilesystemLoader(QObject):
         self.targetLabjackDataFilePathsUpdated.emit()
 
     def reload_data(self, restricted_labjack_file_paths=None):
-        print("VideoPreviewThumbnailGenerator.reload_data(...)")
+        print("LabjackFilesystemLoader.reload_data(...)")
         if restricted_labjack_file_paths is None:
             restricted_labjack_file_paths = self.labjackFilePaths
 

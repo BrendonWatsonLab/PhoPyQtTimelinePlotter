@@ -140,7 +140,7 @@ class BaseDataFilesystemLoader(QObject):
     def get_cache(self):
         return self.cache
 
-    # Called to add a new video path to generate thumbnails for
+    # Called to add a new path
     def add_labjack_file_path(self, newBaseDataFilePath):
         if (newBaseDataFilePath in self.labjackFilePaths):
             print("WARNING: {0} is already in labjackFilePaths! Not adding again.".format(str(newBaseDataFilePath)))
@@ -163,7 +163,7 @@ class BaseDataFilesystemLoader(QObject):
         self.targetBaseDataDataFilePathsUpdated.emit()
 
     def reload_data(self, restricted_labjack_file_paths=None):
-        print("VideoPreviewThumbnailGenerator.reload_data(...)")
+        print("BaseDataFilesystemLoader.reload_data(...)")
         if restricted_labjack_file_paths is None:
             restricted_labjack_file_paths = self.labjackFilePaths
 

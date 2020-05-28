@@ -152,7 +152,7 @@ class DeeplabcutFilesystemLoader(QObject):
     def get_cache(self):
         return self.cache
 
-    # Called to add a new video path to generate thumbnails for
+    # Called to add a new video path
     def add_deeplabcut_file_path(self, newDeeplabcutFilePath):
         if (newDeeplabcutFilePath in self.deeplabcutFilePaths):
             print("WARNING: {0} is already in deeplabcutFilePaths! Not adding again.".format(str(newDeeplabcutFilePath)))
@@ -176,7 +176,7 @@ class DeeplabcutFilesystemLoader(QObject):
 
 
     def reload_data(self, restricted_deeplabcut_file_paths=None):
-        print("VideoPreviewThumbnailGenerator.reload_data(...)")
+        print("DeeplabcutFilesystemLoader.reload_data(...)")
         if restricted_deeplabcut_file_paths is None:
             restricted_deeplabcut_file_paths = self.deeplabcutFilePaths
 
@@ -512,7 +512,7 @@ class DeeplabcutFilesystemLoader(QObject):
                 self.cache[aFoundDeeplabcutDataFile] = outEventFileObj
             else:
                 # Parent already exists
-                print("WARNING: video path {0} already exists in the cache. Updating its thumbnail objects list...".format(str(aFoundDeeplabcutDataFile)))
+                print("WARNING: data path {0} already exists in the cache. Updating its DLC Data objects list...".format(str(aFoundDeeplabcutDataFile)))
                 self.cache[aFoundDeeplabcutDataFile] = outEventFileObj
                 pass
 
