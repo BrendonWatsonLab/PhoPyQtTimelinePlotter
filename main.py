@@ -156,7 +156,7 @@ class TimelineApplication(QApplication):
             # self.video_file_search_paths = ["O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]
             # self.video_file_search_paths = ["O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]
             # self.video_file_search_paths = ["/Users/pho/Desktop/Videos/BB02"]
-            self.video_file_search_paths = ["/Volumes/Speakhard/Temp/Videos/BB02"]
+            self.video_file_search_paths = ["G:/Google Drive/BehavioralBoxData/videos/BB02"]
 
             self.mainListWindow = MainObjectListsWindow(self.database_connection, self.video_file_search_paths)
 
