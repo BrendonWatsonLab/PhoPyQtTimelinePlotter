@@ -78,7 +78,7 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
             self.ui.actionSave.triggered.connect(self.handle_menu_save_event)
             self.ui.actionRefresh.triggered.connect(self.handle_menu_refresh_event)
             
-        desiredWindowWidth = 500
+        desiredWindowWidth = 600
         self.resize( desiredWindowWidth, 800 )
 
         # Setup the menubar

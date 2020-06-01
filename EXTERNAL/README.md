@@ -1,4 +1,10 @@
 
+## Requirements:
+VLC 3.0.8 Vetinari
+
+
+
+
 ## Hierarchy:
 
 ## app/filesystem/FilesystemRecordBase.py
