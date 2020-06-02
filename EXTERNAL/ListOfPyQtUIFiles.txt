@@ -1,0 +1,43 @@
+"GUI/HelpWindow/HelpWindow.ui"
+"GUI/MainObjectListsWindow/MainObjectListsWindow.ui"
+"GUI/MainWindow/MainWindow.ui"
+"GUI/SetupWindow/SetupWindow.ui"
+"GUI/UI/DialogComponents/BoxExperCohortAnimalIDs_DialogComponents.ui"
+"GUI/UI/DialogComponents/StartEndDate_DialogComponents.ui"
+"GUI/UI/DialogComponents/TitleSubtitleBody_DialogComponents.ui"
+"GUI/UI/DialogComponents/TypeSubtype_DialogComponents.ui"
+"GUI/UI/DialogComponents/ImportContext_DialogComponents.ui"
+"GUI/UI/DialogComponents/ListLockableEditButtons_DialogComponents.ui"
+"GUI/UI/DialogComponents/LockableList.ui"
+"GUI/UI/ExperimentalConfigEditDialogs/AnimalEditDialog.ui"
+"GUI/UI/ImportCSVWidget/ImportCSVWidget.ui"
+"GUI/UI/PartitionEditDialog/PartitionEditDialog.ui"
+"GUI/UI/ReferenceMarkViewer/ReferenceMarkViewer.ui"
+"GUI/UI/ReferenceMarkViewer/DockWidget_ReferenceMarkViewer.ui"
+"GUI/UI/TextAnnotations/TextAnnotations.ui"
+"GUI/UI/TimelineFloatingHeaderWidget/TimelineFloatingHeaderWidget.ui"
+"GUI/UI/TimelineHeaderWidget/TimelineHeaderWidget_ContentsCollapsed.ui"
+"GUI/UI/TimelineHeaderWidget/TimelineHeaderWidget_ContentsExpanded.ui"
+"GUI/UI/TimelineHeaderWidget/TimelineHeaderWidget.ui"
+"GUI/UI/VideoEditDialog/VideoEditDialog.ui"
+"GUI/UI/VideoTrackFilterEditWidget/VideoTrackFilterEditWidget.ui"
+"GUI/UI/VideoTrackFilterEditWidget/VideoTrackFilterEditDialog.ui"
+"GUI/UI/VideoTrackFilterEditWidget/VideoTrackFilterEditWidget.ui"
+"GUI/UI/VideoTrackFilterEditWidget/VideoTrackFilterEditDialog.ui"
+"GUI/Windows/ImportCSVWindow/ImportCSVWindow.ui"
+"GUI/Windows/VideoPlayer/MainVideoPlayerWindow.ui"
+"GUI/Windows/VideoPlayer/VideoPlayerWidget.ui"
+"GUI/Windows/VideoPlayer/VideoPlayerWindow_TimestampSidebarWidget.ui"
+
+
+
+ 544,27:         gui_path_string = "GUI/Windows/VideoPlayer/MainVideoPlayerWindow.ui"
+
+  545,29:         # gui_path_string = "GUI/Windows/VideoPlayer/MainVideoPlayerWindow_Old.ui"
+
+  546,29:         # gui_path_string = "GUI/Windows/VideoPlayer/MainVideoPlayerWindow_no_sidebar.ui"
+  544,27:         gui_path_string = "GUI/Windows/VideoPlayer/MainVideoPlayerWindow.ui"
+
+  545,29:         # gui_path_string = "GUI/Windows/VideoPlayer/MainVideoPlayerWindow_Old.ui"
+
+  546,29:         # gui_path_string = "GUI/Windows/VideoPlayer/MainVideoPlayerWindow_no_sidebar.ui"
