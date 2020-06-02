@@ -23,12 +23,19 @@
 ## Solution:
     # http://pyinstaller.47505.x6.nabble.com/ImportError-Could-not-resolve-module-sqlalchemy-ext-baked-td2358.html
 
+
+## Problem:
+# FileNotFoundError: [Errno 2] No such file or directory: 'GUI/MainWindow/MainWindow.ui'
+# [2008] Failed to execute script main
+# Copied C:\ProgramData\Anaconda3\envs\Py3PyQt5\Library\plugins\platforms to ./platforms and C:\ProgramData\Anaconda3\envs\Py3PyQt5\Library\plugins\styles to ./styles
 block_cipher = None
 
 added_binaries = [
          ( 'C:\Program Files\VideoLAN\VLC\*.dll', '.' ),
-         ( 'C:\ProgramData\Anaconda3\envs\Py3PyQt5\Library\plugins\platforms', '.' ),
-         ( 'C:\ProgramData\Anaconda3\envs\Py3PyQt5\Library\plugins\styles', '.' )
+         ( 'C:\ProgramData\Anaconda3\envs\Py3PyQt5\Library\plugins\platforms', 'platforms' ),
+         ( 'C:\ProgramData\Anaconda3\envs\Py3PyQt5\Library\plugins\styles', 'styles' )
+        #  ( 'C:\ProgramData\Anaconda3\envs\Py3PyQt5\Library\plugins\platforms', '.' ),
+        #  ( 'C:\ProgramData\Anaconda3\envs\Py3PyQt5\Library\plugins\styles', '.' )
          ]
 
 #( 'C:\Program Files\VideoLAN\VLC\libvlc.dll', '.' ),
@@ -36,11 +43,43 @@ added_binaries = [
 #( 'C:\ProgramData\Anaconda3\envs\Py3PyQt5\Library\plugins\platforms\qwindows.dll', '.' ),
 #( 'C:\ProgramData\Anaconda3\envs\Py3PyQt5\Library\plugins\styles\qwindowsvistastyle.dll', '.' )
 
-
+# "C:\\Users\\halechr\\repo\\PhoPyQtTimelinePlotter\\data\\fonts\\HelveticaNeue.ttf"
+# 
 added_files = [
          ( 'EXTERNAL/README.md', '.' ),
-         ( 'C:\Program Files\VideoLAN\VLC\plugins', 'plugins' )
+         ( 'C:\Program Files\VideoLAN\VLC\plugins', 'plugins' ),
+         ( 'GUI/application.qss', 'GUI' ),
+         ( 'GUI/HelpWindow/HelpWindow.ui', 'GUI/HelpWindow' ),
+         ( 'GUI/MainObjectListsWindow/MainObjectListsWindow.ui', 'GUI/MainObjectListsWindow' ),
+         ( 'GUI/MainWindow/MainWindow.ui', 'GUI/MainWindow' ),
+         ( 'GUI/SetupWindow/SetupWindow.ui', 'GUI/SetupWindow' ),
+         ( 'GUI/UI/DialogComponents/BoxExperCohortAnimalIDs_DialogComponents.ui', 'GUI/UI/DialogComponents' ),
+         ( 'GUI/UI/DialogComponents/StartEndDate_DialogComponents.ui', 'GUI/UI/DialogComponents' ),
+         ( 'GUI/UI/DialogComponents/TitleSubtitleBody_DialogComponents.ui', 'GUI/UI/DialogComponents' ),
+         ( 'GUI/UI/DialogComponents/TypeSubtype_DialogComponents.ui', 'GUI/UI/DialogComponents' ),
+         ( 'GUI/UI/DialogComponents/ImportContext_DialogComponents.ui', 'GUI/UI/DialogComponents' ),
+         ( 'GUI/UI/DialogComponents/ListLockableEditButtons_DialogComponents.ui', 'GUI/UI/DialogComponents' ),
+         ( 'GUI/UI/DialogComponents/LockableList.ui', 'GUI/UI/DialogComponents' ),
+         ( 'GUI/UI/ExperimentalConfigEditDialogs/AnimalEditDialog.ui', 'GUI/UI/ExperimentalConfigEditDialogs' ),
+         ( 'GUI/UI/ImportCSVWidget/ImportCSVWidget.ui', 'GUI/UI/ImportCSVWidget' ),
+         ( 'GUI/UI/PartitionEditDialog/PartitionEditDialog.ui', 'GUI/UI/PartitionEditDialog' ),
+         ( 'GUI/UI/ReferenceMarkViewer/ReferenceMarkViewer.ui', 'GUI/UI/ReferenceMarkViewer' ),
+         ( 'GUI/UI/ReferenceMarkViewer/DockWidget_ReferenceMarkViewer.ui', 'GUI/UI/ReferenceMarkViewer' ),
+         ( 'GUI/UI/TextAnnotations/TextAnnotations.ui', 'GUI/UI/TextAnnotations' ),
+         ( 'GUI/UI/TimelineFloatingHeaderWidget/TimelineFloatingHeaderWidget.ui', 'GUI/UI/TimelineFloatingHeaderWidget' ),
+         ( 'GUI/UI/TimelineHeaderWidget/TimelineHeaderWidget_ContentsCollapsed.ui', 'GUI/UI/TimelineHeaderWidget' ),
+         ( 'GUI/UI/TimelineHeaderWidget/TimelineHeaderWidget_ContentsExpanded.ui', 'GUI/UI/TimelineHeaderWidget' ),
+         ( 'GUI/UI/TimelineHeaderWidget/TimelineHeaderWidget.ui', 'GUI/UI/TimelineHeaderWidget' ),
+         ( 'GUI/UI/VideoEditDialog/VideoEditDialog.ui', 'GUI/UI/VideoEditDialog' ),
+         ( 'GUI/UI/VideoTrackFilterEditWidget/VideoTrackFilterEditWidget.ui', 'GUI/UI/VideoTrackFilterEditWidget' ),
+         ( 'GUI/UI/VideoTrackFilterEditWidget/VideoTrackFilterEditDialog.ui', 'GUI/UI/VideoTrackFilterEditWidget' ),
+         ( 'GUI/Windows/ImportCSVWindow/ImportCSVWindow.ui', 'GUI/Windows/ImportCSVWindow' ),
+         ( 'GUI/Windows/VideoPlayer/MainVideoPlayerWindow.ui', 'GUI/Windows/VideoPlayer' ),
+         ( 'GUI/Windows/VideoPlayer/VideoPlayerWidget.ui', 'GUI/Windows/VideoPlayer' ),
+         ( 'GUI/Windows/VideoPlayer/VideoPlayerWindow_TimestampSidebarWidget.ui', 'GUI/Windows/VideoPlayer' )
          ]
+
+         
 
 #         ( 'EXTERNAL/Dependencies/ffmpeg', 'EXTERNAL/Dependencies/ffmpeg'),
 #( 'EXTERNAL\Databases\*.db', 'EXTERNAL\Databases\' )
