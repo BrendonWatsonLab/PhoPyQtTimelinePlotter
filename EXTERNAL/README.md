@@ -2,7 +2,22 @@
 ## Requirements:
 VLC 3.0.8 Vetinari
 
+(Py3PyQt5)
 
+# Creating an Environment:
+conda env export > EXTERNAL\Requirements\06-01-2020\environment.yml
+conda env export --no-builds > EXTERNAL\Requirements\06-01-2020\environment_no_builds.yml
+
+conda env export --from-history
+
+## Spec-File:
+conda list --explicit > EXTERNAL\Requirements\06-01-2020\spec-file.txt
+# Installing from Spec-file:
+conda create --name Py3PyQt5New --file EXTERNAL\Requirements\06-01-2020\spec-file.txt
+
+
+#  Making a clone:
+conda create --name Py3PyQt5_Testing --clone Py3PyQt5
 
 
 ## Hierarchy:
