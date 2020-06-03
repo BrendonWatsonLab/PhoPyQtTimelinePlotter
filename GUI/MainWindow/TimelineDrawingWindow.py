@@ -1578,6 +1578,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
                 self.videoPlayerWindow.close_signal.connect(self.on_video_player_window_closed)
             except Exception as e:
                 print("Error Spawning Video Window:", e)
+                raise e
                 return False
             
             try:
