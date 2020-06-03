@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import platform
 import os
 import sys
 import traceback
@@ -250,7 +251,7 @@ class MediaPlayerUpdatingMixin(SimpleErrorStatusMixin, object):
                 self.media_player.set_hwnd(self.ui.frame_video.winId())
             elif sys.platform == "darwin": # for MacOS
                 # self.media_player.set_nsobject(self.ui.frame_video.winId())
-                self.media_player.set_nsobject(int(self.ui.frame_video.winId()))
+                self.media_player.set_nsobject(int(self.ui.frame_video.mac_view.winId()))
             else:
                 print("WARNING: MainVideoPlayerWindow.set_video_filename(...): Unknown platform! {0}".format(str(sys.platform)))
 
@@ -539,7 +540,6 @@ class MainVideoPlayerWindow(HistoricalFrameRenderingMixin, VideoPlaybackRenderin
         # QMainWindow.__init__(self, parent)
         QMainWindow.__init__(self, parent=parent)
         # super().__init__(parent=parent)
-
 
         import pathlib
         gui_path_string = "GUI/Windows/VideoPlayer/MainVideoPlayerWindow.ui"
@@ -853,7 +853,7 @@ class MainVideoPlayerWindow(HistoricalFrameRenderingMixin, VideoPlaybackRenderin
         playing)
         """
         if self.restart_needed:
-            self.media_player.set_time(self.media_start_time)
+            self.media_player.set_time(self.media_start_time, False) # False indicates precise (as opposed to fast) seeking
             self.restart_needed = False
 
 
@@ -944,7 +944,7 @@ class MainVideoPlayerWindow(HistoricalFrameRenderingMixin, VideoPlaybackRenderin
         try:
             self.update_slider_highlight()
             self.media_player.play()
-            self.media_player.set_time(self.media_start_time) # Looks like the media playback time is actually being set from the slider.
+            self.media_player.set_time(self.media_start_time, False) # False indicates precise (as opposed to fast) seeking # Looks like the media playback time is actually being set from the slider.
             self.media_started_playing = True
             self.media_is_playing = True
             self.play_pause_model.setState(False)
@@ -1030,7 +1030,7 @@ class MainVideoPlayerWindow(HistoricalFrameRenderingMixin, VideoPlaybackRenderin
 
     # Info labels above the video that display the FPS/frame/time/etc info
     def update_video_file_play_labels(self):
-        curr_total_fps = self.get_media_fps()
+        # curr_total_fps = self.get_media_fps()
         curr_total_duration = self.media_player.get_length()
         totalNumFrames = self.get_media_total_num_frames()
         if totalNumFrames > 0:
@@ -1108,7 +1108,13 @@ class MainVideoPlayerWindow(HistoricalFrameRenderingMixin, VideoPlaybackRenderin
         return self.ui.spinBoxFrameJumpMultiplier.value
 
     def get_media_fps(self):
-        return (self.media_player.get_fps() or 30)
+        print('get_media_fps(): self.media_player: {}'.format(self.media_player))
+        if self.media_player is not None:
+            # return (self.media_player.get_fps() or 30)
+            return 30
+        else:
+            print('get_media_fps(): self.media_player is None!')
+            return 0
 
     def get_milliseconds_per_frame(self):
         """Milliseconds per frame"""

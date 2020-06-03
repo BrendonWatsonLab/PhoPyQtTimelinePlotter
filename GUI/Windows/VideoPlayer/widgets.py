@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import sys
+
+import platform
 import os
+import sys
 from PyQt5.QtWidgets import QFrame, QSlider, QStyle, QStyleOptionSlider, \
     QPlainTextEdit, QPushButton, QMacCocoaViewContainer
 from PyQt5.QtGui import QPalette, QColor, QWheelEvent, QKeyEvent, QPainter, \
@@ -9,7 +11,6 @@ from PyQt5.QtGui import QPalette, QColor, QWheelEvent, QKeyEvent, QPainter, \
 from PyQt5.QtCore import pyqtSignal, QRect
 
 """ VideoFrame: the frame that contains the VLC video player
-
 """
 class VideoFrame(QFrame):
     """
@@ -22,6 +23,11 @@ class VideoFrame(QFrame):
 
     def __init__(self, parent=None):
         QFrame.__init__(self, parent)
+
+        if platform.system() == "Darwin": # for MacOS
+            self.mac_view = QMacCocoaViewContainer(0, parent=self)
+        else:
+            self.mac_view = None
 
         self.original_parent = parent
         self.palette = self.palette()
@@ -41,8 +47,7 @@ class VideoFrame(QFrame):
         self.wheel.emit(event)
 
     def keyPressEvent(self, event):
-        self.keyPressed.emit(event)
-
+        self.keyPressed.emit(event)    
 
 class HighlightedJumpSlider(QSlider):
     """
