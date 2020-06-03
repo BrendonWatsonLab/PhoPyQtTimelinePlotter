@@ -336,7 +336,6 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
     def saveVideoFilesToDatabase(self):
         print("VideoFilesystemLoader.saveVideoFilesToDatabase(...)")
         # TODO: should we reload the cache again from database? Prob not needed.
-        
         for (key_path, cache_value) in self.cache.items():
             loaded_parent_folder_obj = cache_value.get_database_parent_folder()
             curr_filesystem_search_path_video_files = cache_value.get_filesystem_video_files()
