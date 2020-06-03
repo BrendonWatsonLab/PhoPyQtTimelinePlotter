@@ -10,11 +10,22 @@ conda env export --no-builds > EXTERNAL\Requirements\06-01-2020\environment_no_b
 
 conda env export --from-history
 
+# Installing from Environment:
+1. Open up Admin CMD Prompt
+2. cd C:\Users\Administrator\repo\PhoPyQtTimelinePlotter
+3. ? conda config --set ssl_verify no
+3. ? conda config --show channels
+3. ? conda config --append channels conda-forge
+4. conda update conda
+5. conda update anaconda
+6. conda env create -f "EXTERNAL\Requirements\06-01-2020\environment_no_builds.yml"
+7. conda activate Py3PyQt5
+
 ## Spec-File:
 conda list --explicit > EXTERNAL\Requirements\06-01-2020\spec-file.txt
 # Installing from Spec-file:
 conda create --name Py3PyQt5New --file EXTERNAL\Requirements\06-01-2020\spec-file.txt
-
+C:\Users\Administrator\repo\PhoPyQtTimelinePlotter\EXTERNAL\Requirements\06-01-2020\environment_no_builds.yml
 
 #  Making a clone:
 conda create --name Py3PyQt5_Testing --clone Py3PyQt5
