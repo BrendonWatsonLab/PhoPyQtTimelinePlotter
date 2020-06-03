@@ -96,13 +96,18 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         self.ui.textBrowser_SelectedInfoBox.setText("Hi")
 
         # Main Vertical Splitter:
-        self.ui.mainVerticalSplitter.setSizes([700, 100])
+        # self.ui.frameBottom.setVisible(False)
+        # self.ui.mainVerticalSplitter.setSizes([700, 100])
+        self.ui.mainVerticalSplitter.setSizes([800, 0])
+
 
         # Setup the buttons
         self.ui.pushButton_AddSearchDirectory.clicked.connect(self.handle_add_search_directory_activated)
         self.ui.toolButton_Load.clicked.connect(self.handle_menu_load_event)
         self.ui.toolButton_SaveSelected.clicked.connect(self.handle_save_selection_action)
         self.ui.toolButton_GetConversionList.clicked.connect(self.handle_get_conversion_list_action)
+
+        self.ui.btnReload.clicked.connect(self.handle_menu_refresh_event)
 
         # Complete setup
         self.statusBar()
@@ -125,7 +130,11 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
         self.videoLoader.reloadModelFromDatabase()
 
     def saveVideoFilesToDatabase(self):
+        print('Saving video files to database...')
+        # Reload cache from database to ensure we have the latest versions.
+        self.videoLoader.reloadModelFromDatabase()
         self.videoLoader.saveVideoFilesToDatabase()
+        print('done.')
 
 
     # Rebuilds the entire Tree UI from the self.found_files_lists
@@ -383,6 +392,7 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
     def handle_menu_load_event(self):
         print("actionLoad")
+        self.reload_data()
         pass
 
     def handle_menu_save_event(self):
@@ -393,6 +403,7 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
     def handle_menu_refresh_event(self):
         print("actionRefresh")
         self.reload_data()
+        self.rebuild_from_found_files()
         pass
 
     def handle_add_search_directory_activated(self):
@@ -424,6 +435,8 @@ class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 
     def handle_save_selection_action(self):
         print("handle_save_selection_action()")
+        self.saveVideoFilesToDatabase()
+        pass
 
     def handle_get_conversion_list_action(self):
         print("handle_get_conversion_list_action()")

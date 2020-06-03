@@ -37,6 +37,13 @@ class CachedDataFileLoadingOptions(Enum):
 
 
 
+# Represents an abstract "ParentDirectory", which is a collection of video files grouped by the user.
+# In the filesystem hierarchy, this represents a behaviora box specific folder such as "Transcoded Videos/BB02/" containing videos.
+# The files in this folder are added to the database when they're found and parsed, meaning information about them can exist either:
+    # 1. Only in the database
+    # 2. Only in the filesystem
+    # 3. Both in the filesystem and the database
+# This cache aims to return a unique list of video files, meaning only including one copy of each file (even if it's represented both in the filesystem and database)
 class ParentDirectoryCache(QObject):
     def __init__(self, full_path, source=CachedFileSource.Unknown, parent=None):
         super(ParentDirectoryCache, self).__init__(parent)
@@ -77,6 +84,7 @@ class ParentDirectoryCache(QObject):
         self.database_video_files = new_db_video_files
         self.rebuild_combined_video_files()
 
+    # Sets the filesystem versions of the video files and intellegently rebuilds the combined video files.
     def set_found_filesystem_video_files(self, new_found_filesystem_video_files):
         self.found_filesystem_video_files = new_found_filesystem_video_files
         self.rebuild_combined_video_files()
@@ -140,9 +148,9 @@ class ParentDirectoryCache(QObject):
                     should_add_curr_record = True
                     # should replace the one from the database
                 else:
-                    # otherwise we say the newest is from the database
+                    # otherwise we say the newest is from the database and use the database version
                     self.finalOutputParsedVideoResultFileSources[newFullName] = CachedFileSource.NewestFromDatabase
-                    should_add_curr_record = False
+                    should_add_curr_record = False # don't set the dict entry to the filesystem version, keep the database version that was already set.
                 
             else:
                 #if the key is missing, it wasn't found in the database.
@@ -164,6 +172,7 @@ class ParentDirectoryCache(QObject):
         self.finalOutputParsedVideoResultFiles = sorted(finalOutputParsedVideoResultFilesList, key=lambda obj: obj.parsed_date)
             
 
+    # Simple Getter to the combined_video_files function
     def get_combined_video_files(self):
         return self.finalOutputParsedVideoResultFiles
 
@@ -216,9 +225,11 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
 
     def __init__(self, database_connection, videoFileSearchPaths, parent=None):
         super(VideoFilesystemLoader, self).__init__(database_connection, parent=parent) # Call the inherited classes __init__ method
+
+        # self.cache: a dictionary index by file search paths, with ParentDirectoryCache-type values.
         self.cache = dict()
         self.loadedParentFolders = []
-        self.loadedVideoFiles = []
+        # self.loadedVideoFiles = []
         self.pending_operation_status = PendingFilesystemOperation(OperationTypes.NoOperation, 0, 0, parent=self)
 
         self.shouldEnableFilesystemMetadataUpdate = True
@@ -235,43 +246,46 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
     def get_cache(self):
         return self.cache
 
-    ## DATABASE Functions:
+    # reload_data(...): reloads all data from the database (and if the options permit, the filesystem self.searchPaths)
+    # NOTE: overwrites self.searchPaths
     def reload_data(self, restricted_search_paths=None):
         print("VideoFilesystemLoader.reload_data(...)")
         # Load the video files depending on the setting.
-        if ((VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths) or (VideoFilesystemLoader.DataFileLoadingMode == CachedDataFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths)):
-            
-            if VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadOnlyFromDatabase:
-                print("Only loading video files from database. Ignoring search paths...")
-            else:
-                print("Loading video files from database and filesystem...")
-
-            print("Loading video files from database and searching search paths...")
-            self.reloadModelFromDatabase()
-            # Rebuild self.searchPaths from the database's parent folders
-            self.searchPaths = [str(aSearchPath) for aSearchPath in self.cache.keys()]
-            if restricted_search_paths is None:
-                restricted_search_paths = self.searchPaths
-
-            self.find_filesystem_video(restricted_search_paths)
+        if VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadOnlyFromDatabase:
+            print("Only loading video files from database. Ignoring search paths...")
         else:
-            print("VideoFilesystemLoader ERROR: Unexpected enum type!")
-            pass
+            print("Loading video files from database...")
 
-        self.foundFilesUpdated.emit()
+        # Load from the database (which is done in both modes:
+        self.reloadModelFromDatabase()
+
+         # Rebuild self.searchPaths from the database's parent folders
+        self.searchPaths = [str(aSearchPath) for aSearchPath in self.cache.keys()]
+        if restricted_search_paths is None:
+            restricted_search_paths = self.searchPaths
+
+
+        if VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths:
+            print("Loading video files from search paths: {}...".format(self.searchPaths))
+            self.find_filesystem_video(restricted_search_paths) # Load the videos from the restricted search paths.
+
+        self.foundFilesUpdated.emit() # This returns before the filesystem search is finished, but is used to update the UI to indicate that it's searching.
 
 
     # TODO: should build parent nodes from a combination of the loaded parents and the search paths (if we're in a mode to load search paths)
     
+
+     ## DATABASE Functions:
     # Updates the member variables from the database
+    # Updates self.cache[*] entries for each parent_folder loaded from the database (by calling set_database_video_files and set_database_parent_folder_obj on them), creating new ParentDirectoryCache if needed.
     # Note: if there are any pending changes, they will be persisted on this action
     def reloadModelFromDatabase(self):
         print("VideoFilesystemLoader.reloadModelFromDatabase(...)")
         # Load the latest behaviors and colors data from the database
         self.fileExtensionDict = self.database_connection.load_static_file_extensions_from_database()
         self.loadedParentFolders = self.database_connection.load_file_parent_folders_from_database(include_video_files=True)
-        self.loadedVideoFiles = []
-        currLoadedVideoFiles = []
+        # self.loadedVideoFiles = []
+        currDatabaseLoadedVideoFiles = []
 
         # Iterate through all found parent folders, replacing the versions in the cache with the ones from the database
         for aLoadedParentFolder in self.loadedParentFolders:
@@ -283,40 +297,53 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
                 self.cache[aFinalSearchPath] = ParentDirectoryCache(aFinalSearchPath, CachedFileSource.OnlyFromDatabase)
             else:
                 # Parent already exists
+                # TODO: I believe I should check and see if the self.cache[aFinalSearchPath] is CachedFileSource.OnlyFromFilesystem, and if so, update it to indicate that it's also in the database.
                 # TODO: update parent?
                 # self.cache[aFinalSearchPath].set_source()
                 pass
 
-            
-            #TODO: don't replace the cache's entries in case they were loaded from the filesystem
-            currLoadedVideoFiles = aLoadedParentFolder.videoFiles
-            self.loadedVideoFiles.extend(currLoadedVideoFiles)
-            print("currLoadedVideoFiles[{0}]: {1}".format(str(aLoadedParentFolder.fullpath), len(currLoadedVideoFiles)))
+            # currLoadedVideoFiles are the video files from the database
+            currDatabaseLoadedVideoFiles = aLoadedParentFolder.videoFiles # Database video files
+            # self.loadedVideoFiles.extend(currLoadedVideoFiles)
+            print("currDatabaseLoadedVideoFiles[{0}]: {1}".format(str(aLoadedParentFolder.fullpath), len(currDatabaseLoadedVideoFiles)))
             self.cache[aLoadedParentFolder.fullpath].set_database_parent_folder_obj(aLoadedParentFolder)
-            self.cache[aLoadedParentFolder.fullpath].set_database_video_files(currLoadedVideoFiles)
+            self.cache[aLoadedParentFolder.fullpath].set_database_video_files(currDatabaseLoadedVideoFiles) # Intellegently builds the combined files
 
         self.foundFilesUpdated.emit()
 
     # Called to add a searcg path
     def add_search_path(self, newSearchPath):
-        self.searchPaths.append(newSearchPath)
-        self.reload_on_search_paths_changed()
+        if newSearchPath in self.searchPaths:
+            # Already exists in the search paths. Don't add it. Are the search paths updated from the database objects?
+            print('Search path {} already exists in self.searchPaths. Will searching it again for video files.'.format(newSearchPath))
+            pass
+        else:
+            print('Adding new search path: {} to self.searchPaths'.format(newSearchPath))
+            self.searchPaths.append(newSearchPath) # Add it to the search path array
+            self.reload_on_search_paths_changed() # Doesn't update self.searchPaths or use the new search path. This is done to ensure that the cache has the latest entries from the database (in case the database changes during program operation?)
+    
+        #self.reload_data() is called with freshly updated self.cache dict entries and new database parent entries for each search path
         self.reload_data()
 
+    # Called when self.searchPaths is updated to add DatabaseDirectoryCache entries to the cache for new searchPaths if needed.
     def reload_on_search_paths_changed(self):
         print("VideoFilesystemLoader.reload_on_search_paths_changed(...)")
-        self.reloadModelFromDatabase()
-        self.rebuildParentFolders()
+        self.reloadModelFromDatabase() # This is needed to update self.loadedParentFolders, which is used in rebuildDatabaseRecordParentFolders() to check if the entry is in the database
+        self.rebuildDatabaseRecordParentFolders()
 
-        self.foundFilesUpdated.emit()
+        self.foundFilesUpdated.emit() # note that no files are updated at this point, but I think this is called to refresh the filesystem UI tree to indicate that it's try to find files in these dirs.
 
     def saveVideoFilesToDatabase(self):
         print("VideoFilesystemLoader.saveVideoFilesToDatabase(...)")
+        # TODO: should we reload the cache again from database? Prob not needed.
+        
         for (key_path, cache_value) in self.cache.items():
             loaded_parent_folder_obj = cache_value.get_database_parent_folder()
-            curr_search_path_video_files = cache_value.get_filesystem_video_files()
-            existing_database_video_files = cache_value.get_database_video_files()
-            for aFoundVideoFile in curr_search_path_video_files:
+            curr_filesystem_search_path_video_files = cache_value.get_filesystem_video_files()
+            existing_database_video_files = cache_value.get_database_video_files() # Get cached database files
+
+            # Loop through all found filesystem video files to see if any need new records to be created in the database
+            for aFoundVideoFile in curr_filesystem_search_path_video_files:
                 # Get the appropriate file extension parent
                 currFileExtension = aFoundVideoFile.file_extension[1:].lower()
                 parent_file_extension_obj = None
@@ -324,12 +351,13 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
                     parent_file_extension_obj = self.fileExtensionDict[currFileExtension]
                 else:
                     # Key doesn't exist!
-                    print("extension {0} doesn't exist!".format(currFileExtension))
+                    print("Video File extension {0} doesn't exist in database! Adding it and saving.".format(currFileExtension))
                     parent_file_extension_obj = StaticFileExtension(currFileExtension)
                     # Add it to the database
                     self.database_connection.save_static_file_extensions_to_database([parent_file_extension_obj])
 
 
+                # What is this? Also, should we only save video files with properly computed end dates? Should we update those that didn't have computed end dates, but do now?
                 potentially_computed_end_date = aFoundVideoFile.get_computed_end_date()
                 if potentially_computed_end_date:
                     computed_end_date = str(potentially_computed_end_date)
@@ -358,12 +386,15 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
                     # Add the video file record
                     self.database_connection.save_video_file_info_to_database([aNewVideoFileRecord])
 
-    # Creates new "FileParentFolder" entries in the database if existing ones can't be found
-    def rebuildParentFolders(self):
+    # rebuildDatabaseRecordParentFolders(): iterates through self.searchPaths and performs the following operations:
+    # 1. Creates new ParentDirectoryCache entries in self.cache[aFinalSearchPath] if they don't already exist.
+    # 2. Creates new "FileParentFolder" entries in the database from self.searchPaths if existing ones can't be found
+    def rebuildDatabaseRecordParentFolders(self):
         print("VideoFilesystemLoader.rebuildParentFolders(...)")
         unresolvedSearchPaths = self.searchPaths
         # self.searchPathsParentIDs = []
 
+        # Iterate through all searchPaths in self.searchPaths.
         for (index, aSearchPath) in enumerate(unresolvedSearchPaths):
             currPath = Path(aSearchPath).resolve()
             currRootAnchor = currPath.anchor
@@ -373,12 +404,13 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
             aFinalSearchPath = str(currPath)
             self.searchPaths[index] = aFinalSearchPath
 
+            # Adds it to the cache if it isn't alread there.
             if (not (aFinalSearchPath in self.cache.keys())):
-                # Parent doesn't yet exist in cache
+                # Parent doesn't yet exist in cache, create it
                 self.cache[aFinalSearchPath] = ParentDirectoryCache(aFinalSearchPath)
             else:
-                # Parent already exists
-                self.cache[aFinalSearchPath]
+                # Parent already exists at self.cache[aFinalSearchPath]
+                pass
             
 
             # Iterate through all loaded parents to see if the parent already exists
@@ -388,22 +420,24 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
             for aParentFolder in self.loadedParentFolders:
                 aParentPath = Path(aParentFolder.fullpath).resolve()
                 # Try to match to the loaded parent objects from the database
-                self.cache[aFinalSearchPath]
-
                 if aParentPath.samefile(currPath):
                     # currPath is the same file as the loaded parent path
                     print("Found existing parent for {0}".format(currPath))
                     finalParent = aParentFolder
+                    break # Exit the loop because we found a match.
 
-            # If we get through all loaded parents and the parent doesn't already exist, add it
+            # If we get through all loaded parents and the parent doesn't already exist, create the database FileParentFolder record and persist it to the database.
             if finalParent is None:
-                print("Creating new parent {0}".format(currPath))
+                print("Creating new FileParentFolder record in the database: {0}".format(currPath))
                 finalParent = FileParentFolder(None, currPath, currRootAnchor, currRemainder, 'auto')
                 # Save parent to database
                 self.database_connection.save_file_parent_folders_to_database([finalParent])
-                # Set parent to the newly created database parent object
+                # Set parent to the newly created database parent object in the cache
                 self.cache[aFinalSearchPath].set_database_parent_folder_obj(finalParent)
+                # Add the newly created object to the local array of database loaded parents:
+                self.loadedParentFolders.append(finalParent)
 
+            # What's the point of the code below? A separate check?
             if finalParent is None:
                 print("Still nONE!")
                 # self.searchPathsParentIDs.append(None)
@@ -414,6 +448,9 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
                 self.cache[aFinalSearchPath].set_database_parent_folder_obj(finalParent)
 
     ## Primary Filesystem Functions
+
+    ##
+    #### FILESYSTEM: VIDEOS METADATA THREADING FUNCTIONS:
 
     ## Find_video_metadata:
         # Finds the video metadata in a multithreaded way
@@ -460,7 +497,9 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
         self.foundFilesUpdated.emit()
 
 
-    ## FILESYSTEM:
+    ##
+    #### FILESYSTEM: FIND VIDEOS THREADING FUNCTIONS:
+    
     # Finds the video files in the self.searchPaths in a multithreaded way
     def find_filesystem_video(self, activeSearchPaths):
         print("VideoFilesystemLoader.find_filesystem_video(...):  active_search_paths: {0}".format(str(activeSearchPaths)))
@@ -494,7 +533,7 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
 
             if (VideoFilesystemLoader.VideoFileLoadingMode == CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths):
                 curr_search_path_video_files = findVideoFiles(aSearchPath, shouldPrint=False)
-                self.cache[aSearchPath].set_found_filesystem_video_files(curr_search_path_video_files) ## TODO: Don't overwrite the previously cached/found video files
+                self.cache[aSearchPath].set_found_filesystem_video_files(curr_search_path_video_files) # Intellegently updates the cached/found video files
                 self.total_found_files = self.total_found_files + len(curr_search_path_video_files)
 
             if (VideoFilesystemLoader.DataFileLoadingMode == CachedDataFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths):
@@ -518,7 +557,7 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
         
         # Returned results in self.found_files_lists
         # self.rebuild_from_found_files()
-        self.rebuildParentFolders()
+        self.rebuildDatabaseRecordParentFolders()
         self.findVideosComplete.emit()
         self.foundFilesUpdated.emit()
 

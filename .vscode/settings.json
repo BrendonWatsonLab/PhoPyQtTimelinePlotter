@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "C:\\ProgramData\\Anaconda3\\envs\\Py3PyQt5\\python.exe",
+    "python.pythonPath": "/Users/pho/opt/anaconda3/envs/Py3Qt5_New/bin/python",
     "workbench.colorCustomizations": {
         "editorCursor.foreground": "#d0ff00cb",
         "editor.lineHighlightBackground": "#ff008028"

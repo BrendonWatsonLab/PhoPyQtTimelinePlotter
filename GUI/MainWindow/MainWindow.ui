@@ -26,7 +26,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>PhoPyQtTimelinePlotter: Main Window</string>
   </property>
   <property name="iconSize">
    <size>
@@ -38,7 +38,7 @@
    <enum>Qt::ToolButtonTextUnderIcon</enum>
   </property>
   <property name="unifiedTitleAndToolBarOnMac">
-   <bool>true</bool>
+   <bool>false</bool>
   </property>
   <widget class="QWidget" name="centralwidget"/>
   <widget class="QMenuBar" name="menubar">
@@ -55,6 +55,7 @@
      <string>File</string>
     </property>
     <addaction name="actionLoad"/>
+    <addaction name="actionRollback_Changes"/>
     <addaction name="actionSave"/>
     <addaction name="actionSave_As"/>
     <addaction name="separator"/>
@@ -105,10 +106,10 @@
     <addaction name="actionCut_at_Active_Video_Playhead"/>
    </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuHelp"/>
    <addaction name="menuView"/>
    <addaction name="menuWindow"/>
    <addaction name="menuOperations"/>
+   <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="dockWidget_FooterToolbar">
@@ -389,6 +390,9 @@
    </property>
   </action>
   <action name="actionLoad">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Load...</string>
    </property>
@@ -520,6 +524,14 @@
   <action name="actionImport_Actigraphy_Data">
    <property name="text">
     <string>Import Actigraphy Data...</string>
+   </property>
+  </action>
+  <action name="actionRollback_Changes">
+   <property name="text">
+    <string>Rollback Changes</string>
+   </property>
+   <property name="toolTip">
+    <string>Rollback (Revert) Changes</string>
    </property>
   </action>
  </widget>

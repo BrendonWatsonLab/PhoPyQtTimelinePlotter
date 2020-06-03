@@ -293,6 +293,10 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             # action_exit.setStatusTip('Exit application')
             # action_exit.triggered.connect(qApp.quit)
 
+            self.ui.actionLoad.triggered.connect(self.on_user_load)
+            self.ui.actionRollback_Changes.triggered.connect(self.on_user_rollback)
+            self.ui.actionSave.triggered.connect(self.on_user_save)
+            self.ui.actionSave_As.triggered.connect(self.on_user_saveAs)
 
 
             self.ui.actionExit_Application.triggered.connect(qApp.quit)
@@ -2468,7 +2472,8 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
     """
     def export_partition_track_to_file(self, partitionTrackID):
         print("TimelineDrawingWindow.export_partition_track_to_file(partitionTrackID: {0})".format(str(partitionTrackID)))
-        
+        ## Not yet implemented
+        print('ERROR: NOT YET IMPLEMENTED')
         pass
 
     @pyqtSlot()
@@ -2581,6 +2586,89 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
 
         self.update()
     
+
+    
+    ## TODO: Not yet implemented, so it's currently greyed out.
+    # The only step that remains I believe is reloading everything after setting the database, and updating the database connection reference for all child objects and reloading them.
+    @pyqtSlot()
+    def on_user_load(self):
+        # Called when the user selects "Load..." from the main menu.
+        print("TimelineDrawingWindow.on_user_load()")
+        # Show a dialog that asks the user for their export path
+        # exportFilePath = self.on_exportFile_selected()
+        curr_database_path = self.get_database_connection().get_path()
+
+        path = QFileDialog.getOpenFileName(self, 'Open Database File', curr_database_path, 'Database(*.db)')
+        importFilePath = path[0]
+        if importFilePath == '':
+            print("User canceled the load!")
+            return
+        else:
+            
+            print('Closing existing database at {}...'.format(curr_database_path))
+            shouldClose = self.perform_interactive_database_close()
+            if shouldClose:
+                print("Closed existing database...")
+                print("Loading database file at path {}...".format(importFilePath))
+                try:
+                    self.database_connection = DatabaseConnectionRef(importFilePath)
+                
+                except sqlite3.OperationalError as error:
+                    print("ERROR: database {0} doesn't exist...".format(importFilePath))
+                    self.database_connection = None
+                    
+
+                except OperationalError as error:
+                    print("ERROR: database {0} doesn't exist...".format(importFilePath))
+                    self.database_connection = None
+                    
+                ## Not yet implemented
+                print('ERROR: NOT YET IMPLEMENTED')
+
+            else:
+                print("Close has been canceled!")
+                
+            print("done.")
+
+    @pyqtSlot()
+    def on_user_rollback(self):
+        # Called when the user selects "Rollback Changes" from the main menu.
+        print("TimelineDrawingWindow.on_user_rollback()")
+        print('Rolling back database changes...')
+        self.database_rollback()
+        print('Done.')
+        self.update()
+
+
+    @pyqtSlot()
+    def on_user_save(self):
+        # Called when the user selects "Save" from the main menu.
+        print("TimelineDrawingWindow.on_user_save()")
+        curr_database_path = self.get_database_connection().get_path()
+        self.database_commit()
+        print('Saved database to {}'.format(curr_database_path))
+        self.update()
+       
+
+    @pyqtSlot()
+    def on_user_saveAs(self):
+        # Called when the user selects "Save As.." from the main menu.
+        print("TimelineDrawingWindow.on_user_saveAs()")
+        # Show a dialog that asks the user for their export path
+        curr_database_path = self.get_database_connection().get_path()
+
+        path = QFileDialog.getSaveFileName(self, 'Database Save Path', curr_database_path, 'Database(*.db)')
+        saveFilePath = path[0]
+        if saveFilePath == '':
+            print("User canceled the save as!")
+            return
+        else:
+            print("Saving database file to path {}...".format(saveFilePath))
+            # TODO: reload database from file:
+
+        self.update()
+
+
 
 
     # actionImport_Actigraphy_Data
