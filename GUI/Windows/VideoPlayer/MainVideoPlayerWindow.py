@@ -7,7 +7,7 @@ import traceback
 
 import qtawesome as qta
 from PyQt5 import uic
-from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox, QDataWidgetMapper, QPushButton
+from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox, QDataWidgetMapper, QPushButton, QMacCocoaViewContainer
 from PyQt5.QtGui import QCursor, QIcon, QPixmap
 from PyQt5.QtCore import QDir, QTimer, Qt, QModelIndex, QSortFilterProxyModel, pyqtSignal, pyqtSlot
 
@@ -249,7 +249,8 @@ class MediaPlayerUpdatingMixin(SimpleErrorStatusMixin, object):
             elif sys.platform == "win32": # for Windows
                 self.media_player.set_hwnd(self.ui.frame_video.winId())
             elif sys.platform == "darwin": # for MacOS
-                self.media_player.set_nsobject(self.ui.frame_video.winId())
+                # self.media_player.set_nsobject(self.ui.frame_video.winId())
+                self.media_player.set_nsobject(int(self.ui.frame_video.winId()))
             else:
                 print("WARNING: MainVideoPlayerWindow.set_video_filename(...): Unknown platform! {0}".format(str(sys.platform)))
 
@@ -573,6 +574,9 @@ class MainVideoPlayerWindow(HistoricalFrameRenderingMixin, VideoPlaybackRenderin
 
         self.is_speed_burst_mode_active = False
         self.speedBurstPlaybackRate = MainVideoPlayerWindow.SpeedBurstPlaybackRate
+
+        # Note that frame_video is already a VideoFrame object
+        # Why was this commented out?
         # if sys.platform == "darwin":  # for MacOS
         #     self.ui.frame_video = QMacCocoaViewContainer(0)
 

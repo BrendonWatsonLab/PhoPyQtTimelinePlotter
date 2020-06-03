@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+import sys
+import os
 from PyQt5.QtWidgets import QFrame, QSlider, QStyle, QStyleOptionSlider, \
-    QPlainTextEdit, QPushButton
+    QPlainTextEdit, QPushButton, QMacCocoaViewContainer
 from PyQt5.QtGui import QPalette, QColor, QWheelEvent, QKeyEvent, QPainter, \
     QPen
 from PyQt5.QtCore import pyqtSignal, QRect
