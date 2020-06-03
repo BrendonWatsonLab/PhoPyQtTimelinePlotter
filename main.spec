@@ -1,5 +1,7 @@
 # -*- mode: python -*-
 
+# This is a PyInstaller .spec script
+
 ## Used Info:
 
 ## Problem:

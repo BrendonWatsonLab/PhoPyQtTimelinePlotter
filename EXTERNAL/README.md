@@ -8,7 +8,8 @@ VLC 3.0.8 Vetinari
 conda env export > EXTERNAL\Requirements\06-01-2020\environment.yml
 conda env export --no-builds > EXTERNAL\Requirements\06-01-2020\environment_no_builds.yml
 
-conda env export --from-history
+conda env export --from-history > EXTERNAL\Requirements\06-03-2020\environment.yml
+
 
 ## Spec-File:
 conda list --explicit > EXTERNAL\Requirements\06-01-2020\spec-file.txt
