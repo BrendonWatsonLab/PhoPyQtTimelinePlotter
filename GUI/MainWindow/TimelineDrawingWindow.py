@@ -156,6 +156,9 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         super(TimelineDrawingWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
         self.ui = uic.loadUi("GUI/MainWindow/MainWindow.ui", self) # Load the .ui file
 
+
+        self.shouldGenerateVideoThumbnails = False
+
         self.shouldUseTrackHeaders = True
         self.currentViewportJumpToOption = ViewportJumpToOptions.JumpToNextOutsideViewport
 
@@ -225,9 +228,10 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         self.minimumTimelineTrackWidthChanged.connect(self.referenceManager.set_fixed_width)
 
         # Video Thumbnail Generator:
-        self.videoThumbnailGenerator = VideoPreviewThumbnailGenerator([], parent=self)
-        self.videoThumbnailGenerator.thumbnailGenerationComplete.connect(self.on_all_videos_thumbnail_generation_complete)
-        self.videoThumbnailGenerator.videoThumbnailGenerationComplete.connect(self.on_video_event_thumbnail_generation_complete) # Single video file
+        if self.shouldGenerateVideoThumbnails == True:
+            self.videoThumbnailGenerator = VideoPreviewThumbnailGenerator([], parent=self)
+            self.videoThumbnailGenerator.thumbnailGenerationComplete.connect(self.on_all_videos_thumbnail_generation_complete)
+            self.videoThumbnailGenerator.videoThumbnailGenerationComplete.connect(self.on_video_event_thumbnail_generation_complete) # Single video file
 
 
         self.wantsCreateNewVideoPlayerWindowOnClose = False
