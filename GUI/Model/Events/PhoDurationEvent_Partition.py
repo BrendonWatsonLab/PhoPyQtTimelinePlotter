@@ -82,7 +82,7 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
         separator_action = menu.addSeparator()
 
         # Add Behaviors to menu
-        menu = self.buildBehaviorsMenu(menu)
+        # menu = self.buildBehaviorsMenu(menu)
 
         # Handle the actions
         action = menu.exec_(self.mapToGlobal(pos))
