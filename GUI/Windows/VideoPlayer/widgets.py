@@ -7,7 +7,7 @@ import sys
 from PyQt5.QtWidgets import QFrame, QSlider, QStyle, QStyleOptionSlider, \
     QPlainTextEdit, QPushButton, QMacCocoaViewContainer
 from PyQt5.QtGui import QPalette, QColor, QWheelEvent, QKeyEvent, QPainter, \
-    QPen
+    QPen, QGridLayout
 from PyQt5.QtCore import pyqtSignal, QRect
 
 """ VideoFrame: the frame that contains the VLC video player
@@ -26,8 +26,13 @@ class VideoFrame(QFrame):
 
         if platform.system() == "Darwin": # for MacOS
             self.mac_view = QMacCocoaViewContainer(0, parent=self)
+            self.gridLayout = QGridLayout(self)
+            self.gridLayout.addWidget(self.mac_view, 0, 0, 1, 1)
         else:
             self.mac_view = None
+
+
+
 
         self.original_parent = parent
         self.palette = self.palette()

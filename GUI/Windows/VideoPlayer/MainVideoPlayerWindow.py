@@ -853,7 +853,8 @@ class MainVideoPlayerWindow(HistoricalFrameRenderingMixin, VideoPlaybackRenderin
         playing)
         """
         if self.restart_needed:
-            self.media_player.set_time(self.media_start_time, False) # False indicates precise (as opposed to fast) seeking
+            self.media_player.set_time(self.media_start_time)
+            # self.media_player.set_time(self.media_start_time, False) # False indicates precise (as opposed to fast) seeking
             self.restart_needed = False
 
 
@@ -944,7 +945,8 @@ class MainVideoPlayerWindow(HistoricalFrameRenderingMixin, VideoPlaybackRenderin
         try:
             self.update_slider_highlight()
             self.media_player.play()
-            self.media_player.set_time(self.media_start_time, False) # False indicates precise (as opposed to fast) seeking # Looks like the media playback time is actually being set from the slider.
+            self.media_player.set_time(self.media_start_time)
+            # self.media_player.set_time(self.media_start_time, False) # False indicates precise (as opposed to fast) seeking # Looks like the media playback time is actually being set from the slider.
             self.media_started_playing = True
             self.media_is_playing = True
             self.play_pause_model.setState(False)
@@ -1108,10 +1110,10 @@ class MainVideoPlayerWindow(HistoricalFrameRenderingMixin, VideoPlaybackRenderin
         return self.ui.spinBoxFrameJumpMultiplier.value
 
     def get_media_fps(self):
-        print('get_media_fps(): self.media_player: {}'.format(self.media_player))
+        # print('get_media_fps(): self.media_player: {}'.format(self.media_player))
         if self.media_player is not None:
-            # return (self.media_player.get_fps() or 30)
-            return 30
+            return (self.media_player.get_fps() or 30)
+            # return 30
         else:
             print('get_media_fps(): self.media_player is None!')
             return 0
