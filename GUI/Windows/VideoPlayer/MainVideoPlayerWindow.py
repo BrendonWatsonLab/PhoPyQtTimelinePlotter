@@ -579,6 +579,9 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
         self.is_speed_burst_mode_active = False
         self.speedBurstPlaybackRate = MainVideoPlayerWindow.SpeedBurstPlaybackRate
 
+        # The rate at which we skip/jump
+        self.curr_frame_skip_jump_multiplier = 1
+
         # Note that frame_video is already a VideoFrame object
         # Why was this commented out?
         # if sys.platform == "darwin":  # for MacOS
@@ -637,7 +640,10 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
 
         self.ui.lblFileFPS.setText("")
 
-        self.ui.spinBoxFrameJumpMultiplier.value = 1
+        # self.ui.spinBoxFrameJumpMultiplier.value = 1
+        self.ui.spinBoxFrameJumpMultiplier.setValue(self.curr_frame_skip_jump_multiplier)
+        self.ui.spinBoxFrameJumpMultiplier.valueChanged.connect(self.handle_jump_multiplier_value_changed)
+        
 
         # Set up buttons
 
@@ -898,7 +904,9 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
         ## TODO:
         print(newProposedFrame)
 
-
+    def handle_jump_multiplier_value_changed(self, newProposedMultiplier):
+        print('handle_jump_multiplier_value_changed({})'.format(newProposedMultiplier))
+        self.curr_frame_skip_jump_multiplier = int(newProposedMultiplier)
 
         
     # TODO: REMOVE?? Check
@@ -1113,7 +1121,7 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
 
     # Media Information:
     def get_frame_multipler(self):
-        return self.ui.spinBoxFrameJumpMultiplier.value
+        return float(self.curr_frame_skip_jump_multiplier)
 
     def get_media_fps(self):
         # print('get_media_fps(): self.media_player: {}'.format(self.media_player))
@@ -1129,7 +1137,9 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
         return int(1000 // self.get_media_fps())
 
     def get_media_total_num_frames(self):
-        return int(self.media_player.get_length() * self.get_media_fps())
+        curr_total_duration_millis = self.media_player.get_length()
+        curr_total_duration = float(curr_total_duration_millis) / 1000.0 # Convert to seconds.
+        return int(curr_total_duration * self.get_media_fps())
 
     ## Current playhead functions
     """ get_current_playhead_frame(): Gets the current frame position of the playhead
@@ -1165,19 +1175,19 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
     # Playback Navigation (Left/Right) Handlers:
     def step_left_handler(self):
         print('step: left')
-        self.seek_frames(-1 * self.get_frame_multipler())
+        self.seek_frames(-1.0 * self.get_frame_multipler())
         
     def skip_left_handler(self):
         print('skip: left')
-        self.seek_frames(-10 * self.get_frame_multipler())
+        self.seek_frames(-10.0 * self.get_frame_multipler())
 
     def step_right_handler(self):
         print('step: right')
-        self.seek_frames(1 * self.get_frame_multipler())
+        self.seek_frames(1.0 * self.get_frame_multipler())
 
     def skip_right_handler(self):
         print('skip: right')
-        self.seek_frames(10 * self.get_frame_multipler())
+        self.seek_frames(10.0 * self.get_frame_multipler())
 
     # Other:
     def seek_frames(self, relativeFrameOffset):
@@ -1189,12 +1199,23 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
         # if self.media_end_time == -1:
         #     return
 
+        print('seek_frames(relativeFrameOffset: {}):'.format(relativeFrameOffset))
         curr_total_fps = self.get_media_fps()
         relativeSecondsOffset = relativeFrameOffset / curr_total_fps # Desired offset in seconds
-        curr_total_duration = self.media_player.get_length()
+        # curr_total_duration = self.media_player.get_length()
+        curr_total_duration_millis = self.media_player.get_length()
+        curr_total_duration = float(curr_total_duration_millis) / 1000.0 # Convert to seconds.
+        # NOTE: self.media_player.get_length() returns "14399200" for an approximately 4 hour video, meaning the output is in milliseconds, not seconds.
         relative_percent_offset = relativeSecondsOffset / curr_total_duration # percent of the whole that we want to skip
 
-        totalNumFrames = self.get_media_total_num_frames()
+        print('    \t curr_total_fps: {}'.format(curr_total_fps))
+        print('    \t relativeSecondsOffset: {}'.format(relativeSecondsOffset))
+        print('    \t curr_total_duration: {}'.format(curr_total_duration))
+        print('    \t relative_percent_offset: {}'.format(relative_percent_offset))
+        
+
+        totalNumFrames = self.get_media_total_num_frames() # This number is strangely multiplied by a factor of 1000.0 too! It's incorrect.
+        print('    \t totalNumFrames: {}'.format(totalNumFrames))
 
         try:
             didPauseMedia = False
@@ -1204,6 +1225,7 @@ class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdati
 
             newPosition = self.media_player.get_position() + relative_percent_offset
             # newTime = int(self.media_player.get_time() + relativeFrameOffset)
+            print('    \t newPosition: {}'.format(newPosition))
 
             # self.update_slider_highlight()
             # self.media_player.set_time(newTime)

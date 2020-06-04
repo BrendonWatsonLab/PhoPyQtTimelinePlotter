@@ -1031,11 +1031,23 @@
           </item>
           <item row="1" column="15">
            <widget class="QSpinBox" name="spinBoxFrameJumpMultiplier">
+            <property name="toolTip">
+             <string>Jump Size</string>
+            </property>
+            <property name="frame">
+             <bool>true</bool>
+            </property>
+            <property name="correctionMode">
+             <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+            </property>
+            <property name="keyboardTracking">
+             <bool>false</bool>
+            </property>
             <property name="minimum">
              <number>1</number>
             </property>
             <property name="maximum">
-             <number>1000</number>
+             <number>50000</number>
             </property>
            </widget>
           </item>
