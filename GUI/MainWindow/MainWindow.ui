@@ -497,6 +497,15 @@
    <property name="text">
     <string>Cut at Active Video Playhead</string>
    </property>
+   <property name="shortcut">
+    <string>X</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::ApplicationShortcut</enum>
+   </property>
+   <property name="autoRepeat">
+    <bool>false</bool>
+   </property>
   </action>
   <action name="actionVideo_FIle_ShowListWindow">
    <property name="text">
