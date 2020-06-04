@@ -7,11 +7,12 @@ import sys
 from datetime import datetime, timezone, timedelta
 import numpy as np
 from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QMenu, QComboBox
+from PyQt5.QtWidgets import QAction, QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QMenu, QComboBox
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QFontMetrics, QPalette
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 from GUI.Model.Events.PhoDurationEvent import *
+from app.BehaviorsList import BehaviorsManager
 
 class PhoDurationEvent_Partition(PhoDurationEvent):
     InstantaneousEventDuration = timedelta(seconds=2)
@@ -39,14 +40,76 @@ class PhoDurationEvent_Partition(PhoDurationEvent):
         self.type_id = type_id
         self.subtype_id = subtype_id
 
+    ## UNFINISHED: Builds a list of behavior groups to add to the context menu.
+    def buildBehaviorsMenu(self, menu, enable_none_selection = True):
+        # get behaviors list from somewhere.
+        behaviorsManager = BehaviorsManager()
+        # behaviorGroups = behaviorsManager.get_unique_behavior_groups()
+        behaviorGroupNames = behaviorsManager.get_unique_behavior_groups()
+
+        behaviorGroupColorsDict = behaviorsManager.groups_color_dictionary
+
+
+        # TODO: Try to get dynamically like: self.behaviorGroups = self.database_connection.load_behavior_groups_from_database()
+        # self.behaviors = self.database_connection.load_behaviors_from_database()
+
+        if enable_none_selection:
+            clearSelectionAction = QAction('', parent=menu)
+            clearSelectionAction.setData(-1)
+            menu.addAction(clearSelectionAction)
+
+        for (anIndex, aBehaviorGroupName) in enumerate(behaviorGroupNames):
+            if aBehaviorGroupName is None:
+                print("FATAL ERROR!!")
+                currAction = QAction('', parent=menu)
+                currAction.setData(None)
+                # Empty item
+            else:
+                currAction = QAction(aBehaviorGroupName, parent=menu)
+                currAction.setData(anIndex)
+                # item.setForeground(aBehaviorGroup.primaryColor.get_QColor())
+                # TODO: colors:
+
+            # types_model.appendRow(item)
+            menu.addAction(currAction)
+
+        return menu        
+
 
     def showMenu(self, pos):
         menu = QMenu()
-        clear_action = menu.addAction("Modify Partition")
+        clear_action = menu.addAction("Modify Partition...")
+        separator_action = menu.addSeparator()
+
+        # Add Behaviors to menu
+        menu = self.buildBehaviorsMenu(menu)
+
+        # Handle the actions
         action = menu.exec_(self.mapToGlobal(pos))
-        if action == clear_action:
-            print("Modify Partition action!")
-            self.on_edit.emit(self.get_track_index())
+        if action is None:
+            print('None action!')
+        else:
+            if action == clear_action:
+                print("Modify Partition action!")
+                self.on_edit.emit(self.get_track_index())
+            else:
+                curr_menu_item_user_data = action.data()
+                if curr_menu_item_user_data is not None:
+                    potential_index = curr_menu_item_user_data
+                    print('Got potential index: {}'.format(str(potential_index)))
+                    if (potential_index == -1):
+                        print('Clear type menu action!')
+                        # TODO
+                    else:
+                        # behaviorsManager = BehaviorsManager()
+                        # # behaviorGroups = behaviorsManager.get_unique_behavior_groups()
+                        # behaviorGroupNames = behaviorsManager.get_unique_behavior_groups()
+                        # Greater than one
+                        selected_behavior_group = action.text()
+                        print('Selected type group: {}'.format(selected_behavior_group))
+
+                else:
+                    print('Other menu action with no data!')
 
     def onActivated(self, text):
         self.name = text
