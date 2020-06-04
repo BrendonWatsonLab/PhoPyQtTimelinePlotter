@@ -5,7 +5,11 @@ import platform
 import os
 import sys
 from PyQt5.QtWidgets import QFrame, QSlider, QStyle, QStyleOptionSlider, \
-    QPlainTextEdit, QPushButton, QMacCocoaViewContainer
+    QPlainTextEdit, QPushButton
+
+if platform.system() == "Darwin": # for MacOS
+    from PyQt5.QtWidgets import QMacCocoaViewContainer
+
 from PyQt5.QtGui import QPalette, QColor, QWheelEvent, QKeyEvent, QPainter, \
     QPen, QGridLayout
 from PyQt5.QtCore import pyqtSignal, QRect

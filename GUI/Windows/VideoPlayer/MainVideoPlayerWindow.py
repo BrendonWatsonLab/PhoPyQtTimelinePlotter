@@ -8,7 +8,10 @@ import traceback
 
 import qtawesome as qta
 from PyQt5 import uic
-from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox, QDataWidgetMapper, QPushButton, QMacCocoaViewContainer
+from PyQt5.QtWidgets import QApplication, QFileDialog, QMainWindow, QMessageBox, QDataWidgetMapper, QPushButton
+if platform.system() == "Darwin": # for MacOS
+    from PyQt5.QtWidgets import QMacCocoaViewContainer
+
 from PyQt5.QtGui import QCursor, QIcon, QPixmap
 from PyQt5.QtCore import QDir, QTimer, Qt, QModelIndex, QSortFilterProxyModel, pyqtSignal, pyqtSlot
 
