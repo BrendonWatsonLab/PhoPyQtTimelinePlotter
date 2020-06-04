@@ -423,6 +423,9 @@
    <property name="shortcut">
     <string>Ctrl+Q</string>
    </property>
+   <property name="shortcutContext">
+    <enum>Qt::ApplicationShortcut</enum>
+   </property>
   </action>
   <action name="actionMain">
    <property name="text">
@@ -487,10 +490,19 @@
    <property name="text">
     <string>Current Video</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
   </action>
   <action name="actionJump_to_Active_Video_Playhead">
    <property name="text">
     <string>Jump to Active Video Playhead</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Home</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::ApplicationShortcut</enum>
    </property>
   </action>
   <action name="actionCut_at_Active_Video_Playhead">
