@@ -1009,7 +1009,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         ## Detect modifier keys being held down to modify scroll action.
         """
         Shift Held down: Triple the timeline x-offset speed.
-        Ctrl Held down: Zoom in and out instead of modifying the timeline x-offset
+        # -- DOES NOT WORK: Ctrl Held down: Zoom in and out instead of modifying the timeline x-offset
 
         """
         modifiers = QtWidgets.QApplication.keyboardModifiers()
@@ -1070,7 +1070,8 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
                            QtCore.Qt.ShiftModifier):
             # Scroll
             # print('Control+Shift+Scroll')
-            hsb.setSliderPosition(hsb.sliderPosition()+dy)
+            hsb.setSliderPosition(hsb.sliderPosition()+dy) # TODO: does nothing different
+            
         else:
             # Scroll
             # print('Scroll (no modifiers)')
