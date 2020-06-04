@@ -523,7 +523,8 @@ class VLCVideoEventMixin(object):
         self.on_media_changed_VideoPlaybackRenderingWidgetMixin()
 
 
-class MainVideoPlayerWindow(HistoricalFrameRenderingMixin, VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdatingMixin, VLCVideoEventMixin, QMainWindow):
+# class MainVideoPlayerWindow(HistoricalFrameRenderingMixin, VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdatingMixin, VLCVideoEventMixin, QMainWindow):
+class MainVideoPlayerWindow(VideoPlaybackRenderingWidgetMixin, MediaPlayerUpdatingMixin, VLCVideoEventMixin, QMainWindow):
     """
     The main window class
     """
@@ -595,7 +596,9 @@ class MainVideoPlayerWindow(HistoricalFrameRenderingMixin, VideoPlaybackRenderin
         # self.ui.timestampSidebarWidget.
 
         self.init_VideoPlaybackRenderingWidgetMixin()
-        self.init_HistoricalFrameRenderingMixin()
+
+        if issubclass(MainVideoPlayerWindow, HistoricalFrameRenderingMixin):
+            self.init_HistoricalFrameRenderingMixin()
 
         self.timer = QTimer(self)
         self.timer.setInterval(self.timer_period)

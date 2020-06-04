@@ -52,6 +52,8 @@ class DataMovieLinkInfo(SimpleErrorStatusMixin, QObject):
         super(DataMovieLinkInfo, self).__init__(parent=parent)
         self._error_string = None
 
+        self._shouldGenerateVideoThumbnails = False
+
         self._videoEventChildReference = videoEventChildReference
         self.videoPlayerWindow = videoPlayerWindowRef
         self.mainTimelineWindowRef = mainTimelineWindowRef
@@ -77,14 +79,17 @@ class DataMovieLinkInfo(SimpleErrorStatusMixin, QObject):
 
         # Video Thumbnail Generator:
         self.video_thumbnail_popover_window = None
-        self.videoThumbnailGenerator = VideoPreviewThumbnailGenerator([], parent=self)
-        # self.videoThumbnailGenerator.thumbnailGenerationComplete.connect(self.on_all_videos_thumbnail_generation_complete)
-        self.videoThumbnailGenerator.videoThumbnailGenerationComplete.connect(self.on_video_event_thumbnail_generation_complete) # Single video file
-        self.videoThumbnailGenerator.videoFrameThumbnailsUpdated.connect(self.on_cache_frame_thumbnails_updated) # Single frame of a signle video file
-        # Connect signal to the video player window
-        self.thumbnail_generated.connect(self.videoPlayerWindow.on_video_thumbnail_generated)
+        if self._shouldGenerateVideoThumbnails == True:
+            self.videoThumbnailGenerator = VideoPreviewThumbnailGenerator([], parent=self)
+            # self.videoThumbnailGenerator.thumbnailGenerationComplete.connect(self.on_all_videos_thumbnail_generation_complete)
+            self.videoThumbnailGenerator.videoThumbnailGenerationComplete.connect(self.on_video_event_thumbnail_generation_complete) # Single video file
+            self.videoThumbnailGenerator.videoFrameThumbnailsUpdated.connect(self.on_cache_frame_thumbnails_updated) # Single frame of a signle video file
+            # Connect signal to the video player window
+            self.thumbnail_generated.connect(self.videoPlayerWindow.on_video_thumbnail_generated)
 
-        self.initially_generate_thumbnails()
+            self.initially_generate_thumbnails()
+
+
 
 
     # TODO: Thumbnail generation
