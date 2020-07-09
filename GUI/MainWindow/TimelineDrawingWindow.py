@@ -138,6 +138,9 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
     # debug_IncludeTaggedVideoTracks = False
     debug_IncludeEarlyTracks = False
 
+    # Each entry in the debug_desiredVideoTracks array corresponds to a BBID for a "group" that will be added as a set of tracks to the timeline upon startup.
+    # debug_desiredVideoTrackGroupSettings: for each entry in debug_desiredVideoTracks, there is a corresponding VideoTrackGroupSettings(...) object that specifies which tracks are included in the group.
+
     # debug_desiredVideoTracks = [0, 1, 5, 6, 8, 9]
     # debug_desiredVideoTrackGroupSettings = [VideoTrackGroupSettings(False, True, False), VideoTrackGroupSettings(False, True, False), VideoTrackGroupSettings(False, True, False), VideoTrackGroupSettings(False, True, False), VideoTrackGroupSettings(False, True, False), VideoTrackGroupSettings(False, True, False)]
     
