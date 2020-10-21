@@ -202,8 +202,8 @@ Loads the VideoFiles from the database (cached versions) and then tries to searc
 """
 class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
 
-    # VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
-    VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadOnlyFromDatabase
+    VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
+    # VideoFileLoadingMode = CachedVideoFileLoadingOptions.LoadOnlyFromDatabase
     DataFileLoadingMode = CachedDataFileLoadingOptions.LoadDatabaseAndSearchVideoFileSearchPaths
 
 

@@ -27,6 +27,17 @@ from GUI.Windows.ImportCSVWindow.ImportCSVWindow import ImportCSVWindow
 
 from app.database.DatabaseConnectionRef import DatabaseConnectionRef
 
+def get_user_home_directory():
+    from os import path
+    p = pathlib.Path(path.expanduser("~"))
+    # Path.home()
+    return p
+
+# takes an integer box identifier like '5' and produces 'BB05'
+def get_bbIDstring(aBBID, bb_prefix='BB'):
+    return "%s{0:02}".format(bb_prefix, aBBID)
+
+
 # The main application
 class TimelineApplication(QApplication):
 
@@ -34,12 +45,33 @@ class TimelineApplication(QApplication):
     shouldShowMainGUIWindow = True
     shouldShowListGUIWindow = False
     shouldShowExampleWindow = False
-    shouldShowImportWindow = True # TODO: this is what I was working on last
+    shouldShowImportWindow = False # TODO: this is what I was working on last
 
     database_file_name = 'BehavioralBoxDatabase.db'
 
-    project_directory_windows = pathlib.Path("C:/Users/halechr/repo/PhoPyQtTimelinePlotter/")
-    project_directory_mac = pathlib.Path("/Users/pho/repo/PhoPyQtTimelinePlotter/")
+    # Attempt to automate box folder generation, but then realized I don't want some of them
+    #video_file_search_root = 'E:/Transcoded Videos/' # The folder containing the box folders containg videos
+    #bbID_strings = [get_bbIDstring(i) for i in range(17)] # ['BB00', 'BB01', ...]
+    #video_file_search_paths = [(TimelineApplication.video_file_search_root + aBBID_String + '/') for aBBID_String in TimelineApplication.bbID_strings]
+
+    video_file_search_paths = ["E:/Transcoded Videos/BB12"]
+    
+    # video_file_search_paths = ["E:/Transcoded Videos/BB02", "E:/Transcoded Videos/BB04", "E:/Transcoded Videos/BB06", "E:/Transcoded Videos/BB09", "E:/Transcoded Videos/BB12", "E:/Transcoded Videos/BB14", "E:/Transcoded Videos/BB15", "E:/Transcoded Videos/BB16"]
+    # video_file_search_paths = ["O:/Transcoded Videos/BB00", "O:/Transcoded Videos/BB01", "O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]     
+    # video_file_search_paths = ["O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]     
+    # video_file_search_paths = ["O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]
+
+    user_home_path = get_user_home_directory()
+
+    project_directory_windows = pathlib.Path.joinpath(user_home_path, "source/repos/PhoPyQtTimelinePlotter/")
+    project_directory_mac = pathlib.Path.joinpath(user_home_path, "repo/PhoPyQtTimelinePlotter/")
+
+    # project_directory_windows = pathlib.Path.joinpath(user_home_path, "repo/PhoPyQtTimelinePlotter/")
+    # project_directory_mac = pathlib.Path.joinpath(user_home_path, "repo/PhoPyQtTimelinePlotter/")
+
+    # C:\Users\watsonlab\source\repos\PhoPyQtTimelinePlotter\lib
+    # project_directory_windows = pathlib.Path("C:/Users/halechr/repo/PhoPyQtTimelinePlotter/")
+    # project_directory_mac = pathlib.Path("/Users/pho/repo/PhoPyQtTimelinePlotter/")
 
     @staticmethod
     def get_project_directory():
@@ -52,10 +84,14 @@ class TimelineApplication(QApplication):
             return TimelineApplication.project_directory_mac
 
         else:
-            print("ERROR: none of the expected project directories exist!")
+            print("WARNING: none of the hard-coded project directories exist!")
             new_user_dir = None
             # Todo: allow user to specify a dir
+            # Try CWD:
+            new_user_dir = pathlib.Path.cwd()
+
             if new_user_dir is not None:
+                print("    Using current working path as the project directory ({}).".format(new_user_dir))
                 new_user_dir = new_user_dir.resolve()
 
             return new_user_dir
@@ -70,6 +106,7 @@ class TimelineApplication(QApplication):
         self.database_file_parent_path = self.project_directory_path.joinpath("EXTERNAL", "Databases")
         self.database_file_path = self.database_file_parent_path.joinpath(TimelineApplication.database_file_name)
         self.database_file_path_string = str(self.database_file_path)
+        self.video_file_search_paths = TimelineApplication.video_file_search_paths
 
         try:
             self.database_connection = DatabaseConnectionRef(self.database_file_path_string)
@@ -128,9 +165,7 @@ class TimelineApplication(QApplication):
 
     
         if TimelineApplication.shouldShowListGUIWindow:
-            # self.video_file_search_paths = ["O:/Transcoded Videos/BB00", "O:/Transcoded Videos/BB01", "O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]     
-            self.video_file_search_paths = ["O:/Transcoded Videos/BB05", "O:/Transcoded Videos/BB06", "O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]     
-            # self.video_file_search_paths = ["O:/Transcoded Videos/BB08", "O:/Transcoded Videos/BB09"]
+
             self.mainListWindow = MainObjectListsWindow(self.database_connection, self.video_file_search_paths)
 
 

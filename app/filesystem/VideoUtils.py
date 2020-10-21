@@ -87,7 +87,7 @@ def video_duration(vid_file_path):
 
     # if everything didn't happen,
     # we got here because no single 'return' in the above happen.
-    raise Exception('I found no duration')
+    raise Exception('I found no duration for video {}'.format(vid_file_path))
     #return None
 
 
