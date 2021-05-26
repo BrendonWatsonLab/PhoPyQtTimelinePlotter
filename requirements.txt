@@ -26,6 +26,6 @@ qtmodern==0.1.4
 
 
 ## Restoring:
-# conda create  --name python-course --file "EXTERNAL/Requirements/spec-list-01-07-2020.txt"
+# conda create --name PhoTimelinePyQt5 --file "requirements.txt"
 # conda env create -f "EXTERNAL/Requirements/environment-01-07-2020.yml"
 
