@@ -1,0 +1,31 @@
+PyQt5==5.4.1
+QtAwesome==0.1.8
+orange-canvas-core==0.1.9
+# Requires ffprobe binary installed in C:\Common\bin\ffmpeg\bin\ffprobe. Obtainable from https://www.gyan.dev/ffmpeg/builds/
+#conda install pillow
+pillow==6.2.1
+#conda install av -c conda-forge
+av==6.2.0
+ffmpeg==4.1.3
+# conda install pyqtgraph
+pyqtgraph==0.10.0
+# conda install qtawesome
+
+# conda install qtmodern
+qtmodern==0.1.4
+
+
+
+# Building
+# fbs PyQt5 PyInstaller==3.4
+
+
+## Exporting and importing:
+# conda list --explicit > "EXTERNAL/Requirements/spec-list-01-07-2020.txt"
+# conda env export > "EXTERNAL/Requirements/environment-01-07-2020.yml"
+
+
+## Restoring:
+# conda create --name PhoTimelinePyQt5 --file "requirements.txt"
+# conda env create -f "EXTERNAL/Requirements/environment-01-07-2020.yml"
+
