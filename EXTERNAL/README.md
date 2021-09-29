@@ -5,13 +5,13 @@ VLC 3.0.8 Vetinari
 (Py3PyQt5)
 
 # Creating an Environment:
-conda env export > EXTERNAL\Requirements\06-01-2020\environment.yml
-conda env export --no-builds > EXTERNAL\Requirements\06-01-2020\environment_no_builds.yml
+conda create -n PyQt6
+conda activate PyQt6
+conda install orange-canvas-core PyQt configparser QtAwesome orange-canvas-core pillow av ffmpeg pyqtgraph qtmodern matplotlib numpy scipy pandas opencv ffmpeg sqlalchemy h5py 
 
-conda env export --from-history > EXTERNAL\Requirements\06-03-2020\environment.yml
 
-
-# Installing from Environment:
+# Old:
+## Installing from Environment:
 1. Open up Admin CMD Prompt
 2. cd C:\Users\Administrator\repo\PhoPyQtTimelinePlotter
 3. ? conda config --set ssl_verify no
@@ -21,14 +21,13 @@ conda env export --from-history > EXTERNAL\Requirements\06-03-2020\environment.y
 5. conda update anaconda
 6. conda env create -f "EXTERNAL\Requirements\06-01-2020\environment_no_builds.yml"
 7. conda activate Py3PyQt5
-
-## Spec-File:
+### Spec-File:
 conda list --explicit > EXTERNAL\Requirements\06-01-2020\spec-file.txt
-# Installing from Spec-file:
+### Installing from Spec-file:
 conda create --name Py3PyQt5New --file EXTERNAL\Requirements\06-01-2020\spec-file.txt
 C:\Users\Administrator\repo\PhoPyQtTimelinePlotter\EXTERNAL\Requirements\06-01-2020\environment_no_builds.yml
 
-#  Making a clone:
+###  Making a clone:
 conda create --name Py3PyQt5_Testing --clone Py3PyQt5
 
 
