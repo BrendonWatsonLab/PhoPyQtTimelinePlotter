@@ -7,7 +7,8 @@ VLC 3.0.8 Vetinari
 # Creating an Environment:
 conda create -n PyQt6
 conda activate PyQt6
-conda install orange-canvas-core PyQt configparser QtAwesome orange-canvas-core pillow av ffmpeg pyqtgraph qtmodern matplotlib numpy scipy pandas opencv ffmpeg sqlalchemy h5py 
+<!-- conda install orange-canvas-core PyQt configparser QtAwesome orange-canvas-core pillow av ffmpeg pyqtgraph qtmodern matplotlib numpy scipy pandas opencv ffmpeg sqlalchemy h5py  -->
+mamba install orange-canvas-core PyQt configparser QtAwesome orange-canvas-core pillow av ffmpeg pyqtgraph qtmodern matplotlib numpy scipy pandas opencv ffmpeg sqlalchemy h5py -c conda-forge
 
 
 # Old:
