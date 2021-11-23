@@ -4,14 +4,17 @@
 import platform
 import os
 import sys
-from PyQt5.QtWidgets import QFrame, QSlider, QStyle, QStyleOptionSlider, \
+from PyQt5.QtWidgets import QFrame, QGridLayout, QSlider, QStyle, QStyleOptionSlider, \
     QPlainTextEdit, QPushButton
 
 if platform.system() == "Darwin": # for MacOS
     from PyQt5.QtWidgets import QMacCocoaViewContainer
 
+# from PyQt5 import QtGui
 from PyQt5.QtGui import QPalette, QColor, QWheelEvent, QKeyEvent, QPainter, \
-    QPen, QGridLayout
+    QPen
+# from PyQt5.QtGui import QPalette, QColor, QWheelEvent, QKeyEvent, QPainter, \
+    # QPen, QGridLayout
 from PyQt5.QtCore import pyqtSignal, QRect
 
 """ VideoFrame: the frame that contains the VLC video player
