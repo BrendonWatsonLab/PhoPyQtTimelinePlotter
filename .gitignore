@@ -15,3 +15,4 @@ Git Patches
 .vscode/.ropeproject
 **.idea/**
 .ipynb_checkpoints
+.spyproject
