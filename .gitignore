@@ -21,3 +21,4 @@ TestVideoPlayerWindowSeparately.py
 EXTERNAL/Databases/Old
 dist
 build
+**/.spyproject
