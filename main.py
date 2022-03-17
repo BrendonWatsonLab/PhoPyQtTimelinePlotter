@@ -104,6 +104,8 @@ class TimelineApplication(QApplication):
 
         self.project_directory_path = TimelineApplication.get_project_directory()
         self.database_file_parent_path = self.project_directory_path.joinpath("EXTERNAL", "Databases")
+        self.database_file_parent_path.mkdir(parents=True, exist_ok=True) # make the path if it doesn't exist
+        
         self.database_file_path = self.database_file_parent_path.joinpath(TimelineApplication.database_file_name)
         self.database_file_path_string = str(self.database_file_path)
         self.video_file_search_paths = TimelineApplication.video_file_search_paths
