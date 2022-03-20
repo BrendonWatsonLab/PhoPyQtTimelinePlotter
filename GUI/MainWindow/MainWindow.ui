@@ -68,6 +68,8 @@
     <addaction name="separator"/>
     <addaction name="actionImport_Labjack_Data"/>
     <addaction name="actionImport_Actigraphy_Data"/>
+    <addaction name="actionImport_general_h5_Data"/>
+    <addaction name="actionImport_general_npz_Data"/>
     <addaction name="separator"/>
     <addaction name="actionExport_to"/>
     <addaction name="separator"/>
@@ -560,6 +562,16 @@
    </property>
    <property name="toolTip">
     <string>Rollback (Revert) Changes</string>
+   </property>
+  </action>
+  <action name="actionImport_general_h5_Data">
+   <property name="text">
+    <string>Import general .h5 Data...</string>
+   </property>
+  </action>
+  <action name="actionImport_general_npz_Data">
+   <property name="text">
+    <string>Import general .npz Data...</string>
    </property>
   </action>
  </widget>
