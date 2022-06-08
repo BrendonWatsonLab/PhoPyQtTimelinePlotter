@@ -1,0 +1,116 @@
+[
+    {
+        "type": "Group",
+        "name": "ExtractableFunctionality",
+        "parent_id": null,
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "C5BPjYzOu83IJcbx"
+    },
+    {
+        "type": "Group",
+        "name": "GUI",
+        "parent_id": "C5BPjYzOu83IJcbx",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "cA32i5EPjWe8qVpg"
+    },
+    {
+        "type": "Group",
+        "name": "General",
+        "parent_id": "C5BPjYzOu83IJcbx",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "esKJEAIbXwn13iZq"
+    },
+    {
+        "type": "File",
+        "name": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\UI\\tcontainer.py",
+        "parent_id": "cA32i5EPjWe8qVpg",
+        "fsPath": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\UI\\tcontainer.py",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "p7fPXUtbZ0ed2WOE"
+    },
+    {
+        "type": "File",
+        "name": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\UI\\EdgeAndCornerSelectionViewHelpers.py",
+        "parent_id": "cA32i5EPjWe8qVpg",
+        "fsPath": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\UI\\EdgeAndCornerSelectionViewHelpers.py",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "UPMu860moKJQztxa"
+    },
+    {
+        "type": "File",
+        "name": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\UI\\DialogComponents\\LockableList.py",
+        "parent_id": "cA32i5EPjWe8qVpg",
+        "fsPath": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\UI\\DialogComponents\\LockableList.py",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "e2NV5CkTchvaK670"
+    },
+    {
+        "type": "File",
+        "name": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\UI\\DialogComponents\\LockableList.ui",
+        "parent_id": "cA32i5EPjWe8qVpg",
+        "fsPath": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\UI\\DialogComponents\\LockableList.ui",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "gi1ZXjs6cb3BUE8h"
+    },
+    {
+        "type": "Directory",
+        "name": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\UI\\ReferenceMarkViewer",
+        "parent_id": "cA32i5EPjWe8qVpg",
+        "fsPath": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\UI\\ReferenceMarkViewer",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "FW9UZxIC0MekbOmV"
+    },
+    {
+        "type": "Directory",
+        "name": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\Model\\ReferenceLines",
+        "parent_id": "cA32i5EPjWe8qVpg",
+        "fsPath": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\Model\\ReferenceLines",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "6To9LDHyUFSnsNuM"
+    },
+    {
+        "type": "File",
+        "name": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\Model\\Errors.py",
+        "parent_id": "esKJEAIbXwn13iZq",
+        "fsPath": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\Model\\Errors.py",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "uTm4JrbiAYLQ0Wnd"
+    },
+    {
+        "type": "File",
+        "name": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\Model\\ModelViewContainer.py",
+        "parent_id": "esKJEAIbXwn13iZq",
+        "fsPath": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\Model\\ModelViewContainer.py",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "IM9QpDhObd2ERG6u"
+    },
+    {
+        "type": "File",
+        "name": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\Helpers\\MouseTrackingThroughChildrenMixin.py",
+        "parent_id": "esKJEAIbXwn13iZq",
+        "fsPath": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\Helpers\\MouseTrackingThroughChildrenMixin.py",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "r5WR9BwkjUQHq8E0"
+    },
+    {
+        "type": "File",
+        "name": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\Helpers.py",
+        "parent_id": "esKJEAIbXwn13iZq",
+        "fsPath": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\Helpers.py",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "93zvNGjfhEiaQTqt"
+    }
+]
