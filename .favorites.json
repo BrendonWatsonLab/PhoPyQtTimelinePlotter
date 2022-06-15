@@ -112,5 +112,14 @@
         "workspaceRoot": null,
         "workspacePath": null,
         "id": "93zvNGjfhEiaQTqt"
+    },
+    {
+        "type": "File",
+        "name": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\app\\filesystem\\LabjackFilesystemLoadingMixin.py",
+        "parent_id": "esKJEAIbXwn13iZq",
+        "fsPath": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\app\\filesystem\\LabjackFilesystemLoadingMixin.py",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "nc9Nx6CSJVL2vb5Q"
     }
 ]
