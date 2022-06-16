@@ -121,5 +121,22 @@
         "workspaceRoot": null,
         "workspacePath": null,
         "id": "nc9Nx6CSJVL2vb5Q"
+    },
+    {
+        "type": "Group",
+        "name": "FIlesystem",
+        "parent_id": "C5BPjYzOu83IJcbx",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "P526YFINrSDjb0sL"
+    },
+    {
+        "type": "Directory",
+        "name": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\app\\filesystem",
+        "parent_id": "P526YFINrSDjb0sL",
+        "fsPath": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\app\\filesystem",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "2aTKDmBrHxwSfCRU"
     }
 ]
