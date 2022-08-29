@@ -28,7 +28,7 @@ from GUI.Model.ModelViewContainer import ModelViewContainer
 from app.filesystem.FilesystemOperations import OperationTypes, PendingFilesystemOperation
 # from app.filesystem.BaseDataEventsLoader import BaseDataEventsLoader, PhoServerFormatArgs
 
-from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemBaseDataEvent_Record
+from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemDataEvent_Record
 from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
 
 # from app.filesystem.BaseDataFilesystemLoadingMixin import BaseDataEventFile, BaseDataFilesystemLoader
@@ -292,7 +292,11 @@ class BaseDataFilesystemLoader(QObject):
 
 
     """ loadBaseDataEventsFile(...): new.
-        dataEventRecords: a sorted list of FilesystemBaseDataEvent_Record type objects for all variable types
+        dataEventRecords: a sorted list of FilesystemDataEvent_Record type objects for all variable types
+        
+        This function calls LabjackEventsLoader.loadLabjackEventsFile_loadFromFile(...) with a specific filepath
+        
+        
     """
     @staticmethod
     def loadBaseDataEventsFile(dataFilePath, videoDates, videoEndDates, shouldLimitEventsToVideoDates=True, limitedVariablesToCreateEventsFor=None, usePhoServerFormat=False, phoServerFormatIsStdOut=True, should_filter_for_invalid_events=True):

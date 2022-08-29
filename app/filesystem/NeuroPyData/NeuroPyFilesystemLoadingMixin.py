@@ -24,7 +24,7 @@ from GUI.Model.ModelViewContainer import ModelViewContainer
 from app.filesystem.FilesystemOperations import OperationTypes, PendingFilesystemOperation
 # from app.filesystem.NeuroPyData.NeuroPyEventsLoader import NeuroPyEventsLoader, PhoServerFormatArgs
 
-from app.filesystem.FilesystemRecordBase import FilesystemNeuroPyEvent_Record
+from app.filesystem.FilesystemRecordBase import discover_data_files, FilesystemDataEvent_Record
 # from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
 
 # from app.filesystem.NeuroPyData.NeuroPyFilesystemLoadingMixin import NeuroPyEventFile, NeuroPyFilesystemLoader
@@ -39,7 +39,7 @@ class NeuroPyEventFile(BaseDataEventFile):
     def __init__(self, filePath, parent=None):
         super().__init__(filePath, parent=parent)
         # Custom variables
-        self.onesEventFormatDataArray = []
+        # self.onesEventFormatDataArray = []
 
     # def set_loaded_values(self, dateTimes, variableData, labjackEventsContainerArray, phoServerFormatArgs, onesEventFormatDataArray):
     #     BaseDataEventFile.set_loaded_values(self, dateTimes, onesEventFormatDataArray, variableData, labjackEventsContainerArray, phoServerFormatArgs)
@@ -57,8 +57,8 @@ class NeuroPyFilesystemLoader(BaseDataFilesystemLoader):
     
     """
     
-    def __init__(self, labjackFilePaths, parent=None):
-        super(NeuroPyFilesystemLoader, self).__init__(labjackFilePaths, parent=parent) # Call the inherited classes __init__ method
+    def __init__(self, dataFilePaths, parent=None):
+        super(NeuroPyFilesystemLoader, self).__init__(dataFilePaths, parent=parent) # Call the inherited classes __init__ method
         
 
 
@@ -118,7 +118,7 @@ class NeuroPyFilesystemLoader(BaseDataFilesystemLoader):
 
 
     """ loadNeuroPyEventsFile(...): new.
-        labjackEventRecords: a sorted list of FilesystemNeuroPyEvent_Record type objects for all variable types
+        labjackEventRecords: a sorted list of FilesystemDataEvent_Record type objects for all variable types
     """
     @staticmethod
     def loadNeuroPyEventsFile(neuropyFilePath, videoDates, videoEndDates, shouldLimitEventsToVideoDates=True, limitedVariablesToCreateEventsFor=None, usePhoServerFormat=False, phoServerFormatIsStdOut=True, should_filter_for_invalid_events=True):
@@ -127,206 +127,206 @@ class NeuroPyFilesystemLoader(BaseDataFilesystemLoader):
         # If shouldLimitEventsToVariables is not None, then only events that are of type of the variable with the name in the array are included
         ## TODO: shouldLimitEventsToVideoDates should also affect the returned dateTimes, dataArray, etc.
         """
-        raise NotImplementedError
-        # (dateTimes, onesEventFormatDataArray, phoServerFormatArgs) = NeuroPyEventsLoader.loadNeuroPyEventsFile_loadFromFile(neuropyFilePath, usePhoServerFormat, phoServerFormatIsStdOut)
+        # raise NotImplementedError
+        (dateTimes, onesEventFormatDataArray, phoServerFormatArgs) = NeuroPyEventsLoader.loadNeuroPyEventsFile_loadFromFile(neuropyFilePath, usePhoServerFormat, phoServerFormatIsStdOut)
 
-        # ## Pre-process the data
-        # if limitedVariablesToCreateEventsFor is not None:
-        #     active_labjack_variable_names = limitedVariablesToCreateEventsFor
+        ## Pre-process the data
+        if limitedVariablesToCreateEventsFor is not None:
+            active_labjack_variable_names = limitedVariablesToCreateEventsFor
 
-        # else:
-        #     # Otherwise load for all variables
-        #     active_labjack_variable_names = NeuroPyEventsLoader.labjack_variable_names
+        else:
+            # Otherwise load for all variables
+            active_labjack_variable_names = NeuroPyEventsLoader.labjack_variable_names
 
-        # numVariables = len(active_labjack_variable_names)
+        numVariables = len(active_labjack_variable_names)
 
-        # if ((videoDates is not None) and (len(videoDates) > 0)):
-        #     earliestVideoTime = videoDates.min()
-        # else:
-        #     earliestVideoTime = datetime.min
+        if ((videoDates is not None) and (len(videoDates) > 0)):
+            earliestVideoTime = videoDates.min()
+        else:
+            earliestVideoTime = datetime.min
 
-        # if ((videoEndDates is not None) and (len(videoEndDates) > 0)):
-        #     latestVideoTime = videoEndDates.max()
-        # else:
-        #     latestVideoTime = datetime.max
+        if ((videoEndDates is not None) and (len(videoEndDates) > 0)):
+            latestVideoTime = videoEndDates.max()
+        else:
+            latestVideoTime = datetime.max
 
         
 
-        # ## Iterate through the event variables and pre-process them
-        # variableData = []
-        # labjackEventRecords = []
-        # # labjackEvents = []
-        # # Can't check for invalid events in here because we do it variable by variable.
-        # for variableIndex in range(0, numVariables):
-        #     currVariableName = active_labjack_variable_names[variableIndex]
-        #     dataArrayVariableIndex = NeuroPyEventsLoader.labjack_variable_indicies_dict[currVariableName]
-        #     currVariableDataValues = onesEventFormatDataArray[:, dataArrayVariableIndex]
-        #     currVariableColorTuple = mcolors.to_rgb(NeuroPyEventsLoader.labjack_variable_colors_dict[currVariableName])
-        #     currVariableColor = QColor(int(255.0 * currVariableColorTuple[0]), int(255.0 * currVariableColorTuple[1]), int(255.0 * currVariableColorTuple[2]))
+        ## Iterate through the event variables and pre-process them
+        variableData = []
+        labjackEventRecords = []
+        # labjackEvents = []
+        # Can't check for invalid events in here because we do it variable by variable.
+        for variableIndex in range(0, numVariables):
+            currVariableName = active_labjack_variable_names[variableIndex]
+            dataArrayVariableIndex = NeuroPyEventsLoader.labjack_variable_indicies_dict[currVariableName]
+            currVariableDataValues = onesEventFormatDataArray[:, dataArrayVariableIndex]
+            currVariableColorTuple = mcolors.to_rgb(NeuroPyEventsLoader.labjack_variable_colors_dict[currVariableName])
+            currVariableColor = QColor(int(255.0 * currVariableColorTuple[0]), int(255.0 * currVariableColorTuple[1]), int(255.0 * currVariableColorTuple[2]))
 
-        #     # Find the non-zero entries for the current variable
-        #     nonZeroEntries = np.nonzero(currVariableDataValues)
-        #     activeValues = currVariableDataValues[nonZeroEntries] # This is just all ones for 0/1 array
-        #     activeTimestamps = dateTimes[nonZeroEntries]
+            # Find the non-zero entries for the current variable
+            nonZeroEntries = np.nonzero(currVariableDataValues)
+            activeValues = currVariableDataValues[nonZeroEntries] # This is just all ones for 0/1 array
+            activeTimestamps = dateTimes[nonZeroEntries]
 
-        #     # Acumulate records one variable at a time
-        #     labjackVariableSpecificRecords = []
-        #     ## Find times within video ranges:
-        #     # activeVideoIndicies: contains an int index or None for each timestamp to indicate which video (if any) the timestamp occurred within
-        #     activeVideoIndicies = np.empty_like(activeTimestamps)
-        #     for index, anActiveTimestamp in enumerate(activeTimestamps):
-        #         shouldCreateEvent = True
-        #         video_relative_offset = None
-        #         # Check if the timestamp is within the range of time that that videos span
-        #         if (earliestVideoTime <= anActiveTimestamp <= latestVideoTime):
-        #             # Loop through each video to see if the event is included within its duration (not currently used)
-        #             for (videoIndex, videoStartDate) in enumerate(videoDates):
-        #                 videoEndDate = videoEndDates[videoIndex]
-        #                 if (videoStartDate <= anActiveTimestamp <= videoEndDate):
-        #                     activeVideoIndicies[index] = videoIndex
-        #                     video_relative_offset = anActiveTimestamp - videoStartDate
-        #                     break
-        #         else:
-        #             if shouldLimitEventsToVideoDates:
-        #                 shouldCreateEvent = False
+            # Acumulate records one variable at a time
+            labjackVariableSpecificRecords = []
+            ## Find times within video ranges:
+            # activeVideoIndicies: contains an int index or None for each timestamp to indicate which video (if any) the timestamp occurred within
+            activeVideoIndicies = np.empty_like(activeTimestamps)
+            for index, anActiveTimestamp in enumerate(activeTimestamps):
+                shouldCreateEvent = True
+                video_relative_offset = None
+                # Check if the timestamp is within the range of time that that videos span
+                if (earliestVideoTime <= anActiveTimestamp <= latestVideoTime):
+                    # Loop through each video to see if the event is included within its duration (not currently used)
+                    for (videoIndex, videoStartDate) in enumerate(videoDates):
+                        videoEndDate = videoEndDates[videoIndex]
+                        if (videoStartDate <= anActiveTimestamp <= videoEndDate):
+                            activeVideoIndicies[index] = videoIndex
+                            video_relative_offset = anActiveTimestamp - videoStartDate
+                            break
+                else:
+                    if shouldLimitEventsToVideoDates:
+                        shouldCreateEvent = False
 
-        #         if shouldCreateEvent:
-        #             currExtendedInfoDict = {'videoIndex': activeVideoIndicies[index],
-        #                                     'video_relative_offset': video_relative_offset,
-        #                                     'event_type':NeuroPyEventsLoader.labjack_variable_event_type[dataArrayVariableIndex],
-        #                                     'dispense_type':NeuroPyEventsLoader.labjack_variable_event_type[dataArrayVariableIndex],
-        #                                     'port': NeuroPyEventsLoader.labjack_variable_port_location[dataArrayVariableIndex],
-        #                                     }
-        #             # Create a new record object
-        #             ## TODO: should this have a different parent?
-        #             currRecord = FilesystemNeuroPyEvent_Record(anActiveTimestamp.replace(tzinfo=None), None, currVariableName, currVariableColor, currExtendedInfoDict, parent=None)
-        #             labjackVariableSpecificRecords.append(currRecord)
-
-
-        #     # Append the variable-specific events to the master list of events
-        #     labjackEventRecords.extend(labjackVariableSpecificRecords)
-        #     # Add the value-dict for this variable to the 'variableData' list
-        #     variableData.append({'timestamps': activeTimestamps, 'values': activeValues, 'videoIndicies': activeVideoIndicies, 'variableSpecificRecords': labjackVariableSpecificRecords})
+                if shouldCreateEvent:
+                    currExtendedInfoDict = {'videoIndex': activeVideoIndicies[index],
+                                            'video_relative_offset': video_relative_offset,
+                                            'event_type':NeuroPyEventsLoader.labjack_variable_event_type[dataArrayVariableIndex],
+                                            'dispense_type':NeuroPyEventsLoader.labjack_variable_event_type[dataArrayVariableIndex],
+                                            'port': NeuroPyEventsLoader.labjack_variable_port_location[dataArrayVariableIndex],
+                                            }
+                    # Create a new record object
+                    ## TODO: should this have a different parent?
+                    currRecord = FilesystemDataEvent_Record(anActiveTimestamp.replace(tzinfo=None), None, currVariableName, currVariableColor, currExtendedInfoDict, parent=None)
+                    labjackVariableSpecificRecords.append(currRecord)
 
 
-        # # Sort events by timestamp
-        # try: import operator
-        # except ImportError: keyfun = lambda x: x.start_date  # use a lambda if no operator module
-        # else: keyfun = operator.attrgetter("start_date")  # use operator since it's faster than lambda
-        # labjackEventRecords = sorted(labjackEventRecords, key=keyfun)
+            # Append the variable-specific events to the master list of events
+            labjackEventRecords.extend(labjackVariableSpecificRecords)
+            # Add the value-dict for this variable to the 'variableData' list
+            variableData.append({'timestamps': activeTimestamps, 'values': activeValues, 'videoIndicies': activeVideoIndicies, 'variableSpecificRecords': labjackVariableSpecificRecords})
 
-        # # Be sure to convert into a numpy array AFTER sorting
-        # labjackEventRecords = np.array(labjackEventRecords)
-        # # labjackEvents = np.array(labjackEvents)
 
-        # print('    done. {} total labjackEvents loaded'.format(str(len(labjackEventRecords))))
-        # # 'Pre-Filter:' dateTimes.size, labjackEventRecords.size, onesEventFormatDataArray.shape
-        # # 'Pre-Filter:' 76117, 41189, (76117, 9)
-        # """
-        # dateTimes: ndarray, shape (76117,)
-        # labjackEventRecords: ndarray, shape (41189,)
-        # onesEventFormatDataArray: ndarray, shape (76117, 9)
-        # variableData: a list of 8 dicts defined by: {'timestamps': ndarray, 'values': ndarray, 'videoIndicies': ndarray, 'variableSpecificRecords': list} where each dict in the list corresponds to a variable with that index
-        #     - all fields have same shape (1433,)
-        #     - 'variableSpecificRecords' is a list of length 1433
+        # Sort events by timestamp
+        try: import operator
+        except ImportError: keyfun = lambda x: x.start_date  # use a lambda if no operator module
+        else: keyfun = operator.attrgetter("start_date")  # use operator since it's faster than lambda
+        labjackEventRecords = sorted(labjackEventRecords, key=keyfun)
+
+        # Be sure to convert into a numpy array AFTER sorting
+        labjackEventRecords = np.array(labjackEventRecords)
+        # labjackEvents = np.array(labjackEvents)
+
+        print('    done. {} total labjackEvents loaded'.format(str(len(labjackEventRecords))))
+        # 'Pre-Filter:' dateTimes.size, labjackEventRecords.size, onesEventFormatDataArray.shape
+        # 'Pre-Filter:' 76117, 41189, (76117, 9)
+        """
+        dateTimes: ndarray, shape (76117,)
+        labjackEventRecords: ndarray, shape (41189,)
+        onesEventFormatDataArray: ndarray, shape (76117, 9)
+        variableData: a list of 8 dicts defined by: {'timestamps': ndarray, 'values': ndarray, 'videoIndicies': ndarray, 'variableSpecificRecords': list} where each dict in the list corresponds to a variable with that index
+            - all fields have same shape (1433,)
+            - 'variableSpecificRecords' is a list of length 1433
             
-        # variable-specific lengths (in this file): (1433, 6717, 1496, 12422, 772, 3223, 851, 14275)
+        variable-specific lengths (in this file): (1433, 6717, 1496, 12422, 772, 3223, 851, 14275)
+        """
+        if should_filter_for_invalid_events:
+            print('Filtering for invalid events...')
+            ### Post-processing to detect erronious events, only for food2
+            dateTimes, onesEventFormatDataArray, variableData, labjackEventRecords, phoServerFormatArgs = NeuroPyEventsLoader.filter_invalid_events(dateTimes, onesEventFormatDataArray, variableData, labjackEventRecords, phoServerFormatArgs=phoServerFormatArgs)
+            print('Post-filtering: {} events remain'.format(str(len(labjackEventRecords))))
+            print('    done.')
+        else:
+            print('Skipping filtering...')
+
+        """ Post-filtering:
+        dateTimes: ndarray, shape (68574,)
+        labjackEventRecords: ndarray, shape (33646,)
+        onesEventFormatDataArray: ndarray, shape (68574, 9)
+        variableData: counts match those printed in filter_invalid_events function
+        """
+
+        """
+        converts the variableData list of dicts to a proper Pandas dataframe
+        """
+        def get_variables_as_dict_of_dataframes(variableData, active_labjack_variable_names):
+            # Convert to dataframe:
+            variableDataFramesDict = dict()
+            # Loop through all variables and build a dataframe for each variable data in variableData
+                    # for aVariableIndex in range(0, numVariables):
+            for (aVariableIndex, currVariableName) in enumerate(active_labjack_variable_names):
+                # currVariableName = active_labjack_variable_names[aVariableIndex]
+                variableDataFramesDict[currVariableName] = pd.DataFrame.from_dict(variableData[aVariableIndex])
+
+            return variableDataFramesDict
+
+        def get_dict_of_dataframes_as_dataframe(variableDataFramesDict):
+            return pd.concat(variableDataFramesDict)
+            # return pd.concat(variableDataFramesDict, keys=['s1', 's2'],  names=['Series name', 'Row ID'])
+
+
+        # """ Export Dataframe to file:
+        # Writing dataframe to file data/output/NeuroPyDataExport/output_dataframe_1-9-2020...
+        # C:\Users\halechr\repo\PhoPyQtTimelinePlotter\app\filesystem\NeuroPyFilesystemLoadingMixin.py:257: PerformanceWarning:
+        # your performance may suffer as PyTables will pickle object types that it cannot
+        # map directly to c-types [inferred_type->mixed-integer,key->block2_values] [items->['videoIndicies', 'variableSpecificRecords']]
         # """
-        # if should_filter_for_invalid_events:
-        #     print('Filtering for invalid events...')
-        #     ### Post-processing to detect erronious events, only for food2
-        #     dateTimes, onesEventFormatDataArray, variableData, labjackEventRecords, phoServerFormatArgs = NeuroPyEventsLoader.filter_invalid_events(dateTimes, onesEventFormatDataArray, variableData, labjackEventRecords, phoServerFormatArgs=phoServerFormatArgs)
-        #     print('Post-filtering: {} events remain'.format(str(len(labjackEventRecords))))
-        #     print('    done.')
-        # else:
-        #     print('Skipping filtering...')
+        base_name = 'output_dataframe_1-9-2020'
+        out_dataframe_export_parent_path = Path('data/output/NeuroPyDataExport/')
+        out_dataframe_export_path_basic = out_dataframe_export_parent_path.joinpath('{}_basic_store.h5'.format(str(base_name))) # Used for basic objects
+        out_dataframe_export_path_pandas = out_dataframe_export_parent_path.joinpath('{}_pandas_store.h5'.format(str(base_name))) # Used for pandas Dataframe and Series objects
+        out_records_dataframe_CSV_export_path = out_dataframe_export_parent_path.joinpath('{}_records.csv'.format(str(base_name))) # Exported CSV
 
-        # """ Post-filtering:
-        # dateTimes: ndarray, shape (68574,)
-        # labjackEventRecords: ndarray, shape (33646,)
-        # onesEventFormatDataArray: ndarray, shape (68574, 9)
-        # variableData: counts match those printed in filter_invalid_events function
-        # """
-
-        # """
-        # converts the variableData list of dicts to a proper Pandas dataframe
-        # """
-        # def get_variables_as_dict_of_dataframes(variableData, active_labjack_variable_names):
-        #     # Convert to dataframe:
-        #     variableDataFramesDict = dict()
-        #     # Loop through all variables and build a dataframe for each variable data in variableData
-        #             # for aVariableIndex in range(0, numVariables):
-        #     for (aVariableIndex, currVariableName) in enumerate(active_labjack_variable_names):
-        #         # currVariableName = active_labjack_variable_names[aVariableIndex]
-        #         variableDataFramesDict[currVariableName] = pd.DataFrame.from_dict(variableData[aVariableIndex])
-
-        #     return variableDataFramesDict
-
-        # def get_dict_of_dataframes_as_dataframe(variableDataFramesDict):
-        #     return pd.concat(variableDataFramesDict)
-        #     # return pd.concat(variableDataFramesDict, keys=['s1', 's2'],  names=['Series name', 'Row ID'])
+        print('Converting variableData to dict of Pandas Dataframes...')
+        out_dict_of_df = get_variables_as_dict_of_dataframes(variableData, active_labjack_variable_names)
 
 
-        # # """ Export Dataframe to file:
-        # # Writing dataframe to file data/output/NeuroPyDataExport/output_dataframe_1-9-2020...
-        # # C:\Users\halechr\repo\PhoPyQtTimelinePlotter\app\filesystem\NeuroPyFilesystemLoadingMixin.py:257: PerformanceWarning:
-        # # your performance may suffer as PyTables will pickle object types that it cannot
-        # # map directly to c-types [inferred_type->mixed-integer,key->block2_values] [items->['videoIndicies', 'variableSpecificRecords']]
-        # # """
-        # base_name = 'output_dataframe_1-9-2020'
-        # out_dataframe_export_parent_path = Path('data/output/NeuroPyDataExport/')
-        # out_dataframe_export_path_basic = out_dataframe_export_parent_path.joinpath('{}_basic_store.h5'.format(str(base_name))) # Used for basic objects
-        # out_dataframe_export_path_pandas = out_dataframe_export_parent_path.joinpath('{}_pandas_store.h5'.format(str(base_name))) # Used for pandas Dataframe and Series objects
-        # out_records_dataframe_CSV_export_path = out_dataframe_export_parent_path.joinpath('{}_records.csv'.format(str(base_name))) # Exported CSV
+        # # Write basic variables:
+        # print('Writing dataframe to file {}...'.format(str(out_dataframe_export_path_basic)))
+        # store_basic = pd.HDFStore(out_dataframe_export_path_basic)
+        # # store_basic['variableData'] = variableData
+        # # store_basic['active_labjack_variable_names'] = active_labjack_variable_names
+        # # store_basic['variables_dict_of_dataframes'] = out_dict_of_df
+        # store_basic.close()
+        # print('    done writing basic variables to HDF file.')
 
-        # print('Converting variableData to dict of Pandas Dataframes...')
-        # out_dict_of_df = get_variables_as_dict_of_dataframes(variableData, active_labjack_variable_names)
+        print('Converting variableData to Pandas Dataframe...')
+        # out_df = get_variables_as_dataframe(variableData, active_labjack_variable_names)
+        out_df = get_dict_of_dataframes_as_dataframe(out_dict_of_df)
+        out_series = pd.Series(out_dict_of_df)
+        out_record_df = NeuroPyEventsLoader.build_records_dataframe(labjackEventRecords)
+        # can save it out to CSV here if we want to:
+        NeuroPyEventsLoader.writeRecordsDataframeToCsvFile(out_record_df, filePath=out_records_dataframe_CSV_export_path)
 
+        # out_df.to_json(orient='split')
+        print('Writing dataframe to file {}...'.format(str(out_dataframe_export_path_pandas)))
+        # out_df.to_pickle(out_dataframe_export_path)
+        store_pandas = pd.HDFStore(out_dataframe_export_path_pandas)
+        # store.get_storer('df').attrs.my_attribute = dict(A = 10)
+        store_pandas['variables_dataframe'] = out_df
+        store_pandas['variables_series_of_dataframes'] = out_series
 
-        # # # Write basic variables:
-        # # print('Writing dataframe to file {}...'.format(str(out_dataframe_export_path_basic)))
-        # # store_basic = pd.HDFStore(out_dataframe_export_path_basic)
-        # # # store_basic['variableData'] = variableData
-        # # # store_basic['active_labjack_variable_names'] = active_labjack_variable_names
-        # # # store_basic['variables_dict_of_dataframes'] = out_dict_of_df
-        # # store_basic.close()
-        # # print('    done writing basic variables to HDF file.')
-
-        # print('Converting variableData to Pandas Dataframe...')
-        # # out_df = get_variables_as_dataframe(variableData, active_labjack_variable_names)
-        # out_df = get_dict_of_dataframes_as_dataframe(out_dict_of_df)
-        # out_series = pd.Series(out_dict_of_df)
-        # out_record_df = NeuroPyEventsLoader.build_records_dataframe(labjackEventRecords)
-        # # can save it out to CSV here if we want to:
-        # NeuroPyEventsLoader.writeRecordsDataframeToCsvFile(out_record_df, filePath=out_records_dataframe_CSV_export_path)
-
-        # # out_df.to_json(orient='split')
-        # print('Writing dataframe to file {}...'.format(str(out_dataframe_export_path_pandas)))
-        # # out_df.to_pickle(out_dataframe_export_path)
-        # store_pandas = pd.HDFStore(out_dataframe_export_path_pandas)
-        # # store.get_storer('df').attrs.my_attribute = dict(A = 10)
-        # store_pandas['variables_dataframe'] = out_df
-        # store_pandas['variables_series_of_dataframes'] = out_series
-
-        # store_pandas['records_dataframe'] = out_record_df
-        # store_pandas.close()
+        store_pandas['records_dataframe'] = out_record_df
+        store_pandas.close()
         
-        # print('    done writing pandas variables to HDF file.')
-        # # for (aVariableIndex, aVariableData) in enumerate(variableData):
-        # #     aVariableData['']
+        print('    done writing pandas variables to HDF file.')
+        # for (aVariableIndex, aVariableData) in enumerate(variableData):
+        #     aVariableData['']
             
 
-        # # Build the corresponding GUI objects
-        # print('building container array...')
-        # ## TODO: defer until needed? Some might be filtered out anyway.
-        # built_model_view_container_array = []
-        # for (index, aRecord) in enumerate(labjackEventRecords):
-        #     aGuiView = aRecord.get_gui_view(aRecord, parent=None)
-        #     aModelViewContainer = ModelViewContainer(aRecord, aGuiView)
-        #     built_model_view_container_array.append(aModelViewContainer)
+        # Build the corresponding GUI objects
+        print('building container array...')
+        ## TODO: defer until needed? Some might be filtered out anyway.
+        built_model_view_container_array = []
+        for (index, aRecord) in enumerate(labjackEventRecords):
+            aGuiView = aRecord.get_gui_view(aRecord, parent=None)
+            aModelViewContainer = ModelViewContainer(aRecord, aGuiView)
+            built_model_view_container_array.append(aModelViewContainer)
 
-        # # labjackEvents = [FilesystemNeuroPyEvent_Record.get_gui_view(aRecord, parent=None) for aRecord in labjackEventRecords]
-        # print('done building container array.')
+        # labjackEvents = [FilesystemDataEvent_Record.get_gui_view(aRecord, parent=None) for aRecord in labjackEventRecords]
+        print('done building container array.')
 
-        # # return (dateTimes, onesEventFormatDataArray, variableData, labjackEvents)
-        # return (dateTimes, built_model_view_container_array, phoServerFormatArgs)
+        # return (dateTimes, onesEventFormatDataArray, variableData, labjackEvents)
+        return (dateTimes, built_model_view_container_array, phoServerFormatArgs)

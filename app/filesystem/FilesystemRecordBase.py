@@ -4,12 +4,29 @@ from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget,QTableWidgetItem
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
+from pathlib import Path # for discover_data_files
 
 from GUI.Model.TrackType import TrackType
 from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent, PhoEvent
 
 # FilesystemRecordBase.py
 # from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemDataEvent_Record, FilesystemLabjackEvent_Record
+
+def discover_data_files(basedir: Path, file_extension='.mat', recursive=True):
+    """ By default it attempts to find the all *.mat files in the root of this basedir
+    Example:
+        basedir: Path(r'~/data/Bapun/Day5TwoNovel')
+        session_name: 'RatS-Day5TwoNovel-2020-12-04_07-55-09'
+    """
+    if isinstance(basedir, str):
+        basedir = Path(basedir) # convert to Path object if not already one.
+    if recursive:
+        glob_pattern = f"**/*{file_extension}"
+    else:
+        glob_pattern = f"*{file_extension}"
+    found_files = sorted(basedir.glob(glob_pattern))
+    return found_files # 'RatS-Day5TwoNovel-2020-12-04_07-55-09'
+
 
 
 class DataFileTrackTypeMixin(object):
@@ -27,7 +44,7 @@ class FilesystemRecordBase(DataFileTrackTypeMixin, QObject):
         super().__init__(parent=parent)
 
 
-""" FilesystemDataEvent_Record: for labjack events loaded from a labjack data file
+""" FilesystemDataEvent_Record: for general data events loaded from a data file
 
 """
 class FilesystemDataEvent_Record(FilesystemRecordBase):
