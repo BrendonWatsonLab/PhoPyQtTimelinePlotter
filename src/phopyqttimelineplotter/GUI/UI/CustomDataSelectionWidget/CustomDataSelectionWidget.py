@@ -7,6 +7,8 @@ from pathlib import Path
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 # silx GUI:
+import silx.io
+from silx.io.utils import H5Type, get_h5_class, get_h5py_class # not sure which to use
 from silx.gui import qt
 from silx.gui.dialog.GroupDialog import GroupDialog
 
@@ -77,16 +79,31 @@ class CustomDataSelectionWidget(qt.QWidget):
         self.filenames_list = [Path(filename) for filename in filenames_strs_list]
 
         self.ui.select_group_dialog = None
-        self.ui.toolButton.clicked.connect(self.on_click_select_group_button)
+        
+        # Setup timestamps field:
+        self.ui.toolButton.clicked.connect(lambda is_checked, v_name='t': self.on_click_select_group_button(is_checked, variable_name=v_name))
         self.ui.lineEdit.setText("")
+        
+        # Setup x/y widget:
+        
+        # x:
+        # self.ui.widget.ui.toolButton.clicked.connect(self.on_click_select_group_button)
+        self.ui.widget.ui.toolButton.clicked.connect(lambda is_checked, v_name='x': self.on_click_select_group_button(is_checked, variable_name=v_name))
+        self.ui.widget.ui.lineEdit.setText("")
+
+        # y:
+        # self.ui.widget.ui.toolButton_2.clicked.connect(self.on_click_select_group_button)
+        self.ui.widget.ui.toolButton_2.clicked.connect(lambda is_checked, v_name='y': self.on_click_select_group_button(is_checked, variable_name=v_name))
+        self.ui.widget.ui.lineEdit_2.setText("")
+        
 
     def __str__(self):
         return
 
-    def on_click_select_group_button(self):
-        print(f"on_click_select_group_button")
-        print(f"self is QWidget: {isinstance(self, QtWidgets.QWidget)}")
-        self.ui.select_group_dialog = GroupDialog(parent=self)
+    def on_click_select_group_button(self, *args, variable_name=None):
+        print(f"on_click_select_group_button(*args: {args}, variable_name: {variable_name})")
+        # print(f"self is QWidget: {isinstance(self, QtWidgets.QWidget)}")
+        self.ui.select_group_dialog = GroupDialog(parent=self, allowed_selection_types=[H5Type.DATASET, H5Type.GROUP, H5Type.FILE])
         # self.ui.select_group_dialog = GroupDialog()
         # dialog.addFile(str(filenames_list[0]))
         [
@@ -100,12 +117,27 @@ class CustomDataSelectionWidget(qt.QWidget):
             )
             print("File path: %s" % selected_timestamp_data_url.file_path())
             print("HDF5 group path : %s " % selected_timestamp_data_url.data_path())
-            self.ui.lineEdit.setText(f"{selected_timestamp_data_url.data_path()}")
-
+            # self.ui.lineEdit.setText(f"{selected_timestamp_data_url.data_path()}")
+            self.on_update_variable(variable_name=variable_name, value=f"{selected_timestamp_data_url.data_path()}")
         else:
             print("Operation cancelled :(")
 
+    def on_update_variable(self, variable_name, value):
+        lineEdit = self._get_variable_lineEdit(variable_name=variable_name)
+        lineEdit.setText(value)
 
+        
+    def _get_variable_lineEdit(self, variable_name):
+        """ returns the lineEdit control for the named variable """
+        if variable_name == 't':
+            return self.ui.lineEdit
+        elif variable_name == 'x':
+            return self.ui.widget.ui.lineEdit
+        elif variable_name == 'y':
+            return self.ui.widget.ui.lineEdit_2
+        else:
+            raise NotImplementedError
+    
 ## Start Qt event loop
 if __name__ == "__main__":
     # import pyqtgraph as pg
