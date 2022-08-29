@@ -16,7 +16,7 @@ from sqlalchemy import and_, or_
 # from app.database.entry_models.db_model_extension import ExVideoFile
 
 from app.filesystem.FilesystemRecordBase import *
-from app.filesystem.LabjackData.LabjackFilesystemLoadingMixin import LabjackEventFile, LabjackFilesystemLoader
+from app.filesystem.LabjackData.LabjackFilesystemLoadingMixin import LabjackFilesystemLoader
 
 from GUI.Model.ModelViewContainer import ModelViewContainer
 from GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, TrackCache, TrackFilterBase

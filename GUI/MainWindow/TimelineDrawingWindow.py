@@ -194,7 +194,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
 
 
         self.labjackDataFilesystemLoader = LabjackFilesystemLoader([], parent=self)
-        self.labjackDataFilesystemLoader.loadingLabjackDataFilesComplete.connect(self.on_labjack_files_loading_complete)
+        self.labjackDataFilesystemLoader.loadingDataFilesComplete.connect(self.on_labjack_files_loading_complete)
         self.activeGlobalTimelineTimesChanged.connect(self.labjackDataFilesystemLoader.on_active_global_timeline_times_changed)
 
         # Update the data model, and set up the timeline totalStartTime, totalEndTime, totalDuration from the loaded videos if we're in that enum mode.

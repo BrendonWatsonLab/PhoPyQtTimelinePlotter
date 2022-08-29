@@ -87,10 +87,10 @@ Loads the BaseData event files
 class BaseDataFilesystemLoader(QObject):
 
     # foundFilesUpdated = pyqtSignal()
-    targetBaseDataDataFilePathsUpdated = pyqtSignal()
+    targetDataFilePathsUpdated = pyqtSignal()
 
     dataFileLoaded = pyqtSignal()
-    loadingBaseDataDataFilesComplete = pyqtSignal()
+    loadingDataFilesComplete = pyqtSignal()
 
 
     def __init__(self, dataFilePaths, parent=None):
@@ -98,7 +98,7 @@ class BaseDataFilesystemLoader(QObject):
         self.cache = dict()
         self.dataFilePaths = dataFilePaths
 
-        self.loadedBaseDataFiles = []
+        self.loadedDataFiles = []
         self.pending_operation_status = PendingFilesystemOperation(OperationTypes.NoOperation, 0, 0, parent=self)
         self.videoStartDates = []
         self.videoEndDates = []
@@ -124,7 +124,7 @@ class BaseDataFilesystemLoader(QObject):
             return False
         
         # If it's in the array of already completed video files, skip it as well
-        if (newBaseDataFilePath in self.loadedBaseDataFiles):
+        if (newBaseDataFilePath in self.loadedDataFiles):
             print("WARNING: {0} is already in loadedBaseDataFiles! It's already been processed, so we're not adding it again.".format(str(newBaseDataFilePath)))
             return False
 
@@ -137,7 +137,7 @@ class BaseDataFilesystemLoader(QObject):
         if (len(self.dataFilePaths)>0):
             self.load_data_files(self.dataFilePaths)
     
-        self.targetBaseDataDataFilePathsUpdated.emit()
+        self.targetDataFilePathsUpdated.emit()
 
     def reload_data(self, restricted_file_paths=None):
         print("BaseDataFilesystemLoader.reload_data(...)")
@@ -147,7 +147,7 @@ class BaseDataFilesystemLoader(QObject):
         if (len(restricted_file_paths)>0):
             self.load_data_files(restricted_file_paths)
 
-        self.targetBaseDataDataFilePathsUpdated.emit()
+        self.targetDataFilePathsUpdated.emit()
 
     # # TODO: Integrate with the cache
     # def loadBaseDataFile(self, aBaseDataFilePath, videoStartDates, videoEndDates):
@@ -196,7 +196,7 @@ class BaseDataFilesystemLoader(QObject):
             pass
 
         # Add the current video file path to the loaded files
-        self.loadedBaseDataFiles.append(aFoundBaseDataDataFile)
+        self.loadedDataFiles.append(aFoundBaseDataDataFile)
         
         # updated!
         self.pending_operation_status.update(n)
@@ -236,8 +236,7 @@ class BaseDataFilesystemLoader(QObject):
 
             print('Loading complete... setting loaded values')
             # Cache the loaded values into the BaseDataEventFile object.
-            # outEventFileObj.set_loaded_values(dateTimes, [], [], dataEventContainers, phoServerFormatArgs)
-            outEventFileObj.set_loaded_values(dateTimes, [], [], dataEventContainers, None)
+            outEventFileObj.set_loaded_values(dateTimes, [], dataEventContainers, None)
             print('done updating cache...')
             
             if (not (aFoundBaseDataDataFile in active_cache.keys())):
@@ -270,7 +269,7 @@ class BaseDataFilesystemLoader(QObject):
         for aFinishedVideoFilePath in finished_loaded_data_files:
             self.dataFilePaths.remove(aFinishedVideoFilePath)
 
-        self.loadingBaseDataDataFilesComplete.emit()
+        self.loadingDataFilesComplete.emit()
 
 
 

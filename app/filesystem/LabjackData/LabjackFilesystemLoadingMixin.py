@@ -81,20 +81,36 @@ class LabjackEventFile(BaseDataEventFile):
         self.onesEventFormatDataArray = onesEventFormatDataArray # set the custom values
         
 
-class LabjackFilesystemLoader(QObject):
+class LabjackFilesystemLoader(BaseDataFilesystemLoader):
     """ LabjackFilesystemLoader: this object tries to find Labjack-exported data files in the filesystem and make them accessible in memory
     Loads the Labjack event files
+    
+    Inherited Signals:
+        targetDataFilePathsUpdated = pyqtSignal()
+        dataFileLoaded = pyqtSignal()
+        loadingDataFilesComplete = pyqtSignal()
+    
     """
-    # foundFilesUpdated = pyqtSignal()
-    targetLabjackDataFilePathsUpdated = pyqtSignal()
-
-    labjackDataFileLoaded = pyqtSignal()
-    loadingLabjackDataFilesComplete = pyqtSignal()
-
-
+    
+    @property
+    def labjackFilePaths(self):
+        """The labjackFilePaths property."""
+        return self.dataFilePaths
+    @labjackFilePaths.setter
+    def labjackFilePaths(self, value):
+        self.dataFilePaths = value
+    
+    @property
+    def loadedLabjackFiles(self):
+        """The loadedLabjackFiles property."""
+        return self.loadedDataFiles
+    @loadedLabjackFiles.setter
+    def loadedLabjackFiles(self, value):
+        self.loadedDataFiles = value
+    
     def __init__(self, labjackFilePaths, parent=None):
-        super(LabjackFilesystemLoader, self).__init__(parent=parent) # Call the inherited classes __init__ method
-        self.cache = dict()
+        super(LabjackFilesystemLoader, self).__init__(labjackFilePaths, parent=parent) # Call the inherited classes __init__ method
+        
         self.labjackFilePaths = labjackFilePaths
 
         self.loadedLabjackFiles = []
@@ -136,7 +152,7 @@ class LabjackFilesystemLoader(QObject):
         if (len(self.labjackFilePaths)>0):
             self.load_labjack_data_files(self.labjackFilePaths)
     
-        self.targetLabjackDataFilePathsUpdated.emit()
+        self.targetDataFilePathsUpdated.emit()
 
     def reload_data(self, restricted_labjack_file_paths=None):
         print("LabjackFilesystemLoader.reload_data(...)")
@@ -146,7 +162,7 @@ class LabjackFilesystemLoader(QObject):
         if (len(restricted_labjack_file_paths)>0):
             self.load_labjack_data_files(restricted_labjack_file_paths)
 
-        self.targetLabjackDataFilePathsUpdated.emit()
+        self.targetDataFilePathsUpdated.emit()
 
     # # TODO: Integrate with the cache
     # def loadLabjackFile(self, aLabjackFilePath, videoStartDates, videoEndDates):
@@ -199,7 +215,7 @@ class LabjackFilesystemLoader(QObject):
         
         # updated!
         self.pending_operation_status.update(n)
-        self.labjackDataFileLoaded.emit()
+        self.dataFileLoaded.emit()
         # print("%d%% done" % n)
 
 
@@ -269,10 +285,7 @@ class LabjackFilesystemLoader(QObject):
         for aFinishedVideoFilePath in finished_loaded_labjack_data_files:
             self.labjackFilePaths.remove(aFinishedVideoFilePath)
 
-        self.loadingLabjackDataFilesComplete.emit()
-
-
-
+        self.loadingDataFilesComplete.emit()
 
 
 
@@ -281,15 +294,6 @@ class LabjackFilesystemLoader(QObject):
         self.videoStartDates = np.array(new_start_dates)
         self.videoEndDates = np.array(new_end_dates)
         self.reload_on_labjack_paths_changed()
-
-
-    @pyqtSlot(datetime, datetime, timedelta)
-    def on_active_global_timeline_times_changed(self, totalStartTime, totalEndTime, totalDuration):
-        # print("ReferenceMarkerManager.on_active_global_timeline_times_changed({0}, {1}, {2})".format(str(totalStartTime), str(totalEndTime), str(totalDuration)))
-        # self.totalStartTime = totalStartTime
-        # self.totalEndTime = totalEndTime
-        # self.totalDuration = totalDuration
-        return
 
 
     ## Static Methods:
