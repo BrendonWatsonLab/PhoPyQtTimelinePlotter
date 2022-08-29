@@ -10,7 +10,7 @@ import h5py as h5py
 import numpy as np
 import pandas as pd
 import scipy.io as sio
-from app.filesystem.FilesystemRecordBase import FilesystemLabjackEvent_Record
+from phopyqttimelineplotter.app.filesystem.FilesystemRecordBase import FilesystemLabjackEvent_Record
 from PyQt5.QtCore import QEvent, QObject, Qt, pyqtSignal
 
 from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent import (
@@ -20,8 +20,8 @@ from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent import (
 
 # Copied from "phoPythonVideoFileParser" project
 
-# from app.filesystem.LabjackData.LabjackEventsLoader import loadLabjackDataFromPhoServerFormat, loadLabjackDataFromMatlabFormat, labjack_variable_names, labjack_variable_colors_dict, labjack_variable_indicies_dict, labjack_variable_event_type, labjack_variable_port_location, writeLinesToCsvFile
-# from app.filesystem.LabjackData.LabjackEventsLoader import LabjackEventsLoader, PhoServerFormatArgs
+# from phopyqttimelineplotter.app.filesystem.LabjackData.LabjackEventsLoader import loadLabjackDataFromPhoServerFormat, loadLabjackDataFromMatlabFormat, labjack_variable_names, labjack_variable_colors_dict, labjack_variable_indicies_dict, labjack_variable_event_type, labjack_variable_port_location, writeLinesToCsvFile
+# from phopyqttimelineplotter.app.filesystem.LabjackData.LabjackEventsLoader import LabjackEventsLoader, PhoServerFormatArgs
 
 
 class PhoServerFormatArgs(QObject):

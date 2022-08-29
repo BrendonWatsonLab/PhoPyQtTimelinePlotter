@@ -4,12 +4,12 @@ import sys
 import sqlalchemy as db
 
 # Behaviors:
-from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
-from app.database.entry_models.DatabaseBase import Base, metadata
+from phopyqttimelineplotter.app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
+from phopyqttimelineplotter.app.database.entry_models.DatabaseBase import Base, metadata
 
 # from db_model import Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, \
 #     ExperimentalConfigurationEvent, VideoFile, Base
-from app.database.entry_models.db_model import (
+from phopyqttimelineplotter.app.database.entry_models.db_model import (
     Animal,
     BehavioralBox,
     Cohort,
@@ -22,8 +22,8 @@ from app.database.entry_models.db_model import (
     Subcontext,
     TimestampedAnnotation,
 )
-from app.database.entry_models.db_model_extension import ExVideoFile
-from app.database.utility_functions import *
+from phopyqttimelineplotter.app.database.entry_models.db_model_extension import ExVideoFile
+from phopyqttimelineplotter.app.database.utility_functions import *
 from sqlalchemy.orm import joinedload, selectinload, sessionmaker
 
 # For convert function

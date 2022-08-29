@@ -15,4 +15,4 @@ Base = declarative_base(metadata=meta)
 metadata = Base.metadata
 
 ## Import Statement:
-# from app.database.entry_models.DatabaseBase import Base, metadata
+# from phopyqttimelineplotter.app.database.entry_models.DatabaseBase import Base, metadata

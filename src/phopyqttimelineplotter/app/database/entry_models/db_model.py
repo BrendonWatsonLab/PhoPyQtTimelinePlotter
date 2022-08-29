@@ -2,8 +2,8 @@
 from datetime import datetime
 from pathlib import Path
 
-from app.database.entry_models.DatabaseBase import Base, metadata
-from app.filesystem.VideoUtils import FoundVideoFileResult, VideoParsedResults
+from phopyqttimelineplotter.app.database.entry_models.DatabaseBase import Base, metadata
+from phopyqttimelineplotter.app.filesystem.VideoUtils import FoundVideoFileResult, VideoParsedResults
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtGui import QBrush, QColor, QFont, QPainter, QPen
 from PyQt5.QtWidgets import (
@@ -49,8 +49,8 @@ from phopyqttimelineplotter.GUI.Model.TrackType import TrackType
 from phopyqttimelineplotter.GUI.Model.Videos import ExperimentContextInfo, VideoInfo
 
 ## INCLUDES:
-# from app.database.entry_models.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, CategoricalDurationLabel, VideoFile
-# from app.database.entry_models.db_model import ReferenceBoxExperCohortAnimalMixin, StartEndDatetimeMixin
+# from phopyqttimelineplotter.app.database.entry_models.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, CategoricalDurationLabel, VideoFile
+# from phopyqttimelineplotter.app.database.entry_models.db_model import ReferenceBoxExperCohortAnimalMixin, StartEndDatetimeMixin
 
 # (Animal, BehavioralBox, Context, Experiment, Labjack, FileParentFolder, StaticFileExtension, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, VideoFile)
 

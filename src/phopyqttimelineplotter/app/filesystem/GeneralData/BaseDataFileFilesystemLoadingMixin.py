@@ -11,22 +11,22 @@ from pathlib import Path
 import matplotlib.colors as mcolors
 import numpy as np
 import pandas as pd
-from app.filesystem.FilesystemOperations import (
+from phopyqttimelineplotter.app.filesystem.FilesystemOperations import (
     OperationTypes,
     PendingFilesystemOperation,
 )
-from app.filesystem.FilesystemRecordBase import (
+from phopyqttimelineplotter.app.filesystem.FilesystemRecordBase import (
     FilesystemDataEvent_Record,
     FilesystemRecordBase,
 )
-from app.filesystem.VideoUtils import (
+from phopyqttimelineplotter.app.filesystem.VideoUtils import (
     CachedFileSource,
     FoundVideoFileResult,
     VideoParsedResults,
     findVideoFiles,
 )
-from app.filesystem.Workers.FileMetadataWorkers import FileMetadataWorker
-from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
+from phopyqttimelineplotter.app.filesystem.Workers.FileMetadataWorkers import FileMetadataWorker
+from phopyqttimelineplotter.app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import (
     QDir,
@@ -71,10 +71,10 @@ from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import (
     AbstractDatabaseAccessingQObject,
 )
 
-# from app.filesystem.BaseDataEventsLoader import BaseDataEventsLoader, PhoServerFormatArgs
+# from phopyqttimelineplotter.app.filesystem.BaseDataEventsLoader import BaseDataEventsLoader, PhoServerFormatArgs
 
 
-# from app.filesystem.BaseDataFilesystemLoadingMixin import BaseDataEventFile, BaseDataFilesystemLoader
+# from phopyqttimelineplotter.app.filesystem.BaseDataFilesystemLoadingMixin import BaseDataEventFile, BaseDataFilesystemLoader
 
 
 """ BaseDataEventFile: a single imported data file containing one or more BaseData events.

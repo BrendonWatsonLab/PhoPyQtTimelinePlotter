@@ -13,7 +13,7 @@ from PyQt5.QtCore import Qt, QObject, QEvent, pyqtSignal, pyqtSlot, QRunnable
 
 
 ## IMPORT:
-# from app.filesystem.Workers.VideoFilesystemWorkers import FilesystemWorkersBase, FilesystemWorkersBaseSignals
+# from phopyqttimelineplotter.app.filesystem.Workers.VideoFilesystemWorkers import FilesystemWorkersBase, FilesystemWorkersBaseSignals
 
 
 # https://doc.qt.io/archives/qq/qq27-responsive-guis.html#solvingaproblemstepbystep

@@ -10,27 +10,27 @@ from pathlib import Path
 import matplotlib.colors as mcolors
 import numpy as np
 import pandas as pd
-from app.filesystem.FilesystemOperations import (
+from phopyqttimelineplotter.app.filesystem.FilesystemOperations import (
     OperationTypes,
     PendingFilesystemOperation,
 )
-from app.filesystem.FilesystemRecordBase import FilesystemLabjackEvent_Record
-from app.filesystem.GeneralData.BaseDataFileFilesystemLoadingMixin import (
+from phopyqttimelineplotter.app.filesystem.FilesystemRecordBase import FilesystemLabjackEvent_Record
+from phopyqttimelineplotter.app.filesystem.GeneralData.BaseDataFileFilesystemLoadingMixin import (
     BaseDataEventFile,
     BaseDataFilesystemLoader,
 )
-from app.filesystem.LabjackData.LabjackEventsLoader import (
+from phopyqttimelineplotter.app.filesystem.LabjackData.LabjackEventsLoader import (
     LabjackEventsLoader,
     PhoServerFormatArgs,
 )
-from app.filesystem.VideoUtils import (
+from phopyqttimelineplotter.app.filesystem.VideoUtils import (
     CachedFileSource,
     FoundVideoFileResult,
     VideoParsedResults,
     findVideoFiles,
 )
-from app.filesystem.Workers.FileMetadataWorkers import FileMetadataWorker
-from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
+from phopyqttimelineplotter.app.filesystem.Workers.FileMetadataWorkers import FileMetadataWorker
+from phopyqttimelineplotter.app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import (
     QDir,
@@ -75,7 +75,7 @@ from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import (
     AbstractDatabaseAccessingQObject,
 )
 
-# from app.filesystem.LabjackData.LabjackFilesystemLoadingMixin import LabjackEventFile, LabjackFilesystemLoader
+# from phopyqttimelineplotter.app.filesystem.LabjackData.LabjackFilesystemLoadingMixin import LabjackEventFile, LabjackFilesystemLoader
 
 
 # from pyqtgraph import ProgressDialog

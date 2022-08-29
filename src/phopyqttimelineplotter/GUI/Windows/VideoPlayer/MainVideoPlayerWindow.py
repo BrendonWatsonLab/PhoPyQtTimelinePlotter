@@ -20,11 +20,11 @@ from PyQt5.QtWidgets import (
 if platform.system() == "Darwin":  # for MacOS
     from PyQt5.QtWidgets import QMacCocoaViewContainer
 
-from app.filesystem.VideoPreviewThumbnailGeneratingMixin import (
+from phopyqttimelineplotter.app.filesystem.VideoPreviewThumbnailGeneratingMixin import (
     VideoPreviewThumbnailGenerator,
     VideoThumbnail,
 )
-from app.model import TimestampDelta, TimestampModel, ToggleButtonModel
+from phopyqttimelineplotter.app.model import TimestampDelta, TimestampModel, ToggleButtonModel
 from lib import vlc
 from PyQt5.QtCore import (
     QDir,

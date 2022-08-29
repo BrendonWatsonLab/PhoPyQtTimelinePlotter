@@ -23,7 +23,7 @@ fileConfig(config.config_file_name)
 target_metadata = None
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from app.database.entry_models.DatabaseBase import Base
+# from phopyqttimelineplotter.app.database.entry_models.DatabaseBase import Base
 # from DatabaseBase import Base
 # target_metadata = Base.metadata
 

@@ -4,12 +4,12 @@ from sqlalchemy.sql.sqltypes import NullType
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
-from app.database.entry_models.DatabaseBase import Base, metadata
+from phopyqttimelineplotter.app.database.entry_models.DatabaseBase import Base, metadata
 
 from PyQt5.QtGui import QColor
 
 ## Import Statement:
-# from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
+# from phopyqttimelineplotter.app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
 
 class Behavior(Base):
     __tablename__ = 'behaviors'

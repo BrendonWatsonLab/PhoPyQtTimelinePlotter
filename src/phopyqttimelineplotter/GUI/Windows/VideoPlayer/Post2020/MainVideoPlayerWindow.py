@@ -6,11 +6,11 @@ import sys
 import traceback
 
 import qtawesome as qta
-from app.filesystem.VideoPreviewThumbnailGeneratingMixin import (
+from phopyqttimelineplotter.app.filesystem.VideoPreviewThumbnailGeneratingMixin import (
     VideoPreviewThumbnailGenerator,
     VideoThumbnail,
 )
-from app.model import TimestampDelta, TimestampModel, ToggleButtonModel
+from phopyqttimelineplotter.app.model import TimestampDelta, TimestampModel, ToggleButtonModel
 from lib import vlc
 from PyQt5 import uic
 from PyQt5.QtCore import (

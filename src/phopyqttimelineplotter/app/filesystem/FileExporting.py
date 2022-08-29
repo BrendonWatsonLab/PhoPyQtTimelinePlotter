@@ -12,11 +12,11 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QStandardItemModel
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QRunnable, QUrl
 
-from app.database.entry_models.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, CategoricalDurationLabel, VideoFile
-from app.database.entry_models.db_model import ReferenceBoxExperCohortAnimalMixin, StartEndDatetimeMixin
+from phopyqttimelineplotter.app.database.entry_models.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, CategoricalDurationLabel, VideoFile
+from phopyqttimelineplotter.app.database.entry_models.db_model import ReferenceBoxExperCohortAnimalMixin, StartEndDatetimeMixin
 
 ## INCLUDES:
-# from app.filesystem.FileExporting import FileExportingMixin, FileExportFormat, FileExportOptions
+# from phopyqttimelineplotter.app.filesystem.FileExporting import FileExportingMixin, FileExportFormat, FileExportOptions
 
 
 class TimelineRecordJsonEncoder(json.JSONEncoder):

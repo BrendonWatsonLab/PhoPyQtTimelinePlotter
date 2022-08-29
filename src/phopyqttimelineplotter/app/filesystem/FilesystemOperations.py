@@ -7,7 +7,7 @@ from enum import Enum
 from PyQt5.QtCore import QObject
 
 # INCLUDES:
-# from app.filesystem.FilesystemOperations import OperationTypes, PendingFilesystemOperation
+# from phopyqttimelineplotter.app.filesystem.FilesystemOperations import OperationTypes, PendingFilesystemOperation
 
 
 class OperationTypes(Enum):

@@ -2,7 +2,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 
 import numpy as np
-from app.database.entry_models.db_model import (
+from phopyqttimelineplotter.app.database.entry_models.db_model import (
     CategoricalDurationLabel,
     Context,
     Subcontext,

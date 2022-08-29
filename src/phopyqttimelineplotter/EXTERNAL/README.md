@@ -48,14 +48,14 @@ conda create --name Py3PyQt5_Testing --clone Py3PyQt5
 ## app/filesystem/LabjackEventsLoader.py
 # LabjackEventType
 # LabjackEventsLoader
-#   from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemLabjackEvent_Record
+#   from phopyqttimelineplotter.app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemLabjackEvent_Record
 
 ## app/filesystem/LabjackFilesystemLoadingMixin.py
 # LabjackFilesystemLoader: this object tries to find Labjack-exported data files in the filesystem and make them accessible in memory
     # load_labjack_data_files(...): this is the main function that searches the listed paths for labjack data files, and then loads them into memory.
 # LabjackEventFile: a single imported data file containing one or more labjack events.
-#   from app.filesystem.LabjackData.LabjackEventsLoader import LabjackEventsLoader, PhoServerFormatArgs
-#   from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemLabjackEvent_Record
+#   from phopyqttimelineplotter.app.filesystem.LabjackData.LabjackEventsLoader import LabjackEventsLoader, PhoServerFormatArgs
+#   from phopyqttimelineplotter.app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemLabjackEvent_Record
 
 
 

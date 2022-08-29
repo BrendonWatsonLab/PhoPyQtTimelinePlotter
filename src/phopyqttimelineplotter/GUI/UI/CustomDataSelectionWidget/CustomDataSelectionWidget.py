@@ -29,10 +29,14 @@ from phopyqttimelineplotter.GUI.UI.CustomDataSelectionWidget.Uic_AUTOGEN_CustomD
 # from silx.gui.plot.StackView import StackViewMainWindow
 
 
-# from app.filesystem.FilesystemRecordBase import discover_data_files
+# from phopyqttimelineplotter.app.filesystem.FilesystemRecordBase import discover_data_files
 
 
 class CustomDataSelectionWidget(qt.QWidget):
+    
+    loadDataSelection = qt.pyqtSignal(object) # a dictionary
+    
+    
     def __init__(self, parent=None):
         super().__init__(parent=parent)  # Call the inherited classes __init__ method
         ## Setup Variables
@@ -207,6 +211,7 @@ class CustomDataSelectionWidget(qt.QWidget):
 
     def on_click_finalize_load(self, finalized_selected_data_dict):
         print(f"on_click_finalize_load(selected_data: {finalized_selected_data_dict})")
+        self.loadDataSelection.emit(finalized_selected_data_dict) # emit the signal
 
     def on_complete_finalized_load(self):
         print(f"on_complete_finalized_load")

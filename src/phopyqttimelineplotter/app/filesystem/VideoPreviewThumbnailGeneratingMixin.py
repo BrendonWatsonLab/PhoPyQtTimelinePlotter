@@ -6,27 +6,27 @@ from enum import Enum
 from pathlib import Path
 
 import cv2
-from app.database.entry_models.db_model import (
+from phopyqttimelineplotter.app.database.entry_models.db_model import (
     FileParentFolder,
     StaticFileExtension,
     VideoFile,
 )
-from app.filesystem.FilesystemOperations import (
+from phopyqttimelineplotter.app.filesystem.FilesystemOperations import (
     OperationTypes,
     PendingFilesystemOperation,
 )
-from app.filesystem.VideoConversionHelpers import (
+from phopyqttimelineplotter.app.filesystem.VideoConversionHelpers import (
     HandbrakeConversionQueue,
     save_handbrake_conversion_queue,
 )
-from app.filesystem.VideoUtils import (
+from phopyqttimelineplotter.app.filesystem.VideoUtils import (
     CachedFileSource,
     FoundVideoFileResult,
     VideoParsedResults,
     findVideoFiles,
 )
-from app.filesystem.Workers.FileMetadataWorkers import FileMetadataWorker
-from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
+from phopyqttimelineplotter.app.filesystem.Workers.FileMetadataWorkers import FileMetadataWorker
+from phopyqttimelineplotter.app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import (
     QDir,
@@ -69,7 +69,7 @@ from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import (
     AbstractDatabaseAccessingQObject,
 )
 
-# from app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoThumbnail, VideoPreviewThumbnailGenerator
+# from phopyqttimelineplotter.app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoThumbnail, VideoPreviewThumbnailGenerator
 
 
 class VideoThumbnail(QObject):

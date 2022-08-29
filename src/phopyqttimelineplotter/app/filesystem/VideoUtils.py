@@ -25,9 +25,9 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 # from hachoir.metadata import extractMetadata
 
 ## IMPORT:
-from app.Platform import PlatformOperatingSystem, PlatformConfiguration
-# from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult
-# from app.filesystem.VideoUtils import findDeeplabCutProducedOutputFiles, FoundDeeplabcutOutputFileResult
+from phopyqttimelineplotter.app.Platform import PlatformOperatingSystem, PlatformConfiguration
+# from phopyqttimelineplotter.app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult
+# from phopyqttimelineplotter.app.filesystem.VideoUtils import findDeeplabCutProducedOutputFiles, FoundDeeplabcutOutputFileResult
 
 # Basler emulation style:
 videoFileNameParsingRegex = re.compile(r'.*_(?P<date>\d{4}\d{2}\d{2})_(?P<time>\d{2}\d{2}\d{2}\d{3})')

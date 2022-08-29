@@ -4,12 +4,12 @@ import sys
 from datetime import datetime, timedelta, timezone
 
 import sqlalchemy as db
-from app.BehaviorsList import BehaviorInfoOptions, BehaviorsManager
-from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
-from app.database.entry_models.DatabaseBase import Base, metadata
+from phopyqttimelineplotter.app.BehaviorsList import BehaviorInfoOptions, BehaviorsManager
+from phopyqttimelineplotter.app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
+from phopyqttimelineplotter.app.database.entry_models.DatabaseBase import Base, metadata
 
 ## DATABASE MODELS:
-from app.database.entry_models.db_model import (
+from phopyqttimelineplotter.app.database.entry_models.db_model import (
     Animal,
     BehavioralBox,
     CategoricalDurationLabel,
@@ -23,10 +23,10 @@ from app.database.entry_models.db_model import (
     Subcontext,
     TimestampedAnnotation,
 )
-from app.database.entry_models.db_model_extension import ExVideoFile
-from app.database.utility_functions import *
+from phopyqttimelineplotter.app.database.entry_models.db_model_extension import ExVideoFile
+from phopyqttimelineplotter.app.database.utility_functions import *
 
-# from app.database.SqlAlchemyDatabase import create_connection
+# from phopyqttimelineplotter.app.database.SqlAlchemyDatabase import create_connection
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import QEvent, QObject, Qt, pyqtSignal
 from PyQt5.QtGui import QBrush, QColor, QFont, QPainter, QPalette, QPen

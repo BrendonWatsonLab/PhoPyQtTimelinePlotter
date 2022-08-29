@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 import numpy as np
-from app.database.entry_models.db_model import (
+from phopyqttimelineplotter.app.database.entry_models.db_model import (
     Animal,
     BehavioralBox,
     CategoricalDurationLabel,
@@ -20,17 +20,17 @@ from app.database.entry_models.db_model import (
     VideoFile,
 )
 
-# from app.database.SqliteEventsDatabase import load_video_events_from_database
-from app.database.SqlAlchemyDatabase import (
+# from phopyqttimelineplotter.app.database.SqliteEventsDatabase import load_video_events_from_database
+from phopyqttimelineplotter.app.database.SqlAlchemyDatabase import (
     create_TimestampedAnnotation,
     load_annotation_events_from_database,
     save_annotation_events_to_database,
 )
-from app.filesystem.FileExporting import FileExportingMixin, FileExportOptions
-from app.filesystem.LabjackData.LabjackFilesystemLoadingMixin import (
+from phopyqttimelineplotter.app.filesystem.FileExporting import FileExportingMixin, FileExportOptions
+from phopyqttimelineplotter.app.filesystem.LabjackData.LabjackFilesystemLoadingMixin import (
     LabjackFilesystemLoader,
 )
-from app.filesystem.VideoPreviewThumbnailGeneratingMixin import (
+from phopyqttimelineplotter.app.filesystem.VideoPreviewThumbnailGeneratingMixin import (
     VideoPreviewThumbnailGenerator,
 )
 from PyQt5 import QtGui, QtWidgets, uic

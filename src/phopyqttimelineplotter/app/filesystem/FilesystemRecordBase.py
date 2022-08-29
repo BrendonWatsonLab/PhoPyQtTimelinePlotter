@@ -27,7 +27,7 @@ from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent import (
 from phopyqttimelineplotter.GUI.Model.TrackType import TrackType
 
 # FilesystemRecordBase.py
-# from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemDataEvent_Record, FilesystemLabjackEvent_Record
+# from phopyqttimelineplotter.app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemDataEvent_Record, FilesystemLabjackEvent_Record
 
 
 def discover_data_files(basedir: Path, file_extension=".mat", recursive=True):

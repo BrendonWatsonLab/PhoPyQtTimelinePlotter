@@ -9,23 +9,23 @@ from pathlib import Path
 import matplotlib.colors as mcolors
 import numpy as np
 import pandas as pd
-from app.filesystem.FilesystemOperations import (
+from phopyqttimelineplotter.app.filesystem.FilesystemOperations import (
     OperationTypes,
     PendingFilesystemOperation,
 )
-from app.filesystem.FilesystemRecordBase import FilesystemLabjackEvent_Record
-from app.filesystem.LabjackData.LabjackEventsLoader import (
+from phopyqttimelineplotter.app.filesystem.FilesystemRecordBase import FilesystemLabjackEvent_Record
+from phopyqttimelineplotter.app.filesystem.LabjackData.LabjackEventsLoader import (
     LabjackEventsLoader,
     PhoServerFormatArgs,
 )
-from app.filesystem.Workers.FileMetadataWorkers import FileMetadataWorker
-from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
+from phopyqttimelineplotter.app.filesystem.Workers.FileMetadataWorkers import FileMetadataWorker
+from phopyqttimelineplotter.app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
 from PyQt5.QtCore import QObject, QThreadPool, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QColor
 
 from phopyqttimelineplotter.GUI.Model.ModelViewContainer import ModelViewContainer
 
-# from app.filesystem.GeneralDataFilesystemLoadingMixin import LabjackEventFile, GeneralDataFilesystemLoader
+# from phopyqttimelineplotter.app.filesystem.GeneralDataFilesystemLoadingMixin import LabjackEventFile, GeneralDataFilesystemLoader
 
 
 class LabjackEventFile(QObject):

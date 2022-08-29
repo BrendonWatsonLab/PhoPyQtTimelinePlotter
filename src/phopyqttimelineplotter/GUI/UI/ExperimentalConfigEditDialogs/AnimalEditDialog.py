@@ -3,11 +3,11 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 import numpy as np
-from app.database.DatabaseConnectionRef import (
+from phopyqttimelineplotter.app.database.DatabaseConnectionRef import (
     DatabaseConnectionRef,
     DatabasePendingItemsState,
 )
-from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
+from phopyqttimelineplotter.app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
 from PyQt5 import QtGui, QtWidgets, uic
 from PyQt5.QtCore import (
     QDir,

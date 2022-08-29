@@ -39,7 +39,7 @@ register_matplotlib_converters()
 
 
 import pyqtgraph as pg
-from app.database.SqlAlchemyDatabase import (
+from phopyqttimelineplotter.app.database.SqlAlchemyDatabase import (
     convert_TimestampedAnnotation,
     create_TimestampedAnnotation,
     modify_TimestampedAnnotation,

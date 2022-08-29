@@ -2,8 +2,8 @@
 from datetime import datetime
 from pathlib import Path
 
-from app.database.entry_models.DatabaseBase import Base, metadata
-from app.database.entry_models.db_model import (
+from phopyqttimelineplotter.app.database.entry_models.DatabaseBase import Base, metadata
+from phopyqttimelineplotter.app.database.entry_models.db_model import (
     Animal,
     BehavioralBox,
     Cohort,

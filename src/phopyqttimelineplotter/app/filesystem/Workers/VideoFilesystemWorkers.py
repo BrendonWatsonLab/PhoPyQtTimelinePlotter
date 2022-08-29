@@ -10,10 +10,10 @@ import json # Used to decode ffprobe output
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QObject, QEvent, pyqtSignal, pyqtSlot, QRunnable
 
-from app.filesystem.Workers.FilesystemWorkersBase import FilesystemWorkersBase, FilesystemWorkersBaseSignals
+from phopyqttimelineplotter.app.filesystem.Workers.FilesystemWorkersBase import FilesystemWorkersBase, FilesystemWorkersBaseSignals
 
 ## IMPORT:
-# from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
+# from phopyqttimelineplotter.app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
 
 ## VideoFilesystemWorker
 # class VideoFilesystemWorkerSignals(QObject):

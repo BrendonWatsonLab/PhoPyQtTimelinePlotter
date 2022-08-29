@@ -6,7 +6,7 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import sqlalchemy as db
-from app.database.DatabaseConnectionRef import DatabaseConnectionRef
+from phopyqttimelineplotter.app.database.DatabaseConnectionRef import DatabaseConnectionRef
 from PyQt5 import QtGui, QtWidgets, uic
 from PyQt5.QtCore import (
     QDir,

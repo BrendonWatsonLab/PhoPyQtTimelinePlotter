@@ -2,7 +2,7 @@ from pathlib import Path
 from datetime import datetime
 
 ## This file exists to extend the classes auto-generated in db_model.py
-from app.database.entry_models.db_model import VideoFile
+from phopyqttimelineplotter.app.database.entry_models.db_model import VideoFile
 
 class ExVideoFile(VideoFile):
 

@@ -13,7 +13,7 @@ from PyQt5.QtGui import QCursor
 from PyQt5.QtCore import QDir, QTimer, Qt, QModelIndex, QSortFilterProxyModel
 
 from lib import vlc
-from app.model import TimestampModel, ToggleButtonModel, TimestampDelta
+from phopyqttimelineplotter.app.model import TimestampModel, ToggleButtonModel, TimestampDelta
 
 """
 The software displays/plays a video file with variable speed and navigation settings.

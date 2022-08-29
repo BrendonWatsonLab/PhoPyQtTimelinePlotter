@@ -5,7 +5,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 
 import numpy as np
-from app.database.SqlAlchemyDatabase import (
+from phopyqttimelineplotter.app.database.SqlAlchemyDatabase import (
     convert_TimestampedAnnotation,
     create_TimestampedAnnotation,
     modify_TimestampedAnnotation,

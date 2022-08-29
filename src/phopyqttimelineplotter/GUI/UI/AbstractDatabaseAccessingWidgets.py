@@ -3,7 +3,7 @@
 import sys
 from datetime import datetime, timedelta, timezone
 
-from app.database.DatabaseConnectionRef import (
+from phopyqttimelineplotter.app.database.DatabaseConnectionRef import (
     DatabaseConnectionRef,
     DatabasePendingItemsState,
 )

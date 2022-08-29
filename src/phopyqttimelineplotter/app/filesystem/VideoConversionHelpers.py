@@ -4,7 +4,7 @@
 import json
 
 
-# from app.filesystem.VideoConversionHelpers import HandbrakeConversionQueue, save_handbrake_conversion_queue
+# from phopyqttimelineplotter.app.filesystem.VideoConversionHelpers import HandbrakeConversionQueue, save_handbrake_conversion_queue
 
 # @dataclass
 class HandbrakeConversionQueue:

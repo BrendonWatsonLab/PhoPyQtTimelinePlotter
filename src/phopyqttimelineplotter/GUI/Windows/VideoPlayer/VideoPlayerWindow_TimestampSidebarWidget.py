@@ -13,7 +13,7 @@ from PyQt5.QtGui import QCursor
 from PyQt5.QtCore import QDir, QTimer, Qt, QModelIndex, QSortFilterProxyModel, pyqtSignal, pyqtSlot
 
 from lib import vlc
-from app.model import TimestampModel, ToggleButtonModel, TimestampDelta
+from phopyqttimelineplotter.app.model import TimestampModel, ToggleButtonModel, TimestampDelta
 
 
 """ Classes belonging to the left sidebar (self.ui.timestampSidebarWidget)

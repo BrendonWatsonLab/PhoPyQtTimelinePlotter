@@ -7,7 +7,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 
 import numpy as np
-from app.BehaviorsList import BehaviorsManager
+from phopyqttimelineplotter.app.BehaviorsList import BehaviorsManager
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QBrush, QColor, QFont, QFontMetrics, QPainter, QPalette, QPen

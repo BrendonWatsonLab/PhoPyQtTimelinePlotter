@@ -3,7 +3,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 
-from app.filesystem.VideoPreviewThumbnailGeneratingMixin import (
+from phopyqttimelineplotter.app.filesystem.VideoPreviewThumbnailGeneratingMixin import (
     VideoPreviewThumbnailGenerator,
     VideoThumbnail,
 )

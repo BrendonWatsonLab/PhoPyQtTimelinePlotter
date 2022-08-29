@@ -5,8 +5,8 @@ from pathlib import Path
 
 import numpy as np
 import sqlalchemy as db
-from app.filesystem.FilesystemRecordBase import *  # Imports all known types for some reason?? TODO: is this needed?
-from app.filesystem.LabjackData.LabjackFilesystemLoadingMixin import (
+from phopyqttimelineplotter.app.filesystem.FilesystemRecordBase import *  # Imports all known types for some reason?? TODO: is this needed?
+from phopyqttimelineplotter.app.filesystem.LabjackData.LabjackFilesystemLoadingMixin import (
     LabjackFilesystemLoader,
 )
 from PyQt5 import QtGui, QtWidgets
@@ -21,10 +21,10 @@ from phopyqttimelineplotter.GUI.Model.TrackConfigs.AbstractTrackConfigs import (
     TrackFilterBase,
 )
 
-# from app.database.entry_models.DatabaseBase import Base, metadata
-# from app.database.entry_models.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, CategoricalDurationLabel, VideoFile
-# from app.database.entry_models.db_model import StaticFileExtension, FileParentFolder
-# from app.database.entry_models.db_model_extension import ExVideoFile
+# from phopyqttimelineplotter.app.database.entry_models.DatabaseBase import Base, metadata
+# from phopyqttimelineplotter.app.database.entry_models.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, CategoricalDurationLabel, VideoFile
+# from phopyqttimelineplotter.app.database.entry_models.db_model import StaticFileExtension, FileParentFolder
+# from phopyqttimelineplotter.app.database.entry_models.db_model_extension import ExVideoFile
 
 
 # from phopyqttimelineplotter.GUI.Model.TrackType import TrackType

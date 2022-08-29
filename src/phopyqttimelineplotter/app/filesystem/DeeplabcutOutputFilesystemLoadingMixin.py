@@ -7,12 +7,12 @@ from pathlib import Path
 import matplotlib.colors as mcolors
 import numpy as np
 import pandas as pd
-from app.filesystem.FilesystemOperations import (
+from phopyqttimelineplotter.app.filesystem.FilesystemOperations import (
     OperationTypes,
     PendingFilesystemOperation,
 )
-from app.filesystem.FilesystemRecordBase import FilesystemRecordBase
-from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
+from phopyqttimelineplotter.app.filesystem.FilesystemRecordBase import FilesystemRecordBase
+from phopyqttimelineplotter.app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import (
     QDir,
@@ -57,7 +57,7 @@ from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import (
     AbstractDatabaseAccessingQObject,
 )
 
-# from app.filesystem.DeeplabcutOutputFilesystemLoadingMixin import DeeplabCutOutputFileType, DeeplabcutEventFile, DeeplabcutFilesystemLoader
+# from phopyqttimelineplotter.app.filesystem.DeeplabcutOutputFilesystemLoadingMixin import DeeplabCutOutputFileType, DeeplabcutEventFile, DeeplabcutFilesystemLoader
 
 """ DeeplabCutOutputFileType: the different possible types of deeplabcut produced data files
 

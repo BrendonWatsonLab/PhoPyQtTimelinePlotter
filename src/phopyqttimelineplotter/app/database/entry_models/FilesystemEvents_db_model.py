@@ -4,12 +4,12 @@ from datetime import datetime
 from enum import Enum
 from pathlib import Path
 
-from app.database.entry_models.DatabaseBase import Base, metadata
-from app.database.entry_models.db_model import (
+from phopyqttimelineplotter.app.database.entry_models.DatabaseBase import Base, metadata
+from phopyqttimelineplotter.app.database.entry_models.db_model import (
     ReferenceBoxExperCohortAnimalMixin,
     StartEndDatetimeMixin,
 )
-from app.filesystem.VideoUtils import FoundVideoFileResult, VideoParsedResults
+from phopyqttimelineplotter.app.filesystem.VideoUtils import FoundVideoFileResult, VideoParsedResults
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtGui import QBrush, QColor, QFont, QPainter, QPen
 from PyQt5.QtWidgets import (
@@ -52,7 +52,7 @@ from phopyqttimelineplotter.GUI.Model.Videos import ExperimentContextInfo, Video
 # FilesystemEvents_db_model.py
 
 ## INCLUDES:
-# from app.database.entry_models.FilesystemEvents_db_model import LabjackVariable_EventTypes, LabjackVariable_DispenseTypes
+# from phopyqttimelineplotter.app.database.entry_models.FilesystemEvents_db_model import LabjackVariable_EventTypes, LabjackVariable_DispenseTypes
 
 
 class LabjackVariable_EventTypes(Enum):

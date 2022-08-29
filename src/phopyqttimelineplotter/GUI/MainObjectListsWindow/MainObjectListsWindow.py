@@ -8,26 +8,26 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from app.database.entry_models.db_model import (
+from phopyqttimelineplotter.app.database.entry_models.db_model import (
     FileParentFolder,
     StaticFileExtension,
     VideoFile,
 )
-from app.filesystem.DeeplabcutOutputFilesystemLoadingMixin import (
+from phopyqttimelineplotter.app.filesystem.DeeplabcutOutputFilesystemLoadingMixin import (
     DeeplabcutEventFile,
     DeeplabcutFilesystemLoader,
     DeeplabCutOutputFileType,
 )
-from app.filesystem.VideoConversionHelpers import (
+from phopyqttimelineplotter.app.filesystem.VideoConversionHelpers import (
     HandbrakeConversionQueue,
     save_handbrake_conversion_queue,
 )
-from app.filesystem.VideoFilesystemLoadingMixin import (
+from phopyqttimelineplotter.app.filesystem.VideoFilesystemLoadingMixin import (
     CachedVideoFileLoadingOptions,
     ParentDirectoryCache,
     VideoFilesystemLoader,
 )
-from app.filesystem.VideoUtils import (
+from phopyqttimelineplotter.app.filesystem.VideoUtils import (
     CachedFileSource,
     FoundVideoFileResult,
     VideoParsedResults,

@@ -2,7 +2,7 @@
 from pathlib import Path
 
 import numpy as np
-from app.filesystem.FilesystemRecordBase import *
+from phopyqttimelineplotter.app.filesystem.FilesystemRecordBase import *
 from PyQt5.QtCore import QEvent, QObject, QPoint, QRect, Qt, pyqtSignal
 
 from phopyqttimelineplotter.GUI.Model.ModelViewContainer import ModelViewContainer

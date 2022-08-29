@@ -6,7 +6,7 @@ import sys
 import traceback
 
 import qtawesome as qta
-from app.model import ToggleButtonModel
+from phopyqttimelineplotter.app.model import ToggleButtonModel
 from lib import vlc
 from PyQt5 import uic
 from PyQt5.QtCore import QDir, QModelIndex, QSortFilterProxyModel, Qt, QTimer

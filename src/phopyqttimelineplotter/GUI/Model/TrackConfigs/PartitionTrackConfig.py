@@ -5,8 +5,8 @@ from pathlib import Path
 
 import numpy as np
 import sqlalchemy as db
-from app.database.entry_models.DatabaseBase import Base, metadata
-from app.database.entry_models.db_model import (
+from phopyqttimelineplotter.app.database.entry_models.DatabaseBase import Base, metadata
+from phopyqttimelineplotter.app.database.entry_models.db_model import (
     Animal,
     BehavioralBox,
     CategoricalDurationLabel,
@@ -34,7 +34,7 @@ from phopyqttimelineplotter.GUI.Model.TrackConfigs.AbstractTrackConfigs import (
 )
 from phopyqttimelineplotter.GUI.Model.TrackType import TrackType
 
-# from app.database.entry_models.db_model_extension import ExVideoFile
+# from phopyqttimelineplotter.app.database.entry_models.db_model_extension import ExVideoFile
 
 
 # INCLUDES:

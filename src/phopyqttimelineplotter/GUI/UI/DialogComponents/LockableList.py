@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 import numpy as np
-from app.database.entry_models.DatabaseBase import Base, metadata
+from phopyqttimelineplotter.app.database.entry_models.DatabaseBase import Base, metadata
 from PyQt5 import QtGui, QtWidgets, uic
 from PyQt5.QtCore import (
     QDir,
