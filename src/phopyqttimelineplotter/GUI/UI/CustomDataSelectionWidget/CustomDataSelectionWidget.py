@@ -13,6 +13,7 @@ from silx.gui.dialog.GroupDialog import GroupDialog
 from silx.gui.widgets.ThreadPoolPushButton import (
     ThreadPoolPushButton,  # alternative: WaitingPushButton
 )
+from silx.io.url import DataUrl # DataUrl
 from silx.io.utils import H5Type, get_h5_class, get_h5py_class  # not sure which to use
 
 # C:\Users\pho\repos\PhoPyQtTimelinePlotter\app
@@ -97,9 +98,8 @@ class CustomDataSelectionWidget(qt.QWidget):
         # button = ThreadPoolPushButton(text="Load from paths")
         # button.setCallable(math.pow, 2, 16)
         # button.succeeded.connect(print) # python3
-        self.ui.btnFinalizeLoad.setCallable(
-            self.on_click_finalize_load, self.selected_data
-        )
+        # self.ui.btnFinalizeLoad.setCallable(self.on_click_finalize_load, self.selected_data)
+        self.ui.btnFinalizeLoad.setCallable(self.on_click_finalize_load, self.selected_data_nodes)
         self.ui.btnFinalizeLoad.succeeded.connect(self.on_complete_finalized_load)
 
         # Setup timestamps field:
@@ -131,10 +131,24 @@ class CustomDataSelectionWidget(qt.QWidget):
         self.ui.widget.ui.lineEdit_2.setText("")
 
     @property
+    def selected_data_nodes(self):
+        """The selected_data_nodes property."""
+        return self._selected_data
+    @selected_data_nodes.setter
+    def selected_data_nodes(self, value):
+        self._selected_data = value
+        
+    @property
+    def selected_data_urls(self):
+        """The selected_data_urls property."""
+        # return {var_name:GroupDialog.selectedUrlFromNode(self.selected_data_nodes.get(var_name, None), subgroupName='') for var_name in list(self.selected_data_nodes.keys())}
+        return {var_name:GroupDialog.selectedUrlFromNode(node, subgroupName='') for var_name, node in self.selected_data_nodes.items()}
+        
+        
+    @property
     def selected_data(self):
         """The selected_data property."""
         return self._selected_data
-
     @selected_data.setter
     def selected_data(self, value):
         self._selected_data = value
@@ -142,28 +156,15 @@ class CustomDataSelectionWidget(qt.QWidget):
     @property
     def are_all_variables_valid(self):
         """The are_all_variables_valid property."""
-        set_variables_dict = {
-            a_var_name: a_data_url
-            for a_var_name, a_data_url in self.selected_data
-            if a_data_url is not None
-        }
-        valid_only_variables_dict = {
-            a_var_name: a_data_url
-            for a_var_name, a_data_url in set_variables_dict
-            if a_data_url.is_valid()
-        }
-        are_all_valid = len(valid_only_variables_dict) == len(self.selected_data)
+        set_variables_dict = { a_var_name: a_data_url for a_var_name, a_data_url in self.selected_data_urls.items() if a_data_url is not None }
+        valid_only_variables_dict = { a_var_name: a_data_url for a_var_name, a_data_url in set_variables_dict.items() if a_data_url.is_valid() }
+        are_all_valid = len(valid_only_variables_dict) == len(self.selected_data_urls)
         return are_all_valid
 
     def on_click_select_group_button(self, *args, variable_name=None):
-        print(
-            f"on_click_select_group_button(*args: {args}, variable_name: {variable_name})"
-        )
+        print( f"on_click_select_group_button(*args: {args}, variable_name: {variable_name})" )
         # print(f"self is QWidget: {isinstance(self, QtWidgets.QWidget)}")
-        self.ui.select_group_dialog = GroupDialog(
-            parent=self,
-            allowed_selection_types=[H5Type.DATASET, H5Type.GROUP, H5Type.FILE],
-        )
+        self.ui.select_group_dialog = GroupDialog(parent=self, allowed_selection_types=[H5Type.DATASET, H5Type.GROUP, H5Type.FILE])
         # self.ui.select_group_dialog = GroupDialog()
         # dialog.addFile(str(filenames_list[0]))
         [
@@ -172,31 +173,36 @@ class CustomDataSelectionWidget(qt.QWidget):
         ]
         self.ui.select_group_dialog.show()
         if self.ui.select_group_dialog.exec():
+            selected_data_node_item = self.ui.select_group_dialog.getSelectedDataNode()
+            print(f"selected_data_node_item: {selected_data_node_item}")
+            self.on_update_variable(variable_name=variable_name, value=selected_data_node_item)            
+            # _selectedUrl = GroupDialog.selectedUrlFromNode(self._selectedNode, subgroupName=self._lineEditNewItem.text())
+
+            # URL object mode:
             selected_timestamp_data_url = (
                 self.ui.select_group_dialog.getSelectedDataUrl()
             )
             print(f"selected_timestamp_data_url: {selected_timestamp_data_url}")
             print("File path: %s" % selected_timestamp_data_url.file_path())
             print("HDF5 group path : %s " % selected_timestamp_data_url.data_path())
-            # self.ui.lineEdit.setText(f"{selected_timestamp_data_url.data_path()}")
-            self.on_update_variable(
-                variable_name=variable_name,
-                value=selected_timestamp_data_url,
-            )
+            self.on_update_variable(variable_name=variable_name, value=selected_timestamp_data_url)
         else:
             print("Operation cancelled :(")
 
     def on_update_variable(self, variable_name, value):
-        """value: DataUrl - selected_timestamp_data_url"""
+        """
+        value: DataUrl - selected_timestamp_data_url
+        value: now a silx.gui.hdf5._utils.H5Node
+        """
         self._selected_data[variable_name] = value
 
-        sanitized_path = str(value.data_path())
+        selected_timestamp_data_url = GroupDialog.selectedUrlFromNode(value, subgroupName='')
+        sanitized_path = str(selected_timestamp_data_url.data_path())
+        # sanitized_path = str(value.data_path())
         lineEdit = self._get_variable_lineEdit(variable_name=variable_name)
         lineEdit.setText(sanitized_path)
 
-        self.ui.btnFinalizeLoad.setEnabled(
-            self.are_all_variables_valid
-        )  # only enable the button if all are valid
+        self.ui.btnFinalizeLoad.setEnabled(self.are_all_variables_valid)  # only enable the button if all are valid
 
     def _get_variable_lineEdit(self, variable_name):
         """returns the lineEdit control for the named variable"""
@@ -217,6 +223,33 @@ class CustomDataSelectionWidget(qt.QWidget):
         print(f"on_complete_finalized_load")
 
 
+    @classmethod
+    def perform_load_data(cls, finalized_selected_data_dict, limitedVariablesToCreateEventsFor=None):
+        """ actually loads the data """
+        if limitedVariablesToCreateEventsFor is not None:
+            active_variable_names = limitedVariablesToCreateEventsFor
+
+        else:
+            # Otherwise load for all variables
+            active_variable_names = list(finalized_selected_data_dict.keys())
+            
+        numVariables = len(active_variable_names)
+        activeLoadedDataValuesDict = {var_name:None for var_name in active_variable_names}
+
+        for variableIndex in range(0, numVariables):
+            currVariableName = active_variable_names[variableIndex]
+            currVariableDataUrl = finalized_selected_data_dict[currVariableName]
+            assert currVariableDataUrl is not None
+            assert isinstance(currVariableDataUrl, DataUrl)
+            
+            ## Here we actually load the values:
+            currVariableDataValues = silx.io.get_data(currVariableDataUrl)
+            activeLoadedDataValuesDict[currVariableName] = currVariableDataValues
+        
+        return activeLoadedDataValuesDict
+    
+    
+            
 ## Start Qt event loop
 if __name__ == "__main__":
     # import pyqtgraph as pg
