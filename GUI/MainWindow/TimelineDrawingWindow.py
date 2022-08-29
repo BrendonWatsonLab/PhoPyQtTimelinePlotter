@@ -64,13 +64,13 @@ from GUI.Helpers.MouseTrackingThroughChildrenMixin import MouseTrackingThroughCh
 
 from GUI.Model.TrackType import TrackType, TrackStorageArray
 
-from app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoThumbnail, VideoPreviewThumbnailGenerator
-from app.filesystem.FileExporting import FileExportingMixin, FileExportFormat, FileExportOptions
+from app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoPreviewThumbnailGenerator
+from app.filesystem.FileExporting import FileExportingMixin, FileExportOptions
 
 from GUI.Model.TrackGroups import VideoTrackGroupSettings, VideoTrackGroup, TrackReference, TrackChildReference, VideoTrackGroupOwningMixin
 from GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
 
-from app.filesystem.LabjackData.LabjackFilesystemLoadingMixin import LabjackEventFile, LabjackFilesystemLoader
+from app.filesystem.LabjackData.LabjackFilesystemLoadingMixin import LabjackFilesystemLoader
 
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.

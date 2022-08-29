@@ -49,58 +49,37 @@ from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
 #                 raise Exception("Processing canceled by user")
 
 
+from app.filesystem.GeneralData.BaseDataFileFilesystemLoadingMixin import BaseDataEventFile, BaseDataFilesystemLoader
 
 
-
-class LabjackEventFile(QObject):
+class LabjackEventFile(BaseDataEventFile):
     """ LabjackEventFile: a single imported data file containing one or more labjack events.
 
     """
     def __init__(self, filePath, parent=None):
-        super().__init__(parent=parent)
-        self.filePath = filePath
-        self.dateTimes = []
+        super().__init__(filePath, parent=parent)
+        # Custom variables
         self.onesEventFormatDataArray = []
-        self.variableData = []
 
-        self.labjackContainerEvents = []
-        # self.labjackEvents = []
-
-        self.phoServerFormatArgs = None
-
-    def get_file_path(self):
-        return self.filePath
-
-    def get_dateTimes(self):
-        return self.dateTimes
-
-    def get_variable_data(self):
-        return self.variableData
-
-    # def get_labjack_events(self):
-    #     return self.labjackEvents
+    @property
+    def labjackContainerEvents(self):
+        """The labjackContainerEvents property."""
+        return self.dataContainerEvents
+    @labjackContainerEvents.setter
+    def labjackContainerEvents(self, value):
+        self.dataContainerEvents = value
 
     def get_labjack_container_events(self):
         return self.labjackContainerEvents
 
-
-    def get_parsed_dict(self):
-        if self.phoServerFormatArgs is None:
-            return None
-        else:
-            return self.phoServerFormatArgs.parsedFileInfoDict
-
-    def set_loaded_values(self, dateTimes, onesEventFormatDataArray, variableData, labjackEventsContainerArray, phoServerFormatArgs):
-        self.dateTimes = dateTimes
-        self.onesEventFormatDataArray = onesEventFormatDataArray
-        self.variableData = variableData
-        # self.labjackEvents = labjackEvents
-        self.labjackContainerEvents = labjackEventsContainerArray
-        self.phoServerFormatArgs = phoServerFormatArgs
+    # def get_labjack_events(self):
+    #     return self.labjackEvents
 
 
-# QThreadPool
-
+    def set_loaded_values(self, dateTimes, variableData, labjackEventsContainerArray, phoServerFormatArgs, onesEventFormatDataArray):
+        BaseDataEventFile.set_loaded_values(self, dateTimes, onesEventFormatDataArray, variableData, labjackEventsContainerArray, phoServerFormatArgs)
+        self.onesEventFormatDataArray = onesEventFormatDataArray # set the custom values
+        
 
 class LabjackFilesystemLoader(QObject):
     """ LabjackFilesystemLoader: this object tries to find Labjack-exported data files in the filesystem and make them accessible in memory
@@ -257,7 +236,7 @@ class LabjackFilesystemLoader(QObject):
             print('Loading complete... setting loaded values')
             # Cache the loaded values into the LabjackEventFile object.
             # outEventFileObj.set_loaded_values(dateTimes, [], [], labjackEventContainers, phoServerFormatArgs)
-            outEventFileObj.set_loaded_values(dateTimes, [], [], labjackEventContainers, None)
+            outEventFileObj.set_loaded_values(dateTimes, [], labjackEventContainers, None, [])
             print('done updating cache...')
             
             if (not (aFoundLabjackDataFile in active_cache.keys())):

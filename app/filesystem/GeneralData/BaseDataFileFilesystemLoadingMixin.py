@@ -34,24 +34,6 @@ from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
 # from app.filesystem.BaseDataFilesystemLoadingMixin import BaseDataEventFile, BaseDataFilesystemLoader
 
 
-# from pyqtgraph import ProgressDialog
-# import pyqtgraph as pg
-# class ProgressDialogDisplayingMixin(QObject):
-
-#     def __init__(self, filePath, parent=None):
-#         super().__init__(parent=parent)
-
-#         with ProgressDialog("Processing..", 0, 100, cancelText='Cancel', parent=self, busyCursor=True) as dlg:
-#             # do stuff
-#             self.get_data_files_loader().add_file_path(importFilePath)
-#             # dlg.setValue(i)   ## could also use dlg += 1
-#             dlg += 1
-#             if dlg.wasCanceled():
-#                 raise Exception("Processing canceled by user")
-
-
-
-
 """ BaseDataEventFile: a single imported data file containing one or more BaseData events.
 
 """
@@ -60,7 +42,6 @@ class BaseDataEventFile(QObject):
         super().__init__(parent=parent)
         self.filePath = filePath
         self.dateTimes = []
-        self.onesEventFormatDataArray = []
         self.variableData = []
 
         self.dataContainerEvents = []
@@ -90,16 +71,14 @@ class BaseDataEventFile(QObject):
         else:
             return self.phoServerFormatArgs.parsedFileInfoDict
 
-    def set_loaded_values(self, dateTimes, onesEventFormatDataArray, variableData, dataEventsContainerArray, phoServerFormatArgs):
+    def set_loaded_values(self, dateTimes, variableData, dataEventsContainerArray, phoServerFormatArgs):
         self.dateTimes = dateTimes
-        self.onesEventFormatDataArray = onesEventFormatDataArray
+        # self.onesEventFormatDataArray = onesEventFormatDataArray
         self.variableData = variableData
         # self.dataEvents = dataEvents
         self.dataContainerEvents = dataEventsContainerArray
         self.phoServerFormatArgs = phoServerFormatArgs
 
-
-# QThreadPool
 
 ## BaseDataFilesystemLoader: this object tries to find BaseData-exported data files in the filesystem and make them accessible in memory
 """
