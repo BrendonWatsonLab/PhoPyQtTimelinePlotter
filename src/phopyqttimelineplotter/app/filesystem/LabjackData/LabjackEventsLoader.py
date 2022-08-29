@@ -138,12 +138,8 @@ class LabjackEventsLoader(object):
     ]
 
     # Derived Dictionaries
-    labjack_variable_colors_dict = dict(
-        zip(labjack_variable_names, labjack_variable_colors)
-    )
-    labjack_variable_indicies_dict = dict(
-        zip(labjack_variable_names, labjack_variable_indicies)
-    )
+    labjack_variable_colors_dict = dict( zip(labjack_variable_names, labjack_variable_colors) )
+    labjack_variable_indicies_dict = dict( zip(labjack_variable_names, labjack_variable_indicies) )
 
     ## TODO: Generalize to work with analog sensors (like the new 1-9-2020 running wheel absolute rotary encoder)
     rx_stdout_data_line = re.compile(
