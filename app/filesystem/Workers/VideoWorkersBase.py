@@ -13,17 +13,19 @@ from PyQt5.QtCore import Qt, QObject, QEvent, pyqtSignal, pyqtSlot, QRunnable
 
 
 ## IMPORT:
-# from app.filesystem.Workers.VideoFilesystemWorkers import VideoWorkersBase, VideoWorkersBaseSignals
+# from app.filesystem.Workers.VideoFilesystemWorkers import FilesystemWorkersBase, FilesystemWorkersBaseSignals
 
 
 # https://doc.qt.io/archives/qq/qq27-responsive-guis.html#solvingaproblemstepbystep
 
 
-## VideoWorkersBase
-class VideoWorkersBaseSignals(QObject):
+## FilesystemWorkersBase
+class FilesystemWorkersBaseSignals(QObject):
     '''
     Defines the signals available from a running worker thread.
-
+    
+    Historical: Renamed from `VideoWorkersBaseSignals` to `FilesystemWorkersBaseSignals` since it was discovered to be used in non video specific operations (like finding Labjack data files)
+    
     Supported signals are:
 
     finished
@@ -45,9 +47,12 @@ class VideoWorkersBaseSignals(QObject):
     progress = pyqtSignal(list, int)
 
 
-class VideoWorkersBase(QRunnable):
+class FilesystemWorkersBase(QRunnable):
     '''
     Worker thread
+    
+    Historical: Renamed from `VideoWorkersBase` to `FilesystemWorkersBase` since it was discovered to be used in non video specific operations (like finding Labjack data files)
+    
 
     Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
 
@@ -60,14 +65,14 @@ class VideoWorkersBase(QRunnable):
     '''
 
     def __init__(self, search_paths, fn, *args, **kwargs):
-        super(VideoWorkersBase, self).__init__()
+        super(FilesystemWorkersBase, self).__init__()
 
         # Store constructor arguments (re-used for processing)
         self.search_paths = search_paths
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
-        self.signals = VideoWorkersBaseSignals()    
+        self.signals = FilesystemWorkersBaseSignals()    
 
         # Add the callback to our kwargs
         self.kwargs['progress_callback'] = self.signals.progress        
