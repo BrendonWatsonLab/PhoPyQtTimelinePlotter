@@ -2728,7 +2728,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             return
         else:
             print("Importing data file at path {}...".format(importFilePath))
-            self.get_labjack_data_files_loader().add_labjack_file_path(importFilePath)
+            self.get_labjack_data_files_loader().add_file_path(importFilePath)
 
     def get_labjack_data_files_loader(self):
         return self.labjackDataFilesystemLoader

@@ -227,7 +227,7 @@ class GeneralDataFilesystemLoader(QObject):
         currProgress = 0.0
         parsedFiles = 0
         numPendingFiles = len(active_general_data_file_paths)
-        self.pending_operation_status.restart(OperationTypes.FilesystemLabjackFileLoad, numPendingFiles)
+        self.pending_operation_status.restart(OperationTypes.FilesystemDataFileLoad, numPendingFiles)
 
         new_cache = dict()
         

@@ -201,12 +201,12 @@ class BaseDataFilesystemLoader(QObject):
         # updated!
         self.pending_operation_status.update(n)
         self.dataFileLoaded.emit()
-        # print("%d%% done" % n)
 
 
 
     """
     The main execution function
+    Must be overriden by specific file types to perform the loading action
     """
     def on_load_data_files_execute_thread(self, active_data_file_paths, progress_callback):
 
@@ -229,9 +229,6 @@ class BaseDataFilesystemLoader(QObject):
             outEventFileObj = BaseDataEventFile(aFoundBaseDataDataFile)
 
             # Call the static "loadBaseDataEventsFile(...) function:
-
-            # (dateTimes, onesEventFormatDataArray, variableData, dataEvents) = BaseDataFilesystemLoader.loadBaseDataFiles(aFoundBaseDataDataFile, self.videoStartDates, self.videoEndDates, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
-            # (dateTimes, onesEventFormatDataArray, variableData, dataEvents) = BaseDataFilesystemLoader.loadBaseDataEventsFile(aFoundBaseDataDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
             (dateTimes, dataEventContainers, phoServerFormatArgs) = BaseDataFilesystemLoader.loadBaseDataEventsFile(aFoundBaseDataDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False, should_filter_for_invalid_events=should_filter_for_invalid_events)
 
             print('Loading complete... setting loaded values')
@@ -248,7 +245,6 @@ class BaseDataFilesystemLoader(QObject):
                 print("WARNING: data file path {} already exists in the temporary cache. Updating its values...".format(str(aFoundBaseDataDataFile)))
                 active_cache[aFoundBaseDataDataFile] = outEventFileObj
                 pass
-
 
             parsedFiles = parsedFiles + 1
             # progress_callback.emit(active_data_file_paths, (parsedFiles*100/numPendingFiles))
