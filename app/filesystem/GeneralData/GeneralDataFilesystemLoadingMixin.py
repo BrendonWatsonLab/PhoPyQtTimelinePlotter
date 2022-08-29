@@ -25,26 +25,6 @@ from app.filesystem.FilesystemRecordBase import FilesystemLabjackEvent_Record
 # from app.filesystem.GeneralDataFilesystemLoadingMixin import LabjackEventFile, GeneralDataFilesystemLoader
 
 
-# from pyqtgraph import ProgressDialog
-# import pyqtgraph as pg
-# class ProgressDialogDisplayingMixin(QObject):
-
-#     def __init__(self, filePath, parent=None):
-#         super().__init__(parent=parent)
-
-#         with ProgressDialog("Processing..", 0, 100, cancelText='Cancel', parent=self, busyCursor=True) as dlg:
-#             # do stuff
-#             self.get_general_data_files_loader().add_labjack_file_path(importFilePath)
-#             # dlg.setValue(i)   ## could also use dlg += 1
-#             dlg += 1
-#             if dlg.wasCanceled():
-#                 raise Exception("Processing canceled by user")
-
-
-# GeneralDataFilesystemLoadingMixin
-
-
-
 class LabjackEventFile(QObject):
     """ LabjackEventFile: a single imported data file containing one or more labjack events. """
     def __init__(self, filePath, parent=None):

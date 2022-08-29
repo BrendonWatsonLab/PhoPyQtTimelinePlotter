@@ -397,32 +397,6 @@ class LabjackEventsLoader(object):
                         continue # Found bb_id:  Move on to the next part of the path
 
 
-        
-
-
-
-
-
-        # # Parent dir name:
-        # parent_dir_matches = LabjackEventsLoader.rx_combined_csv_file_path_name_subject_name.search(parentDirName)
-        # if ((parent_dir_matches is not None)):
-        #     if parent_dir_matches.group('subject_id'):
-        #         subject_id = int(parent_dir_matches.group('subject_id'))
-        #     else:
-        #         print("couldn't find valid subject_id: parent dir: {}".format(parentDirName))
-        # else:
-        #     print("Failed to match parent dir: {}".format(parentDirName))
-
-        # # Grandparent dir name:
-        # grandparent_dir_matches = LabjackEventsLoader.rx_combined_csv_file_path_name_bb_id.search(grandparentDirName)
-        # if ((grandparent_dir_matches is not None)):
-        #     if grandparent_dir_matches.group('bb_id'):
-        #         behavioral_box_id = int(grandparent_dir_matches.group('bb_id'))
-        #     else:
-        #         print("couldn't find valid bb_id: grandparent dir: {}".format(grandparentDirName))
-        # else:
-        #     print("Failed to match grandparent dir: {}".format(grandparentDirName))
-
         did_encounter_issue = ((behavioral_box_id is None) or (subject_id is None) or (labjack_serial_number is None) or (date_range_earliest is None) or (date_range_latest is None))
         if (did_encounter_issue):
             print("encountered issue parsing path: {}".format(filePathString))
@@ -551,17 +525,9 @@ class LabjackEventsLoader(object):
         out_filtered_csv_path = None
         outputPhoServerFormatArgs = PhoServerFormatArgs(dateTimes[falling_edges_row_indicies], relevantFileLines[falling_edges_row_indicies], out_filtered_csv_path, parsedFileInfoDict)
 
-
-        # outputData = np.zeros()
-        # outputData = dataArray[falling_edges_row_indicies, :]
-        # outputData = np.zeros((len(falling_edges_row_indicies), numVariables))
-
         # "onesEventFormat" has a '1' value anywhere an event occurred, and zeros elsewhere. These are computed by checking falling edges to find transitions. Has same dimensionality as inputEventFormat.
         onesEventFormatOutputData = np.zeros((numSamples, numVariables))
         onesEventFormatOutputData[falling_edge_cells_result] = 1.0
-        # outputData = dataArray[falling_edges_row_indicies, :]
-        # return (outputDateTimes, outputData)
-        # return (relevantFileLines[falling_edges_row_indicies], outputDateTimes, dateTimes, onesEventFormatOutputData)
         return (outputPhoServerFormatArgs, dateTimes, onesEventFormatOutputData)
 
     """ loadLabjackEventsFile_loadFromFile(...): Just loads the file
