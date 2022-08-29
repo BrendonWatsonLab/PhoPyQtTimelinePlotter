@@ -200,5 +200,32 @@
         "workspaceRoot": null,
         "workspacePath": null,
         "id": "fbXGJaFrB9dp82Ao"
+    },
+    {
+        "type": "File",
+        "name": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\UI\\qtimeline.py",
+        "parent_id": "HdDeGNEwjvCfspgU",
+        "fsPath": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\UI\\qtimeline.py",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "ZPrWkUBSgY9R4aAc"
+    },
+    {
+        "type": "File",
+        "name": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\Helpers\\MouseTrackingThroughChildrenMixin.py",
+        "parent_id": "cA32i5EPjWe8qVpg",
+        "fsPath": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\Helpers\\MouseTrackingThroughChildrenMixin.py",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "emEknBwtVg5Hrl3G"
+    },
+    {
+        "type": "File",
+        "name": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\Helpers.py",
+        "parent_id": "cA32i5EPjWe8qVpg",
+        "fsPath": "c:\\Users\\pho\\repos\\PhoPyQtTimelinePlotter\\GUI\\Helpers.py",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "rpQBVtjKx5ldhHWX"
     }
 ]

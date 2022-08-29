@@ -87,11 +87,12 @@ class ViewportJumpToOptions(Enum):
     JumpToNextFromStartOfViewport = 1 # Aligns the start of the viewport with the start of the first video following the original start of the viewport.
     JumpToNextOutsideViewport = 2 # Jumps to the next view following the original end of the viewport
 
-"""
-self.activeScaleMultiplier: this multipler determines how many times longer the contents of the scrollable viewport are than the viewport width itself.
-
-"""
 class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, MouseTrackingThroughChildrenMixin, DateTimeRenderMixin, DurationRepresentationMixin, AbstractDatabaseAccessingWindow):
+    """ the mainWindow instantiated in main.py of the Watson app.
+    
+    self.activeScaleMultiplier: this multipler determines how many times longer the contents of the scrollable viewport are than the viewport width itself.
+
+    """
     
     static_VideoTrackTrackID = -1 # The integer ID of the main video track
     
@@ -278,7 +279,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         return self.referenceManager
 
     def initUI(self):
-
         """ View Hierarchy:
             self.verticalSplitter
                 self.videoPlayerContainer

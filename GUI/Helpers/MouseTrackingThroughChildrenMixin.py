@@ -11,7 +11,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 # from GUI.Helpers.MouseTrackingThroughChildrenMixin import MouseTrackingThroughChildrenMixin
 
 class MouseTrackingThroughChildrenMixin(object):
-    # Overrides the default QWidget.setMouseTracking(...) function to recurrsively set mouse tracking to be enabled on all children.
+    """ Overrides the default QWidget.setMouseTracking(...) function to recurrsively set mouse tracking to be enabled on all children. """
     def setMouseTracking(self, flag):
         def recursive_set(parent):
             for child in parent.findChildren(QObject):

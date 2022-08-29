@@ -13,14 +13,16 @@ import os
 ## IMPORT:
 # from GUI.Helpers.FixedTimelineContentsWidthMixin import FixedTimelineContentsWidthMixin
 
-## Requires
-"""
-Requires self.fixedWidth be set in initializer
-"""
+
 class FixedTimelineContentsWidthMixin(object):
-    # Called on the width changing
+    """
+    # Requires:
+        Requires self.fixedWidth be set in initializer
+    """
+    
     @pyqtSlot(float) 
     def set_fixed_width(self, newWidth):
+        """ Called on the width changing """
         self.fixedWidth = newWidth
         # self.resize(self.fixedWidth, self.height())
         self.setMinimumWidth(self.fixedWidth)

@@ -14,13 +14,14 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, 
 # INCLUDES:
 # from GUI.Helpers.ThumbnailDrawingEventMixin import ThumbnailDrawingEventMixin
 
-## TODO: Doesn't work
-""" ThumbnailDrawingEventMixin: a mixin that draws thumbnail images on a timeline event
-    Requires:
-    self.desiredThumbnailSizeKey = "160"
-"""
 class ThumbnailDrawingEventMixin(object):
-
+    """ ThumbnailDrawingEventMixin: a mixin that draws thumbnail images on a timeline event
+        Requires:
+        self.desiredThumbnailSizeKey = "160"
+        
+        ## TODO: Doesn't work
+        
+    """
     def init_ThumbnailDrawingEventMixin(self):
         self.mainWidgetLayout = QGridLayout(self)
 

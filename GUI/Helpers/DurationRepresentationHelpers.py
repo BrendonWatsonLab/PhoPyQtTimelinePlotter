@@ -7,11 +7,10 @@ from PyQt5.QtWidgets import QFrame
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize
 
 
-"""
-RepresentedTimeRange: on object that holds a reference to the current global start and end times
-"""
-class RepresentedTimeRange(QObject):
 
+class RepresentedTimeRange(QObject):
+    """ RepresentedTimeRange: on object that holds a reference to the current global start and end times
+    """
     timesChanged = pyqtSignal(datetime, datetime, timedelta) # Called when the timeline's global displayed start/end times are updated
     
     def __init__(self, totalStartTime, totalEndTime, parent=None):
