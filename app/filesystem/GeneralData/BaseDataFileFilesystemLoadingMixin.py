@@ -19,9 +19,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
 
 from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult, CachedFileSource
-# from app.filesystem.Workers.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
-# from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
-from app.filesystem.Workers.VideoMetadataWorkers import VideoMetadataWorker
+from app.filesystem.Workers.VideoMetadataWorkers import FileMetadataWorker
 from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
 
 from pathlib import Path
@@ -185,7 +183,7 @@ class BaseDataFilesystemLoader(QObject):
     def load_labjack_data_files(self, labjackDataFilePaths):
         print("BaseDataFilesystemLoader.load_labjack_data_files(labjackDataFilePaths: {0})".format(str(labjackDataFilePaths)))
         # Pass the function to execute
-        self.labjackFilesystemWorker = VideoMetadataWorker(labjackDataFilePaths, self.on_load_labjack_data_files_execute_thread) # Any other args, kwargs are passed to the run function
+        self.labjackFilesystemWorker = FileMetadataWorker(labjackDataFilePaths, self.on_load_labjack_data_files_execute_thread) # Any other args, kwargs are passed to the run function
         self.labjackFilesystemWorker.signals.result.connect(self.on_load_labjack_data_files_print_output)
         self.labjackFilesystemWorker.signals.finished.connect(self.on_load_labjack_data_files_thread_complete)
         self.labjackFilesystemWorker.signals.progress.connect(self.on_load_labjack_data_files_progress_fn)

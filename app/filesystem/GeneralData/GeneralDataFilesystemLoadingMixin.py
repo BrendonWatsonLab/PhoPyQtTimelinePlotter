@@ -11,9 +11,7 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, QThreadPool
 
 
-# from app.filesystem.Workers.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
-# from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
-from app.filesystem.Workers.VideoMetadataWorkers import VideoMetadataWorker
+from app.filesystem.Workers.VideoMetadataWorkers import FileMetadataWorker
 from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
 
 from pathlib import Path
@@ -175,7 +173,7 @@ class GeneralDataFilesystemLoader(QObject):
     def load_general_data_files(self, generalDataFilePaths):
         print("GeneralDataFilesystemLoader.load_general_data_files(generalDataFilePaths: {0})".format(str(generalDataFilePaths)))
         # Pass the function to execute
-        self.generalFilesystemWorker = VideoMetadataWorker(generalDataFilePaths, self.on_load_general_data_files_execute_thread) # Any other args, kwargs are passed to the run function
+        self.generalFilesystemWorker = FileMetadataWorker(generalDataFilePaths, self.on_load_general_data_files_execute_thread) # Any other args, kwargs are passed to the run function
         self.generalFilesystemWorker.signals.result.connect(self.on_load_general_data_files_print_output)
         self.generalFilesystemWorker.signals.finished.connect(self.on_load_general_data_files_thread_complete)
         self.generalFilesystemWorker.signals.progress.connect(self.on_load_general_data_files_progress_fn)

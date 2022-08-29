@@ -16,7 +16,7 @@ from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQOb
 
 from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult, CachedFileSource
 
-from app.filesystem.Workers.VideoMetadataWorkers import VideoMetadataWorker
+from app.filesystem.Workers.VideoMetadataWorkers import FileMetadataWorker
 from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
 
 from pathlib import Path
@@ -197,7 +197,7 @@ class VideoPreviewThumbnailGenerator(QObject):
     def generate_video_thumbnails(self, videoPaths, desired_frame_indicies, desired_thumbnail_sizes):
         print("VideoPreviewThumbnailGenerator.generate_video_thumbnails(videoPaths: {0})".format(str(videoPaths)))
         # Pass the function to execute
-        self.videoThumbnailGeneratorWorker = VideoMetadataWorker(videoPaths, self.on_generate_video_thumbnails_execute_thread, desired_frame_indicies, desired_thumbnail_sizes) # Any other args, kwargs are passed to the run function
+        self.videoThumbnailGeneratorWorker = FileMetadataWorker(videoPaths, self.on_generate_video_thumbnails_execute_thread, desired_frame_indicies, desired_thumbnail_sizes) # Any other args, kwargs are passed to the run function
         self.videoThumbnailGeneratorWorker.signals.result.connect(self.on_generate_video_thumbnails_print_output)
         self.videoThumbnailGeneratorWorker.signals.finished.connect(self.on_generate_video_thumbnails_thread_complete)
         self.videoThumbnailGeneratorWorker.signals.progress.connect(self.on_generate_video_thumbnails_progress_fn)

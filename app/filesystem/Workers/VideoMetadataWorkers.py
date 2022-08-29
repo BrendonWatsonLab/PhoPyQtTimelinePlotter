@@ -10,10 +10,9 @@ import json # Used to decode ffprobe output
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QObject, QEvent, pyqtSignal, pyqtSlot, QRunnable
 
-from app.filesystem.Workers.FilesystemWorkersBase import FilesystemWorkersBase, FilesystemWorkersBaseSignals
+from app.filesystem.Workers.FilesystemWorkersBase import FilesystemWorkersBase
 
 ## IMPORT:
-# from app.filesystem.Workers.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
 
 ## VideoMetadataWorker
 # class VideoMetadataWorkerSignals(QObject):
@@ -41,7 +40,7 @@ from app.filesystem.Workers.FilesystemWorkersBase import FilesystemWorkersBase, 
 #     progress = pyqtSignal(int)
 
 
-class VideoMetadataWorker(FilesystemWorkersBase):
+class FileMetadataWorker(FilesystemWorkersBase):
     '''
     Worker thread
 
@@ -56,7 +55,7 @@ class VideoMetadataWorker(FilesystemWorkersBase):
     '''
 
     def __init__(self, search_paths, fn, *args, **kwargs):
-        super(VideoMetadataWorker, self).__init__(search_paths, fn, *args, **kwargs)
+        super(FileMetadataWorker, self).__init__(search_paths, fn, *args, **kwargs)
 
         # Store constructor arguments (re-used for processing)
         # self.fn = fn
