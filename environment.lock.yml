@@ -1,0 +1,5 @@
+name: PhoPyQtTimelinePlotter
+channels:
+  - conda-forge
+  - defaults
+prefix: C:\Users\pho\miniconda3\envs\PhoPyQtTimelinePlotter
