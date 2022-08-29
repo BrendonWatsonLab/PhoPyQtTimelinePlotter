@@ -19,12 +19,11 @@ from GUI.Model.ReferenceLines.ReferenceLineManager import ReferenceMarkerManager
 from GUI.Helpers.FixedTimelineContentsWidthMixin import FixedTimelineContentsWidthMixin
 from GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
 
-"""
-A class that draws "ticks" which are evenly spaced lines along its entire width.
-Used by qtimeline.py and ExtendedTrackContainerWidget.py
 
-"""
 class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContentsWidthMixin, QWidget):
+    """ A class that draws "ticks" which are evenly spaced lines along its entire width.
+        Used by qtimeline.py and ExtendedTrackContainerWidget.py
+    """
 
     hoverChanged = pyqtSignal(int)
     positionChanged = pyqtSignal(int)

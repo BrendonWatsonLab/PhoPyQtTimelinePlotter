@@ -16,7 +16,7 @@ from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQOb
 
 from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult, CachedFileSource
 
-from app.filesystem.Workers.VideoMetadataWorkers import VideoMetadataWorker
+from app.filesystem.Workers.FileMetadataWorkers import FileMetadataWorker
 from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
 
 from pathlib import Path
@@ -29,10 +29,9 @@ from app.filesystem.FilesystemOperations import OperationTypes, PendingFilesyste
 # from app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoThumbnail, VideoPreviewThumbnailGenerator
 
 
-""" VideoThumbnail: A cache of all the different thumbnail sizes for a specific frame in a specific video
-
-"""
 class VideoThumbnail(QObject):
+    """ VideoThumbnail: A cache of all the different thumbnail sizes for a specific frame in a specific video
+    """
     def __init__(self, frameIndex, thumbsDict, parent=None):
         super().__init__(parent=parent)
         self.frameIndex = frameIndex
@@ -45,10 +44,9 @@ class VideoThumbnail(QObject):
         return self.thumbsDict
 
 
-""" VideoSpecificThumbnailCache: A cache of all the resultant thumbnails for each frame for a given video file
-
-"""
 class VideoSpecificThumbnailCache(QObject):
+    """ VideoSpecificThumbnailCache: A cache of all the resultant thumbnails for each frame for a given video file
+    """
 
     frame_thumbnails_updated = pyqtSignal(str, VideoThumbnail) # (cache_video_file_name: str, frameThumbnailResult: VideoThumbnail)
 
@@ -96,11 +94,9 @@ class VideoSpecificThumbnailCache(QObject):
             self.frame_thumbnails_updated.emit(self.get_video_file_name(), aThumbnailResult)
 
         
-## VideoPreviewThumbnailGenerator: this object generates an array of "VideoThumbnail" type objects from a videoURL
-"""
-
-"""
 class VideoPreviewThumbnailGenerator(QObject):
+    """ VideoPreviewThumbnailGenerator: this object generates an array of "VideoThumbnail" type objects from a videoURL
+    """
 
     targetVideoFilePathsUpdated = pyqtSignal()
 
@@ -201,7 +197,7 @@ class VideoPreviewThumbnailGenerator(QObject):
     def generate_video_thumbnails(self, videoPaths, desired_frame_indicies, desired_thumbnail_sizes):
         print("VideoPreviewThumbnailGenerator.generate_video_thumbnails(videoPaths: {0})".format(str(videoPaths)))
         # Pass the function to execute
-        self.videoThumbnailGeneratorWorker = VideoMetadataWorker(videoPaths, self.on_generate_video_thumbnails_execute_thread, desired_frame_indicies, desired_thumbnail_sizes) # Any other args, kwargs are passed to the run function
+        self.videoThumbnailGeneratorWorker = FileMetadataWorker(videoPaths, self.on_generate_video_thumbnails_execute_thread, desired_frame_indicies, desired_thumbnail_sizes) # Any other args, kwargs are passed to the run function
         self.videoThumbnailGeneratorWorker.signals.result.connect(self.on_generate_video_thumbnails_print_output)
         self.videoThumbnailGeneratorWorker.signals.finished.connect(self.on_generate_video_thumbnails_thread_complete)
         self.videoThumbnailGeneratorWorker.signals.progress.connect(self.on_generate_video_thumbnails_progress_fn)

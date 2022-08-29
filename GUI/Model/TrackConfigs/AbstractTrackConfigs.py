@@ -1,25 +1,11 @@
 #Filters.py
-import sys
-from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import numpy as np
-from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal
-
-import sqlalchemy as db
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy import and_, or_
-
-from app.database.entry_models.DatabaseBase import Base, metadata
-from app.database.entry_models.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, CategoricalDurationLabel, VideoFile
-from app.database.entry_models.db_model import StaticFileExtension, FileParentFolder
-# from app.database.entry_models.db_model_extension import ExVideoFile
 
 from app.filesystem.FilesystemRecordBase import *
 
 from GUI.Model.ModelViewContainer import ModelViewContainer
-
-from GUI.Model.TrackType import TrackType, TrackStorageArray
 
 # INCLUDE:
 # from GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, TrackCache, TrackFilterBase
@@ -32,7 +18,11 @@ from GUI.Model.TrackType import TrackType, TrackStorageArray
 Represents a filter for a specific track
 """
 class TrackFilterBase(QObject):
-
+    """ Represents a filter for a specific track
+    
+    takes the trackRecordClass: the Type of the record objects for this track
+    
+    """
     def __init__(self, trackRecordClass, behavioral_box_ids=None, experiment_ids=None, cohort_ids=None, animal_ids=None, parent=None):
         super(TrackFilterBase, self).__init__(parent=parent)
         self.trackRecordClass = trackRecordClass
@@ -183,7 +173,9 @@ class TrackCache(QObject):
 
 # TrackConfigurationBase: a class that holds the settings for a timeline track
 class TrackConfigurationBase(QObject):
-
+    """ holds the settings for a timeline track
+    
+    """
     # dataChanged = pyqtSignal()
     # recordsLoaded = pyqtSignal()
 

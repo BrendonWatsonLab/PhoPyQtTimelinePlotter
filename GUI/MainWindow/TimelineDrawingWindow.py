@@ -64,13 +64,13 @@ from GUI.Helpers.MouseTrackingThroughChildrenMixin import MouseTrackingThroughCh
 
 from GUI.Model.TrackType import TrackType, TrackStorageArray
 
-from app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoThumbnail, VideoPreviewThumbnailGenerator
-from app.filesystem.FileExporting import FileExportingMixin, FileExportFormat, FileExportOptions
+from app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoPreviewThumbnailGenerator
+from app.filesystem.FileExporting import FileExportingMixin, FileExportOptions
 
 from GUI.Model.TrackGroups import VideoTrackGroupSettings, VideoTrackGroup, TrackReference, TrackChildReference, VideoTrackGroupOwningMixin
 from GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
 
-from app.filesystem.LabjackFilesystemLoadingMixin import LabjackEventFile, LabjackFilesystemLoader
+from app.filesystem.LabjackData.LabjackFilesystemLoadingMixin import LabjackFilesystemLoader
 
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.
@@ -87,11 +87,12 @@ class ViewportJumpToOptions(Enum):
     JumpToNextFromStartOfViewport = 1 # Aligns the start of the viewport with the start of the first video following the original start of the viewport.
     JumpToNextOutsideViewport = 2 # Jumps to the next view following the original end of the viewport
 
-"""
-self.activeScaleMultiplier: this multipler determines how many times longer the contents of the scrollable viewport are than the viewport width itself.
-
-"""
 class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, MouseTrackingThroughChildrenMixin, DateTimeRenderMixin, DurationRepresentationMixin, AbstractDatabaseAccessingWindow):
+    """ the mainWindow instantiated in main.py of the Watson app.
+    
+    self.activeScaleMultiplier: this multipler determines how many times longer the contents of the scrollable viewport are than the viewport width itself.
+
+    """
     
     static_VideoTrackTrackID = -1 # The integer ID of the main video track
     
@@ -193,7 +194,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
 
 
         self.labjackDataFilesystemLoader = LabjackFilesystemLoader([], parent=self)
-        self.labjackDataFilesystemLoader.loadingLabjackDataFilesComplete.connect(self.on_labjack_files_loading_complete)
+        self.labjackDataFilesystemLoader.loadingDataFilesComplete.connect(self.on_labjack_files_loading_complete)
         self.activeGlobalTimelineTimesChanged.connect(self.labjackDataFilesystemLoader.on_active_global_timeline_times_changed)
 
         # Update the data model, and set up the timeline totalStartTime, totalEndTime, totalDuration from the loaded videos if we're in that enum mode.
@@ -278,7 +279,6 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
         return self.referenceManager
 
     def initUI(self):
-
         """ View Hierarchy:
             self.verticalSplitter
                 self.videoPlayerContainer
@@ -2728,7 +2728,7 @@ class TimelineDrawingWindow(VideoTrackGroupOwningMixin, FileExportingMixin, Mous
             return
         else:
             print("Importing data file at path {}...".format(importFilePath))
-            self.get_labjack_data_files_loader().add_labjack_file_path(importFilePath)
+            self.get_labjack_data_files_loader().add_file_path(importFilePath)
 
     def get_labjack_data_files_loader(self):
         return self.labjackDataFilesystemLoader

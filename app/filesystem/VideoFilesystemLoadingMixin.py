@@ -14,9 +14,7 @@ from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQOb
 from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult, CachedFileSource
 from app.filesystem.VideoUtils import findDeeplabCutProducedOutputFiles, FoundDeeplabcutOutputFileResult
 
-# from app.filesystem.Workers.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
-# from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
-from app.filesystem.Workers.VideoMetadataWorkers import VideoMetadataWorker
+from app.filesystem.Workers.FileMetadataWorkers import FileMetadataWorker
 from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
 
 from pathlib import Path
@@ -456,7 +454,7 @@ class VideoFilesystemLoader(AbstractDatabaseAccessingQObject):
     def find_video_metadata(self, activeSearchPaths):
         print("VideoFilesystemLoader.find_video_metadata(...)")
         # Pass the function to execute
-        self.videoMetadataWorker = VideoMetadataWorker(activeSearchPaths, self.on_find_video_metadata_execute_thread) # Any other args, kwargs are passed to the run function
+        self.videoMetadataWorker = FileMetadataWorker(activeSearchPaths, self.on_find_video_metadata_execute_thread) # Any other args, kwargs are passed to the run function
         self.videoMetadataWorker.signals.result.connect(self.on_find_video_metadata_print_output)
         self.videoMetadataWorker.signals.finished.connect(self.on_find_video_metadata_thread_complete)
         self.videoMetadataWorker.signals.progress.connect(self.on_find_video_metadata_progress_fn)

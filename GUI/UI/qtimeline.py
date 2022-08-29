@@ -19,6 +19,15 @@ __font__ = QFont('Decorative', 11)
 __minor_font__ = QFont('Decorative', 8)
 
 class QTimeLine(TickedTimelineDrawingBaseWidget):
+    """ Appears to tbe central timeline widget that contains the various tracks
+    
+    Usages:
+        Initialized by TimelineDrawingWindow as timelineMasterTrackWidget
+    
+
+    Args:
+        TickedTimelineDrawingBaseWidget (_type_): _description_
+    """
 
     def __init__(self, totalStartTime, totalEndTime, totalDuration, duration, parent=None):
         super(QTimeLine, self).__init__(totalStartTime, totalEndTime, totalDuration, duration, parent=parent)
