@@ -11,9 +11,13 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 
 class Ui_CustomDataSelectionWidget_Subpanel_SimpleXY(object):
     def setupUi(self, CustomDataSelectionWidget_Subpanel_SimpleXY):
-        CustomDataSelectionWidget_Subpanel_SimpleXY.setObjectName("CustomDataSelectionWidget_Subpanel_SimpleXY")
+        CustomDataSelectionWidget_Subpanel_SimpleXY.setObjectName(
+            "CustomDataSelectionWidget_Subpanel_SimpleXY"
+        )
         CustomDataSelectionWidget_Subpanel_SimpleXY.resize(400, 79)
-        self.layoutWidget = QtWidgets.QWidget(CustomDataSelectionWidget_Subpanel_SimpleXY)
+        self.layoutWidget = QtWidgets.QWidget(
+            CustomDataSelectionWidget_Subpanel_SimpleXY
+        )
         self.layoutWidget.setGeometry(QtCore.QRect(10, 10, 382, 24))
         self.layoutWidget.setObjectName("layoutWidget")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.layoutWidget)
@@ -24,7 +28,9 @@ class Ui_CustomDataSelectionWidget_Subpanel_SimpleXY(object):
         self.label.setObjectName("label")
         self.horizontalLayout_2.addWidget(self.label)
         self.lineEdit = QtWidgets.QLineEdit(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
+        )
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.lineEdit.sizePolicy().hasHeightForWidth())
@@ -40,7 +46,9 @@ class Ui_CustomDataSelectionWidget_Subpanel_SimpleXY(object):
         self.toolButton.setObjectName("toolButton")
         self.horizontalLayout_2.addWidget(self.toolButton)
         self.horizontalLayout_2.setStretch(1, 1)
-        self.layoutWidget_2 = QtWidgets.QWidget(CustomDataSelectionWidget_Subpanel_SimpleXY)
+        self.layoutWidget_2 = QtWidgets.QWidget(
+            CustomDataSelectionWidget_Subpanel_SimpleXY
+        )
         self.layoutWidget_2.setGeometry(QtCore.QRect(10, 40, 382, 24))
         self.layoutWidget_2.setObjectName("layoutWidget_2")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.layoutWidget_2)
@@ -51,7 +59,9 @@ class Ui_CustomDataSelectionWidget_Subpanel_SimpleXY(object):
         self.label_2.setObjectName("label_2")
         self.horizontalLayout_3.addWidget(self.label_2)
         self.lineEdit_2 = QtWidgets.QLineEdit(self.layoutWidget_2)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
+        )
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.lineEdit_2.sizePolicy().hasHeightForWidth())
@@ -69,12 +79,27 @@ class Ui_CustomDataSelectionWidget_Subpanel_SimpleXY(object):
         self.horizontalLayout_3.setStretch(1, 1)
 
         self.retranslateUi(CustomDataSelectionWidget_Subpanel_SimpleXY)
-        QtCore.QMetaObject.connectSlotsByName(CustomDataSelectionWidget_Subpanel_SimpleXY)
+        QtCore.QMetaObject.connectSlotsByName(
+            CustomDataSelectionWidget_Subpanel_SimpleXY
+        )
 
     def retranslateUi(self, CustomDataSelectionWidget_Subpanel_SimpleXY):
         _translate = QtCore.QCoreApplication.translate
-        CustomDataSelectionWidget_Subpanel_SimpleXY.setWindowTitle(_translate("CustomDataSelectionWidget_Subpanel_SimpleXY", "CustomDataSelectionWidget_Subpanel_SimpleXY"))
-        self.label.setText(_translate("CustomDataSelectionWidget_Subpanel_SimpleXY", "x"))
-        self.toolButton.setText(_translate("CustomDataSelectionWidget_Subpanel_SimpleXY", "..."))
-        self.label_2.setText(_translate("CustomDataSelectionWidget_Subpanel_SimpleXY", "y"))
-        self.toolButton_2.setText(_translate("CustomDataSelectionWidget_Subpanel_SimpleXY", "..."))
+        CustomDataSelectionWidget_Subpanel_SimpleXY.setWindowTitle(
+            _translate(
+                "CustomDataSelectionWidget_Subpanel_SimpleXY",
+                "CustomDataSelectionWidget_Subpanel_SimpleXY",
+            )
+        )
+        self.label.setText(
+            _translate("CustomDataSelectionWidget_Subpanel_SimpleXY", "x")
+        )
+        self.toolButton.setText(
+            _translate("CustomDataSelectionWidget_Subpanel_SimpleXY", "...")
+        )
+        self.label_2.setText(
+            _translate("CustomDataSelectionWidget_Subpanel_SimpleXY", "y")
+        )
+        self.toolButton_2.setText(
+            _translate("CustomDataSelectionWidget_Subpanel_SimpleXY", "...")
+        )

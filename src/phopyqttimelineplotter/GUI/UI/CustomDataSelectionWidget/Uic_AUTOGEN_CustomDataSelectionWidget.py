@@ -22,7 +22,9 @@ class Ui_CustomDataSelectionWidget(object):
         self.label.setObjectName("label")
         self.horizontalLayout_2.addWidget(self.label)
         self.lineEdit = QtWidgets.QLineEdit(CustomDataSelectionWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
+        )
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.lineEdit.sizePolicy().hasHeightForWidth())
@@ -38,9 +40,16 @@ class Ui_CustomDataSelectionWidget(object):
         self.toolButton.setObjectName("toolButton")
         self.horizontalLayout_2.addWidget(self.toolButton)
         self.horizontalLayout_2.setStretch(1, 1)
-        self.formLayout.setLayout(0, QtWidgets.QFormLayout.ItemRole.SpanningRole, self.horizontalLayout_2)
-        self.widget = CustomDataSelectionWidget_Subpanel_SimpleXY(CustomDataSelectionWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Preferred)
+        self.formLayout.setLayout(
+            0, QtWidgets.QFormLayout.ItemRole.SpanningRole, self.horizontalLayout_2
+        )
+        self.widget = CustomDataSelectionWidget_Subpanel_SimpleXY(
+            CustomDataSelectionWidget
+        )
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Policy.MinimumExpanding,
+            QtWidgets.QSizePolicy.Policy.Preferred,
+        )
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.widget.sizePolicy().hasHeightForWidth())
@@ -48,14 +57,22 @@ class Ui_CustomDataSelectionWidget(object):
         self.widget.setMinimumSize(QtCore.QSize(400, 79))
         self.widget.setBaseSize(QtCore.QSize(400, 79))
         self.widget.setObjectName("widget")
-        self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.LabelRole, self.widget)
+        self.formLayout.setWidget(
+            1, QtWidgets.QFormLayout.ItemRole.LabelRole, self.widget
+        )
 
         self.retranslateUi(CustomDataSelectionWidget)
         QtCore.QMetaObject.connectSlotsByName(CustomDataSelectionWidget)
 
     def retranslateUi(self, CustomDataSelectionWidget):
         _translate = QtCore.QCoreApplication.translate
-        CustomDataSelectionWidget.setWindowTitle(_translate("CustomDataSelectionWidget", "CustomDataSelectionWidget"))
+        CustomDataSelectionWidget.setWindowTitle(
+            _translate("CustomDataSelectionWidget", "CustomDataSelectionWidget")
+        )
         self.label.setText(_translate("CustomDataSelectionWidget", "timestamps"))
         self.toolButton.setText(_translate("CustomDataSelectionWidget", "..."))
-from phopyqttimelineplotter.GUI.UI.CustomDataSelectionWidget.CustomDataSelectionWidget_Subpanel_SimpleXY import CustomDataSelectionWidget_Subpanel_SimpleXY
+
+
+from phopyqttimelineplotter.GUI.UI.CustomDataSelectionWidget.CustomDataSelectionWidget_Subpanel_SimpleXY import (
+    CustomDataSelectionWidget_Subpanel_SimpleXY,
+)
