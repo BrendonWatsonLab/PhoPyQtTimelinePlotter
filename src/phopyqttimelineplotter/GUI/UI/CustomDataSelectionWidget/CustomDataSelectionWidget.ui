@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Form</class>
- <widget class="QWidget" name="Form">
+ <class>CustomDataSelectionWidget</class>
+ <widget class="QWidget" name="CustomDataSelectionWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>424</width>
     <height>300</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>CustomDataSelectionWidget</string>
   </property>
   <layout class="QFormLayout" name="formLayout">
    <item row="0" column="0" colspan="2">
@@ -94,7 +94,7 @@
   <customwidget>
    <class>CustomDataSelectionWidget_Subpanel_SimpleXY</class>
    <extends>QWidget</extends>
-   <header location="global">GUI.UI.CustomDataSelectionWidget.ui_CustomDataSelectionWidget_Subpanel_SimpleXY</header>
+   <header location="global">phopyqttimelineplotter.GUI.UI.CustomDataSelectionWidget.CustomDataSelectionWidget_Subpanel_SimpleXY</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

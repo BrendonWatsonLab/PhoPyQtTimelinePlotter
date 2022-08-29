@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Form</class>
- <widget class="QWidget" name="Form">
+ <author>Pho Hale</author>
+ <class>CustomDataSelectionWidget_Subpanel_SimpleXY</class>
+ <widget class="QWidget" name="CustomDataSelectionWidget_Subpanel_SimpleXY">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +12,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>CustomDataSelectionWidget_Subpanel_SimpleXY</string>
   </property>
   <widget class="QWidget" name="layoutWidget">
    <property name="geometry">

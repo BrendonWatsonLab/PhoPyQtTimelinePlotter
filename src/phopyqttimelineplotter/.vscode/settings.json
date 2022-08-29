@@ -6,5 +6,11 @@
 		"activityBar.background": "#0C2F4D",
 		"titleBar.activeBackground": "#10426B",
 		"titleBar.activeForeground": "#F9FCFE"
-	}
+	},
+	"qtForPython.uic.path": "C:/Users/pho/miniconda3/envs/PyQt6/Scripts/pyuic6.exe",
+	"qtForPython.uic.liveExecution": false,
+	"qtForPython.uic.options": [
+		"-o",
+		"${resourceDirname}${pathSeparator}Uic_AUTOGEN_${resourceBasenameNoExtension}.py"
+	]
 }
