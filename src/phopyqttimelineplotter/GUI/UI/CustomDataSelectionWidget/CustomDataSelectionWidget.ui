@@ -69,7 +69,7 @@
    <item row="1" column="0">
     <widget class="CustomDataSelectionWidget_Subpanel_SimpleXY" name="widget" native="true">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
        <horstretch>1</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
@@ -88,6 +88,27 @@
      </property>
     </widget>
    </item>
+   <item row="2" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="ThreadPoolPushButton" name="btnFinalizeLoad">
+       <property name="text">
+        <string>Load</string>
+       </property>
+       <property name="default">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
   </layout>
  </widget>
  <customwidgets>
@@ -96,6 +117,11 @@
    <extends>QWidget</extends>
    <header location="global">phopyqttimelineplotter.GUI.UI.CustomDataSelectionWidget.CustomDataSelectionWidget_Subpanel_SimpleXY</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ThreadPoolPushButton</class>
+   <extends>QPushButton</extends>
+   <header location="global">silx.gui.widgets.ThreadPoolPushButton</header>
   </customwidget>
  </customwidgets>
  <resources/>
