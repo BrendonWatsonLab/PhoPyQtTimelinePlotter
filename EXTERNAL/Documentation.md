@@ -25,6 +25,14 @@ Traceback (most recent call last):
 AttributeError: 'TimelineDrawingWindow' object has no attribute 'actigraphyDataFilesystemLoader'
 
 
+```python
+self.labjackDataFilesystemLoader = LabjackFilesystemLoader([], parent=self)
+self.labjackDataFilesystemLoader.loadingLabjackDataFilesComplete.connect(self.on_labjack_files_loading_complete)
+self.activeGlobalTimelineTimesChanged.connect(self.labjackDataFilesystemLoader.on_active_global_timeline_times_changed)
+
+```
+
+
 # Track Widget Setup
 
 In general each track widget has the following setup:

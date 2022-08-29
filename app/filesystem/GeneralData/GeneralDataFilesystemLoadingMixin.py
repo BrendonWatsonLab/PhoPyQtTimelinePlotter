@@ -3,21 +3,14 @@ import sys
 # import pickle
 # import cPickle
 from datetime import datetime, timezone, timedelta
-from enum import Enum
 import numpy as np
 import pandas as pd
 
 import matplotlib.colors as mcolors
+from PyQt5.QtGui import QColor
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, QThreadPool
 
-from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea
-from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QAction, qApp, QApplication, QTreeWidgetItem, QFileDialog 
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool
 
-from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
-
-from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult, CachedFileSource
 # from app.filesystem.Workers.VideoMetadataWorkers import VideoMetadataWorker, VideoMetadataWorkerSignals
 # from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker, VideoFilesystemWorkerSignals
 from app.filesystem.Workers.VideoMetadataWorkers import VideoMetadataWorker
@@ -30,7 +23,6 @@ from app.filesystem.FilesystemOperations import OperationTypes, PendingFilesyste
 from app.filesystem.LabjackData.LabjackEventsLoader import LabjackEventsLoader, PhoServerFormatArgs
 
 from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemLabjackEvent_Record
-from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
 
 # from app.filesystem.GeneralDataFilesystemLoadingMixin import LabjackEventFile, GeneralDataFilesystemLoader
 
@@ -104,8 +96,8 @@ class LabjackEventFile(QObject):
 
 
 class GeneralDataFilesystemLoader(QObject):
-    """ GeneralDataFilesystemLoader: this object tries to find Labjack-exported data files in the filesystem and make them accessible in memory
-    Loads the Labjack event files
+    """ GeneralDataFilesystemLoader: this object tries to find general data files in the filesystem and make them accessible in memory
+    Generalized from LabjackFilesystemLoader
     """
     # foundFilesUpdated = pyqtSignal()
     targetGeneralDataFilePathsUpdated = pyqtSignal()

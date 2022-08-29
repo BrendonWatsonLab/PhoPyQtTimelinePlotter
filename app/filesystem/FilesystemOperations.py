@@ -2,15 +2,9 @@
 # FilesystemOperations.py
 
 import sys
-from datetime import datetime, timezone, timedelta
 from enum import Enum
-from pathlib import Path
 
-from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea
-from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QAction, qApp, QApplication, QTreeWidgetItem, QFileDialog 
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool
+from PyQt5.QtCore import QObject
 
 # INCLUDES:
 # from app.filesystem.FilesystemOperations import OperationTypes, PendingFilesystemOperation
