@@ -11,9 +11,9 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 from app.database.DatabaseConnectionRef import DatabasePendingItemsState, DatabaseConnectionRef
 from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
-from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingDialog
+from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingDialog
 
-from GUI.UI.DialogComponents.AbstractDialogMixins import BoxExperCohortAnimalIDsFrame_Mixin, ObjectSpecificDialogMixin, DialogObjectIdentifier
+from phopyqttimelineplotter.GUI.UI.DialogComponents.AbstractDialogMixins import BoxExperCohortAnimalIDsFrame_Mixin, ObjectSpecificDialogMixin, DialogObjectIdentifier
 
 # When you set a subtype, ensure that its parent is selected as the type
 # When you select a type that's incompatible with the current subtype, probably change the subtype to the first of that type

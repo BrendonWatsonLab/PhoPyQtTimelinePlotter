@@ -9,8 +9,8 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QLinearGradient
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
 
-from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import TimelineTrackDrawingWidgetBase, ItemSelectionOptions
-from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_SelectionBase import TimelineTrackDrawingWidget_SelectionBase
+from phopyqttimelineplotter.GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import TimelineTrackDrawingWidgetBase, ItemSelectionOptions
+from phopyqttimelineplotter.GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_SelectionBase import TimelineTrackDrawingWidget_SelectionBase
 
 # durationObjects are PhoDurationEvents
 class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_SelectionBase):

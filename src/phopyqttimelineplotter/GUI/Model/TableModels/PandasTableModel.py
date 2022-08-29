@@ -6,7 +6,7 @@ from PyQt5.QtCore import QAbstractTableModel, Qt
 # PandasTableModel.py
 
 ## INCLUDES:
-# from GUI.Model.TableModels.PandasTableModel import PandasTableModel
+# from phopyqttimelineplotter.GUI.Model.TableModels.PandasTableModel import PandasTableModel
 
 
 """ PandasTableModel: https://learndataanalysis.org/display-pandas-dataframe-with-pyqt5-qtableview-widget/

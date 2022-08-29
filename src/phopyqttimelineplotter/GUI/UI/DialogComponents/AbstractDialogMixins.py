@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QFrame
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize
 
 # INCLUDE:
-# from GUI.UI.DialogComponents.AbstractDialogMixins import *
+# from phopyqttimelineplotter.GUI.UI.DialogComponents.AbstractDialogMixins import *
 
 """ DialogObjectIdentifier:
 Holds the trackID and childID that a given dialog refers to

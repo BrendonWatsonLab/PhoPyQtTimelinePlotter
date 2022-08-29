@@ -6,7 +6,7 @@ from datetime import datetime, timezone, timedelta
 # DateTimeRenders.py
 
 ## IMPORTS:
-# from GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
+# from phopyqttimelineplotter.GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
 
 class DateTimeRenderMixin(object):
 

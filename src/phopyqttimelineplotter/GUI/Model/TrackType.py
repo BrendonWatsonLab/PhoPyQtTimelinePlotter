@@ -6,7 +6,7 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
 
 ## IMPORT:
-# from GUI.Model.TrackType import TrackType, TrackStorageArray
+# from phopyqttimelineplotter.GUI.Model.TrackType import TrackType, TrackStorageArray
 
 class TrackStorageArray(Enum):
     Unknown = 1

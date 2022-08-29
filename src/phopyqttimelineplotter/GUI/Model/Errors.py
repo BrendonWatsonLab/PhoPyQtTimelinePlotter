@@ -14,7 +14,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 # Errors.py
 
 ## IMPORTS:
-# from GUI.Model.Errors import SimpleErrorStatusMixin
+# from phopyqttimelineplotter.GUI.Model.Errors import SimpleErrorStatusMixin
 
 """ SimpleErrorStatusMixin: a simple string flag that indicates whether a class currently has an error or not.
 Requires:

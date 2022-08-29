@@ -11,10 +11,10 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QFontMetrics
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
-from GUI.Model.Events.PhoDurationEvent import *
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent import *
 
 ## IMPORT:
-# from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
+# from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
 
 class PhoDurationEvent_Video(PhoDurationEvent):
     

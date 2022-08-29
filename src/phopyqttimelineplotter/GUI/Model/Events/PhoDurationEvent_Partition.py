@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import QAction, QMessageBox, QToolTip, QStackedWidget, QHBo
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QFontMetrics, QPalette
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
-from GUI.Model.Events.PhoDurationEvent import *
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent import *
 from app.BehaviorsList import BehaviorsManager
 
 class PhoDurationEvent_Partition(PhoDurationEvent):

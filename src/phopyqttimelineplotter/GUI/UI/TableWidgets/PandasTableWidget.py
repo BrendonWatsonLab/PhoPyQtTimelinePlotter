@@ -7,10 +7,10 @@ from PyQt5.QtWidgets import QApplication, QTableView, QWidget, QAction, QMenu, Q
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool, QItemSelectionModel, QAbstractTableModel, QPersistentModelIndex
 
-from GUI.Model.TableModels.PandasTableModel import PandasTableModel
+from phopyqttimelineplotter.GUI.Model.TableModels.PandasTableModel import PandasTableModel
 
 ## INCLUDES:
-# from GUI.UI.TableWidgets.PandasTableWidget import PandasTableWidget
+# from phopyqttimelineplotter.GUI.UI.TableWidgets.PandasTableWidget import PandasTableWidget
 
 
 """ PandasTableWidget

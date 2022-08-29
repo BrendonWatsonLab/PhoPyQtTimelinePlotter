@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool
 
-from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
+from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
 
 from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult, CachedFileSource
 from app.filesystem.Workers.FileMetadataWorkers import FileMetadataWorker
@@ -24,12 +24,12 @@ from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
 
 from pathlib import Path
 
-from GUI.Model.ModelViewContainer import ModelViewContainer
+from phopyqttimelineplotter.GUI.Model.ModelViewContainer import ModelViewContainer
 from app.filesystem.FilesystemOperations import OperationTypes, PendingFilesystemOperation
 # from app.filesystem.BaseDataEventsLoader import BaseDataEventsLoader, PhoServerFormatArgs
 
 from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemDataEvent_Record
-from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
 
 # from app.filesystem.BaseDataFilesystemLoadingMixin import BaseDataEventFile, BaseDataFilesystemLoader
 

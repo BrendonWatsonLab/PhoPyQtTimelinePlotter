@@ -37,15 +37,15 @@ from pyqtgraph.widgets import MatplotlibWidget
 import pyqtgraph as pg
 from lib.pg_time_axis import DateAxisItem
 
-from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import TimelineTrackDrawingWidgetBase, ItemSelectionOptions
-from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_SelectionBase import TimelineTrackDrawingWidget_SelectionBase
+from phopyqttimelineplotter.GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import TimelineTrackDrawingWidgetBase, ItemSelectionOptions
+from phopyqttimelineplotter.GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_SelectionBase import TimelineTrackDrawingWidget_SelectionBase
 
-from GUI.Model.Events.PhoDurationEvent_AnnotationComment import *
-from GUI.UI.TextAnnotations.TextAnnotationDialog import *
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent_AnnotationComment import *
+from phopyqttimelineplotter.GUI.UI.TextAnnotations.TextAnnotationDialog import *
 
 from app.database.SqlAlchemyDatabase import create_TimestampedAnnotation, convert_TimestampedAnnotation, modify_TimestampedAnnotation, modify_TimestampedAnnotation_startDate, modify_TimestampedAnnotation_endDate
 
-from GUI.Model.TrackType import TrackType, TrackConfigMixin, TrackConfigDataCacheMixin
+from phopyqttimelineplotter.GUI.Model.TrackType import TrackType, TrackConfigMixin, TrackConfigDataCacheMixin
 
 
 class DataTrackDisplayMode(Enum):

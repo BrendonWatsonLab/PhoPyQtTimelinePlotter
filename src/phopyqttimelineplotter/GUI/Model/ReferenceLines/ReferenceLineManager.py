@@ -13,15 +13,15 @@ from PyQt5.QtGui import QPainter, QColor, QFont, QBrush, QPalette, QPen, QPolygo
 from PyQt5.QtWidgets import QWidget, QFrame, QScrollArea, QVBoxLayout, QGridLayout, QListWidget
 import os
 
-from GUI.UI.ReferenceMarkViewer.ReferenceMarkViewer import ReferenceMarkViewer, ActiveReferenceMarkersMixin
+from phopyqttimelineplotter.GUI.UI.ReferenceMarkViewer.ReferenceMarkViewer import ReferenceMarkViewer, ActiveReferenceMarkersMixin
 
 ## IMPORTS:
-# from GUI.Model.ReferenceLines.ReferenceLineManager import ReferenceMarkerManager
+# from phopyqttimelineplotter.GUI.Model.ReferenceLines.ReferenceLineManager import ReferenceMarkerManager
 
-from GUI.Model.ModelViewContainer import ModelViewContainer
-from GUI.Model.ReferenceLines.ReferenceMarkerVisualHelpers import TickProperties, ReferenceMarker
-from GUI.Model.ReferenceLines.ReferenceMarker import RepresentedTimeRange, RepresentedMarkerTime, RepresentedMarkerRecord, ReferenceMarkerManagerConfiguration
-from GUI.Helpers.DurationRepresentationHelpers import DurationRepresentationMixin
+from phopyqttimelineplotter.GUI.Model.ModelViewContainer import ModelViewContainer
+from phopyqttimelineplotter.GUI.Model.ReferenceLines.ReferenceMarkerVisualHelpers import TickProperties, ReferenceMarker
+from phopyqttimelineplotter.GUI.Model.ReferenceLines.ReferenceMarker import RepresentedTimeRange, RepresentedMarkerTime, RepresentedMarkerRecord, ReferenceMarkerManagerConfiguration
+from phopyqttimelineplotter.GUI.Helpers.DurationRepresentationHelpers import DurationRepresentationMixin
 
 
 __textColor__ = QColor(20, 20, 20)

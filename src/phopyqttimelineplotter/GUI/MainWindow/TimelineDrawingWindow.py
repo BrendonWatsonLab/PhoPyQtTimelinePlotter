@@ -14,61 +14,61 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 from app.database.entry_models.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, CategoricalDurationLabel, VideoFile
 
-from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWindow
+from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWindow
 
-from GUI.HelpWindow.HelpWindowFinal import *
-from GUI.MainObjectListsWindow.MainObjectListsWindow import *
-from GUI.Windows.ExampleDatabaseTableWindow import ExampleDatabaseTableWindow
+from phopyqttimelineplotter.GUI.HelpWindow.HelpWindowFinal import *
+from phopyqttimelineplotter.GUI.MainObjectListsWindow.MainObjectListsWindow import *
+from phopyqttimelineplotter.GUI.Windows.ExampleDatabaseTableWindow import ExampleDatabaseTableWindow
 
-from GUI.Model.ReferenceLines.ReferenceLineManager import ReferenceMarkerManager, IndicatorLineMixin
-# from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget import *
-from GUI.UI.qtimeline import *
+from phopyqttimelineplotter.GUI.Model.ReferenceLines.ReferenceLineManager import ReferenceMarkerManager, IndicatorLineMixin
+# from phopyqttimelineplotter.GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget import *
+from phopyqttimelineplotter.GUI.UI.qtimeline import *
 
-from GUI.UI.ExtendedTracksContainerWidget import ExtendedTracksContainerWidget
-from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Videos import *
-from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Partition import TrackContextConfig, TimelineTrackDrawingWidget_Partition
-from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_AnnotationComments import *
-from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_DataFile import *
+from phopyqttimelineplotter.GUI.UI.ExtendedTracksContainerWidget import ExtendedTracksContainerWidget
+from phopyqttimelineplotter.GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Videos import *
+from phopyqttimelineplotter.GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_Partition import TrackContextConfig, TimelineTrackDrawingWidget_Partition
+from phopyqttimelineplotter.GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_AnnotationComments import *
+from phopyqttimelineplotter.GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_DataFile import *
 
 # from app.database.SqliteEventsDatabase import load_video_events_from_database
 from app.database.SqlAlchemyDatabase import load_annotation_events_from_database, save_annotation_events_to_database, create_TimestampedAnnotation
 
-from GUI.Windows.VideoPlayer.VideoPlayerWidget import VideoPlayerWidget
-from GUI.Windows.VideoPlayer.MainVideoPlayerWindow import *
-from GUI.SetupWindow.SetupWindow import *
+from phopyqttimelineplotter.GUI.Windows.VideoPlayer.VideoPlayerWidget import VideoPlayerWidget
+from phopyqttimelineplotter.GUI.Windows.VideoPlayer.MainVideoPlayerWindow import *
+from phopyqttimelineplotter.GUI.SetupWindow.SetupWindow import *
 
 
-from GUI.UI.VideoTrackFilterEditWidget.TrackFilterEditDialogBase import TrackFilterEditDialogBase
-from GUI.UI.VideoTrackFilterEditWidget.VideoTrackFilterEditDialog import VideoTrackFilterEditDialog
+from phopyqttimelineplotter.GUI.UI.VideoTrackFilterEditWidget.TrackFilterEditDialogBase import TrackFilterEditDialogBase
+from phopyqttimelineplotter.GUI.UI.VideoTrackFilterEditWidget.VideoTrackFilterEditDialog import VideoTrackFilterEditDialog
 
-from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
 
-from GUI.UI.TimelineHeaderWidget.TimelineHeaderWidget import TimelineHeaderWidget
+from phopyqttimelineplotter.GUI.UI.TimelineHeaderWidget.TimelineHeaderWidget import TimelineHeaderWidget
 
 # Track Configs
-from GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, TrackCache, TrackFilterBase
-from GUI.Model.TrackConfigs.VideoTrackConfig import VideoTrackFilter, VideoTrackConfiguration
-from GUI.Model.TrackConfigs.PartitionTrackConfig import PartitionTrackFilter, PartitionTrackConfiguration
-from GUI.Model.TrackConfigs.DataFileTrackConfig import DataFileTrackFilter, DataFileTrackConfiguration
+from phopyqttimelineplotter.GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, TrackCache, TrackFilterBase
+from phopyqttimelineplotter.GUI.Model.TrackConfigs.VideoTrackConfig import VideoTrackFilter, VideoTrackConfiguration
+from phopyqttimelineplotter.GUI.Model.TrackConfigs.PartitionTrackConfig import PartitionTrackFilter, PartitionTrackConfiguration
+from phopyqttimelineplotter.GUI.Model.TrackConfigs.DataFileTrackConfig import DataFileTrackFilter, DataFileTrackConfiguration
 
 
-from GUI.Model.ModelViewContainer import ModelViewContainer
+from phopyqttimelineplotter.GUI.Model.ModelViewContainer import ModelViewContainer
 
-from GUI.UI.TimelineFloatingHeaderWidget.TimelineFloatingHeaderWidget import TimelineFloatingHeaderWidget
+from phopyqttimelineplotter.GUI.UI.TimelineFloatingHeaderWidget.TimelineFloatingHeaderWidget import TimelineFloatingHeaderWidget
 
-from GUI.Model.DataMovieLinkInfo import DataMovieLinkInfo
+from phopyqttimelineplotter.GUI.Model.DataMovieLinkInfo import DataMovieLinkInfo
 
-from GUI.Helpers.DurationRepresentationHelpers import DurationRepresentationMixin, OffsetRepresentationMixin
-from GUI.Helpers.MouseTrackingThroughChildrenMixin import MouseTrackingThroughChildrenMixin
+from phopyqttimelineplotter.GUI.Helpers.DurationRepresentationHelpers import DurationRepresentationMixin, OffsetRepresentationMixin
+from phopyqttimelineplotter.GUI.Helpers.MouseTrackingThroughChildrenMixin import MouseTrackingThroughChildrenMixin
 
 
-from GUI.Model.TrackType import TrackType, TrackStorageArray
+from phopyqttimelineplotter.GUI.Model.TrackType import TrackType, TrackStorageArray
 
 from app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoPreviewThumbnailGenerator
 from app.filesystem.FileExporting import FileExportingMixin, FileExportOptions
 
-from GUI.Model.TrackGroups import VideoTrackGroupSettings, VideoTrackGroup, TrackReference, TrackChildReference, VideoTrackGroupOwningMixin
-from GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
+from phopyqttimelineplotter.GUI.Model.TrackGroups import VideoTrackGroupSettings, VideoTrackGroup, TrackReference, TrackChildReference, VideoTrackGroupOwningMixin
+from phopyqttimelineplotter.GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
 
 from app.filesystem.LabjackData.LabjackFilesystemLoadingMixin import LabjackFilesystemLoader
 

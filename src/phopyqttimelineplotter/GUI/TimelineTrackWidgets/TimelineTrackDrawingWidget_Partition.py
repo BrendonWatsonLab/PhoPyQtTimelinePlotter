@@ -9,13 +9,13 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QHBoxLayout, QVBoxLayout, QSp
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
 
-from GUI.Model.Partitions import *
-from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import *
+from phopyqttimelineplotter.GUI.Model.Partitions import *
+from phopyqttimelineplotter.GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import *
 
-from GUI.UI.PartitionEditDialog.PartitionEditDialog import *
-from GUI.Model.TrackType import TrackType, TrackConfigMixin, TrackConfigDataCacheMixin
+from phopyqttimelineplotter.GUI.UI.PartitionEditDialog.PartitionEditDialog import *
+from phopyqttimelineplotter.GUI.Model.TrackType import TrackType, TrackConfigMixin, TrackConfigDataCacheMixin
 
-from GUI.UI.DialogComponents.AbstractDialogMixins import DialogObjectIdentifier
+from phopyqttimelineplotter.GUI.UI.DialogComponents.AbstractDialogMixins import DialogObjectIdentifier
 
 
 ## TODO:

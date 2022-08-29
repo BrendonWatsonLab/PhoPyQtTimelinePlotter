@@ -11,13 +11,13 @@ from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
-from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWidget
+from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWidget
 from app.database.entry_models.db_model import Animal, VideoFile, BehavioralBox, Context, FileParentFolder, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, VideoFile
 
-from GUI.UI.DialogComponents.LockableList import LockableList
+from phopyqttimelineplotter.GUI.UI.DialogComponents.LockableList import LockableList
 
 ## IMPORTS:
-# from GUI.UI.DialogComponents import ImportContext_DialogComponents
+# from phopyqttimelineplotter.GUI.UI.DialogComponents import ImportContext_DialogComponents
 
 """ ImportContext_DialogComponents: side-by-side LockableList components
 locklist_Box

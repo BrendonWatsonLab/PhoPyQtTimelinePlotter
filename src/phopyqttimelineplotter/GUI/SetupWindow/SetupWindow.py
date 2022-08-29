@@ -11,12 +11,12 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPalette
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 from app.database.DatabaseConnectionRef import DatabasePendingItemsState, DatabaseConnectionRef
-from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWindow
+from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWindow
 
 from app.BehaviorsList import BehaviorsManager, BehaviorInfoOptions
 from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
 
-# from GUI.UI.EditCapableTableView import EditCapableTableView
+# from phopyqttimelineplotter.GUI.UI.EditCapableTableView import EditCapableTableView
 
 # Enables not painting the background on selection for the color cells.
 # https://stackoverflow.com/questions/47880568/how-to-set-each-items-selection-color-of-qtablewidget-in-pyqt5

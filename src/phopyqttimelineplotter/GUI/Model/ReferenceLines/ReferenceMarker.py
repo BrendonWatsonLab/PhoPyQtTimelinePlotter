@@ -7,12 +7,12 @@ from PyQt5.QtWidgets import QWidget, QFrame, QScrollArea, QVBoxLayout, QGridLayo
 import os
 
 # ReferenceMarker.py
-from GUI.Model.ModelViewContainer import ModelViewContainer
-from GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackCache
+from phopyqttimelineplotter.GUI.Model.ModelViewContainer import ModelViewContainer
+from phopyqttimelineplotter.GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackCache
 
 
 
-# from GUI.Model.ReferenceLines.ReferenceMarker import RepresentedTimeRange
+# from phopyqttimelineplotter.GUI.Model.ReferenceLines.ReferenceMarker import RepresentedTimeRange
 """
 RepresentedMarkerTime: a simple model object that wraps a datetime. To be used by ReferenceMarkerManager
 """

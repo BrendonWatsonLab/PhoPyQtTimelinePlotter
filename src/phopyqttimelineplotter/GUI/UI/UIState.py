@@ -8,7 +8,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 from enum import Enum
 
 # import GUI.UI.UIState as UIState
-# from GUI.UI.UIState import ItemInteractionState, ItemHoverState, ItemSelectionState
+# from phopyqttimelineplotter.GUI.UI.UIState import ItemInteractionState, ItemHoverState, ItemSelectionState
 
 class ItemHoverState(Enum):
     Deemphasized = 1 # Deemphasized

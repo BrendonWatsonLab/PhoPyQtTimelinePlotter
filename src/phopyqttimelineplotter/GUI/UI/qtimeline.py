@@ -12,7 +12,7 @@ import os
 
 from numpy import load
 
-from GUI.UI.TickedTimelineDrawingBaseWidget import TickProperties, TickedTimelineDrawingBaseWidget
+from phopyqttimelineplotter.GUI.UI.TickedTimelineDrawingBaseWidget import TickProperties, TickedTimelineDrawingBaseWidget
 
 __textColor__ = QColor(187, 187, 187)
 __font__ = QFont('Decorative', 11)

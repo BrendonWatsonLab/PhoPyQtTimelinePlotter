@@ -3,12 +3,13 @@
 import sys
 from pathlib import Path
 
-from PyQt6 import QtCore, QtGui, QtWidgets
+# from PyQt6 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 # silx GUI:
 from silx.gui import qt
 from silx.gui.dialog.GroupDialog import GroupDialog
-from silx.gui.plot.StackView import StackViewMainWindow
+# from silx.gui.plot.StackView import StackViewMainWindow
 
 # C:\Users\pho\repos\PhoPyQtTimelinePlotter\app
 from phopyqttimelineplotter.app.filesystem.FilesystemRecordBase import (
@@ -16,7 +17,7 @@ from phopyqttimelineplotter.app.filesystem.FilesystemRecordBase import (
 )
 
 ## IMPORTS:
-# from GUI.UI.CustomDataSelectionWidget import CustomDataSelectionWidget
+# from phopyqttimelineplotter.GUI.UI.CustomDataSelectionWidget import CustomDataSelectionWidget
 from phopyqttimelineplotter.GUI.UI.CustomDataSelectionWidget.Uic_AUTOGEN_CustomDataSelectionWidget import (
     Ui_CustomDataSelectionWidget,
 )
@@ -24,7 +25,7 @@ from phopyqttimelineplotter.GUI.UI.CustomDataSelectionWidget.Uic_AUTOGEN_CustomD
 # from app.filesystem.FilesystemRecordBase import discover_data_files
 
 
-class CustomDataSelectionWidget(QtWidgets.QWidget):
+class CustomDataSelectionWidget(qt.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent=parent)  # Call the inherited classes __init__ method
         # self.ui = uic.loadUi("GUI/UI/CustomDataSelectionWidget/CustomDataSelectionWidget.ui", self) # Load the .ui file
@@ -73,6 +74,7 @@ class CustomDataSelectionWidget(QtWidgets.QWidget):
         ]
         self.filenames_list = [Path(filename) for filename in filenames_strs_list]
 
+        self.ui.select_group_dialog = None
         self.ui.toolButton.clicked.connect(self.on_click_select_group_button)
         self.ui.lineEdit.setText("")
 
@@ -80,12 +82,15 @@ class CustomDataSelectionWidget(QtWidgets.QWidget):
         return
 
     def on_click_select_group_button(self):
-        dialog = GroupDialog()
+        print(f'on_click_select_group_button')
+        print(f'self is QWidget: {isinstance(self, QtWidgets.QWidget)}')
+        self.ui.select_group_dialog = GroupDialog(parent=self)
+        # self.ui.select_group_dialog = GroupDialog()
         # dialog.addFile(str(filenames_list[0]))
-        [dialog.addFile(str(a_filename)) for a_filename in self.filenames_list]
-        dialog.show()
-        if dialog.exec():
-            selected_timestamp_data_url = dialog.getSelectedDataUrl()
+        [self.ui.select_group_dialog.addFile(str(a_filename)) for a_filename in self.filenames_list]
+        self.ui.select_group_dialog.show()
+        if self.ui.select_group_dialog.exec():
+            selected_timestamp_data_url = self.ui.select_group_dialog.getSelectedDataUrl()
             print("File path: %s" % selected_timestamp_data_url.file_path())
             print("HDF5 group path : %s " % selected_timestamp_data_url.data_path())
             self.ui.lineEdit.setText(f"{selected_timestamp_data_url.data_path()}")
@@ -96,9 +101,17 @@ class CustomDataSelectionWidget(QtWidgets.QWidget):
 
 ## Start Qt event loop
 if __name__ == "__main__":
-    import pyqtgraph as pg
-
-    app = pg.mkQApp("CustomDataSelectionWidget Example")
+    # import pyqtgraph as pg
+    # app = QtWidgets.QApplication([])
+    app = qt.QApplication([])
     widget = CustomDataSelectionWidget()
     widget.show()
-    pg.exec()
+    
+    result = app.exec()
+    # remove ending warnings relative to QTimer
+    # app.deleteLater()
+    sys.exit(result)
+    
+    # app = pg.mkQApp("CustomDataSelectionWidget Example")
+    # pg.exec()
+    

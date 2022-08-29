@@ -13,11 +13,11 @@ import os
 
 __backgroudColor__ = QColor(60, 63, 65)
 
-from GUI.Model.ReferenceLines.ReferenceMarkerVisualHelpers import TickProperties, ReferenceMarker
-from GUI.Model.ReferenceLines.ReferenceLineManager import ReferenceMarkerManager
+from phopyqttimelineplotter.GUI.Model.ReferenceLines.ReferenceMarkerVisualHelpers import TickProperties, ReferenceMarker
+from phopyqttimelineplotter.GUI.Model.ReferenceLines.ReferenceLineManager import ReferenceMarkerManager
 
-from GUI.Helpers.FixedTimelineContentsWidthMixin import FixedTimelineContentsWidthMixin
-from GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
+from phopyqttimelineplotter.GUI.Helpers.FixedTimelineContentsWidthMixin import FixedTimelineContentsWidthMixin
+from phopyqttimelineplotter.GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
 
 
 class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContentsWidthMixin, QWidget):

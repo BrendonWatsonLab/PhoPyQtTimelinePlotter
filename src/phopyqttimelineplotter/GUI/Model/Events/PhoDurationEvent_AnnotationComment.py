@@ -11,10 +11,10 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPainterPath, QPolygon, QFontMetrics, QRegion
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
-from GUI.Model.Events.PhoEvent import *
-from GUI.Model.Events.PhoDurationEvent import *
+from phopyqttimelineplotter.GUI.Model.Events.PhoEvent import *
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent import *
 
-from GUI.UI.TrianglePainter import *
+from phopyqttimelineplotter.GUI.UI.TrianglePainter import *
 
 class PhoDurationEvent_AnnotationComment(PhoDurationEvent):
     InstantaneousEventDuration = timedelta(minutes=30)

@@ -11,12 +11,12 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 from orangecanvas.gui.dock import CollapsibleDockWidget
 
-from GUI.Model.TrackType import TrackType, TrackConfigMixin
-from GUI.Model.TrackConfigs.AbstractTrackConfigs import *
-from GUI.Model.TrackConfigs.VideoTrackConfig import *
+from phopyqttimelineplotter.GUI.Model.TrackType import TrackType, TrackConfigMixin
+from phopyqttimelineplotter.GUI.Model.TrackConfigs.AbstractTrackConfigs import *
+from phopyqttimelineplotter.GUI.Model.TrackConfigs.VideoTrackConfig import *
 
 
-# from GUI.UI.TimelineFloatingHeaderWidget.TimelineFloatingHeaderWidget import TimelineFloatingHeaderWidget
+# from phopyqttimelineplotter.GUI.UI.TimelineFloatingHeaderWidget.TimelineFloatingHeaderWidget import TimelineFloatingHeaderWidget
 
 # TimelineFloatingHeaderWidget: A label that floats over each track in the viewport that scrolls with the user to prevent the user from getting confused as to which track is which
 class TimelineFloatingHeaderWidget(TrackConfigMixin, QWidget):

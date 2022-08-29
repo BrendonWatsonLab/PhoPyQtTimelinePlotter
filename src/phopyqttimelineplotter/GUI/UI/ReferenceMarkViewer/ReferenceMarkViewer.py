@@ -11,7 +11,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 
 ## IMPORTS:
-# from GUI.UI.ReferenceMarkViewer.ReferenceMarkViewer import ReferenceMarkViewer, ActiveReferenceMarkersMixin
+# from phopyqttimelineplotter.GUI.UI.ReferenceMarkViewer.ReferenceMarkViewer import ReferenceMarkViewer, ActiveReferenceMarkersMixin
 
 class ActiveReferenceMarkersMixin(object):
     selection_changed = pyqtSignal(list, list)

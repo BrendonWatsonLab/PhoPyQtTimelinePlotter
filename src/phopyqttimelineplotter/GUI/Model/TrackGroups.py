@@ -14,7 +14,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 # TrackGroups.py
 
 ## IMPORTS:
-# from GUI.Model.TrackGroups import VideoTrackGroupSettings, VideoTrackGroup, TrackReference, TrackChildReference, VideoTrackGroupOwningMixin
+# from phopyqttimelineplotter.GUI.Model.TrackGroups import VideoTrackGroupSettings, VideoTrackGroup, TrackReference, TrackChildReference, VideoTrackGroupOwningMixin
 
 """ TrackChildReference: a reference to a child event on a specific track.
 owningTrackReference: TrackReference

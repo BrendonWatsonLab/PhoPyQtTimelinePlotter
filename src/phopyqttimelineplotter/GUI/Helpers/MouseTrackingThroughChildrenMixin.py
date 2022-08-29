@@ -8,7 +8,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
 
 ## INCLUDES:
-# from GUI.Helpers.MouseTrackingThroughChildrenMixin import MouseTrackingThroughChildrenMixin
+# from phopyqttimelineplotter.GUI.Helpers.MouseTrackingThroughChildrenMixin import MouseTrackingThroughChildrenMixin
 
 class MouseTrackingThroughChildrenMixin(object):
     """ Overrides the default QWidget.setMouseTracking(...) function to recurrsively set mouse tracking to be enabled on all children. """

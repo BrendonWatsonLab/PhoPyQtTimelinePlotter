@@ -20,14 +20,14 @@ from sqlalchemy.ext.declarative import declarative_base
 from app.database.entry_models.DatabaseBase import Base, metadata
 
 #create QTable Model/View
-from GUI.Model.AlchemicalModels.alchemical_model import SqlAlchemyTableModel
-from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWidget
+from phopyqttimelineplotter.GUI.Model.AlchemicalModels.alchemical_model import SqlAlchemyTableModel
+from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWidget
 
 
-from GUI.UI.DialogComponents.ListLockableEditButtons_DialogComponents import ListLockableEditButtons_DialogComponents
+from phopyqttimelineplotter.GUI.UI.DialogComponents.ListLockableEditButtons_DialogComponents import ListLockableEditButtons_DialogComponents
 
 ## IMPORTS:
-# from GUI.UI.DialogComponents.LockableList import LockableList
+# from phopyqttimelineplotter.GUI.UI.DialogComponents.LockableList import LockableList
 
 
 class LockableListMainWidgetType(Enum):

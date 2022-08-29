@@ -18,12 +18,12 @@ from sqlalchemy import and_, or_
 from app.filesystem.FilesystemRecordBase import * # Imports all known types for some reason?? TODO: is this needed?
 from app.filesystem.LabjackData.LabjackFilesystemLoadingMixin import LabjackFilesystemLoader
 
-from GUI.Model.ModelViewContainer import ModelViewContainer
-from GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, TrackCache, TrackFilterBase
-# from GUI.Model.TrackType import TrackType
+from phopyqttimelineplotter.GUI.Model.ModelViewContainer import ModelViewContainer
+from phopyqttimelineplotter.GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, TrackCache, TrackFilterBase
+# from phopyqttimelineplotter.GUI.Model.TrackType import TrackType
 
 # INCLUDES:
-# from GUI.Model.TrackConfigs.DataFileTrackConfig import DataFileTrackFilter, DataFileTrackConfiguration
+# from phopyqttimelineplotter.GUI.Model.TrackConfigs.DataFileTrackConfig import DataFileTrackFilter, DataFileTrackConfiguration
 
 """
 Represents a filter for a specific track

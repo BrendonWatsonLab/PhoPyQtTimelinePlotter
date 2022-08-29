@@ -9,7 +9,7 @@ from PyQt5.QtGui import QColor, QCursor, QPainterPath, QBrush
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QMenu, QLabel, QMainWindow
 
 ## IMPORT:
-# from GUI.UI.EdgeAndCornerSelectionViewHelpers import EdgeAndCornerContainerComponent, EdgeAndCornerContainerViewMixin
+# from phopyqttimelineplotter.GUI.UI.EdgeAndCornerSelectionViewHelpers import EdgeAndCornerContainerComponent, EdgeAndCornerContainerViewMixin
 
 class EdgeAndCornerContainerComponent(IntEnum):
     NONE = 0,

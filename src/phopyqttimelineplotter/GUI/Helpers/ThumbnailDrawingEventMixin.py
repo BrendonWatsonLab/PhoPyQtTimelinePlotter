@@ -7,12 +7,12 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QFontMetrics
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
 
-# from GUI.Model.Events.PhoDurationEvent import *
+# from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent import *
 
 # ThumbnailDrawingEventMixin.py
 
 # INCLUDES:
-# from GUI.Helpers.ThumbnailDrawingEventMixin import ThumbnailDrawingEventMixin
+# from phopyqttimelineplotter.GUI.Helpers.ThumbnailDrawingEventMixin import ThumbnailDrawingEventMixin
 
 class ThumbnailDrawingEventMixin(object):
     """ ThumbnailDrawingEventMixin: a mixin that draws thumbnail images on a timeline event

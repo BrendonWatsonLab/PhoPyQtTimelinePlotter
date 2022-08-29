@@ -6,8 +6,8 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
 from pathlib import Path # for discover_data_files
 
-from GUI.Model.TrackType import TrackType
-from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent, PhoEvent
+from phopyqttimelineplotter.GUI.Model.TrackType import TrackType
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent import PhoDurationEvent, PhoEvent
 
 # FilesystemRecordBase.py
 # from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemDataEvent_Record, FilesystemLabjackEvent_Record

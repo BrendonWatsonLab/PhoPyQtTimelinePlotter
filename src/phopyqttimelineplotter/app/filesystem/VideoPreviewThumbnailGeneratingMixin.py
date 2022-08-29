@@ -12,7 +12,7 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 import subprocess
 import cv2
 
-from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
+from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
 
 from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult, CachedFileSource
 

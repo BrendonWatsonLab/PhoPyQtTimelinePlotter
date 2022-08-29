@@ -56,7 +56,7 @@ class RepresentedTimeRange(QObject):
 
 
 ## IMPORTS:
-# from GUI.Helpers.DurationRepresentationHelpers import DurationRepresentationMixin
+# from phopyqttimelineplotter.GUI.Helpers.DurationRepresentationHelpers import DurationRepresentationMixin
 
 class DurationRepresentationMixin(object):
 

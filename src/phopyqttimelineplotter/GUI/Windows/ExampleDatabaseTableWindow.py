@@ -17,16 +17,16 @@ from datetime import datetime
 #(leaves out sqlalchemy & PyQt boilerplate, will not run)
 #Define SQL Alchemy model
 
-from GUI.Model.AlchemicalModels.qvariantalchemy import String, Integer, Boolean
+from phopyqttimelineplotter.GUI.Model.AlchemicalModels.qvariantalchemy import String, Integer, Boolean
 from app.database.entry_models.DatabaseBase import Base, metadata
 # from sqlalchemy.ext.declarative import declarative_base
 # Base = declarative_base()
 
 
-from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWindow
+from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWindow
 
 #create QTable Model/View
-from GUI.Model.AlchemicalModels.alchemical_model import SqlAlchemyTableModel
+from phopyqttimelineplotter.GUI.Model.AlchemicalModels.alchemical_model import SqlAlchemyTableModel
 
 from app.database.entry_models.db_model import Animal, VideoFile, BehavioralBox, Context, FileParentFolder, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, VideoFile
 

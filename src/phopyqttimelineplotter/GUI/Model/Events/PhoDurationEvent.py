@@ -12,9 +12,9 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QFontMetrics
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
-from GUI.Model.Events.PhoEvent import *
-from GUI.UI.EdgeAndCornerSelectionViewHelpers import EdgeAndCornerContainerComponent, EdgeAndCornerContainerViewMixin
-from GUI.Helpers.ThumbnailDrawingEventMixin import ThumbnailDrawingEventMixin
+from phopyqttimelineplotter.GUI.Model.Events.PhoEvent import *
+from phopyqttimelineplotter.GUI.UI.EdgeAndCornerSelectionViewHelpers import EdgeAndCornerContainerComponent, EdgeAndCornerContainerViewMixin
+from phopyqttimelineplotter.GUI.Helpers.ThumbnailDrawingEventMixin import ThumbnailDrawingEventMixin
 
 class PhoDurationEvent(ThumbnailDrawingEventMixin, EdgeAndCornerContainerViewMixin, PhoEvent):
     InstantaneousEventDuration = timedelta(seconds=2)

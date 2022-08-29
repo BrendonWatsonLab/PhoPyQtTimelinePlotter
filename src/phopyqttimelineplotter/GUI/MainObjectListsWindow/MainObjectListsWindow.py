@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool, QVariant
 
-from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWindow
+from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWindow
 
 from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult, CachedFileSource
 
@@ -26,8 +26,8 @@ from app.filesystem.VideoFilesystemLoadingMixin import CachedVideoFileLoadingOpt
 from app.filesystem.DeeplabcutOutputFilesystemLoadingMixin import DeeplabCutOutputFileType, DeeplabcutEventFile, DeeplabcutFilesystemLoader
 
 # Pandas dataframe tables
-from GUI.Model.TableModels.PandasTableModel import PandasTableModel
-from GUI.UI.TableWidgets.PandasTableWidget import PandasTableWidget
+from phopyqttimelineplotter.GUI.Model.TableModels.PandasTableModel import PandasTableModel
+from phopyqttimelineplotter.GUI.UI.TableWidgets.PandasTableWidget import PandasTableWidget
 
 class MainObjectListsWindow(AbstractDatabaseAccessingWindow):
 

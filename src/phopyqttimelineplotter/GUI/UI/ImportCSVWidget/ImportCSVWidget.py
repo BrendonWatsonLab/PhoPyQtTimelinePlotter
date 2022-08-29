@@ -12,12 +12,12 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
 
 
-from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWidget
+from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWidget
 
-from GUI.UI.DialogComponents.ListLockableEditButtons_DialogComponents import ListLockableEditButtons_DialogComponents
+from phopyqttimelineplotter.GUI.UI.DialogComponents.ListLockableEditButtons_DialogComponents import ListLockableEditButtons_DialogComponents
 
 ## IMPORTS:
-# from GUI.UI.ImportCSVWidget.ImportCSVWidget import ImportCSVWidget
+# from phopyqttimelineplotter.GUI.UI.ImportCSVWidget.ImportCSVWidget import ImportCSVWidget
 
 """ ImportCSVWidget: a widget that allows the user to select the context in which the Labjack CSV Data is imported.
 importContextMain: ListLockableEditButtons_DialogComponents

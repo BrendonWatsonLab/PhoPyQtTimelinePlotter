@@ -6,16 +6,16 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
 
-from GUI.Model.Events.PhoEvent import PhoEvent
-from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
-from GUI.Model.Events.PhoDurationEvent_Partition import PhoDurationEvent_Partition
+from phopyqttimelineplotter.GUI.Model.Events.PhoEvent import PhoEvent
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent_Partition import PhoDurationEvent_Partition
 
 
-from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
+from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
 
 from app.database.entry_models.db_model import CategoricalDurationLabel, Context, Subcontext
 
-from GUI.Model.ModelViewContainer import ModelViewContainer
+from phopyqttimelineplotter.GUI.Model.ModelViewContainer import ModelViewContainer
 # """
 # Represents a partition
 # """

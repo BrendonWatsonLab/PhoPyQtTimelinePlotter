@@ -8,7 +8,7 @@ from app.database.entry_models.DatabaseBase import Base, metadata
 from pathlib import Path
 from datetime import datetime
 
-from GUI.Model.Videos import VideoInfo, ExperimentContextInfo
+from phopyqttimelineplotter.GUI.Model.Videos import VideoInfo, ExperimentContextInfo
 
 from app.filesystem.VideoUtils import VideoParsedResults, FoundVideoFileResult
 
@@ -16,12 +16,12 @@ from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QWidget, QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 
-from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
-from GUI.Model.Events.PhoDurationEvent_AnnotationComment import PhoDurationEvent_AnnotationComment
-from GUI.Model.Events.PhoDurationEvent_Partition import PhoDurationEvent_Partition
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent_AnnotationComment import PhoDurationEvent_AnnotationComment
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent_Partition import PhoDurationEvent_Partition
 
-from GUI.Model.TrackType import TrackType
-from GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
+from phopyqttimelineplotter.GUI.Model.TrackType import TrackType
+from phopyqttimelineplotter.GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
 
 
 ## INCLUDES:

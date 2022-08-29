@@ -13,12 +13,12 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 
 from app.database.DatabaseConnectionRef import DatabasePendingItemsState, DatabaseConnectionRef
 from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
-from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingDialog
+from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingDialog
 
-from GUI.UI.ImportCSVWidget.ImportCSVWidget import ImportCSVWidget
+from phopyqttimelineplotter.GUI.UI.ImportCSVWidget.ImportCSVWidget import ImportCSVWidget
 
 ## IMPORTS:
-# from GUI.Windows.ImportCSVWindow.ImportCSVWindow import ImportCSVWindow
+# from phopyqttimelineplotter.GUI.Windows.ImportCSVWindow.ImportCSVWindow import ImportCSVWindow
 
 
 """ 

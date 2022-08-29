@@ -12,10 +12,10 @@ from PyQt5.QtGui import QPainter, QColor, QFont, QBrush, QPalette, QPen, QPolygo
 from PyQt5.QtWidgets import QWidget, QFrame, QScrollArea, QVBoxLayout, QGridLayout, QListWidget
 import os
 
-from GUI.UI.ReferenceMarkViewer.ReferenceMarkViewer import ReferenceMarkViewer, ActiveReferenceMarkersMixin
+from phopyqttimelineplotter.GUI.UI.ReferenceMarkViewer.ReferenceMarkViewer import ReferenceMarkViewer, ActiveReferenceMarkersMixin
 
 ## IMPORTS:
-# from GUI.Model.ReferenceLines.ReferenceMarkerVisualHelpers import TickProperties, ReferenceMarker
+# from phopyqttimelineplotter.GUI.Model.ReferenceLines.ReferenceMarkerVisualHelpers import TickProperties, ReferenceMarker
 
 __textColor__ = QColor(20, 20, 20)
 __font__ = QFont('Decorative', 12)

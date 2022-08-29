@@ -19,7 +19,7 @@ from app.database.entry_models.db_model_extension import ExVideoFile
 from app.database.utility_functions import *
 
 # For convert function
-from GUI.Model.Events.PhoDurationEvent_AnnotationComment import *
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent_AnnotationComment import *
 
 import sys
 import os

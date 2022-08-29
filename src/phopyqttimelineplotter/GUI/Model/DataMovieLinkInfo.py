@@ -5,9 +5,9 @@ from datetime import datetime, timezone, timedelta
 from PyQt5.QtWidgets import QFrame, QDialog, QFrame, QLabel, QHBoxLayout
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize
 
-from GUI.Model.TrackGroups import VideoTrackGroupSettings, VideoTrackGroup, TrackReference, TrackChildReference, VideoTrackGroupOwningMixin
-from GUI.Model.Errors import SimpleErrorStatusMixin
-from GUI.Windows.VideoPlayer.VideoPlayerWidget import VideoPlayerWidget
+from phopyqttimelineplotter.GUI.Model.TrackGroups import VideoTrackGroupSettings, VideoTrackGroup, TrackReference, TrackChildReference, VideoTrackGroupOwningMixin
+from phopyqttimelineplotter.GUI.Model.Errors import SimpleErrorStatusMixin
+from phopyqttimelineplotter.GUI.Windows.VideoPlayer.VideoPlayerWidget import VideoPlayerWidget
 
 from app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoThumbnail, VideoPreviewThumbnailGenerator
 

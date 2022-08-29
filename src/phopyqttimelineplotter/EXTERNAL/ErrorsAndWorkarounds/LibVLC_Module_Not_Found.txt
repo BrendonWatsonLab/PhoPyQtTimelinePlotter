@@ -1,10 +1,10 @@
 Traceback (most recent call last):
   File "main.py", line 21, in <module>
-    from GUI.MainWindow.TimelineDrawingWindow import *
+    from phopyqttimelineplotter.GUI.MainWindow.TimelineDrawingWindow import *
   File "C:\Users\Administrator\repo\PhoPyQtTimelinePlotter\GUI\MainWindow\TimelineDrawingWindow.py", line 36, in <module>
-    from GUI.Windows.VideoPlayer.VideoPlayerWidget import VideoPlayerWidget
+    from phopyqttimelineplotter.GUI.Windows.VideoPlayer.VideoPlayerWidget import VideoPlayerWidget
   File "C:\Users\Administrator\repo\PhoPyQtTimelinePlotter\GUI\Windows\VideoPlayer\__init__.py", line 6, in <module>
-    from GUI.Windows.VideoPlayer.MainVideoPlayerWindow import MainVideoPlayerWindow
+    from phopyqttimelineplotter.GUI.Windows.VideoPlayer.MainVideoPlayerWindow import MainVideoPlayerWindow
   File "C:\Users\Administrator\repo\PhoPyQtTimelinePlotter\GUI\Windows\VideoPlayer\MainVideoPlayerWindow.py", line 18, in <module>
     from lib import vlc
   File "C:\Users\Administrator\repo\PhoPyQtTimelinePlotter\lib\vlc.py", line 207, in <module>

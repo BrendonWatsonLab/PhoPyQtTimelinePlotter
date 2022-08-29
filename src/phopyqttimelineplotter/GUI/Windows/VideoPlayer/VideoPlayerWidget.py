@@ -14,7 +14,7 @@ from PyQt5.QtCore import QDir, QTimer, Qt, QModelIndex, QSortFilterProxyModel
 from lib import vlc
 from app.model import ToggleButtonModel
 
-from GUI.Model.DataMovieLinkInfo import *
+from phopyqttimelineplotter.GUI.Model.DataMovieLinkInfo import *
 
 """
 The software displays/plays a video file with variable speed and navigation settings.

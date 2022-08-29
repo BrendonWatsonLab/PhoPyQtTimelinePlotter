@@ -6,8 +6,8 @@ from PyQt5.QtWidgets import QWidget, QFrame, QScrollArea, QVBoxLayout
 
 
 ## Import:
-# from GUI.UI.ExtendedTracksContainerWidget import ExtendedTracksContainerWidget
-from GUI.UI.TickedTimelineDrawingBaseWidget import TickProperties, TickedTimelineDrawingBaseWidget
+# from phopyqttimelineplotter.GUI.UI.ExtendedTracksContainerWidget import ExtendedTracksContainerWidget
+from phopyqttimelineplotter.GUI.UI.TickedTimelineDrawingBaseWidget import TickProperties, TickedTimelineDrawingBaseWidget
 
 
 class ExtendedTracksContainerWidget(TickedTimelineDrawingBaseWidget):

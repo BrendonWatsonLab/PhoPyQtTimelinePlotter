@@ -10,10 +10,10 @@ from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPalette, QLinear
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
 from enum import Enum
 
-from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWidget
-from GUI.UI.UIState import ItemInteractionState, ItemHoverState, ItemSelectionState
-from GUI.Helpers.FixedTimelineContentsWidthMixin import FixedTimelineContentsWidthMixin
-from GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
+from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWidget
+from phopyqttimelineplotter.GUI.UI.UIState import ItemInteractionState, ItemHoverState, ItemSelectionState
+from phopyqttimelineplotter.GUI.Helpers.FixedTimelineContentsWidthMixin import FixedTimelineContentsWidthMixin
+from phopyqttimelineplotter.GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
 
 
 class ItemSelectionOptions(Enum):

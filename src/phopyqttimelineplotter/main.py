@@ -15,15 +15,15 @@ from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon, QStandardItem
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QResource
 
-from GUI.Model.Events.PhoEvent import PhoEvent
-from GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
+from phopyqttimelineplotter.GUI.Model.Events.PhoEvent import PhoEvent
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
 
-from GUI.MainWindow.TimelineDrawingWindow import *
-from GUI.HelpWindow.HelpWindowFinal import *
-from GUI.MainObjectListsWindow.MainObjectListsWindow import *
-from GUI.Windows.ExampleDatabaseTableWindow import ExampleDatabaseTableWindow
+from phopyqttimelineplotter.GUI.MainWindow.TimelineDrawingWindow import *
+from phopyqttimelineplotter.GUI.HelpWindow.HelpWindowFinal import *
+from phopyqttimelineplotter.GUI.MainObjectListsWindow.MainObjectListsWindow import *
+from phopyqttimelineplotter.GUI.Windows.ExampleDatabaseTableWindow import ExampleDatabaseTableWindow
 
-from GUI.Windows.ImportCSVWindow.ImportCSVWindow import ImportCSVWindow
+from phopyqttimelineplotter.GUI.Windows.ImportCSVWindow.ImportCSVWindow import ImportCSVWindow
 
 from app.database.DatabaseConnectionRef import DatabaseConnectionRef
 

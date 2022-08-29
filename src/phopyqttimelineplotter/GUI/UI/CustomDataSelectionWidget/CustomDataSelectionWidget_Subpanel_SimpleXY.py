@@ -1,10 +1,10 @@
 # CustomDataSelectionWidget_Subpanel_SimpleXY.py
 # Generated from c:\Users\pho\repos\PhoPyQtTimelinePlotter\src\phopyqttimelineplotter\GUI\UI\CustomDataSelectionWidget\CustomDataSelectionWidget_Subpanel_SimpleXY.ui automatically by PhoPyQtClassGenerator VSCode Extension
-import sys
 
-from PyQt6 import QtCore, QtGui, QtWidgets
+# from PyQt6 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-## IMPORTS:
+##from phopyqttimelineplotter.GUI.
 # from GUI.UI.CustomDataSelectionWidget import CustomDataSelectionWidget_Subpanel_SimpleXY
 from phopyqttimelineplotter.GUI.UI.CustomDataSelectionWidget.Uic_AUTOGEN_CustomDataSelectionWidget_Subpanel_SimpleXY import (
     Ui_CustomDataSelectionWidget_Subpanel_SimpleXY,

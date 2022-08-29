@@ -18,10 +18,10 @@ from PyQt5.QtCore import QDir, QTimer, Qt, QModelIndex, QSortFilterProxyModel, p
 from lib import vlc
 from app.model import TimestampModel, ToggleButtonModel, TimestampDelta
 
-from GUI.Model.Errors import SimpleErrorStatusMixin
-from GUI.Model.DataMovieLinkInfo import *
+from phopyqttimelineplotter.GUI.Model.Errors import SimpleErrorStatusMixin
+from phopyqttimelineplotter.GUI.Model.DataMovieLinkInfo import *
 
-from GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
+from phopyqttimelineplotter.GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
 
 from app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoThumbnail, VideoPreviewThumbnailGenerator
 

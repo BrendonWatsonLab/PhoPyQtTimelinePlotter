@@ -9,15 +9,15 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
 
-from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import TimelineTrackDrawingWidgetBase, ItemSelectionOptions
-from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_SelectionBase import TimelineTrackDrawingWidget_SelectionBase
+from phopyqttimelineplotter.GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import TimelineTrackDrawingWidgetBase, ItemSelectionOptions
+from phopyqttimelineplotter.GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_SelectionBase import TimelineTrackDrawingWidget_SelectionBase
 
-from GUI.Model.Events.PhoDurationEvent_AnnotationComment import *
-from GUI.UI.TextAnnotations.TextAnnotationDialog import *
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent_AnnotationComment import *
+from phopyqttimelineplotter.GUI.UI.TextAnnotations.TextAnnotationDialog import *
 
 from app.database.SqlAlchemyDatabase import create_TimestampedAnnotation, convert_TimestampedAnnotation, modify_TimestampedAnnotation, modify_TimestampedAnnotation_startDate, modify_TimestampedAnnotation_endDate
 
-from GUI.Model.TrackType import TrackType, TrackConfigMixin, TrackConfigDataCacheMixin
+from phopyqttimelineplotter.GUI.Model.TrackType import TrackType, TrackConfigMixin, TrackConfigDataCacheMixin
 
 class TimelineTrackDrawingWidget_AnnotationComments(TrackConfigDataCacheMixin, TrackConfigMixin, TimelineTrackDrawingWidget_SelectionBase):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected

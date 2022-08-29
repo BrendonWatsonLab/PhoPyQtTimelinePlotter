@@ -9,11 +9,11 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QLinearGradient
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
 
-from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import TimelineTrackDrawingWidgetBase, ItemSelectionOptions
-from GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_EventsBase import TimelineTrackDrawingWidget_EventsBase
+from phopyqttimelineplotter.GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import TimelineTrackDrawingWidgetBase, ItemSelectionOptions
+from phopyqttimelineplotter.GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_EventsBase import TimelineTrackDrawingWidget_EventsBase
 
-from GUI.UI.VideoEditDialog.VideoEditDialog import *
-from GUI.Model.TrackType import TrackType, TrackConfigMixin, TrackConfigDataCacheMixin
+from phopyqttimelineplotter.GUI.UI.VideoEditDialog.VideoEditDialog import *
+from phopyqttimelineplotter.GUI.Model.TrackType import TrackType, TrackConfigMixin, TrackConfigDataCacheMixin
 
 
 class TimelineTrackDrawingWidget_Videos(TrackConfigDataCacheMixin, TrackConfigMixin, TimelineTrackDrawingWidget_EventsBase):

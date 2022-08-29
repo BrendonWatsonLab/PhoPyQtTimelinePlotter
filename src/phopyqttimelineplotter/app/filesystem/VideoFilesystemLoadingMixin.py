@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool
 
-from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
+from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
 
 from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult, CachedFileSource
 from app.filesystem.VideoUtils import findDeeplabCutProducedOutputFiles, FoundDeeplabcutOutputFileResult

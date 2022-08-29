@@ -8,8 +8,8 @@ from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import sessionmaker, selectinload, joinedload
 
 # Table Model Generation:
-from GUI.Model.AlchemicalModels.qvariantalchemy import String, Integer, Boolean
-from GUI.Model.AlchemicalModels.alchemical_model import SqlAlchemyTableModel
+from phopyqttimelineplotter.GUI.Model.AlchemicalModels.qvariantalchemy import String, Integer, Boolean
+from phopyqttimelineplotter.GUI.Model.AlchemicalModels.alchemical_model import SqlAlchemyTableModel
 
 # from app.database.SqlAlchemyDatabase import create_connection
 from PyQt5 import QtCore, QtGui
@@ -31,7 +31,7 @@ from app.database.utility_functions import *
 import sys
 import os
 
-from GUI.Model.Videos import VideoInfo
+from phopyqttimelineplotter.GUI.Model.Videos import VideoInfo
 
 
 class DatabasePendingItemsState(QObject):

@@ -11,7 +11,7 @@ from app.database.entry_models.DatabaseBase import Base, metadata
 from pathlib import Path
 from datetime import datetime
 
-from GUI.Model.Videos import VideoInfo, ExperimentContextInfo
+from phopyqttimelineplotter.GUI.Model.Videos import VideoInfo, ExperimentContextInfo
 
 from app.filesystem.VideoUtils import VideoParsedResults, FoundVideoFileResult
 
@@ -19,10 +19,10 @@ from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QWidget, QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
 
-from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent, PhoEvent
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent import PhoDurationEvent, PhoEvent
 
-from GUI.Model.TrackType import TrackType
-from GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
+from phopyqttimelineplotter.GUI.Model.TrackType import TrackType
+from phopyqttimelineplotter.GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
 
 from app.database.entry_models.db_model import ReferenceBoxExperCohortAnimalMixin, StartEndDatetimeMixin
 

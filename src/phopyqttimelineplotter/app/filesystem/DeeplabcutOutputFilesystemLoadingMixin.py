@@ -12,16 +12,16 @@ from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, 
 from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
 from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool
 
-from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
+from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
 
 from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
 
 from pathlib import Path
 
-from GUI.Model.ModelViewContainer import ModelViewContainer
+from phopyqttimelineplotter.GUI.Model.ModelViewContainer import ModelViewContainer
 from app.filesystem.FilesystemOperations import OperationTypes, PendingFilesystemOperation
 from app.filesystem.FilesystemRecordBase import FilesystemRecordBase
-from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
 
 # from app.filesystem.DeeplabcutOutputFilesystemLoadingMixin import DeeplabCutOutputFileType, DeeplabcutEventFile, DeeplabcutFilesystemLoader
 

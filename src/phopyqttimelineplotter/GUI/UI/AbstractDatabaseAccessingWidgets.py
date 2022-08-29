@@ -10,8 +10,8 @@ from PyQt5.QtCore import QObject
 
 from app.database.DatabaseConnectionRef import DatabasePendingItemsState, DatabaseConnectionRef
 
-#from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWidget
-# from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
+#from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWidget
+# from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
 
 ShouldCloseConnectionOnlyOnQuit = True
 

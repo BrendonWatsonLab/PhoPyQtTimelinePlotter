@@ -16,7 +16,7 @@ from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
 
 from pathlib import Path
 
-from GUI.Model.ModelViewContainer import ModelViewContainer
+from phopyqttimelineplotter.GUI.Model.ModelViewContainer import ModelViewContainer
 from app.filesystem.FilesystemOperations import OperationTypes, PendingFilesystemOperation
 from app.filesystem.LabjackData.LabjackEventsLoader import LabjackEventsLoader, PhoServerFormatArgs
 

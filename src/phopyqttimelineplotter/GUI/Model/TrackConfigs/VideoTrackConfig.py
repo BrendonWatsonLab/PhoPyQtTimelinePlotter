@@ -15,12 +15,12 @@ from app.database.entry_models.db_model import Animal, BehavioralBox, Context, E
 from app.database.entry_models.db_model import StaticFileExtension, FileParentFolder
 # from app.database.entry_models.db_model_extension import ExVideoFile
 
-from GUI.Model.ModelViewContainer import ModelViewContainer
-from GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, TrackCache, TrackFilterBase
-from GUI.Model.TrackType import TrackType
+from phopyqttimelineplotter.GUI.Model.ModelViewContainer import ModelViewContainer
+from phopyqttimelineplotter.GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, TrackCache, TrackFilterBase
+from phopyqttimelineplotter.GUI.Model.TrackType import TrackType
 
 # INCLUDE:
-# from GUI.Model.TrackConfigs.VideoTrackConfig import VideoTrackFilter, VideoTrackConfiguration
+# from phopyqttimelineplotter.GUI.Model.TrackConfigs.VideoTrackConfig import VideoTrackFilter, VideoTrackConfiguration
 
 
 """

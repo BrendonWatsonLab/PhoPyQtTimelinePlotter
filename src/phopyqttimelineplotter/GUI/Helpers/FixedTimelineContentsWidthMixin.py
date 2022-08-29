@@ -11,7 +11,7 @@ import sys
 import os
 
 ## IMPORT:
-# from GUI.Helpers.FixedTimelineContentsWidthMixin import FixedTimelineContentsWidthMixin
+# from phopyqttimelineplotter.GUI.Helpers.FixedTimelineContentsWidthMixin import FixedTimelineContentsWidthMixin
 
 
 class FixedTimelineContentsWidthMixin(object):
