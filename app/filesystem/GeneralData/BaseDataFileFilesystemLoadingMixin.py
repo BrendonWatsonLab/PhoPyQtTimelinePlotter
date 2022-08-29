@@ -43,7 +43,7 @@ from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
 
 #         with ProgressDialog("Processing..", 0, 100, cancelText='Cancel', parent=self, busyCursor=True) as dlg:
 #             # do stuff
-#             self.get_labjack_data_files_loader().add_labjack_file_path(importFilePath)
+#             self.get_data_files_loader().add_file_path(importFilePath)
 #             # dlg.setValue(i)   ## could also use dlg += 1
 #             dlg += 1
 #             if dlg.wasCanceled():
@@ -63,8 +63,8 @@ class BaseDataEventFile(QObject):
         self.onesEventFormatDataArray = []
         self.variableData = []
 
-        self.labjackContainerEvents = []
-        # self.labjackEvents = []
+        self.dataContainerEvents = []
+        # self.dataEvents = []
 
         self.phoServerFormatArgs = None
 
@@ -77,11 +77,11 @@ class BaseDataEventFile(QObject):
     def get_variable_data(self):
         return self.variableData
 
-    # def get_labjack_events(self):
-    #     return self.labjackEvents
+    # def get_events(self):
+    #     return self.dataEvents
 
-    def get_labjack_container_events(self):
-        return self.labjackContainerEvents
+    def get_container_events(self):
+        return self.dataContainerEvents
 
 
     def get_parsed_dict(self):
@@ -90,12 +90,12 @@ class BaseDataEventFile(QObject):
         else:
             return self.phoServerFormatArgs.parsedFileInfoDict
 
-    def set_loaded_values(self, dateTimes, onesEventFormatDataArray, variableData, labjackEventsContainerArray, phoServerFormatArgs):
+    def set_loaded_values(self, dateTimes, onesEventFormatDataArray, variableData, dataEventsContainerArray, phoServerFormatArgs):
         self.dateTimes = dateTimes
         self.onesEventFormatDataArray = onesEventFormatDataArray
         self.variableData = variableData
-        # self.labjackEvents = labjackEvents
-        self.labjackContainerEvents = labjackEventsContainerArray
+        # self.dataEvents = dataEvents
+        self.dataContainerEvents = dataEventsContainerArray
         self.phoServerFormatArgs = phoServerFormatArgs
 
 
@@ -110,27 +110,27 @@ class BaseDataFilesystemLoader(QObject):
     # foundFilesUpdated = pyqtSignal()
     targetBaseDataDataFilePathsUpdated = pyqtSignal()
 
-    labjackDataFileLoaded = pyqtSignal()
+    dataFileLoaded = pyqtSignal()
     loadingBaseDataDataFilesComplete = pyqtSignal()
 
 
-    def __init__(self, labjackFilePaths, parent=None):
+    def __init__(self, dataFilePaths, parent=None):
         super(BaseDataFilesystemLoader, self).__init__(parent=parent) # Call the inherited classes __init__ method
         self.cache = dict()
-        self.labjackFilePaths = labjackFilePaths
+        self.dataFilePaths = dataFilePaths
 
         self.loadedBaseDataFiles = []
         self.pending_operation_status = PendingFilesystemOperation(OperationTypes.NoOperation, 0, 0, parent=self)
         self.videoStartDates = []
         self.videoEndDates = []
 
-        self.labjackFilesystemWorker = None
+        self.dataFilesystemWorker = None
         self.threadpool = QThreadPool()
         self.threadpool.setMaxThreadCount(2)
         
         print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
         
-        self.reload_on_labjack_paths_changed()
+        self.reload_on_paths_changed()
         
         self.reload_data()
 
@@ -139,9 +139,9 @@ class BaseDataFilesystemLoader(QObject):
         return self.cache
 
     # Called to add a new path
-    def add_labjack_file_path(self, newBaseDataFilePath):
-        if (newBaseDataFilePath in self.labjackFilePaths):
-            print("WARNING: {0} is already in labjackFilePaths! Not adding again.".format(str(newBaseDataFilePath)))
+    def add_file_path(self, newBaseDataFilePath):
+        if (newBaseDataFilePath in self.dataFilePaths):
+            print("WARNING: {0} is already in dataFilePaths! Not adding again.".format(str(newBaseDataFilePath)))
             return False
         
         # If it's in the array of already completed video files, skip it as well
@@ -150,23 +150,23 @@ class BaseDataFilesystemLoader(QObject):
             return False
 
         # Otherwise we can add it
-        self.labjackFilePaths.append(newBaseDataFilePath)
-        self.reload_on_labjack_paths_changed()
+        self.dataFilePaths.append(newBaseDataFilePath)
+        self.reload_on_paths_changed()
 
-    def reload_on_labjack_paths_changed(self):
-        print("BaseDataFilesystemLoader.reload_on_labjack_paths_changed(...)")
-        if (len(self.labjackFilePaths)>0):
-            self.load_labjack_data_files(self.labjackFilePaths)
+    def reload_on_paths_changed(self):
+        print("BaseDataFilesystemLoader.reload_on_paths_changed(...)")
+        if (len(self.dataFilePaths)>0):
+            self.load_data_files(self.dataFilePaths)
     
         self.targetBaseDataDataFilePathsUpdated.emit()
 
-    def reload_data(self, restricted_labjack_file_paths=None):
+    def reload_data(self, restricted_file_paths=None):
         print("BaseDataFilesystemLoader.reload_data(...)")
-        if restricted_labjack_file_paths is None:
-            restricted_labjack_file_paths = self.labjackFilePaths
+        if restricted_file_paths is None:
+            restricted_file_paths = self.dataFilePaths
 
-        if (len(restricted_labjack_file_paths)>0):
-            self.load_labjack_data_files(restricted_labjack_file_paths)
+        if (len(restricted_file_paths)>0):
+            self.load_data_files(restricted_file_paths)
 
         self.targetBaseDataDataFilePathsUpdated.emit()
 
@@ -174,36 +174,36 @@ class BaseDataFilesystemLoader(QObject):
     # def loadBaseDataFile(self, aBaseDataFilePath, videoStartDates, videoEndDates):
     #     print("BaseDataFilesystemLoader.loadBaseDataFile({0})".format(str(aBaseDataFilePath)))
     #     outEventFileObj = BaseDataEventFile(aBaseDataFilePath)
-    #     (dateTimes, onesEventFormatDataArray, variableData, labjackEvents) = BaseDataFilesystemLoader.loadBaseDataFiles(aBaseDataFilePath, videoStartDates, videoEndDates, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
-    #     outEventFileObj.set_loaded_values(dateTimes, onesEventFormatDataArray, variableData, labjackEvents)
+    #     (dateTimes, onesEventFormatDataArray, variableData, dataEvents) = BaseDataFilesystemLoader.loadBaseDataFiles(aBaseDataFilePath, videoStartDates, videoEndDates, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
+    #     outEventFileObj.set_loaded_values(dateTimes, onesEventFormatDataArray, variableData, dataEvents)
     #     # Return the created object
     #     return outEventFileObj
 
     # The main function that starts the threads.
-    def load_labjack_data_files(self, labjackDataFilePaths):
-        print("BaseDataFilesystemLoader.load_labjack_data_files(labjackDataFilePaths: {0})".format(str(labjackDataFilePaths)))
+    def load_data_files(self, dataFilePaths):
+        print("BaseDataFilesystemLoader.load_data_files(dataFilePaths: {0})".format(str(dataFilePaths)))
         # Pass the function to execute
-        self.labjackFilesystemWorker = FileMetadataWorker(labjackDataFilePaths, self.on_load_labjack_data_files_execute_thread) # Any other args, kwargs are passed to the run function
-        self.labjackFilesystemWorker.signals.result.connect(self.on_load_labjack_data_files_print_output)
-        self.labjackFilesystemWorker.signals.finished.connect(self.on_load_labjack_data_files_thread_complete)
-        self.labjackFilesystemWorker.signals.progress.connect(self.on_load_labjack_data_files_progress_fn)
+        self.dataFilesystemWorker = FileMetadataWorker(dataFilePaths, self.on_load_data_files_execute_thread) # Any other args, kwargs are passed to the run function
+        self.dataFilesystemWorker.signals.result.connect(self.on_load_data_files_print_output)
+        self.dataFilesystemWorker.signals.finished.connect(self.on_load_data_files_thread_complete)
+        self.dataFilesystemWorker.signals.progress.connect(self.on_load_data_files_progress_fn)
         
         # Execute
-        self.threadpool.start(self.labjackFilesystemWorker) 
+        self.threadpool.start(self.dataFilesystemWorker) 
 
 
     ## Threads:
     # @pyqtSlot(list, int)
-    # def on_load_labjack_data_files_progress_fn(self, active_labjack_data_file_paths, n):     
+    # def on_load_data_files_progress_fn(self, active_data_file_paths, n):     
     #     self.pending_operation_status.update(n)
-    #     self.labjackDataFileLoaded.emit()
+    #     self.dataDataFileLoaded.emit()
     #     print("%d%% done" % n)
 
     @pyqtSlot(list, int)
-    def on_load_labjack_data_files_progress_fn(self, latest_labjack_file_result_list, n):
-        aFoundBaseDataDataFile = latest_labjack_file_result_list[0] # The last loaded URL
-        outEventFileObj = latest_labjack_file_result_list[1] # outEventFileObj: BaseDataEventFile type object
-        print('on_load_labjack_data_files_progress_fn(..., n: {}): file: {}'.format(str(n), str(aFoundBaseDataDataFile)))
+    def on_load_data_files_progress_fn(self, latest_file_result_list, n):
+        aFoundBaseDataDataFile = latest_file_result_list[0] # The last loaded URL
+        outEventFileObj = latest_file_result_list[1] # outEventFileObj: BaseDataEventFile type object
+        print('on_load_data_files_progress_fn(..., n: {}): file: {}'.format(str(n), str(aFoundBaseDataDataFile)))
 
         # Update our cache
         if (not (aFoundBaseDataDataFile in self.cache.keys())):
@@ -212,7 +212,7 @@ class BaseDataFilesystemLoader(QObject):
             self.cache[aFoundBaseDataDataFile] = outEventFileObj
         else:
             # Parent already exists
-            print("WARNING: labjack file path {} already exists in the cache. Updating its values...".format(str(aFoundBaseDataDataFile)))
+            print("WARNING: data file path {} already exists in the cache. Updating its values...".format(str(aFoundBaseDataDataFile)))
             self.cache[aFoundBaseDataDataFile] = outEventFileObj
             pass
 
@@ -221,7 +221,7 @@ class BaseDataFilesystemLoader(QObject):
         
         # updated!
         self.pending_operation_status.update(n)
-        self.labjackDataFileLoaded.emit()
+        self.dataFileLoaded.emit()
         # print("%d%% done" % n)
 
 
@@ -229,36 +229,36 @@ class BaseDataFilesystemLoader(QObject):
     """
     The main execution function
     """
-    def on_load_labjack_data_files_execute_thread(self, active_labjack_data_file_paths, progress_callback):
+    def on_load_data_files_execute_thread(self, active_data_file_paths, progress_callback):
 
         should_filter_for_invalid_events = True
         # should_filter_for_invalid_events = False
         
         currProgress = 0.0
         parsedFiles = 0
-        numPendingFiles = len(active_labjack_data_file_paths)
+        numPendingFiles = len(active_data_file_paths)
         self.pending_operation_status.restart(OperationTypes.FilesystemBaseDataFileLoad, numPendingFiles)
 
         new_cache = dict()
         
         # active_cache = self.cache
         active_cache = new_cache
-        # Loop through all the labjack data file paths and parse the files into a BaseDataEventFile object.
-        for (sub_index, aFoundBaseDataDataFile) in enumerate(active_labjack_data_file_paths):
+        # Loop through all the data data file paths and parse the files into a BaseDataEventFile object.
+        for (sub_index, aFoundBaseDataDataFile) in enumerate(active_data_file_paths):
 
             # BaseDataEventFile: this serves as a container to hold the loaded events
             outEventFileObj = BaseDataEventFile(aFoundBaseDataDataFile)
 
             # Call the static "loadBaseDataEventsFile(...) function:
 
-            # (dateTimes, onesEventFormatDataArray, variableData, labjackEvents) = BaseDataFilesystemLoader.loadBaseDataFiles(aFoundBaseDataDataFile, self.videoStartDates, self.videoEndDates, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
-            # (dateTimes, onesEventFormatDataArray, variableData, labjackEvents) = BaseDataFilesystemLoader.loadBaseDataEventsFile(aFoundBaseDataDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
-            (dateTimes, labjackEventContainers, phoServerFormatArgs) = BaseDataFilesystemLoader.loadBaseDataEventsFile(aFoundBaseDataDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False, should_filter_for_invalid_events=should_filter_for_invalid_events)
+            # (dateTimes, onesEventFormatDataArray, variableData, dataEvents) = BaseDataFilesystemLoader.loadBaseDataFiles(aFoundBaseDataDataFile, self.videoStartDates, self.videoEndDates, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
+            # (dateTimes, onesEventFormatDataArray, variableData, dataEvents) = BaseDataFilesystemLoader.loadBaseDataEventsFile(aFoundBaseDataDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False)
+            (dateTimes, dataEventContainers, phoServerFormatArgs) = BaseDataFilesystemLoader.loadBaseDataEventsFile(aFoundBaseDataDataFile, self.videoStartDates, self.videoEndDates, shouldLimitEventsToVideoDates=False, usePhoServerFormat=True, phoServerFormatIsStdOut=False, should_filter_for_invalid_events=should_filter_for_invalid_events)
 
             print('Loading complete... setting loaded values')
             # Cache the loaded values into the BaseDataEventFile object.
-            # outEventFileObj.set_loaded_values(dateTimes, [], [], labjackEventContainers, phoServerFormatArgs)
-            outEventFileObj.set_loaded_values(dateTimes, [], [], labjackEventContainers, None)
+            # outEventFileObj.set_loaded_values(dateTimes, [], [], dataEventContainers, phoServerFormatArgs)
+            outEventFileObj.set_loaded_values(dateTimes, [], [], dataEventContainers, None)
             print('done updating cache...')
             
             if (not (aFoundBaseDataDataFile in active_cache.keys())):
@@ -267,13 +267,13 @@ class BaseDataFilesystemLoader(QObject):
                 active_cache[aFoundBaseDataDataFile] = outEventFileObj
             else:
                 # Parent already exists
-                print("WARNING: labjack file path {} already exists in the temporary cache. Updating its values...".format(str(aFoundBaseDataDataFile)))
+                print("WARNING: data file path {} already exists in the temporary cache. Updating its values...".format(str(aFoundBaseDataDataFile)))
                 active_cache[aFoundBaseDataDataFile] = outEventFileObj
                 pass
 
 
             parsedFiles = parsedFiles + 1
-            # progress_callback.emit(active_labjack_data_file_paths, (parsedFiles*100/numPendingFiles))
+            # progress_callback.emit(active_data_file_paths, (parsedFiles*100/numPendingFiles))
             progress_callback.emit([aFoundBaseDataDataFile, outEventFileObj], (parsedFiles*100/numPendingFiles))
 
         # return "Done."
@@ -281,15 +281,15 @@ class BaseDataFilesystemLoader(QObject):
         return new_cache
  
     @pyqtSlot(list, object)
-    def on_load_labjack_data_files_print_output(self, active_video_paths, s):
+    def on_load_data_files_print_output(self, active_video_paths, s):
         print(s)
         
     @pyqtSlot(list)
-    def on_load_labjack_data_files_thread_complete(self, finished_loaded_labjack_data_files):
-        print("THREAD on_load_labjack_data_files_thread_complete(...)! {0}".format(str(finished_loaded_labjack_data_files)))
-        # The finished_loaded_labjack_data_files are paths that have already been added to self.loadedBaseDataFiles. We just need to remove them from self.labjackFilePaths
-        for aFinishedVideoFilePath in finished_loaded_labjack_data_files:
-            self.labjackFilePaths.remove(aFinishedVideoFilePath)
+    def on_load_data_files_thread_complete(self, finished_loaded_data_files):
+        print("THREAD on_load_data_files_thread_complete(...)! {0}".format(str(finished_loaded_data_files)))
+        # The finished_loaded_data_files are paths that have already been added to self.loadedBaseDataFiles. We just need to remove them from self.dataFilePaths
+        for aFinishedVideoFilePath in finished_loaded_data_files:
+            self.dataFilePaths.remove(aFinishedVideoFilePath)
 
         self.loadingBaseDataDataFilesComplete.emit()
 
@@ -302,7 +302,7 @@ class BaseDataFilesystemLoader(QObject):
     def set_start_end_video_file_dates(self, new_start_dates, new_end_dates):
         self.videoStartDates = np.array(new_start_dates)
         self.videoEndDates = np.array(new_end_dates)
-        self.reload_on_labjack_paths_changed()
+        self.reload_on_paths_changed()
 
 
     @pyqtSlot(datetime, datetime, timedelta)
@@ -318,25 +318,25 @@ class BaseDataFilesystemLoader(QObject):
 
 
     """ loadBaseDataEventsFile(...): new.
-        labjackEventRecords: a sorted list of FilesystemBaseDataEvent_Record type objects for all variable types
+        dataEventRecords: a sorted list of FilesystemBaseDataEvent_Record type objects for all variable types
     """
     @staticmethod
-    def loadBaseDataEventsFile(labjackFilePath, videoDates, videoEndDates, shouldLimitEventsToVideoDates=True, limitedVariablesToCreateEventsFor=None, usePhoServerFormat=False, phoServerFormatIsStdOut=True, should_filter_for_invalid_events=True):
+    def loadBaseDataEventsFile(dataFilePath, videoDates, videoEndDates, shouldLimitEventsToVideoDates=True, limitedVariablesToCreateEventsFor=None, usePhoServerFormat=False, phoServerFormatIsStdOut=True, should_filter_for_invalid_events=True):
         ## Load the BaseData events data from an exported MATLAB file
         # If shouldLimitEventsToVideoDates is True then only events that fall between the earliest video start date and the latest video finish date are included
         # If shouldLimitEventsToVariables is not None, then only events that are of type of the variable with the name in the array are included
         ## TODO: shouldLimitEventsToVideoDates should also affect the returned dateTimes, dataArray, etc.
-        (dateTimes, onesEventFormatDataArray, phoServerFormatArgs) = BaseDataEventsLoader.loadBaseDataEventsFile_loadFromFile(labjackFilePath, usePhoServerFormat, phoServerFormatIsStdOut)
+        (dateTimes, onesEventFormatDataArray, phoServerFormatArgs) = BaseDataEventsLoader.loadBaseDataEventsFile_loadFromFile(dataFilePath, usePhoServerFormat, phoServerFormatIsStdOut)
 
         ## Pre-process the data
         if limitedVariablesToCreateEventsFor is not None:
-            active_labjack_variable_names = limitedVariablesToCreateEventsFor
+            active_variable_names = limitedVariablesToCreateEventsFor
 
         else:
             # Otherwise load for all variables
-            active_labjack_variable_names = BaseDataEventsLoader.labjack_variable_names
+            active_variable_names = BaseDataEventsLoader.labjack_variable_names
 
-        numVariables = len(active_labjack_variable_names)
+        numVariables = len(active_variable_names)
 
         if ((videoDates is not None) and (len(videoDates) > 0)):
             earliestVideoTime = videoDates.min()
@@ -352,11 +352,11 @@ class BaseDataFilesystemLoader(QObject):
 
         ## Iterate through the event variables and pre-process them
         variableData = []
-        labjackEventRecords = []
-        # labjackEvents = []
+        dataEventRecords = []
+        # dataEvents = []
         # Can't check for invalid events in here because we do it variable by variable.
         for variableIndex in range(0, numVariables):
-            currVariableName = active_labjack_variable_names[variableIndex]
+            currVariableName = active_variable_names[variableIndex]
             dataArrayVariableIndex = BaseDataEventsLoader.labjack_variable_indicies_dict[currVariableName]
             currVariableDataValues = onesEventFormatDataArray[:, dataArrayVariableIndex]
             currVariableColorTuple = mcolors.to_rgb(BaseDataEventsLoader.labjack_variable_colors_dict[currVariableName])
@@ -368,7 +368,7 @@ class BaseDataFilesystemLoader(QObject):
             activeTimestamps = dateTimes[nonZeroEntries]
 
             # Acumulate records one variable at a time
-            labjackVariableSpecificRecords = []
+            dataVariableSpecificRecords = []
             ## Find times within video ranges:
             # activeVideoIndicies: contains an int index or None for each timestamp to indicate which video (if any) the timestamp occurred within
             activeVideoIndicies = np.empty_like(activeTimestamps)
@@ -398,31 +398,31 @@ class BaseDataFilesystemLoader(QObject):
                     # Create a new record object
                     ## TODO: should this have a different parent?
                     currRecord = FilesystemBaseDataEvent_Record(anActiveTimestamp.replace(tzinfo=None), None, currVariableName, currVariableColor, currExtendedInfoDict, parent=None)
-                    labjackVariableSpecificRecords.append(currRecord)
+                    dataVariableSpecificRecords.append(currRecord)
 
 
             # Append the variable-specific events to the master list of events
-            labjackEventRecords.extend(labjackVariableSpecificRecords)
+            dataEventRecords.extend(dataVariableSpecificRecords)
             # Add the value-dict for this variable to the 'variableData' list
-            variableData.append({'timestamps': activeTimestamps, 'values': activeValues, 'videoIndicies': activeVideoIndicies, 'variableSpecificRecords': labjackVariableSpecificRecords})
+            variableData.append({'timestamps': activeTimestamps, 'values': activeValues, 'videoIndicies': activeVideoIndicies, 'variableSpecificRecords': dataVariableSpecificRecords})
 
 
         # Sort events by timestamp
         try: import operator
         except ImportError: keyfun = lambda x: x.start_date  # use a lambda if no operator module
         else: keyfun = operator.attrgetter("start_date")  # use operator since it's faster than lambda
-        labjackEventRecords = sorted(labjackEventRecords, key=keyfun)
+        dataEventRecords = sorted(dataEventRecords, key=keyfun)
 
         # Be sure to convert into a numpy array AFTER sorting
-        labjackEventRecords = np.array(labjackEventRecords)
-        # labjackEvents = np.array(labjackEvents)
+        dataEventRecords = np.array(dataEventRecords)
+        # dataEvents = np.array(dataEvents)
 
-        print('    done. {} total labjackEvents loaded'.format(str(len(labjackEventRecords))))
-        # 'Pre-Filter:' dateTimes.size, labjackEventRecords.size, onesEventFormatDataArray.shape
+        print('    done. {} total dataEvents loaded'.format(str(len(dataEventRecords))))
+        # 'Pre-Filter:' dateTimes.size, dataEventRecords.size, onesEventFormatDataArray.shape
         # 'Pre-Filter:' 76117, 41189, (76117, 9)
         """
         dateTimes: ndarray, shape (76117,)
-        labjackEventRecords: ndarray, shape (41189,)
+        dataEventRecords: ndarray, shape (41189,)
         onesEventFormatDataArray: ndarray, shape (76117, 9)
         variableData: a list of 8 dicts defined by: {'timestamps': ndarray, 'values': ndarray, 'videoIndicies': ndarray, 'variableSpecificRecords': list} where each dict in the list corresponds to a variable with that index
             - all fields have same shape (1433,)
@@ -433,15 +433,15 @@ class BaseDataFilesystemLoader(QObject):
         if should_filter_for_invalid_events:
             print('Filtering for invalid events...')
             ### Post-processing to detect erronious events, only for food2
-            dateTimes, onesEventFormatDataArray, variableData, labjackEventRecords, phoServerFormatArgs = BaseDataEventsLoader.filter_invalid_events(dateTimes, onesEventFormatDataArray, variableData, labjackEventRecords, phoServerFormatArgs=phoServerFormatArgs)
-            print('Post-filtering: {} events remain'.format(str(len(labjackEventRecords))))
+            dateTimes, onesEventFormatDataArray, variableData, dataEventRecords, phoServerFormatArgs = BaseDataEventsLoader.filter_invalid_events(dateTimes, onesEventFormatDataArray, variableData, dataEventRecords, phoServerFormatArgs=phoServerFormatArgs)
+            print('Post-filtering: {} events remain'.format(str(len(dataEventRecords))))
             print('    done.')
         else:
             print('Skipping filtering...')
 
         """ Post-filtering:
         dateTimes: ndarray, shape (68574,)
-        labjackEventRecords: ndarray, shape (33646,)
+        dataEventRecords: ndarray, shape (33646,)
         onesEventFormatDataArray: ndarray, shape (68574, 9)
         variableData: counts match those printed in filter_invalid_events function
         """
@@ -449,13 +449,13 @@ class BaseDataFilesystemLoader(QObject):
         """
         converts the variableData list of dicts to a proper Pandas dataframe
         """
-        def get_variables_as_dict_of_dataframes(variableData, active_labjack_variable_names):
+        def get_variables_as_dict_of_dataframes(variableData, active_variable_names):
             # Convert to dataframe:
             variableDataFramesDict = dict()
             # Loop through all variables and build a dataframe for each variable data in variableData
                     # for aVariableIndex in range(0, numVariables):
-            for (aVariableIndex, currVariableName) in enumerate(active_labjack_variable_names):
-                # currVariableName = active_labjack_variable_names[aVariableIndex]
+            for (aVariableIndex, currVariableName) in enumerate(active_variable_names):
+                # currVariableName = active_variable_names[aVariableIndex]
                 variableDataFramesDict[currVariableName] = pd.DataFrame.from_dict(variableData[aVariableIndex])
 
             return variableDataFramesDict
@@ -478,23 +478,23 @@ class BaseDataFilesystemLoader(QObject):
         out_records_dataframe_CSV_export_path = out_dataframe_export_parent_path.joinpath('{}_records.csv'.format(str(base_name))) # Exported CSV
 
         print('Converting variableData to dict of Pandas Dataframes...')
-        out_dict_of_df = get_variables_as_dict_of_dataframes(variableData, active_labjack_variable_names)
+        out_dict_of_df = get_variables_as_dict_of_dataframes(variableData, active_variable_names)
 
 
         # # Write basic variables:
         # print('Writing dataframe to file {}...'.format(str(out_dataframe_export_path_basic)))
         # store_basic = pd.HDFStore(out_dataframe_export_path_basic)
         # # store_basic['variableData'] = variableData
-        # # store_basic['active_labjack_variable_names'] = active_labjack_variable_names
+        # # store_basic['active_variable_names'] = active_variable_names
         # # store_basic['variables_dict_of_dataframes'] = out_dict_of_df
         # store_basic.close()
         # print('    done writing basic variables to HDF file.')
 
         print('Converting variableData to Pandas Dataframe...')
-        # out_df = get_variables_as_dataframe(variableData, active_labjack_variable_names)
+        # out_df = get_variables_as_dataframe(variableData, active_variable_names)
         out_df = get_dict_of_dataframes_as_dataframe(out_dict_of_df)
         out_series = pd.Series(out_dict_of_df)
-        out_record_df = BaseDataEventsLoader.build_records_dataframe(labjackEventRecords)
+        out_record_df = BaseDataEventsLoader.build_records_dataframe(dataEventRecords)
         # can save it out to CSV here if we want to:
         BaseDataEventsLoader.writeRecordsDataframeToCsvFile(out_record_df, filePath=out_records_dataframe_CSV_export_path)
 
@@ -518,13 +518,13 @@ class BaseDataFilesystemLoader(QObject):
         print('building container array...')
         ## TODO: defer until needed? Some might be filtered out anyway.
         built_model_view_container_array = []
-        for (index, aRecord) in enumerate(labjackEventRecords):
+        for (index, aRecord) in enumerate(dataEventRecords):
             aGuiView = aRecord.get_gui_view(aRecord, parent=None)
             aModelViewContainer = ModelViewContainer(aRecord, aGuiView)
             built_model_view_container_array.append(aModelViewContainer)
 
-        # labjackEvents = [FilesystemBaseDataEvent_Record.get_gui_view(aRecord, parent=None) for aRecord in labjackEventRecords]
+        # dataEvents = [FilesystemBaseDataEvent_Record.get_gui_view(aRecord, parent=None) for aRecord in dataEventRecords]
         print('done building container array.')
 
-        # return (dateTimes, onesEventFormatDataArray, variableData, labjackEvents)
+        # return (dateTimes, onesEventFormatDataArray, variableData, dataEvents)
         return (dateTimes, built_model_view_container_array, phoServerFormatArgs)
