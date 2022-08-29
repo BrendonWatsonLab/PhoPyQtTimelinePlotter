@@ -10,8 +10,9 @@ import silx.io
 from PyQt5 import QtCore, QtGui, QtWidgets
 from silx.gui import qt
 from silx.gui.dialog.GroupDialog import GroupDialog
-from silx.gui.widgets.ThreadPoolPushButton import ThreadPoolPushButton # alternative: WaitingPushButton
-
+from silx.gui.widgets.ThreadPoolPushButton import (
+    ThreadPoolPushButton,  # alternative: WaitingPushButton
+)
 from silx.io.utils import H5Type, get_h5_class, get_h5py_class  # not sure which to use
 
 # C:\Users\pho\repos\PhoPyQtTimelinePlotter\app
@@ -36,8 +37,10 @@ class CustomDataSelectionWidget(qt.QWidget):
         super().__init__(parent=parent)  # Call the inherited classes __init__ method
         ## Setup Variables
         # self._selected_data = dict() # a dictionary with keys == variable name, and values == variable url
-        self._selected_data = dict(t=None, x=None, y=None) # a dictionary with keys == variable name, and values == DataUrl
-        
+        self._selected_data = dict(
+            t=None, x=None, y=None
+        )  # a dictionary with keys == variable name, and values == DataUrl
+
         # self.ui = uic.loadUi("GUI/UI/CustomDataSelectionWidget/CustomDataSelectionWidget.ui", self) # Load the .ui file
         self.ui = Ui_CustomDataSelectionWidget()
         self.ui.setupUi(self)  # builds the design from the .ui onto this widget.
@@ -86,12 +89,13 @@ class CustomDataSelectionWidget(qt.QWidget):
 
         self.ui.select_group_dialog = None
 
-
         ## Add submission buttons:
         # button = ThreadPoolPushButton(text="Load from paths")
         # button.setCallable(math.pow, 2, 16)
         # button.succeeded.connect(print) # python3
-        self.ui.btnFinalizeLoad.setCallable(self.on_click_finalize_load, self.selected_data)
+        self.ui.btnFinalizeLoad.setCallable(
+            self.on_click_finalize_load, self.selected_data
+        )
         self.ui.btnFinalizeLoad.succeeded.connect(self.on_complete_finalized_load)
 
         # Setup timestamps field:
@@ -126,20 +130,26 @@ class CustomDataSelectionWidget(qt.QWidget):
     def selected_data(self):
         """The selected_data property."""
         return self._selected_data
+
     @selected_data.setter
     def selected_data(self, value):
         self._selected_data = value
 
-
     @property
     def are_all_variables_valid(self):
         """The are_all_variables_valid property."""
-        set_variables_dict = {a_var_name:a_data_url for a_var_name, a_data_url in self.selected_data if a_data_url is not None}
-        valid_only_variables_dict = {a_var_name:a_data_url for a_var_name, a_data_url in set_variables_dict if a_data_url.is_valid()}
-        are_all_valid = (len(valid_only_variables_dict) == len(self.selected_data))
+        set_variables_dict = {
+            a_var_name: a_data_url
+            for a_var_name, a_data_url in self.selected_data
+            if a_data_url is not None
+        }
+        valid_only_variables_dict = {
+            a_var_name: a_data_url
+            for a_var_name, a_data_url in set_variables_dict
+            if a_data_url.is_valid()
+        }
+        are_all_valid = len(valid_only_variables_dict) == len(self.selected_data)
         return are_all_valid
-    
-    
 
     def on_click_select_group_button(self, *args, variable_name=None):
         print(
@@ -173,15 +183,16 @@ class CustomDataSelectionWidget(qt.QWidget):
             print("Operation cancelled :(")
 
     def on_update_variable(self, variable_name, value):
-        """ value: DataUrl - selected_timestamp_data_url """
+        """value: DataUrl - selected_timestamp_data_url"""
         self._selected_data[variable_name] = value
-        
+
         sanitized_path = str(value.data_path())
         lineEdit = self._get_variable_lineEdit(variable_name=variable_name)
         lineEdit.setText(sanitized_path)
-        
-        self.ui.btnFinalizeLoad.setEnabled(self.are_all_variables_valid) # only enable the button if all are valid
 
+        self.ui.btnFinalizeLoad.setEnabled(
+            self.are_all_variables_valid
+        )  # only enable the button if all are valid
 
     def _get_variable_lineEdit(self, variable_name):
         """returns the lineEdit control for the named variable"""
@@ -194,12 +205,12 @@ class CustomDataSelectionWidget(qt.QWidget):
         else:
             raise NotImplementedError
 
-
     def on_click_finalize_load(self, finalized_selected_data_dict):
-        print(f'on_click_finalize_load(selected_data: {finalized_selected_data_dict})')
-        
+        print(f"on_click_finalize_load(selected_data: {finalized_selected_data_dict})")
+
     def on_complete_finalized_load(self):
-        print(f'on_complete_finalized_load')
+        print(f"on_complete_finalized_load")
+
 
 ## Start Qt event loop
 if __name__ == "__main__":

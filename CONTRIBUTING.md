@@ -170,6 +170,11 @@ conda activate PhoPyQtTimelinePlotter
    pre-commit install
    ```
 
+   NOTE: they can be uninstalled using:
+   ```
+   pre-commit uninstall
+   ```
+
    `PhoPyQtTimelinePlotter` comes with a lot of hooks configured to automatically help the
    developer to check the code being written.
 
