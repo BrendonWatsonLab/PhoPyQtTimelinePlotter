@@ -27,7 +27,7 @@ from GUI.Model.ModelViewContainer import ModelViewContainer
 from app.filesystem.FilesystemOperations import OperationTypes, PendingFilesystemOperation
 from app.filesystem.LabjackData.LabjackEventsLoader import LabjackEventsLoader, PhoServerFormatArgs
 
-from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemLabjackEvent_Record
+from app.filesystem.FilesystemRecordBase import FilesystemLabjackEvent_Record
 from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
 
 # from app.filesystem.LabjackData.LabjackFilesystemLoadingMixin import LabjackEventFile, LabjackFilesystemLoader

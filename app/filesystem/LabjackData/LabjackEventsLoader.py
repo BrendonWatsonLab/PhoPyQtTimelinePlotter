@@ -13,7 +13,7 @@ import pandas as pd
 from PyQt5.QtCore import Qt, QObject, QEvent, pyqtSignal
 
 from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent, PhoEvent
-from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemLabjackEvent_Record
+from app.filesystem.FilesystemRecordBase import FilesystemLabjackEvent_Record
 
 # Copied from "phoPythonVideoFileParser" project
 

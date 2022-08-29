@@ -20,7 +20,7 @@ from GUI.Model.ModelViewContainer import ModelViewContainer
 from app.filesystem.FilesystemOperations import OperationTypes, PendingFilesystemOperation
 from app.filesystem.LabjackData.LabjackEventsLoader import LabjackEventsLoader, PhoServerFormatArgs
 
-from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemLabjackEvent_Record
+from app.filesystem.FilesystemRecordBase import FilesystemLabjackEvent_Record
 
 # from app.filesystem.GeneralDataFilesystemLoadingMixin import LabjackEventFile, GeneralDataFilesystemLoader
 
