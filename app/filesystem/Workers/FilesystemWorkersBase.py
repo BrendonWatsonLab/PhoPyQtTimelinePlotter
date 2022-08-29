@@ -1,4 +1,4 @@
-# VideoWorkersBase.py
+# FilesystemWorkersBase.py
 import os, time, traceback, sys
 
 from datetime import datetime, timezone, timedelta
