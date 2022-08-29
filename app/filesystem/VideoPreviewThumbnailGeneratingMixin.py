@@ -16,7 +16,7 @@ from GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQOb
 
 from app.filesystem.VideoUtils import findVideoFiles, VideoParsedResults, FoundVideoFileResult, CachedFileSource
 
-from app.filesystem.Workers.VideoMetadataWorkers import FileMetadataWorker
+from app.filesystem.Workers.FileMetadataWorkers import FileMetadataWorker
 from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
 
 from pathlib import Path

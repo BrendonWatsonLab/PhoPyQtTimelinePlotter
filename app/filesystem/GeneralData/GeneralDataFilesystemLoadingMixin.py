@@ -11,7 +11,7 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, QThreadPool
 
 
-from app.filesystem.Workers.VideoMetadataWorkers import FileMetadataWorker
+from app.filesystem.Workers.FileMetadataWorkers import FileMetadataWorker
 from app.filesystem.Workers.VideoFilesystemWorkers import VideoFilesystemWorker
 
 from pathlib import Path
