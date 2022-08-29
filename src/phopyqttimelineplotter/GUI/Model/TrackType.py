@@ -1,12 +1,27 @@
 import sys
 from enum import Enum
+
 from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget,QTableWidgetItem
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
+from PyQt5.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, pyqtSignal, pyqtSlot
+from PyQt5.QtGui import QBrush, QColor, QFont, QPainter, QPen
+from PyQt5.QtWidgets import (
+    QFormLayout,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QSplitter,
+    QStackedWidget,
+    QTableWidget,
+    QTableWidgetItem,
+    QToolTip,
+    QVBoxLayout,
+)
 
 ## IMPORT:
 # from phopyqttimelineplotter.GUI.Model.TrackType import TrackType, TrackStorageArray
+
 
 class TrackStorageArray(Enum):
     Unknown = 1
@@ -23,46 +38,45 @@ class TrackType(Enum):
 
     def get_short_str(self):
         if self == TrackType.Unknown:
-            return '?'
+            return "?"
         elif self == TrackType.Video:
-            return 'V'
+            return "V"
         elif self == TrackType.Annotation:
-            return 'A'
+            return "A"
         elif self == TrackType.Partition:
-            return 'P'
+            return "P"
         elif self == TrackType.DataFile:
-            return 'D'
+            return "D"
         else:
-            return '!'
+            return "!"
 
     def get_medium_str(self):
         if self == TrackType.Unknown:
-            return '???'
+            return "???"
         elif self == TrackType.Video:
-            return 'Vid'
+            return "Vid"
         elif self == TrackType.Annotation:
-            return 'Note'
+            return "Note"
         elif self == TrackType.Partition:
-            return 'Part'
+            return "Part"
         elif self == TrackType.DataFile:
-            return 'Data'
+            return "Data"
         else:
-            return 'ERR'
+            return "ERR"
 
     def get_long_str(self):
         if self == TrackType.Unknown:
-            return 'Unknown'
+            return "Unknown"
         elif self == TrackType.Video:
-            return 'Video'
+            return "Video"
         elif self == TrackType.Annotation:
-            return 'Annotation'
+            return "Annotation"
         elif self == TrackType.Partition:
-            return 'Partition'
+            return "Partition"
         elif self == TrackType.DataFile:
-            return 'DataFile'
+            return "DataFile"
         else:
-            return 'ERROR'
-
+            return "ERROR"
 
     def get_storage_array_type(self):
         if self == TrackType.Unknown:
@@ -78,8 +92,6 @@ class TrackType(Enum):
         else:
             return TrackStorageArray.Unknown
 
-
-
     def get_default_track_height(self):
         defaultMinimumVideoTrackHeight = 50
         defaultMinimumEventTrackHeight = 50
@@ -93,18 +105,15 @@ class TrackType(Enum):
         elif self == TrackType.Partition:
             return defaultMinimumEventTrackHeight
         elif self == TrackType.DataFile:
-            return 25 # Data tracks are smaller
+            return 25  # Data tracks are smaller
         else:
             return defaultMinimumEventTrackHeight
-
-
 
     def __str__(self):
         return self.get_long_str()
 
 
-
-# TrackConfigMixin: Used to get the config 
+# TrackConfigMixin: Used to get the config
 class TrackConfigMixin(object):
     # Track config functions
     def get_track_config(self):
@@ -116,9 +125,12 @@ class TrackConfigMixin(object):
     def get_track_type(self):
         return self.get_track_filter().get_track_type()
 
+
 """ TrackConfigDataCacheMixin:
-This object has a config with a cache that caches both its active record and view objects. 
+This object has a config with a cache that caches both its active record and view objects.
 """
+
+
 class TrackConfigDataCacheMixin(object):
 
     # Gets the container array from the cache

@@ -3,12 +3,34 @@
 # FixedTimelineContentsWidthMixin.py
 # from datetime import datetime, timezone, timedelta
 
-from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import Qt, QPoint, QLine, QRect, QRectF, pyqtSignal, pyqtSlot, QObject, QMargins, QSize
-from PyQt5.QtGui import QPainter, QColor, QFont, QBrush, QPalette, QPen, QPolygon, QPainterPath, QPixmap
-from PyQt5.QtWidgets import QWidget, QFrame, QScrollArea, QVBoxLayout
-import sys
 import os
+import sys
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import (
+    QLine,
+    QMargins,
+    QObject,
+    QPoint,
+    QRect,
+    QRectF,
+    QSize,
+    Qt,
+    pyqtSignal,
+    pyqtSlot,
+)
+from PyQt5.QtGui import (
+    QBrush,
+    QColor,
+    QFont,
+    QPainter,
+    QPainterPath,
+    QPalette,
+    QPen,
+    QPixmap,
+    QPolygon,
+)
+from PyQt5.QtWidgets import QFrame, QScrollArea, QVBoxLayout, QWidget
 
 ## IMPORT:
 # from phopyqttimelineplotter.GUI.Helpers.FixedTimelineContentsWidthMixin import FixedTimelineContentsWidthMixin
@@ -19,10 +41,10 @@ class FixedTimelineContentsWidthMixin(object):
     # Requires:
         Requires self.fixedWidth be set in initializer
     """
-    
-    @pyqtSlot(float) 
+
+    @pyqtSlot(float)
     def set_fixed_width(self, newWidth):
-        """ Called on the width changing """
+        """Called on the width changing"""
         self.fixedWidth = newWidth
         # self.resize(self.fixedWidth, self.height())
         self.setMinimumWidth(self.fixedWidth)

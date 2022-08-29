@@ -1,7 +1,8 @@
 # AbstractDialogMixins.py
 import sys
+
+from PyQt5.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QFrame
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize
 
 # INCLUDE:
 # from phopyqttimelineplotter.GUI.UI.DialogComponents.AbstractDialogMixins import *
@@ -9,6 +10,8 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlo
 """ DialogObjectIdentifier:
 Holds the trackID and childID that a given dialog refers to
 """
+
+
 class DialogObjectIdentifier(QObject):
     def __init__(self, trackID, childID, parent=None):
         super(DialogObjectIdentifier, self).__init__(parent=parent)
@@ -41,19 +44,20 @@ class DialogObjectIdentifier(QObject):
             pass
 
     def __eq__(self, otherIdentifier):
-        return self._trackID == otherIdentifier._trackID and self._childID == otherIdentifier._childID
+        return (
+            self._trackID == otherIdentifier._trackID
+            and self._childID == otherIdentifier._childID
+        )
 
 
-
-
-# requires self.referredObjectID exists    
+# requires self.referredObjectID exists
 class ObjectSpecificDialogMixin(object):
-
     def get_referred_object_identifier(self):
         return self.referredObjectID
 
     def set_referred_object_identifiers(self, trackID, childEventID):
         self.referredObjectID = DialogObjectIdentifier(trackID, childEventID)
+
 
 class BoxExperCohortAnimalIDsFrame_Mixin(object):
     # @method_decorator(network_protected)
@@ -62,11 +66,15 @@ class BoxExperCohortAnimalIDsFrame_Mixin(object):
 
     # @property
     def get_id_values(self, shouldReturnNoneTypes=True):
-        return self.ui.frame_BoxExperCohortAnimalIDs.get_id_values(shouldReturnNoneTypes)
+        return self.ui.frame_BoxExperCohortAnimalIDs.get_id_values(
+            shouldReturnNoneTypes
+        )
 
     # @property
     def set_id_values(self, behavioral_box_id, experiment_id, cohort_id, animal_id):
-        self.ui.frame_BoxExperCohortAnimalIDs.set_id_values(behavioral_box_id, experiment_id, cohort_id, animal_id)
+        self.ui.frame_BoxExperCohortAnimalIDs.set_id_values(
+            behavioral_box_id, experiment_id, cohort_id, animal_id
+        )
 
     # @property
     def set_id_frame_editability(self, is_editable):

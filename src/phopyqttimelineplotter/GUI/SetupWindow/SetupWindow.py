@@ -1,27 +1,51 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+
+from app.BehaviorsList import BehaviorInfoOptions, BehaviorsManager
+from app.database.DatabaseConnectionRef import (
+    DatabaseConnectionRef,
+    DatabasePendingItemsState,
+)
+from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
+from PyQt5.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, pyqtSignal
+
+# from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
+from PyQt5.QtGui import QBrush, QColor, QFont, QPainter, QPalette, QPen
+from PyQt5.QtWidgets import (
+    QApplication,
+    QColorDialog,
+    QDialogButtonBox,
+    QMessageBox,
+    QPushButton,
+    QStyle,
+    QStyledItemDelegate,
+    QTableWidget,
+    QTableWidgetItem,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+    qApp,
+)
+
+from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import (
+    AbstractDatabaseAccessingWindow,
+)
+
 # import numpy as np
 
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
-from PyQt5.QtWidgets import QApplication, qApp, QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QPushButton, QColorDialog, QTreeWidget, QTreeWidgetItem, QDialogButtonBox, QMessageBox, QStyledItemDelegate, QStyle
-# from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPalette
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
-
-from app.database.DatabaseConnectionRef import DatabasePendingItemsState, DatabaseConnectionRef
-from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWindow
-
-from app.BehaviorsList import BehaviorsManager, BehaviorInfoOptions
-from app.database.entry_models.Behaviors import Behavior, BehaviorGroup, CategoryColors
 
 # from phopyqttimelineplotter.GUI.UI.EditCapableTableView import EditCapableTableView
 
 # Enables not painting the background on selection for the color cells.
 # https://stackoverflow.com/questions/47880568/how-to-set-each-items-selection-color-of-qtablewidget-in-pyqt5
 class ColorDelegate(QStyledItemDelegate):
-    DefaultSelectionColor = QColor(41, 142, 230, 200) # A mid-darkish blue with 200/255 opacity
+    DefaultSelectionColor = QColor(
+        41, 142, 230, 200
+    )  # A mid-darkish blue with 200/255 opacity
 
     def paint(self, painter, option, index):
         color = index.data(Qt.UserRole) or ColorDelegate.DefaultSelectionColor
@@ -31,8 +55,12 @@ class ColorDelegate(QStyledItemDelegate):
 
 class SetupWindow(AbstractDatabaseAccessingWindow):
     def __init__(self, database_connection):
-        super(SetupWindow, self).__init__(database_connection) # Call the inherited classes __init__ method
-        self.ui = uic.loadUi("GUI/SetupWindow/SetupWindow.ui", self) # Load the .ui file
+        super(SetupWindow, self).__init__(
+            database_connection
+        )  # Call the inherited classes __init__ method
+        self.ui = uic.loadUi(
+            "GUI/SetupWindow/SetupWindow.ui", self
+        )  # Load the .ui file
 
         # The most recently selected/activated table cell index (column, row) or None
         self.behaviorsTableActiveIndex = None
@@ -48,7 +76,7 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         self.initUI()
 
     def initUI(self):
-        
+
         # self.ui.tableWidget_Settings_PartitionTrack.setH
 
         # if you don't want to allow in-table editing, either disable the table like:
@@ -59,48 +87,57 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
 
         # create a connection to the double click event
         self.ui.tableWidget_Settings_PartitionTrack.setItemDelegate(ColorDelegate())
-        self.ui.tableWidget_Settings_PartitionTrack.itemDoubleClicked.connect(self.on_begin_edit_behavior_table_item)
+        self.ui.tableWidget_Settings_PartitionTrack.itemDoubleClicked.connect(
+            self.on_begin_edit_behavior_table_item
+        )
 
         # Not sure which function I want to use
-        self.ui.tableWidget_Settings_PartitionTrack.itemChanged.connect(self.on_behavior_table_item_changed)
-        self.ui.tableWidget_Settings_PartitionTrack.currentItemChanged.connect(self.on_current_behavior_table_item_changed)
+        self.ui.tableWidget_Settings_PartitionTrack.itemChanged.connect(
+            self.on_behavior_table_item_changed
+        )
+        self.ui.tableWidget_Settings_PartitionTrack.currentItemChanged.connect(
+            self.on_current_behavior_table_item_changed
+        )
 
-        self.ui.buttonBox_Settings_PartitionTrack.clicked.connect(self.on_update_buttonBox_clicked)
+        self.ui.buttonBox_Settings_PartitionTrack.clicked.connect(
+            self.on_update_buttonBox_clicked
+        )
 
         # self.setStyleSheet("QTableView{ selection-background-color: rgba(255, 0, 0, 50);  }")
         # self.setSelectionBehavior(QAbstractItemView.SelectRows)
 
-        self.reloadBehaviorsInterfaces(should_initialize_database_from_sample_if_missing=False)
+        self.reloadBehaviorsInterfaces(
+            should_initialize_database_from_sample_if_missing=False
+        )
 
-
-
-## Data Model Functions:
+    ## Data Model Functions:
     # Updates the member variables from the database
     # Note: if there are any pending changes, they will be persisted on this action
     def reloadModelFromDatabase(self):
         # Load the latest behaviors and colors data from the database
         self.colorsDict = self.database_connection.load_colors_from_database()
-        self.behaviorGroups = self.database_connection.load_behavior_groups_from_database()
+        self.behaviorGroups = (
+            self.database_connection.load_behavior_groups_from_database()
+        )
         ## What about self.partitionInfoOptions?
-        
 
-## General Functions:
+    ## General Functions:
 
     # Called to rebuild the behaviors tree and table from the behaviors data loaded from the database
     def build_behaviors_interfaces_from_loaded(self):
-        
+
         # Table
         # self.ui.tableWidget_Settings_PartitionTrack.clear()
         self.ui.tableWidget_Settings_PartitionTrack.clearContents()
-        
+
         self.partitionInfoOptions = []
-        
+
         # Tree
         self.ui.treeWidget_Settings_PartitionTrack.clear()
         self.topLevelNodes = []
         self.topLeftNodesDict = dict()
 
-         # Add the top-level parent nodes
+        # Add the top-level parent nodes
         for (aTypeId, aUniqueBehaviorGroup) in enumerate(self.behaviorGroups):
             # Get loaded item properties
             if aUniqueBehaviorGroup.description:
@@ -108,36 +145,55 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             else:
                 extra_string = "String C"
 
-            aNewGroupNode = QTreeWidgetItem([aUniqueBehaviorGroup.name, str(aTypeId), extra_string])
+            aNewGroupNode = QTreeWidgetItem(
+                [aUniqueBehaviorGroup.name, str(aTypeId), extra_string]
+            )
             aNodeColor = aUniqueBehaviorGroup.primaryColor.get_QColor()
             aNewGroupNode.setBackground(0, aNodeColor)
 
             # Table Item:
-            newObj = BehaviorInfoOptions(aUniqueBehaviorGroup.name, (aUniqueBehaviorGroup.description or aUniqueBehaviorGroup.name), aTypeId, 0, aNodeColor)
+            newObj = BehaviorInfoOptions(
+                aUniqueBehaviorGroup.name,
+                (aUniqueBehaviorGroup.description or aUniqueBehaviorGroup.name),
+                aTypeId,
+                0,
+                aNodeColor,
+            )
             self.partitionInfoOptions.append(newObj)
 
-            for (aSubtypeID, aUniqueLeafBehavior) in enumerate(aUniqueBehaviorGroup.behaviors):
+            for (aSubtypeID, aUniqueLeafBehavior) in enumerate(
+                aUniqueBehaviorGroup.behaviors
+            ):
                 if aUniqueLeafBehavior.description:
                     extra_string = aUniqueLeafBehavior.description
                 else:
                     # Otherwise it's the parents' name
                     extra_string = aUniqueBehaviorGroup.name
 
-                aNewNode = QTreeWidgetItem([aUniqueLeafBehavior.name, "(type: {0}, subtype: {1})".format(str(aTypeId), str(aSubtypeID)), extra_string])
+                aNewNode = QTreeWidgetItem(
+                    [
+                        aUniqueLeafBehavior.name,
+                        "(type: {0}, subtype: {1})".format(
+                            str(aTypeId), str(aSubtypeID)
+                        ),
+                        extra_string,
+                    ]
+                )
                 aNodeColor = aUniqueLeafBehavior.primaryColor.get_QColor()
                 aNewNode.setBackground(0, aNodeColor)
                 aNewGroupNode.addChild(aNewNode)
 
             self.topLevelNodes.append(aNewGroupNode)
-            
+
         self.ui.treeWidget_Settings_PartitionTrack.addTopLevelItems(self.topLevelNodes)
         # Refresh the table to display the updated data
         self.updatePartitionOptionsTable()
 
-
     # Initializes the UI elements that display/edit the behaviors
     # If should_initialize_database_from_sample_if_missing is true, the database will attempt to be loaded, and if that fails or it's empty it will be created from sample data
-    def reloadBehaviorsInterfaces(self, should_initialize_database_from_sample_if_missing):
+    def reloadBehaviorsInterfaces(
+        self, should_initialize_database_from_sample_if_missing
+    ):
 
         # Load the latest behaviors and colors data from the database
         self.reloadModelFromDatabase()
@@ -148,50 +204,75 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
 
             if self.colorsDict and self.behaviorGroups:
                 # Valid loaded objects
-                if (len(self.behaviorGroups) > 0):
+                if len(self.behaviorGroups) > 0:
                     needs_init_sample_db = False
-                
+
             # Initializes the DB if that's needed (if it's empty)
             if needs_init_sample_db:
                 self.initSampleBehaviorsDatabase()
-        
+
         # Build the UI objects either way
         self.build_behaviors_interfaces_from_loaded()
 
         # self.database_close()
 
-
     # Updates the table interface from the self.partitionInfoObjects variable
     def updatePartitionOptionsTable(self):
         # Setup Table
         self.ui.tableWidget_Settings_PartitionTrack.setColumnCount(5)
-        self.ui.tableWidget_Settings_PartitionTrack.setRowCount(len(self.partitionInfoOptions)+1)
+        self.ui.tableWidget_Settings_PartitionTrack.setRowCount(
+            len(self.partitionInfoOptions) + 1
+        )
         # Headers
-        self.ui.tableWidget_Settings_PartitionTrack.setItem(0,0,QTableWidgetItem("Name"))
-        self.ui.tableWidget_Settings_PartitionTrack.setItem(0,1,QTableWidgetItem("Descr."))
-        self.ui.tableWidget_Settings_PartitionTrack.setItem(0,2,QTableWidgetItem("Type"))
-        self.ui.tableWidget_Settings_PartitionTrack.setItem(0,3,QTableWidgetItem("Subtype"))
-        self.ui.tableWidget_Settings_PartitionTrack.setItem(0,4,QTableWidgetItem("Color"))
+        self.ui.tableWidget_Settings_PartitionTrack.setItem(
+            0, 0, QTableWidgetItem("Name")
+        )
+        self.ui.tableWidget_Settings_PartitionTrack.setItem(
+            0, 1, QTableWidgetItem("Descr.")
+        )
+        self.ui.tableWidget_Settings_PartitionTrack.setItem(
+            0, 2, QTableWidgetItem("Type")
+        )
+        self.ui.tableWidget_Settings_PartitionTrack.setItem(
+            0, 3, QTableWidgetItem("Subtype")
+        )
+        self.ui.tableWidget_Settings_PartitionTrack.setItem(
+            0, 4, QTableWidgetItem("Color")
+        )
 
         for (aRowIndex, aPartitionInfoOption) in enumerate(self.partitionInfoOptions):
-            aDataRowIndex = aRowIndex + 1 # Add one to compensate for the header row
+            aDataRowIndex = aRowIndex + 1  # Add one to compensate for the header row
             # self.ui.tableWidget_Settings_PartitionTrack.setItem(aDataRowIndex,0,QTableWidgetItem(str(aRowIndex)))
-            self.ui.tableWidget_Settings_PartitionTrack.setItem(aDataRowIndex,0,QTableWidgetItem(aPartitionInfoOption.name))
-            self.ui.tableWidget_Settings_PartitionTrack.setItem(aDataRowIndex,1,QTableWidgetItem(aPartitionInfoOption.description))
-            self.ui.tableWidget_Settings_PartitionTrack.setItem(aDataRowIndex,2,QTableWidgetItem(str(aPartitionInfoOption.type)))
-            self.ui.tableWidget_Settings_PartitionTrack.setItem(aDataRowIndex,3,QTableWidgetItem(str(aPartitionInfoOption.subtype)))
+            self.ui.tableWidget_Settings_PartitionTrack.setItem(
+                aDataRowIndex, 0, QTableWidgetItem(aPartitionInfoOption.name)
+            )
+            self.ui.tableWidget_Settings_PartitionTrack.setItem(
+                aDataRowIndex, 1, QTableWidgetItem(aPartitionInfoOption.description)
+            )
+            self.ui.tableWidget_Settings_PartitionTrack.setItem(
+                aDataRowIndex, 2, QTableWidgetItem(str(aPartitionInfoOption.type))
+            )
+            self.ui.tableWidget_Settings_PartitionTrack.setItem(
+                aDataRowIndex, 3, QTableWidgetItem(str(aPartitionInfoOption.subtype))
+            )
 
             # Color Item:
-            currColorTableWidgetItem = QTableWidgetItem('')
+            currColorTableWidgetItem = QTableWidgetItem("")
             currColorTableWidgetItem.setBackground(aPartitionInfoOption.color)
-            currColorTableWidgetItem.setFlags(currColorTableWidgetItem.flags() ^ Qt.ItemIsEditable)
-            currColorTableWidgetItem.setData(Qt.UserRole, aPartitionInfoOption.color) # Set the color as user data on the item
+            currColorTableWidgetItem.setFlags(
+                currColorTableWidgetItem.flags() ^ Qt.ItemIsEditable
+            )
+            currColorTableWidgetItem.setData(
+                Qt.UserRole, aPartitionInfoOption.color
+            )  # Set the color as user data on the item
             # "selection-background-color: #000000;"
-            self.ui.tableWidget_Settings_PartitionTrack.setItem(aDataRowIndex,4,currColorTableWidgetItem)
+            self.ui.tableWidget_Settings_PartitionTrack.setItem(
+                aDataRowIndex, 4, currColorTableWidgetItem
+            )
 
     # Called when the user edited an item
     def on_user_updated_behavior_table_item(self, column, row, newValue):
-        # self.get_has_pending_changes()        
+        # self.get_has_pending_changes()
         # self.reloadModelFromDatabase()
         did_change_occur = False
 
@@ -200,14 +281,14 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
             pass
         elif column == 1:
             # Description column:
-            prevValue = self.behaviorGroups[row-1].description
+            prevValue = self.behaviorGroups[row - 1].description
             # prevValue = self.behaviorsTableEditingPrevValue
-            if (newValue == prevValue):
+            if newValue == prevValue:
                 print("Unchanged from original!")
                 return
             else:
                 print("Value changed from {0} to {1}".format(prevValue, newValue))
-                self.behaviorGroups[row-1].description = newValue
+                self.behaviorGroups[row - 1].description = newValue
                 did_change_occur = True
         elif column == 4:
             # Color column
@@ -234,13 +315,17 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
     def on_behavior_table_item_changed(self, item):
         # print('on_item_changed() table item (col: {0}, row: {1}): content: {2}'.format(item.column(), item.row(), item.text()))
 
-        if (self.behaviorsTableEditingIndex):
+        if self.behaviorsTableEditingIndex:
             # print("Editing index: {0}".format(self.behaviorsTableEditingIndex))
             # If we have an active editing index, see if it matches the changed item, implying the user has edited it
-            if ((self.behaviorsTableEditingIndex[0] == item.column()) and (self.behaviorsTableEditingIndex[1] == item.row())):
+            if (self.behaviorsTableEditingIndex[0] == item.column()) and (
+                self.behaviorsTableEditingIndex[1] == item.row()
+            ):
                 # Item matches editing item, user might have changed it
                 print("User changed item!")
-                self.on_user_updated_behavior_table_item(item.column(), item.row(), item.text())
+                self.on_user_updated_behavior_table_item(
+                    item.column(), item.row(), item.text()
+                )
             else:
                 # Otherwise, the user activated a new item without editing the edit item, so the editing item is None
                 # print("User didn't edit item")
@@ -251,7 +336,6 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         else:
             # print("Not editing")
             pass
-
 
     # This is being called whenever the table selection is updated, independent of if the contents of the cell are being edited
     def on_current_behavior_table_item_changed(self, item):
@@ -266,31 +350,32 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
     def on_begin_edit_behavior_table_item(self, item):
         # print('editItem() table item (col: {0}, row: {1}): content: {2}'.format(item.column(), item.row(), item.text()))
         self.behaviorsTableEditingIndex = (item.column(), item.row())
-        
+
         # column is 0-indexed
-        if (item.column() == 1):
+        if item.column() == 1:
             # Description Column
-            print('Description column: editing')
+            print("Description column: editing")
             # self.current_editing_item_row = item.row()
             # self.current_editing_item_old_value = item.text()
             oldValue = item.text()
             # newValue = item.text()
             # print('old value: {0}'.format(oldValue))
 
-
-        elif (item.column() == 4):
-            print('Color column: selecting')
+        elif item.column() == 4:
+            print("Color column: selecting")
             # Get the existing table item color
             original_item_color = item.background().color()
             newRowColor = self.open_color_picker(original_item_color)
             if newRowColor:
-                self.partitionInfoOptions[item.row()-1].color = newRowColor
+                self.partitionInfoOptions[item.row() - 1].color = newRowColor
                 # Update the row color
                 item.setBackground(newRowColor)
-                item.setData(Qt.UserRole, newRowColor) # Set the color as user data on the item
-                print('Color updated!')
+                item.setData(
+                    Qt.UserRole, newRowColor
+                )  # Set the color as user data on the item
+                print("Color updated!")
         else:
-            print('editItem() table item {0}: Unknown action'.format(item.text())) 
+            print("editItem() table item {0}: Unknown action".format(item.text()))
 
     # Called when one of the buttons in the button box at the bottom of the window are clicked like "Save all", "Reset", or "Restore Defaults"
     def on_update_buttonBox_clicked(self, button):
@@ -298,15 +383,17 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         self.user_edited_pending_counts = self.database_connection.get_pending_counts()
 
         if sb == QDialogButtonBox.SaveAll:
-            print('SaveAll Clicked')
+            print("SaveAll Clicked")
             print("Saving {0} changes...".format(str(self.user_edited_pending_counts)))
             self.database_connection.commit()
             self.reloadModelFromDatabase()
             self.build_behaviors_interfaces_from_loaded()
 
         elif sb == QDialogButtonBox.Reset:
-            print('Reset Clicked')
-            self.reloadBehaviorsInterfaces(should_initialize_database_from_sample_if_missing=False)
+            print("Reset Clicked")
+            self.reloadBehaviorsInterfaces(
+                should_initialize_database_from_sample_if_missing=False
+            )
 
         elif sb == QDialogButtonBox.RestoreDefaults:
             print("RestoreDefaults Clicked")
@@ -314,47 +401,47 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
         else:
             print("UNIMPLEMENTED: Unhandled button box button")
         # and so on...
-    
 
-
-## UTILITY Functions:
+    ## UTILITY Functions:
 
     # Opens a dialog that asks the user to confirm the "Restore Defaults" operation.
     def open_confirm_restore_defaults_messagebox(self):
         self.activeMessageBox = QMessageBox()
         self.activeMessageBox.setIcon(QMessageBox.Warning)
 
-        self.activeMessageBox.setText("This will overwrite the data in the database with the sample data that was hard-coded into the application.")
-        self.activeMessageBox.setInformativeText("You probably don't want to do this unless the database has become corrupted or you're testing!")
+        self.activeMessageBox.setText(
+            "This will overwrite the data in the database with the sample data that was hard-coded into the application."
+        )
+        self.activeMessageBox.setInformativeText(
+            "You probably don't want to do this unless the database has become corrupted or you're testing!"
+        )
         self.activeMessageBox.setWindowTitle("Restore Sample Data?")
         # msg.setDetailedText("The details are as follows:")
-        self.activeMessageBox.setStandardButtons(QMessageBox.RestoreDefaults | QMessageBox.Cancel)
+        self.activeMessageBox.setStandardButtons(
+            QMessageBox.RestoreDefaults | QMessageBox.Cancel
+        )
         self.activeMessageBox.setDefaultButton(QMessageBox.Cancel)
-        self.activeMessageBox.buttonClicked.connect(self.on_confirm_restore_defaults_messagebox_callback)
-        
+        self.activeMessageBox.buttonClicked.connect(
+            self.on_confirm_restore_defaults_messagebox_callback
+        )
+
         retval = self.activeMessageBox.exec_()
         # print("value of pressed message box button:", retval)
-        
 
     # Callback of the "Restore Defaults" confirmatory message box
     def on_confirm_restore_defaults_messagebox_callback(self, button):
-        print("Button pressed is:",button.text())
+        print("Button pressed is:", button.text())
         button = self.activeMessageBox.standardButton(button)
         # sb = self.ui.buttonBox_Settings_PartitionTrack.standardButton(button)
         if button == QMessageBox.RestoreDefaults:
-            print('Confirm RestoreDefaults Clicked')
+            print("Confirm RestoreDefaults Clicked")
         elif button == QMessageBox.Cancel:
-            print('Cancel Clicked')
+            print("Cancel Clicked")
         else:
             print("UNIMPLEMENTED: Unhandled QMessageBox button")
 
         # Clear the messagebox variable
         self.activeMessageBox = None
-        
-
-
-        
-
 
     # Displays a color-picker window that the user can select a color from
     def open_color_picker(self, existingColor):
@@ -368,4 +455,3 @@ class SetupWindow(AbstractDatabaseAccessingWindow):
                 return None
         else:
             return None
-

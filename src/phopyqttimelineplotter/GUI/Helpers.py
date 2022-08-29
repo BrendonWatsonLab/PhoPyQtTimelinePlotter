@@ -1,14 +1,28 @@
 import sys
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+
 import numpy as np
 from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
-
+from PyQt5.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, pyqtSignal
+from PyQt5.QtGui import QBrush, QColor, QFont, QPainter, QPen
+from PyQt5.QtWidgets import (
+    QFormLayout,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QSplitter,
+    QStackedWidget,
+    QTableWidget,
+    QTableWidgetItem,
+    QToolTip,
+    QVBoxLayout,
+)
 
 ## INCLUDES:
 # from phopyqttimelineplotter.GUI.Helpers import clickable
+
 
 def clickable(widget):
     class Filter(QObject):
@@ -27,4 +41,3 @@ def clickable(widget):
     filter = Filter(widget)
     widget.installEventFilter(filter)
     return filter.clicked
-

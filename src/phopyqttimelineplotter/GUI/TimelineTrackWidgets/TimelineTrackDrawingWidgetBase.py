@@ -2,53 +2,96 @@
 # Contains EventTrackDrawingWidget which draws several PhoEvent objects as rectangles or lines within a single track.
 
 import sys
-from datetime import datetime, timezone, timedelta
-import numpy as np
-from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget,QTableWidgetItem, QWidget
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QPalette, QLinearGradient
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 
-from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWidget
-from phopyqttimelineplotter.GUI.UI.UIState import ItemInteractionState, ItemHoverState, ItemSelectionState
-from phopyqttimelineplotter.GUI.Helpers.FixedTimelineContentsWidthMixin import FixedTimelineContentsWidthMixin
+import numpy as np
+from PyQt5 import QtGui, QtWidgets
+from PyQt5.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, pyqtSignal, pyqtSlot
+from PyQt5.QtGui import QBrush, QColor, QFont, QLinearGradient, QPainter, QPalette, QPen
+from PyQt5.QtWidgets import (
+    QFormLayout,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QSplitter,
+    QStackedWidget,
+    QTableWidget,
+    QTableWidgetItem,
+    QToolTip,
+    QVBoxLayout,
+    QWidget,
+)
+
 from phopyqttimelineplotter.GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
+from phopyqttimelineplotter.GUI.Helpers.FixedTimelineContentsWidthMixin import (
+    FixedTimelineContentsWidthMixin,
+)
+from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import (
+    AbstractDatabaseAccessingWidget,
+)
+from phopyqttimelineplotter.GUI.UI.UIState import (
+    ItemHoverState,
+    ItemInteractionState,
+    ItemSelectionState,
+)
 
 
 class ItemSelectionOptions(Enum):
-        DisableSelection = 1 # disallows selection
-        SingleSelection = 2 #  allows one or no items to be selected
-        # TODO: could have a "RequireSingleSelection" which disallows deselection
-        MultiSelection = 3  # allows multiple selection
+    DisableSelection = 1  # disallows selection
+    SingleSelection = 2  #  allows one or no items to be selected
+    # TODO: could have a "RequireSingleSelection" which disallows deselection
+    MultiSelection = 3  # allows multiple selection
+
 
 # The base timeline track widget which all others should inherit from
-class TimelineTrackDrawingWidgetBase(DateTimeRenderMixin, FixedTimelineContentsWidthMixin, AbstractDatabaseAccessingWidget):
+class TimelineTrackDrawingWidgetBase(
+    DateTimeRenderMixin,
+    FixedTimelineContentsWidthMixin,
+    AbstractDatabaseAccessingWidget,
+):
     # This defines a signal called 'hover_changed'/'selection_changed' that takes the trackID and the index of the child object that was hovered/selected
-    hover_changed = pyqtSignal(int, int, name='hover_changed')
-    selection_changed = pyqtSignal(int, int, name='selection_changed')
+    hover_changed = pyqtSignal(int, int, name="hover_changed")
+    selection_changed = pyqtSignal(int, int, name="selection_changed")
 
     on_create_marker = pyqtSignal(datetime)
-    
-    static_TimeTrackObjectIndex_NoSelection = -1  # The integer value that indicates no object has been selected in the timeline
 
-    def __init__(self, trackID, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=False, wantsMouseEvents=True):
-        super(TimelineTrackDrawingWidgetBase, self).__init__(database_connection, parent)
+    static_TimeTrackObjectIndex_NoSelection = (
+        -1
+    )  # The integer value that indicates no object has been selected in the timeline
+
+    def __init__(
+        self,
+        trackID,
+        totalStartTime,
+        totalEndTime,
+        database_connection,
+        parent=None,
+        wantsKeyboardEvents=False,
+        wantsMouseEvents=True,
+    ):
+        super(TimelineTrackDrawingWidgetBase, self).__init__(
+            database_connection, parent
+        )
         self.trackID = trackID
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
-        self.totalDuration = (self.totalEndTime - self.totalStartTime)
+        self.totalDuration = self.totalEndTime - self.totalStartTime
         self.fixedWidth = 800.0
-        
+
         self.wantsKeyboardEvents = wantsKeyboardEvents
         self.wantsMouseEvents = wantsMouseEvents
-        
+
         self.trackLabelText = None
 
-        QToolTip.setFont(QFont('SansSerif', 10))
+        QToolTip.setFont(QFont("SansSerif", 10))
 
-        self.trackInteractionState = ItemInteractionState(ItemHoverState.Default, ItemSelectionState.Default, parent=self)
-        
+        self.trackInteractionState = ItemInteractionState(
+            ItemHoverState.Default, ItemSelectionState.Default, parent=self
+        )
+
         # # Debug background fill
         # p = self.palette()
         # p.setColor(QPalette.Background, Qt.red)
@@ -58,45 +101,51 @@ class TimelineTrackDrawingWidgetBase(DateTimeRenderMixin, FixedTimelineContentsW
         # self.setToolTip('This is a <b>QWidget</b> widget')
 
         # Setup input events
-        if (self.wantsKeyboardEvents):
+        if self.wantsKeyboardEvents:
             self.keyPressEvent = self.on_key_pressed
             self.keyReleaseEvent = self.on_key_released
 
         self.setMouseTracking(self.wantsMouseEvents)
-        if (self.wantsMouseEvents):
+        if self.wantsMouseEvents:
             self.mousePressEvent = self.on_button_clicked
             self.mouseReleaseEvent = self.on_button_released
             self.mouseMoveEvent = self.on_mouse_moved
 
-
     def get_trackID(self):
         return self.trackID
-        
+
     def set_track_title_label(self, title):
         self.trackLabelText = title
 
     def get_track_title_label(self):
         return self.trackLabelText
-        
-    def paintEvent( self, event ):
+
+    def paintEvent(self, event):
         pass
 
     def get_background_gradient(self, height):
-        middleColor = QColor(40,40,40,64)
-        edgeColor = QColor(38,38,38,255)
-        transitionColor = QColor(255,255,255,200)
-        innerGlowColor = QColor(255,255,255,64)
+        middleColor = QColor(40, 40, 40, 64)
+        edgeColor = QColor(38, 38, 38, 255)
+        transitionColor = QColor(255, 255, 255, 200)
+        innerGlowColor = QColor(255, 255, 255, 64)
 
-        if (self.is_track_emphasized()):
-            brightnessAmount = 160 # returns a color that's 60% brighter
-            middleColor = middleColor.lighter(brightnessAmount) 
+        if self.is_track_emphasized():
+            brightnessAmount = 160  # returns a color that's 60% brighter
+            middleColor = middleColor.lighter(brightnessAmount)
             edgeColor = edgeColor.lighter(brightnessAmount)
             transitionColor = transitionColor.lighter(brightnessAmount)
             innerGlowColor = innerGlowColor.lighter(brightnessAmount)
 
-
-        gradientKeysMain = [(0.09, edgeColor),(0.095, transitionColor),(0.1, innerGlowColor), (0.16, middleColor),
-        (0.84, middleColor),(0.9, innerGlowColor),(0.905, transitionColor), (0.91, edgeColor)]
+        gradientKeysMain = [
+            (0.09, edgeColor),
+            (0.095, transitionColor),
+            (0.1, innerGlowColor),
+            (0.16, middleColor),
+            (0.84, middleColor),
+            (0.9, innerGlowColor),
+            (0.905, transitionColor),
+            (0.91, edgeColor),
+        ]
 
         # Draw the linear horizontal gradient.
         out_gradient = QLinearGradient(0, 0, 0, height)
@@ -110,7 +159,7 @@ class TimelineTrackDrawingWidgetBase(DateTimeRenderMixin, FixedTimelineContentsW
 
     def is_track_selected(self):
         return self.trackInteractionState.is_selected()
-    
+
     def deselect_all(self):
         pass
 
@@ -159,11 +208,11 @@ class TimelineTrackDrawingWidgetBase(DateTimeRenderMixin, FixedTimelineContentsW
 
     def offset_to_duration(self, event_x):
         (percent_x, percent_y) = self.offset_to_percent(event_x, 0.0)
-        return (self.totalDuration * percent_x)
+        return self.totalDuration * percent_x
 
     def offset_to_datetime(self, event_x):
         duration_offset = self.offset_to_duration(event_x)
-        return (self.totalStartTime + duration_offset)
+        return self.totalStartTime + duration_offset
 
     def percent_to_offset(self, percent_offset):
         event_x = percent_offset * self.width()

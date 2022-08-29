@@ -1,51 +1,129 @@
 import sys
-from datetime import datetime, timezone, timedelta
-import numpy as np
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 
+import numpy as np
 from PyQt5 import QtGui, QtWidgets, uic
-from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
-from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
+from PyQt5.QtCore import (
+    QDir,
+    QEvent,
+    QObject,
+    QPoint,
+    QRect,
+    QSize,
+    Qt,
+    pyqtSignal,
+    pyqtSlot,
+)
+from PyQt5.QtGui import QBrush, QColor, QFont, QIcon, QPainter, QPen
+from PyQt5.QtWidgets import (
+    QApplication,
+    QFileSystemModel,
+    QFormLayout,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QSplitter,
+    QStackedWidget,
+    QTableWidget,
+    QTableWidgetItem,
+    QToolTip,
+    QTreeView,
+    QVBoxLayout,
+    QWidget,
+)
 
-from phopyqttimelineplotter.GUI.UI.DialogComponents.AbstractDialogMixins import BoxExperCohortAnimalIDsFrame_Mixin, ObjectSpecificDialogMixin, DialogObjectIdentifier
+from phopyqttimelineplotter.GUI.UI.DialogComponents.AbstractDialogMixins import (
+    BoxExperCohortAnimalIDsFrame_Mixin,
+    DialogObjectIdentifier,
+    ObjectSpecificDialogMixin,
+)
 
-class TextAnnotationDialog(ObjectSpecificDialogMixin, BoxExperCohortAnimalIDsFrame_Mixin, QtWidgets.QDialog):
 
-     # This defines a signal called 'closed' that takes no arguments.
+class TextAnnotationDialog(
+    ObjectSpecificDialogMixin, BoxExperCohortAnimalIDsFrame_Mixin, QtWidgets.QDialog
+):
+
+    # This defines a signal called 'closed' that takes no arguments.
     on_cancel = pyqtSignal(DialogObjectIdentifier)
 
-     # This defines a signal called 'closed' that takes no arguments.
+    # This defines a signal called 'closed' that takes no arguments.
     # on_commit = pyqtSignal([datetime, str, str, str], [datetime, datetime, str, str, str])
 
-    on_commit = pyqtSignal([DialogObjectIdentifier, datetime, str, str, str, int, int, int, int], [DialogObjectIdentifier, datetime, datetime, str, str, str, int, int, int, int])
-
+    on_commit = pyqtSignal(
+        [DialogObjectIdentifier, datetime, str, str, str, int, int, int, int],
+        [DialogObjectIdentifier, datetime, datetime, str, str, str, int, int, int, int],
+    )
 
     def __init__(self):
-        super(TextAnnotationDialog, self).__init__() # Call the inherited classes __init__ method
-        self.ui = uic.loadUi("GUI/UI/TextAnnotations/TextAnnotations.ui", self) # Load the .ui file
+        super(
+            TextAnnotationDialog, self
+        ).__init__()  # Call the inherited classes __init__ method
+        self.ui = uic.loadUi(
+            "GUI/UI/TextAnnotations/TextAnnotations.ui", self
+        )  # Load the .ui file
         self.initUI()
-        self.show() # Show the GUI
-
+        self.show()  # Show the GUI
 
     def initUI(self):
         pass
 
-
     def accept(self):
-        print('accept:')
+        print("accept:")
         # Emit the signal.
-        behavioral_box_id, experiment_id, cohort_id, animal_id = self.frame_BoxExperCohortAnimalIDs.get_id_values(shouldReturnNoneTypes=False)
-        if (self.get_end_date()):
-            self.on_commit[DialogObjectIdentifier, datetime, datetime, str, str, str, int, int, int, int].emit(self.get_referred_object_identifier(), self.get_start_date(), self.get_end_date(), self.get_title(), self.get_subtitle(), self.get_body(), behavioral_box_id, experiment_id, cohort_id, animal_id)
+        (
+            behavioral_box_id,
+            experiment_id,
+            cohort_id,
+            animal_id,
+        ) = self.frame_BoxExperCohortAnimalIDs.get_id_values(
+            shouldReturnNoneTypes=False
+        )
+        if self.get_end_date():
+            self.on_commit[
+                DialogObjectIdentifier,
+                datetime,
+                datetime,
+                str,
+                str,
+                str,
+                int,
+                int,
+                int,
+                int,
+            ].emit(
+                self.get_referred_object_identifier(),
+                self.get_start_date(),
+                self.get_end_date(),
+                self.get_title(),
+                self.get_subtitle(),
+                self.get_body(),
+                behavioral_box_id,
+                experiment_id,
+                cohort_id,
+                animal_id,
+            )
         else:
-            self.on_commit[DialogObjectIdentifier, datetime, str, str, str, int, int, int, int].emit(self.get_referred_object_identifier(), self.get_start_date(), self.get_title(), self.get_subtitle(), self.get_body(), behavioral_box_id, experiment_id, cohort_id, animal_id)
-            
+            self.on_commit[
+                DialogObjectIdentifier, datetime, str, str, str, int, int, int, int
+            ].emit(
+                self.get_referred_object_identifier(),
+                self.get_start_date(),
+                self.get_title(),
+                self.get_subtitle(),
+                self.get_body(),
+                behavioral_box_id,
+                experiment_id,
+                cohort_id,
+                animal_id,
+            )
+
         super(TextAnnotationDialog, self).accept()
 
     def reject(self):
-        print('reject:')
+        print("reject:")
         self.on_cancel.emit(self.get_referred_object_identifier())
         super(TextAnnotationDialog, self).reject()
 
@@ -58,12 +136,12 @@ class TextAnnotationDialog(ObjectSpecificDialogMixin, BoxExperCohortAnimalIDsFra
 
     def get_enable_end_date(self):
         return self.ui.checkBox_ShouldUseEndDate.isChecked()
-    
+
     def get_start_date(self):
         return self.ui.dateTimeEdit_Start.dateTime().toPyDateTime()
 
     def get_end_date(self):
-        if (self.get_enable_end_date()):
+        if self.get_enable_end_date():
             return self.ui.dateTimeEdit_End.dateTime().toPyDateTime()
         else:
             return None
@@ -73,7 +151,7 @@ class TextAnnotationDialog(ObjectSpecificDialogMixin, BoxExperCohortAnimalIDsFra
 
     def get_title(self):
         return self.ui.lineEdit_Title.text()
-    
+
     def get_subtitle(self):
         return self.ui.lineEdit_Subtitle.text()
 
@@ -88,4 +166,3 @@ class TextAnnotationDialog(ObjectSpecificDialogMixin, BoxExperCohortAnimalIDsFra
 
     def set_body(self, updatedStr):
         return self.ui.textBrowser_Body.setPlainText(updatedStr)
-    

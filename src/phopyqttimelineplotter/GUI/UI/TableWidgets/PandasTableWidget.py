@@ -1,13 +1,49 @@
 # coding: utf-8
 import sys
+
 import pandas as pd
-
 from PyQt5 import QtGui, QtWidgets, uic
-from PyQt5.QtWidgets import QApplication, QTableView, QWidget, QAction, QMenu, QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QFileDialog, QInputDialog, QAbstractItemView, QTabWidget
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir, QThreadPool, QItemSelectionModel, QAbstractTableModel, QPersistentModelIndex
+from PyQt5.QtCore import (
+    QAbstractTableModel,
+    QDir,
+    QEvent,
+    QItemSelectionModel,
+    QObject,
+    QPersistentModelIndex,
+    QPoint,
+    QRect,
+    QSize,
+    Qt,
+    QThreadPool,
+    pyqtSignal,
+    pyqtSlot,
+)
+from PyQt5.QtGui import QBrush, QColor, QFont, QIcon, QPainter, QPen
+from PyQt5.QtWidgets import (
+    QAbstractItemView,
+    QAction,
+    QApplication,
+    QFileDialog,
+    QFormLayout,
+    QFrame,
+    QHBoxLayout,
+    QInputDialog,
+    QLabel,
+    QMenu,
+    QMessageBox,
+    QPushButton,
+    QSplitter,
+    QStackedWidget,
+    QTableView,
+    QTabWidget,
+    QToolTip,
+    QVBoxLayout,
+    QWidget,
+)
 
-from phopyqttimelineplotter.GUI.Model.TableModels.PandasTableModel import PandasTableModel
+from phopyqttimelineplotter.GUI.Model.TableModels.PandasTableModel import (
+    PandasTableModel,
+)
 
 ## INCLUDES:
 # from phopyqttimelineplotter.GUI.UI.TableWidgets.PandasTableWidget import PandasTableWidget
@@ -16,6 +52,8 @@ from phopyqttimelineplotter.GUI.Model.TableModels.PandasTableModel import Pandas
 """ PandasTableWidget
 
 """
+
+
 class PandasTableWidget(QWidget):
 
     # ActiveTableTabs = [Animal, Cohort, Experiment, BehavioralBox, Labjack]
@@ -28,7 +66,7 @@ class PandasTableWidget(QWidget):
     # ActiveTableTabStrings = ["Animal", "Cohort", "Experiment", "BehavioralBox", "Labjack", "VideoFile", "TimestampedAnnotation"]
 
     def __init__(self, table_models, parent=None):
-        super().__init__(parent=parent) # Call the inherited classes __init__ method
+        super().__init__(parent=parent)  # Call the inherited classes __init__ method
 
         self.activeActionTabIndex = 0
         self.models = table_models
@@ -37,7 +75,7 @@ class PandasTableWidget(QWidget):
         for (i, aTableModel) in enumerate(table_models):
             self.tables.append(None)
             self.table_selection_models.append(None)
-        
+
         self.reloadModels()
 
         self.setMouseTracking(True)
@@ -48,7 +86,7 @@ class PandasTableWidget(QWidget):
 
     def initUI(self):
         # mainQWidget = QWidget()
-        mainLayout= QVBoxLayout()
+        mainLayout = QVBoxLayout()
 
         # Nested helper function to initialize the menu bar
         def initUI_initMenuBar(self):
@@ -56,9 +94,9 @@ class PandasTableWidget(QWidget):
             # self.ui.actionSave.triggered.connect(self.handle_menu_save_event)
             # self.ui.actionRefresh.triggered.connect(self.handle_menu_refresh_event)
             pass
-            
+
         desiredWindowWidth = 500
-        self.resize( desiredWindowWidth, 800 )
+        self.resize(desiredWindowWidth, 800)
         self.setWindowTitle("DLC File Preview Window")
 
         # Setup the menubar
@@ -70,11 +108,11 @@ class PandasTableWidget(QWidget):
         for (i, aTableModel) in enumerate(self.get_table_models()):
             currTabNameStr = aTableModel.get_model_display_name()
 
-            exec( 'self.tab'+str(i)+'= QWidget() ' )
+            exec("self.tab" + str(i) + "= QWidget() ")
             # self.tab1 = QWidget()
-            exec( 'self.tabs.addTab(self.tab'+str(i)+', "'+currTabNameStr+'")' )
+            exec("self.tabs.addTab(self.tab" + str(i) + ', "' + currTabNameStr + '")')
             # self.tabs.addTab(self.tab1,"Tab 1")
-            exec('self.tab'+str(i)+'.layout = QVBoxLayout(self)')
+            exec("self.tab" + str(i) + ".layout = QVBoxLayout(self)")
             # self.tab1.layout = QVBoxLayout(self)
 
             self.tables[i] = QTableView(self)
@@ -87,22 +125,25 @@ class PandasTableWidget(QWidget):
             self.table_selection_models[i] = QItemSelectionModel(self.models[i])
             self.tables[i].setModel(self.table_selection_models[i].model())
             self.tables[i].setSelectionModel(self.table_selection_models[i])
-            self.table_selection_models[i].selectionChanged.connect(self.update_current_record)
+            self.table_selection_models[i].selectionChanged.connect(
+                self.update_current_record
+            )
 
-            exec( 'self.tab'+str(i)+'.layout.addWidget(self.tables['+str(i)+'])' )
-            exec( 'self.tab'+str(i)+'.setLayout(self.tab'+str(i)+'.layout)')
+            exec("self.tab" + str(i) + ".layout.addWidget(self.tables[" + str(i) + "])")
+            exec("self.tab" + str(i) + ".setLayout(self.tab" + str(i) + ".layout)")
 
             currBtnAddNewRecord = QPushButton("New", self)
             currBtnAddNewRecord.released.connect(self.handle_add_new_record_pressed)
 
             currBtnExportAllRecords = QPushButton("Export", self)
-            currBtnExportAllRecords.released.connect(self.handle_export_all_records_pressed)
+            currBtnExportAllRecords.released.connect(
+                self.handle_export_all_records_pressed
+            )
 
-            exec( 'self.tab'+str(i)+'.layout.addWidget(currBtnAddNewRecord)' )
-            exec( 'self.tab'+str(i)+'.layout.addWidget(currBtnExportAllRecords)' )
-                   
+            exec("self.tab" + str(i) + ".layout.addWidget(currBtnAddNewRecord)")
+            exec("self.tab" + str(i) + ".layout.addWidget(currBtnExportAllRecords)")
 
-        self.tabs.resize(300,200)
+        self.tabs.resize(300, 200)
 
         mainLayout.addWidget(self.tabs)
 
@@ -111,13 +152,11 @@ class PandasTableWidget(QWidget):
         for (aTableIndex, aTable) in enumerate(self.tables):
             aTable.resizeColumnsToContents()
 
-
-
     # Updates the member variables from the database
     # Note: if there are any pending changes, they will be persisted on this action
     def reloadModels(self):
         # self.model = []
-        
+
         # for (i, tableRecordClass) in enumerate(self.get_table_models()):
         #     self.models[i] = self.database_connection.get_table_model(tableRecordClass)
 
@@ -148,7 +187,7 @@ class PandasTableWidget(QWidget):
     def display_context_menu(self, pos):
         curr_active_tab_index = self.get_active_tab_index()
         index = self.tables[curr_active_tab_index].indexAt(pos)
-        
+
         self.menu = QMenu()
 
         # self.edit_action = self.menu.addAction("Edit")
@@ -170,10 +209,10 @@ class PandasTableWidget(QWidget):
         print("UNIMPLEMENTED!!!")
         curr_active_tab_index = self.get_active_tab_index()
         # # selected_row_index = self.table_selection_model.currentIndex().data(Qt.EditRole)
-        # index_list = []                                                          
-        # for model_index in self.tables[curr_active_tab_index].selectionModel().selectedRows():       
-        #     index = QPersistentModelIndex(model_index)         
-        #     index_list.append(index)                                             
+        # index_list = []
+        # for model_index in self.tables[curr_active_tab_index].selectionModel().selectedRows():
+        #     index = QPersistentModelIndex(model_index)
+        #     index_list.append(index)
 
         # num_items_to_remove = len(index_list)
         # reply = QMessageBox.question(
@@ -192,10 +231,10 @@ class PandasTableWidget(QWidget):
         ## TODO: unimplemented
         print("UNIMPLEMENTED!!!")
         curr_active_tab_index = self.get_active_tab_index()
-        # index_list = []                                                          
-        # for model_index in self.tables[curr_active_tab_index].selectionModel().selectedRows():       
-        #     index = QPersistentModelIndex(model_index)         
-        #     index_list.append(index)                                             
+        # index_list = []
+        # for model_index in self.tables[curr_active_tab_index].selectionModel().selectedRows():
+        #     index = QPersistentModelIndex(model_index)
+        #     index_list.append(index)
 
         # num_items_to_remove = len(index_list)
         # selected_row_index = None
@@ -212,12 +251,12 @@ class PandasTableWidget(QWidget):
         # else:
         #     print("selection empty!")
         #     return
-        
+
         print("done.")
 
     def get_active_tab_index(self):
         return self.tabs.currentIndex()
-        
+
     def create_new_record(self):
         self.activeActionTabIndex = self.get_active_tab_index()
         dialog = QInputDialog(self)
@@ -228,11 +267,11 @@ class PandasTableWidget(QWidget):
     def store_new_record(self, name):
         # self.currClass = PandasTableWidget.ActiveTableTabs[self.activeActionTabIndex]
         # self.currClassString = PandasTableWidget.ActiveTableTabStrings[self.activeActionTabIndex]
-        
+
         # # rec = BehavioralBox()
         # rec = self.currClass()
         # rec.name = name
-        
+
         # try:
         #     self.database_connection.save_to_database([rec], self.currClassString)
 
@@ -250,7 +289,11 @@ class PandasTableWidget(QWidget):
         pass
 
     def update_current_record(self, x, y):
-        self.current_record = self.table_selection_models[self.get_active_tab_index()].currentIndex().data(Qt.EditRole)
+        self.current_record = (
+            self.table_selection_models[self.get_active_tab_index()]
+            .currentIndex()
+            .data(Qt.EditRole)
+        )
 
     def export_records(self):
         print("export_records()...")
@@ -271,4 +314,3 @@ class PandasTableWidget(QWidget):
         #     curr_row_str = separator_str.join([str(c) for c in curr_row])
         #     print(curr_row_str)
         pass
-        

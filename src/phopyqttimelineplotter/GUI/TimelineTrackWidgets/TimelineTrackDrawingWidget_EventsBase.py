@@ -2,15 +2,35 @@
 # Contains EventTrackDrawingWidget which draws several PhoEvent objects as rectangles or lines within a single track.
 
 import sys
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+
 import numpy as np
 from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget,QTableWidgetItem
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QLinearGradient
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
+from PyQt5.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, pyqtSignal, pyqtSlot
+from PyQt5.QtGui import QBrush, QColor, QFont, QLinearGradient, QPainter, QPen
+from PyQt5.QtWidgets import (
+    QFormLayout,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QSplitter,
+    QStackedWidget,
+    QTableWidget,
+    QTableWidgetItem,
+    QToolTip,
+    QVBoxLayout,
+)
 
-from phopyqttimelineplotter.GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import TimelineTrackDrawingWidgetBase, ItemSelectionOptions
-from phopyqttimelineplotter.GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_SelectionBase import TimelineTrackDrawingWidget_SelectionBase
+from phopyqttimelineplotter.GUI.TimelineTrackWidgets.TimelineTrackDrawingWidget_SelectionBase import (
+    TimelineTrackDrawingWidget_SelectionBase,
+)
+from phopyqttimelineplotter.GUI.TimelineTrackWidgets.TimelineTrackDrawingWidgetBase import (
+    ItemSelectionOptions,
+    TimelineTrackDrawingWidgetBase,
+)
+
 
 # durationObjects are PhoDurationEvents
 class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_SelectionBase):
@@ -18,23 +38,47 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
     default_shouldDismissSelectionUponMouseButtonRelease = True
     default_itemSelectionMode = ItemSelectionOptions.MultiSelection
 
-
     # child_action_comment = pyqtSignal(object, object)
     child_action_info = pyqtSignal(int, object)
     child_action_modify = pyqtSignal(int, object)
     child_action_comment = pyqtSignal(int, object)
     child_action_delete = pyqtSignal(int, object)
 
-    def __init__(self, trackID, durationObjects, instantaneousObjects, totalStartTime, totalEndTime, database_connection, parent=None, wantsKeyboardEvents=True, wantsMouseEvents=True):
-        super(TimelineTrackDrawingWidget_EventsBase, self).__init__(trackID, totalStartTime, totalEndTime, durationObjects, database_connection=database_connection, parent=parent, wantsKeyboardEvents=wantsKeyboardEvents, wantsMouseEvents=wantsMouseEvents)
+    def __init__(
+        self,
+        trackID,
+        durationObjects,
+        instantaneousObjects,
+        totalStartTime,
+        totalEndTime,
+        database_connection,
+        parent=None,
+        wantsKeyboardEvents=True,
+        wantsMouseEvents=True,
+    ):
+        super(TimelineTrackDrawingWidget_EventsBase, self).__init__(
+            trackID,
+            totalStartTime,
+            totalEndTime,
+            durationObjects,
+            database_connection=database_connection,
+            parent=parent,
+            wantsKeyboardEvents=wantsKeyboardEvents,
+            wantsMouseEvents=wantsMouseEvents,
+        )
         # self.durationObjects = durationObjects
         self.instantaneousObjects = instantaneousObjects
         # self.eventRect = np.repeat(QRect(0,0,0,0), len(durationObjects))
-        self.instantaneousEventRect = np.repeat(QRect(0,0,0,0), len(instantaneousObjects))
+        self.instantaneousEventRect = np.repeat(
+            QRect(0, 0, 0, 0), len(instantaneousObjects)
+        )
         # Selected Object
-        self.shouldDismissSelectionUponMouseButtonRelease = TimelineTrackDrawingWidget_EventsBase.default_shouldDismissSelectionUponMouseButtonRelease
-        self.itemSelectionMode = TimelineTrackDrawingWidget_EventsBase.default_itemSelectionMode
-
+        self.shouldDismissSelectionUponMouseButtonRelease = (
+            TimelineTrackDrawingWidget_EventsBase.default_shouldDismissSelectionUponMouseButtonRelease
+        )
+        self.itemSelectionMode = (
+            TimelineTrackDrawingWidget_EventsBase.default_itemSelectionMode
+        )
 
         # Set up signals to parent:
         self.child_action_info.connect(self.parent().on_track_child_get_info)
@@ -50,13 +94,15 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
             aDurationObject.on_edit.connect(self.on_child_action_modify)
             aDurationObject.on_annotate.connect(self.on_child_action_comment)
             aDurationObject.on_delete.connect(self.on_child_action_delete)
-    
-    def paintEvent( self, event ):
+
+    def paintEvent(self, event):
         qp = QtGui.QPainter()
-        qp.begin( self )
+        qp.begin(self)
         # TODO: minor speedup by re-using the array of QRect objects if the size doesn't change
-        self.eventRect = np.repeat(QRect(0,0,0,0), len(self.durationObjects))
-        self.instantaneousEventRect = np.repeat(QRect(0, 0, 0, 0), len(self.instantaneousObjects))
+        self.eventRect = np.repeat(QRect(0, 0, 0, 0), len(self.durationObjects))
+        self.instantaneousEventRect = np.repeat(
+            QRect(0, 0, 0, 0), len(self.instantaneousObjects)
+        )
 
         ## TODO: Use viewport information to only draw the currently displayed rectangles instead of having to draw it all at once.
         # drawRect = event.rect()
@@ -69,10 +115,14 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
 
         # Draw the duration objects
         for (index, obj) in enumerate(self.durationObjects):
-            self.eventRect[index] = obj.paint( qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
+            self.eventRect[index] = obj.paint(
+                qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect
+            )
         # Draw the instantaneous event objects
         for (index, obj) in enumerate(self.instantaneousObjects):
-            self.instantaneousEventRect[index] = obj.paint(qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect)
+            self.instantaneousEventRect[index] = obj.paint(
+                qp, self.totalStartTime, self.totalEndTime, self.totalDuration, drawRect
+            )
 
         qp.end()
 
@@ -85,7 +135,6 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
             obj.is_deemphasized = not obj.overlaps_range(start_datetime, end_datetime)
         self.update()
 
-
     # TODO: find_overlapping_events(...) doesn't yet work
     def find_overlapping_events(self):
         currOpenEvents = []
@@ -96,22 +145,22 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
             currTime = obj.startTime
 
             for anOpenEventIndex, anOpenEvent in currOpenEvents:
-                if (anOpenEvent.endTime <= currTime):
+                if anOpenEvent.endTime <= currTime:
                     # the event is now closed. Remove it from the currOpenEvents array
                     currOpenEvents.remove((anOpenEventIndex, anOpenEvent))
                 else:
-                    # Otherwise the event is still open and we should check and see if it overlaps this event                    
+                    # Otherwise the event is still open and we should check and see if it overlaps this event
                     if anOpenEventIndex in overlappingEvents.keys():
-                        overlappingEvents[anOpenEventIndex] = overlappingEvents[anOpenEventIndex] + 1
+                        overlappingEvents[anOpenEventIndex] = (
+                            overlappingEvents[anOpenEventIndex] + 1
+                        )
                     else:
                         overlappingEvents[anOpenEventIndex] = 1
 
-            # Add the current to the array of open events            
+            # Add the current to the array of open events
             currOpenEvents.append((index, obj))
 
-
-        return overlappingEvents # If there is no next event, return None
-
+        return overlappingEvents  # If there is no next event, return None
 
     def on_button_clicked(self, event):
         super().on_button_clicked(event)
@@ -139,18 +188,26 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
     def on_mouse_moved(self, event):
         super().on_mouse_moved(event)
         # Draw the tooltip if we want
-        if (not (self.hovered_object_index is None)):
-            text = "event: {0}\nstart_time: {1}\nend_time: {2}\nduration: {3}".format(self.hovered_object.name, self.get_full_date_time_string(self.hovered_object.startTime), self.get_full_date_time_string(self.hovered_object.endTime), self.hovered_object.computeDuration())
+        if not (self.hovered_object_index is None):
+            text = "event: {0}\nstart_time: {1}\nend_time: {2}\nduration: {3}".format(
+                self.hovered_object.name,
+                self.get_full_date_time_string(self.hovered_object.startTime),
+                self.get_full_date_time_string(self.hovered_object.endTime),
+                self.hovered_object.computeDuration(),
+            )
             QToolTip.showText(event.globalPos(), text, self, self.hovered_object_rect)
             self.update()
-
 
     # Menu Event Handlers:
     @pyqtSlot(int)
     def on_child_action_info(self, childIndex):
-        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_info({0})".format(str(childIndex)))
+        print(
+            "TimelineTrackDrawingWidget_EventsBase.on_child_action_info({0})".format(
+                str(childIndex)
+            )
+        )
         selected_obj = self.durationObjects[childIndex]
-        if (selected_obj is None):
+        if selected_obj is None:
             print("ERROR: selected duration object is None! Can't perform action!")
             return
         else:
@@ -161,9 +218,13 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
 
     @pyqtSlot(int)
     def on_child_action_modify(self, childIndex):
-        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_modify{0})".format(str(childIndex)))
+        print(
+            "TimelineTrackDrawingWidget_EventsBase.on_child_action_modify{0})".format(
+                str(childIndex)
+            )
+        )
         selected_obj = self.durationObjects[childIndex]
-        if (selected_obj is None):
+        if selected_obj is None:
             print("ERROR: selected duration object is None! Can't perform action!")
             return
         else:
@@ -174,9 +235,13 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
 
     @pyqtSlot(int)
     def on_child_action_comment(self, childIndex):
-        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_comment({0})".format(str(childIndex)))
+        print(
+            "TimelineTrackDrawingWidget_EventsBase.on_child_action_comment({0})".format(
+                str(childIndex)
+            )
+        )
         selected_obj = self.durationObjects[childIndex]
-        if (selected_obj is None):
+        if selected_obj is None:
             print("ERROR: selected duration object is None! Can't perform action!")
             return
         else:
@@ -187,9 +252,13 @@ class TimelineTrackDrawingWidget_EventsBase(TimelineTrackDrawingWidget_Selection
 
     @pyqtSlot(int)
     def on_child_action_delete(self, childIndex):
-        print("TimelineTrackDrawingWidget_EventsBase.on_child_action_delete({0})".format(str(childIndex)))
+        print(
+            "TimelineTrackDrawingWidget_EventsBase.on_child_action_delete({0})".format(
+                str(childIndex)
+            )
+        )
         selected_obj = self.durationObjects[childIndex]
-        if (selected_obj is None):
+        if selected_obj is None:
             print("ERROR: selected duration object is None! Can't perform action!")
             return
         else:

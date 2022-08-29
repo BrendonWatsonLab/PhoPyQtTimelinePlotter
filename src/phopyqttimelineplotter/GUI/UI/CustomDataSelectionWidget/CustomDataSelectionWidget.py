@@ -9,7 +9,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 # silx GUI:
 from silx.gui import qt
 from silx.gui.dialog.GroupDialog import GroupDialog
-# from silx.gui.plot.StackView import StackViewMainWindow
 
 # C:\Users\pho\repos\PhoPyQtTimelinePlotter\app
 from phopyqttimelineplotter.app.filesystem.FilesystemRecordBase import (
@@ -21,6 +20,9 @@ from phopyqttimelineplotter.app.filesystem.FilesystemRecordBase import (
 from phopyqttimelineplotter.GUI.UI.CustomDataSelectionWidget.Uic_AUTOGEN_CustomDataSelectionWidget import (
     Ui_CustomDataSelectionWidget,
 )
+
+# from silx.gui.plot.StackView import StackViewMainWindow
+
 
 # from app.filesystem.FilesystemRecordBase import discover_data_files
 
@@ -82,15 +84,20 @@ class CustomDataSelectionWidget(qt.QWidget):
         return
 
     def on_click_select_group_button(self):
-        print(f'on_click_select_group_button')
-        print(f'self is QWidget: {isinstance(self, QtWidgets.QWidget)}')
+        print(f"on_click_select_group_button")
+        print(f"self is QWidget: {isinstance(self, QtWidgets.QWidget)}")
         self.ui.select_group_dialog = GroupDialog(parent=self)
         # self.ui.select_group_dialog = GroupDialog()
         # dialog.addFile(str(filenames_list[0]))
-        [self.ui.select_group_dialog.addFile(str(a_filename)) for a_filename in self.filenames_list]
+        [
+            self.ui.select_group_dialog.addFile(str(a_filename))
+            for a_filename in self.filenames_list
+        ]
         self.ui.select_group_dialog.show()
         if self.ui.select_group_dialog.exec():
-            selected_timestamp_data_url = self.ui.select_group_dialog.getSelectedDataUrl()
+            selected_timestamp_data_url = (
+                self.ui.select_group_dialog.getSelectedDataUrl()
+            )
             print("File path: %s" % selected_timestamp_data_url.file_path())
             print("HDF5 group path : %s " % selected_timestamp_data_url.data_path())
             self.ui.lineEdit.setText(f"{selected_timestamp_data_url.data_path()}")
@@ -106,12 +113,11 @@ if __name__ == "__main__":
     app = qt.QApplication([])
     widget = CustomDataSelectionWidget()
     widget.show()
-    
+
     result = app.exec()
     # remove ending warnings relative to QTimer
     # app.deleteLater()
     sys.exit(result)
-    
+
     # app = pg.mkQApp("CustomDataSelectionWidget Example")
     # pg.exec()
-    

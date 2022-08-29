@@ -1,11 +1,28 @@
-import sys
 import math
-from datetime import datetime, timezone, timedelta
+import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
 from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QGridLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QMenu, QWidget
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QFontMetrics
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, pyqtSlot
+from PyQt5.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, pyqtSignal, pyqtSlot
+from PyQt5.QtGui import QBrush, QColor, QFont, QFontMetrics, QPainter, QPen
+from PyQt5.QtWidgets import (
+    QFormLayout,
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QMenu,
+    QMessageBox,
+    QPushButton,
+    QSplitter,
+    QStackedWidget,
+    QTableWidget,
+    QTableWidgetItem,
+    QToolTip,
+    QVBoxLayout,
+    QWidget,
+)
 
 # from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent import *
 
@@ -14,14 +31,16 @@ from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize, 
 # INCLUDES:
 # from phopyqttimelineplotter.GUI.Helpers.ThumbnailDrawingEventMixin import ThumbnailDrawingEventMixin
 
+
 class ThumbnailDrawingEventMixin(object):
-    """ ThumbnailDrawingEventMixin: a mixin that draws thumbnail images on a timeline event
-        Requires:
-        self.desiredThumbnailSizeKey = "160"
-        
-        ## TODO: Doesn't work
-        
+    """ThumbnailDrawingEventMixin: a mixin that draws thumbnail images on a timeline event
+    Requires:
+    self.desiredThumbnailSizeKey = "160"
+
+    ## TODO: Doesn't work
+
     """
+
     def init_ThumbnailDrawingEventMixin(self):
         self.mainWidgetLayout = QGridLayout(self)
 
@@ -42,9 +61,9 @@ class ThumbnailDrawingEventMixin(object):
         self.thumbnailsContainer.setLayout(self.thumbnailsLayout)
 
         self.mainWidgetLayout.addWidget(self.thumbnailsContainer, 0, 0)
-        
+
         # self.addWidget(self.thumbnailsContainer)
-        
+
         # w.setPixmap(QtGui.QPixmap.fromImage(currThumbnailImage))
 
     def get_labels_array(self):
@@ -56,7 +75,11 @@ class ThumbnailDrawingEventMixin(object):
     @pyqtSlot(str, list)
     def on_thumbnails_loaded(self, filename, generated_thumbnails_list):
         print("on_thumbnails_loaded(...)")
-        print("thumbnail generation complete for [{0}]: {1} frames".format(str(filename), len(generated_thumbnails_list)))
+        print(
+            "thumbnail generation complete for [{0}]: {1} frames".format(
+                str(filename), len(generated_thumbnails_list)
+            )
+        )
         # Iterate through the generated thumbnails and render them
         for (index, aVideoThumbnailObj) in enumerate(generated_thumbnails_list):
             currThumbsDict = aVideoThumbnailObj.get_thumbs_dict()
@@ -65,7 +88,5 @@ class ThumbnailDrawingEventMixin(object):
             w = self.get_labels_array()[index]
             w.setPixmap(QtGui.QPixmap.fromImage(currThumbnailImage))
             # w.isHidden((index > self.get_num_thumbnails_horizontal()))
-
-
 
     pass

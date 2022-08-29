@@ -1,28 +1,57 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+import os
+import sys
 import tempfile
 from base64 import b64encode
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
-from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import Qt, QPoint, QLine, QRect, QRectF, pyqtSignal, pyqtSlot, QObject, QMargins, QSize
-from PyQt5.QtGui import QPainter, QColor, QFont, QBrush, QPalette, QPen, QPolygon, QPainterPath, QPixmap
-from PyQt5.QtWidgets import QWidget, QFrame, QScrollArea, QVBoxLayout
-import sys
-import os
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import (
+    QLine,
+    QMargins,
+    QObject,
+    QPoint,
+    QRect,
+    QRectF,
+    QSize,
+    Qt,
+    pyqtSignal,
+    pyqtSlot,
+)
+from PyQt5.QtGui import (
+    QBrush,
+    QColor,
+    QFont,
+    QPainter,
+    QPainterPath,
+    QPalette,
+    QPen,
+    QPixmap,
+    QPolygon,
+)
+from PyQt5.QtWidgets import QFrame, QScrollArea, QVBoxLayout, QWidget
 
 __backgroudColor__ = QColor(60, 63, 65)
 
-from phopyqttimelineplotter.GUI.Model.ReferenceLines.ReferenceMarkerVisualHelpers import TickProperties, ReferenceMarker
-from phopyqttimelineplotter.GUI.Model.ReferenceLines.ReferenceLineManager import ReferenceMarkerManager
-
-from phopyqttimelineplotter.GUI.Helpers.FixedTimelineContentsWidthMixin import FixedTimelineContentsWidthMixin
 from phopyqttimelineplotter.GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
+from phopyqttimelineplotter.GUI.Helpers.FixedTimelineContentsWidthMixin import (
+    FixedTimelineContentsWidthMixin,
+)
+from phopyqttimelineplotter.GUI.Model.ReferenceLines.ReferenceLineManager import (
+    ReferenceMarkerManager,
+)
+from phopyqttimelineplotter.GUI.Model.ReferenceLines.ReferenceMarkerVisualHelpers import (
+    ReferenceMarker,
+    TickProperties,
+)
 
 
-class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContentsWidthMixin, QWidget):
-    """ A class that draws "ticks" which are evenly spaced lines along its entire width.
-        Used by qtimeline.py and ExtendedTrackContainerWidget.py
+class TickedTimelineDrawingBaseWidget(
+    DateTimeRenderMixin, FixedTimelineContentsWidthMixin, QWidget
+):
+    """A class that draws "ticks" which are evenly spaced lines along its entire width.
+    Used by qtimeline.py and ExtendedTrackContainerWidget.py
     """
 
     hoverChanged = pyqtSignal(int)
@@ -32,16 +61,20 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
     defaultNowColor = Qt.red
 
     # static lines
-    staticTimeDelininationTickLineProperties = TickProperties(QColor(187, 187, 187), 2.6, Qt.SolidLine)
-    staticTimeDelininationMinorTickLineProperties = TickProperties(QColor(187, 187, 187), 0.6, Qt.SolidLine)
-
+    staticTimeDelininationTickLineProperties = TickProperties(
+        QColor(187, 187, 187), 2.6, Qt.SolidLine
+    )
+    staticTimeDelininationMinorTickLineProperties = TickProperties(
+        QColor(187, 187, 187), 0.6, Qt.SolidLine
+    )
 
     # dynamic (moving) lines
     videoPlaybackLineProperties = TickProperties(Qt.red, 1.0, Qt.SolidLine)
     hoverLineProperties = TickProperties(Qt.cyan, 0.8, Qt.DashLine)
 
-
-    def __init__(self, totalStartTime, totalEndTime, totalDuration, duration, parent=None):
+    def __init__(
+        self, totalStartTime, totalEndTime, totalDuration, duration, parent=None
+    ):
         super(TickedTimelineDrawingBaseWidget, self).__init__(parent=parent)
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime
@@ -73,30 +106,35 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
         pal.setColor(QPalette.Background, self.backgroundColor)
         self.setPalette(pal)
 
-
     def get_reference_manager(self):
         return self.referenceManager
-
 
     def draw_tick_lines(self, painter):
         # Draw dash lines
         # point = 0
-        painter.setPen(TickedTimelineDrawingBaseWidget.staticTimeDelininationTickLineProperties.get_pen())
+        painter.setPen(
+            TickedTimelineDrawingBaseWidget.staticTimeDelininationTickLineProperties.get_pen()
+        )
         # draw a horizontal line (Currently draws the line a fixed distance in pixels apart. The labels are only added in qtimeline)
         painter.drawLine(0, 40, self.width(), 40)
 
         # Major markers (day markers)
         for aStaticMarkerData in self.referenceManager.get_static_major_marker_data():
-            item_x_offset = self.referenceManager.compute_x_offset_from_datetime(self.width(), aStaticMarkerData.time)
+            item_x_offset = self.referenceManager.compute_x_offset_from_datetime(
+                self.width(), aStaticMarkerData.time
+            )
             painter.drawLine(item_x_offset, 40, item_x_offset, 20)
 
-        painter.setPen(TickedTimelineDrawingBaseWidget.staticTimeDelininationMinorTickLineProperties.get_pen())
+        painter.setPen(
+            TickedTimelineDrawingBaseWidget.staticTimeDelininationMinorTickLineProperties.get_pen()
+        )
 
         # Minor Markers
         for aStaticMarkerData in self.referenceManager.get_static_minor_marker_data():
-            item_x_offset = self.referenceManager.compute_x_offset_from_datetime(self.width(), aStaticMarkerData.time)
+            item_x_offset = self.referenceManager.compute_x_offset_from_datetime(
+                self.width(), aStaticMarkerData.time
+            )
             painter.drawLine(item_x_offset, 40, item_x_offset, 30)
-
 
     # Draws the tick marks and the indicator lines
     def draw_indicator_lines(self, painter):
@@ -107,21 +145,22 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
         # hoverIndicatorMarkerContainer = self.referenceManager.get_indicator_marker_user_hover()
         # hoverIndicatorMarkerContainer.get_view().updateIsEnabled((self.is_in or self.is_driven_externally))
 
-
         # Draw video playback indicator line
         if self.video_pos is not None:
-            painter.setPen(TickedTimelineDrawingBaseWidget.videoPlaybackLineProperties.get_pen())
+            painter.setPen(
+                TickedTimelineDrawingBaseWidget.videoPlaybackLineProperties.get_pen()
+            )
             painter.drawLine(self.video_pos.x(), 0, self.video_pos.x(), self.height())
-
 
         # Draw hover line
         if self.pos is not None:
-            if (self.is_in or self.is_driven_externally): 
-                painter.setPen(TickedTimelineDrawingBaseWidget.hoverLineProperties.get_pen())
+            if self.is_in or self.is_driven_externally:
+                painter.setPen(
+                    TickedTimelineDrawingBaseWidget.hoverLineProperties.get_pen()
+                )
                 painter.drawLine(self.pos.x(), 0, self.pos.x(), self.height())
-                
-        pass
 
+        pass
 
     def paintRect(self, event):
         qp = QPainter()
@@ -156,7 +195,7 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
         if self.clicking:
             self.pointerPos = x
             self.positionChanged.emit(x)
-            self.pointerTimePos = self.pointerPos*self.getScale()
+            self.pointerTimePos = self.pointerPos * self.getScale()
 
         self.update()
 
@@ -186,10 +225,9 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
         self.is_in = False
         self.update()
 
-
     # Get scale from length
     def getScale(self):
-        return float(self.duration)/float(self.width())
+        return float(self.duration) / float(self.width())
 
     # Get duration
     def getDuration(self):
@@ -199,12 +237,10 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
     def setBackgroundColor(self, color):
         self.backgroundColor = color
 
-
     @pyqtSlot(float)
     def on_update_reference_marker_position(self, pointer_desired_x):
         self.get_reference_manager().update_next_unused_marker(pointer_desired_x)
         self.update()
-
 
     @pyqtSlot(float)
     def on_update_selected_position(self, pointer_desired_x):
@@ -219,7 +255,6 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
         self.pos = QPoint(x, 0)
         self.update()
 
-
     @pyqtSlot(int)
     def on_update_video_line(self, x):
         # passing in None for x allows the line to be removed
@@ -227,9 +262,8 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
             self.video_pos = None
         else:
             self.video_pos = QPoint(x, 0)
-        
-        self.update()
 
+        self.update()
 
     # Main Window Slots:
     @pyqtSlot()
@@ -243,7 +277,9 @@ class TickedTimelineDrawingBaseWidget(DateTimeRenderMixin, FixedTimelineContents
         self.update()
 
     @pyqtSlot(datetime, datetime, timedelta)
-    def on_active_global_timeline_times_changed(self, totalStartTime, totalEndTime, totalDuration):
+    def on_active_global_timeline_times_changed(
+        self, totalStartTime, totalEndTime, totalDuration
+    ):
         # print("TickedTimelineDrawingBaseWidget.on_active_global_timeline_times_changed({0}, {1}, {2})".format(str(totalStartTime), str(totalEndTime), str(totalDuration)))
         self.totalStartTime = totalStartTime
         self.totalEndTime = totalEndTime

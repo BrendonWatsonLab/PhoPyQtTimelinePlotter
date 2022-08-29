@@ -1,15 +1,47 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 import sys
-
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 from PyQt5 import QtGui, QtWidgets, uic
-from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QGridLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QScrollArea
-from PyQt5.QtWidgets import QApplication, QFileSystemModel, QTreeView, QWidget, QAction, qApp, QApplication, QAbstractSlider, QAbstractScrollArea, QDialog, QLabel
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QIcon
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, pyqtSlot, QSize, QDir
+from PyQt5.QtCore import (
+    QDir,
+    QEvent,
+    QObject,
+    QPoint,
+    QRect,
+    QSize,
+    Qt,
+    pyqtSignal,
+    pyqtSlot,
+)
+from PyQt5.QtGui import QBrush, QColor, QFont, QIcon, QPainter, QPen
+from PyQt5.QtWidgets import (
+    QAbstractScrollArea,
+    QAbstractSlider,
+    QAction,
+    QApplication,
+    QDialog,
+    QFileSystemModel,
+    QFormLayout,
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QScrollArea,
+    QSplitter,
+    QStackedWidget,
+    QTableWidget,
+    QTableWidgetItem,
+    QToolTip,
+    QTreeView,
+    QVBoxLayout,
+    QWidget,
+    qApp,
+)
 
 # Errors.py
 
@@ -21,17 +53,19 @@ Requires:
     self._error_string
 
 """
+
+
 class SimpleErrorStatusMixin(object):
-    error_status_changed = pyqtSignal() # Called when the "has_error" has changed
-    error_string_changed = pyqtSignal() # Called when the "has_error" has changed
+    error_status_changed = pyqtSignal()  # Called when the "has_error" has changed
+    error_string_changed = pyqtSignal()  # Called when the "has_error" has changed
 
     # Error Status:
     def get_has_error(self):
-        return (self._error_string is not None)
+        return self._error_string is not None
 
     def get_error_string(self):
         return self._error_string
-    
+
     # Getters:
     @property
     def has_error(self):
@@ -40,7 +74,6 @@ class SimpleErrorStatusMixin(object):
     @property
     def error_string(self):
         return self.get_error_string()
-
 
     def set_has_error(self, new_error_string):
         prev_has_error = self.get_has_error()
@@ -64,5 +97,3 @@ class SimpleErrorStatusMixin(object):
     @error_string.setter
     def error_string(self, new_value):
         self.set_has_error(new_value)
-
-

@@ -1,7 +1,8 @@
 import sys
+
 import pandas as pd
-from PyQt5.QtWidgets import QApplication, QTableView
 from PyQt5.QtCore import QAbstractTableModel, Qt
+from PyQt5.QtWidgets import QApplication, QTableView
 
 # PandasTableModel.py
 
@@ -12,8 +13,9 @@ from PyQt5.QtCore import QAbstractTableModel, Qt
 """ PandasTableModel: https://learndataanalysis.org/display-pandas-dataframe-with-pyqt5-qtableview-widget/
     A QAbstractTableModel that displays a Pandas dataframe
 """
-class PandasTableModel(QAbstractTableModel):
 
+
+class PandasTableModel(QAbstractTableModel):
     def __init__(self, data, model_display_name):
         QAbstractTableModel.__init__(self)
         self._data = data
@@ -38,7 +40,6 @@ class PandasTableModel(QAbstractTableModel):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             return self._data.columns[col]
         return None
-
 
 
 """

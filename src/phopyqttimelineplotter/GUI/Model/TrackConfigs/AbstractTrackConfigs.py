@@ -1,9 +1,9 @@
-#Filters.py
+# Filters.py
 from pathlib import Path
-import numpy as np
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal
 
+import numpy as np
 from app.filesystem.FilesystemRecordBase import *
+from PyQt5.QtCore import QEvent, QObject, QPoint, QRect, Qt, pyqtSignal
 
 from phopyqttimelineplotter.GUI.Model.ModelViewContainer import ModelViewContainer
 
@@ -11,19 +11,27 @@ from phopyqttimelineplotter.GUI.Model.ModelViewContainer import ModelViewContain
 # from phopyqttimelineplotter.GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackConfigurationBase, TrackCache, TrackFilterBase
 
 
-
-
-
 """
 Represents a filter for a specific track
 """
+
+
 class TrackFilterBase(QObject):
-    """ Represents a filter for a specific track
-    
+    """Represents a filter for a specific track
+
     takes the trackRecordClass: the Type of the record objects for this track
-    
+
     """
-    def __init__(self, trackRecordClass, behavioral_box_ids=None, experiment_ids=None, cohort_ids=None, animal_ids=None, parent=None):
+
+    def __init__(
+        self,
+        trackRecordClass,
+        behavioral_box_ids=None,
+        experiment_ids=None,
+        cohort_ids=None,
+        animal_ids=None,
+        parent=None,
+    ):
         super(TrackFilterBase, self).__init__(parent=parent)
         self.trackRecordClass = trackRecordClass
         self.behavioral_box_ids = behavioral_box_ids
@@ -36,13 +44,17 @@ class TrackFilterBase(QObject):
         query = session.query(self.trackRecordClass)
 
         if self.behavioral_box_ids is not None:
-            query = query.filter(self.trackRecordClass.behavioral_box_id.in_(self.behavioral_box_ids))            
+            query = query.filter(
+                self.trackRecordClass.behavioral_box_id.in_(self.behavioral_box_ids)
+            )
         if self.experiment_ids is not None:
-            query = query.filter(self.trackRecordClass.experiment_id.in_(self.experiment_ids))            
+            query = query.filter(
+                self.trackRecordClass.experiment_id.in_(self.experiment_ids)
+            )
         if self.cohort_ids is not None:
-            query = query.filter(self.trackRecordClass.cohort_id.in_(self.cohort_ids))            
+            query = query.filter(self.trackRecordClass.cohort_id.in_(self.cohort_ids))
         if self.animal_ids is not None:
-            query = query.filter(self.trackRecordClass.animal_id.in_(self.animal_ids))            
+            query = query.filter(self.trackRecordClass.animal_id.in_(self.animal_ids))
 
         return query
 
@@ -50,66 +62,94 @@ class TrackFilterBase(QObject):
     def build_filter(self, session):
         return self.build_filter_query(session).all()
 
-    def _get_behavioral_box_ids_str(self, noneString="Any", array_opening_bracket = "[", array_closing_bracket = "]", enable_single_element_arrays = False):
+    def _get_behavioral_box_ids_str(
+        self,
+        noneString="Any",
+        array_opening_bracket="[",
+        array_closing_bracket="]",
+        enable_single_element_arrays=False,
+    ):
         out_string = ""
         if self.behavioral_box_ids is None:
             return noneString
         else:
             currArray = self.behavioral_box_ids
-            if (enable_single_element_arrays or (len(currArray)>1)):
+            if enable_single_element_arrays or (len(currArray) > 1):
                 out_string = out_string + array_opening_bracket
             for aBBID in currArray:
-                out_string = out_string + "B{0:02}".format(aBBID-1)
-            if (enable_single_element_arrays or (len(currArray)>1)):
+                out_string = out_string + "B{0:02}".format(aBBID - 1)
+            if enable_single_element_arrays or (len(currArray) > 1):
                 out_string = out_string + array_closing_bracket
             return out_string
 
-    def _get_experiment_ids_str(self, noneString="Any", array_opening_bracket = "[", array_closing_bracket = "]", enable_single_element_arrays = False):
+    def _get_experiment_ids_str(
+        self,
+        noneString="Any",
+        array_opening_bracket="[",
+        array_closing_bracket="]",
+        enable_single_element_arrays=False,
+    ):
         out_string = ""
         if self.experiment_ids is None:
             return noneString
         else:
             currArray = self.experiment_ids
-            if (enable_single_element_arrays or (len(currArray)>1)):
+            if enable_single_element_arrays or (len(currArray) > 1):
                 out_string = out_string + array_opening_bracket
             for anID in self.experiment_ids:
-                out_string = out_string + "E{0:04}".format(anID-1)
-            if (enable_single_element_arrays or (len(currArray)>1)):
+                out_string = out_string + "E{0:04}".format(anID - 1)
+            if enable_single_element_arrays or (len(currArray) > 1):
                 out_string = out_string + array_closing_bracket
             return out_string
 
-    def _get_cohort_ids_str(self, noneString="Any", array_opening_bracket = "[", array_closing_bracket = "]", enable_single_element_arrays = False):
+    def _get_cohort_ids_str(
+        self,
+        noneString="Any",
+        array_opening_bracket="[",
+        array_closing_bracket="]",
+        enable_single_element_arrays=False,
+    ):
         out_string = ""
         if self.cohort_ids is None:
             return noneString
         else:
             currArray = self.cohort_ids
-            if (enable_single_element_arrays or (len(currArray)>1)):
+            if enable_single_element_arrays or (len(currArray) > 1):
                 out_string = out_string + array_opening_bracket
             for anID in self.cohort_ids:
-                out_string = out_string + "C{0:04}".format(anID-1)
-            if (enable_single_element_arrays or (len(currArray)>1)):
+                out_string = out_string + "C{0:04}".format(anID - 1)
+            if enable_single_element_arrays or (len(currArray) > 1):
                 out_string = out_string + array_closing_bracket
             return out_string
 
-    def _get_animal_ids_str(self, noneString="Any", array_opening_bracket = "[", array_closing_bracket = "]", enable_single_element_arrays = False):
+    def _get_animal_ids_str(
+        self,
+        noneString="Any",
+        array_opening_bracket="[",
+        array_closing_bracket="]",
+        enable_single_element_arrays=False,
+    ):
         out_string = ""
         if self.animal_ids is None:
             return noneString
         else:
             currArray = self.animal_ids
-            if (enable_single_element_arrays or (len(currArray)>1)):
+            if enable_single_element_arrays or (len(currArray) > 1):
                 out_string = out_string + array_opening_bracket
             for anID in self.animal_ids:
-                out_string = out_string + "A{0:04}".format(anID-1)
-            if (enable_single_element_arrays or (len(currArray)>1)):
+                out_string = out_string + "A{0:04}".format(anID - 1)
+            if enable_single_element_arrays or (len(currArray) > 1):
                 out_string = out_string + array_closing_bracket
             return out_string
 
-
     def __str__(self):
         # return 'TrackFilterBase: behavioral_box_ids: {0}, experiment_ids: {1}, cohort_ids: {2}, animal_ids: {3}'.format(self.behavioral_box_ids, self.experiment_ids, self.cohort_ids, self.animal_ids)
-        return 'TrackFilterBase: behavioral_box_ids: {0}, experiment_ids: {1}, cohort_ids: {2}, animal_ids: {3}'.format(self._get_behavioral_box_ids_str(), self._get_experiment_ids_str(), self._get_cohort_ids_str(), self._get_animal_ids_str())
+        return "TrackFilterBase: behavioral_box_ids: {0}, experiment_ids: {1}, cohort_ids: {2}, animal_ids: {3}".format(
+            self._get_behavioral_box_ids_str(),
+            self._get_experiment_ids_str(),
+            self._get_cohort_ids_str(),
+            self._get_animal_ids_str(),
+        )
 
     def get_selection_string(self):
         out_string = ""
@@ -122,26 +162,56 @@ class TrackFilterBase(QObject):
             currType = self.get_track_type()
             out_string = out_string + currType.get_medium_str()
             out_string = out_string + ":"
-            
+
         if self.behavioral_box_ids is not None:
-            out_string = out_string + self._get_behavioral_box_ids_str("", array_opening_bracket=array_opening_bracket, array_closing_bracket=array_closing_bracket, enable_single_element_arrays=enable_single_element_arrays)
+            out_string = out_string + self._get_behavioral_box_ids_str(
+                "",
+                array_opening_bracket=array_opening_bracket,
+                array_closing_bracket=array_closing_bracket,
+                enable_single_element_arrays=enable_single_element_arrays,
+            )
 
         if self.experiment_ids is not None:
-            out_string = out_string + self._get_experiment_ids_str("", array_opening_bracket=array_opening_bracket, array_closing_bracket=array_closing_bracket, enable_single_element_arrays=enable_single_element_arrays)
+            out_string = out_string + self._get_experiment_ids_str(
+                "",
+                array_opening_bracket=array_opening_bracket,
+                array_closing_bracket=array_closing_bracket,
+                enable_single_element_arrays=enable_single_element_arrays,
+            )
 
         if self.cohort_ids is not None:
-            out_string = out_string + self._get_cohort_ids_str("", array_opening_bracket=array_opening_bracket, array_closing_bracket=array_closing_bracket, enable_single_element_arrays=enable_single_element_arrays)
+            out_string = out_string + self._get_cohort_ids_str(
+                "",
+                array_opening_bracket=array_opening_bracket,
+                array_closing_bracket=array_closing_bracket,
+                enable_single_element_arrays=enable_single_element_arrays,
+            )
 
         if self.animal_ids is not None:
-            out_string = out_string + self._get_animal_ids_str("", array_opening_bracket=array_opening_bracket, array_closing_bracket=array_closing_bracket, enable_single_element_arrays=enable_single_element_arrays)
+            out_string = out_string + self._get_animal_ids_str(
+                "",
+                array_opening_bracket=array_opening_bracket,
+                array_closing_bracket=array_closing_bracket,
+                enable_single_element_arrays=enable_single_element_arrays,
+            )
 
         return out_string
 
     def get_output_dict(self):
-        return {'behavioral_box_ids': self.behavioral_box_ids, 'experiment_ids': self.experiment_ids, 'cohort_ids': self.cohort_ids, 'animal_ids': self.animal_ids}
+        return {
+            "behavioral_box_ids": self.behavioral_box_ids,
+            "experiment_ids": self.experiment_ids,
+            "cohort_ids": self.cohort_ids,
+            "animal_ids": self.animal_ids,
+        }
 
     def get_ids(self):
-        return (self.behavioral_box_ids, self.experiment_ids, self.cohort_ids,  self.animal_ids)
+        return (
+            self.behavioral_box_ids,
+            self.experiment_ids,
+            self.cohort_ids,
+            self.animal_ids,
+        )
 
     def get_track_record_class(self):
         return self.trackRecordClass
@@ -156,7 +226,12 @@ class TrackFilterBase(QObject):
 
     # matches(other_filter): returns True IFF behavioral_box_ids, experiment_ids, cohort_ids, and animal_ids all match other_filter
     def matches(self, other_filter):
-        return ((self.behavioral_box_ids == other_filter.behavioral_box_ids) and (self.experiment_ids == other_filter.experiment_ids) and (self.cohort_ids == other_filter.cohort_ids) and (self.animal_ids == other_filter.animal_ids))
+        return (
+            (self.behavioral_box_ids == other_filter.behavioral_box_ids)
+            and (self.experiment_ids == other_filter.experiment_ids)
+            and (self.cohort_ids == other_filter.cohort_ids)
+            and (self.animal_ids == other_filter.animal_ids)
+        )
 
 
 class TrackCache(QObject):
@@ -173,22 +248,39 @@ class TrackCache(QObject):
 
 # TrackConfigurationBase: a class that holds the settings for a timeline track
 class TrackConfigurationBase(QObject):
-    """ holds the settings for a timeline track
-    
-    """
+    """holds the settings for a timeline track"""
+
     # dataChanged = pyqtSignal()
     # recordsLoaded = pyqtSignal()
 
     cacheUpdated = pyqtSignal()
 
-    def __init__(self, trackIndex, trackTitle, trackExtendedDescription, trackRecordClass, behavioral_box_ids=None, experiment_ids=None, cohort_ids=None, animal_ids=None, parent=None):
+    def __init__(
+        self,
+        trackIndex,
+        trackTitle,
+        trackExtendedDescription,
+        trackRecordClass,
+        behavioral_box_ids=None,
+        experiment_ids=None,
+        cohort_ids=None,
+        animal_ids=None,
+        parent=None,
+    ):
         super(TrackConfigurationBase, self).__init__(parent=parent)
         self.trackIndex = trackIndex
         self.trackTitle = trackTitle
         self.trackExtendedDescription = trackExtendedDescription
         # self.trackType = trackRecordClass.get_track_type()
 
-        self.filter = TrackFilterBase(trackRecordClass, behavioral_box_ids, experiment_ids, cohort_ids, animal_ids, parent=parent)
+        self.filter = TrackFilterBase(
+            trackRecordClass,
+            behavioral_box_ids,
+            experiment_ids,
+            cohort_ids,
+            animal_ids,
+            parent=parent,
+        )
         self.cache = TrackCache([], parent=parent)
 
     # get_should_auto_build_gui_views(): true if the gui views should automatically be built from the records after a reload(...) command
@@ -204,7 +296,7 @@ class TrackConfigurationBase(QObject):
 
     def get_track_extended_description(self):
         return self.trackExtendedDescription
-    
+
     def get_track_record_class(self):
         return self.get_filter().get_track_record_class()
 
@@ -226,14 +318,20 @@ class TrackConfigurationBase(QObject):
     # reload(...): called when the filter is changed to update the cache (reloading the records from the database) as needed
     def reload(self, session, owning_parent_track):
         found_records = self.filter_records(session)
-        print("track[{0}]: {1} records found".format(self.get_track_id(), len(found_records)))
+        print(
+            "track[{0}]: {1} records found".format(
+                self.get_track_id(), len(found_records)
+            )
+        )
 
         # Build the corresponding GUI objects
         built_model_view_container_array = []
         for (index, aRecord) in enumerate(found_records):
             aGuiView = None
             if self.get_should_auto_build_gui_views():
-                aGuiView = self.get_filter().trackRecordClass.get_gui_view(aRecord, parent=owning_parent_track)
+                aGuiView = self.get_filter().trackRecordClass.get_gui_view(
+                    aRecord, parent=owning_parent_track
+                )
             else:
                 aGuiView = None
 
@@ -241,7 +339,6 @@ class TrackConfigurationBase(QObject):
             built_model_view_container_array.append(aModelViewContainer)
 
         self.update_cache(built_model_view_container_array)
-
 
     # called to update the cache from an external source. Also called internally in self.reload(...)
     def update_cache(self, newCachedModelViewArray):
@@ -258,8 +355,12 @@ class TrackConfigurationBase(QObject):
         self.filter = newFilter
 
     def __str__(self):
-        return 'TrackConfigurationBase: trackIndex: {0}, trackTitle: {1}, trackExtendedDescription: {2}, filter: {3}'.format(self.trackIndex, self.trackTitle, self.trackExtendedDescription, str(self.filter))
-
+        return "TrackConfigurationBase: trackIndex: {0}, trackTitle: {1}, trackExtendedDescription: {2}, filter: {3}".format(
+            self.trackIndex,
+            self.trackTitle,
+            self.trackExtendedDescription,
+            str(self.filter),
+        )
 
     # update_labels_dynamically(): updates the labels dynamically from the active filter
     def update_labels_dynamically(self):

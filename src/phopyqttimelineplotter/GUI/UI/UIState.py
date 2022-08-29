@@ -1,19 +1,34 @@
 # UIState.py
 import sys
+from enum import Enum
+
 # from datetime import datetime, timezone, timedelta
 from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtWidgets import QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget,QTableWidgetItem
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont, QLinearGradient
-from PyQt5.QtCore import Qt, QPoint, QRect, QObject, QEvent, pyqtSignal, QSize
-from enum import Enum
+from PyQt5.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, pyqtSignal
+from PyQt5.QtGui import QBrush, QColor, QFont, QLinearGradient, QPainter, QPen
+from PyQt5.QtWidgets import (
+    QFormLayout,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QSplitter,
+    QStackedWidget,
+    QTableWidget,
+    QTableWidgetItem,
+    QToolTip,
+    QVBoxLayout,
+)
 
 # import GUI.UI.UIState as UIState
 # from phopyqttimelineplotter.GUI.UI.UIState import ItemInteractionState, ItemHoverState, ItemSelectionState
 
+
 class ItemHoverState(Enum):
-    Deemphasized = 1 # Deemphasized
-    Default = 2 # Default
-    Emphasized = 3 #  Emphasized
+    Deemphasized = 1  # Deemphasized
+    Default = 2  # Default
+    Emphasized = 3  #  Emphasized
 
     def is_emphasized(self):
         if self == ItemHoverState.Emphasized:
@@ -28,11 +43,10 @@ class ItemHoverState(Enum):
             return False
 
 
-
 class ItemSelectionState(Enum):
-    Default = 1 # Default
-    PartiallySelected = 2 # PartiallySelected
-    Selected = 3 #  Selected
+    Default = 1  # Default
+    PartiallySelected = 2  # PartiallySelected
+    Selected = 3  #  Selected
 
     def is_selected(self):
         if self == ItemSelectionState.Default:
@@ -53,10 +67,13 @@ class ItemSelectionState(Enum):
             return False
 
 
-
-
 class ItemInteractionState(QObject):
-    def __init__(self, hoverState=ItemHoverState.Default, selectionState=ItemSelectionState.Default, parent=None):
+    def __init__(
+        self,
+        hoverState=ItemHoverState.Default,
+        selectionState=ItemSelectionState.Default,
+        parent=None,
+    ):
         super().__init__(parent=parent)
         self.hoverState = hoverState
         self.selectionState = selectionState
@@ -87,5 +104,3 @@ class ItemInteractionState(QObject):
 
     def is_selected(self):
         return self.selectionState.is_selected()
-
-

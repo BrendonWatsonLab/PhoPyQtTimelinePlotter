@@ -1,21 +1,51 @@
-import sys
-from datetime import datetime, timezone, timedelta
-from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import Qt, QPoint, QLine, QRect, QRectF, pyqtSignal, pyqtSlot, QObject, QMargins
-from PyQt5.QtGui import QPainter, QColor, QFont, QBrush, QPalette, QPen, QPolygon, QPainterPath, QPixmap
-from PyQt5.QtWidgets import QWidget, QFrame, QScrollArea, QVBoxLayout, QGridLayout, QListWidget
 import os
+import sys
+from datetime import datetime, timedelta, timezone
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import (
+    QLine,
+    QMargins,
+    QObject,
+    QPoint,
+    QRect,
+    QRectF,
+    Qt,
+    pyqtSignal,
+    pyqtSlot,
+)
+from PyQt5.QtGui import (
+    QBrush,
+    QColor,
+    QFont,
+    QPainter,
+    QPainterPath,
+    QPalette,
+    QPen,
+    QPixmap,
+    QPolygon,
+)
+from PyQt5.QtWidgets import (
+    QFrame,
+    QGridLayout,
+    QListWidget,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
+)
 
 # ReferenceMarker.py
 from phopyqttimelineplotter.GUI.Model.ModelViewContainer import ModelViewContainer
-from phopyqttimelineplotter.GUI.Model.TrackConfigs.AbstractTrackConfigs import TrackCache
-
-
+from phopyqttimelineplotter.GUI.Model.TrackConfigs.AbstractTrackConfigs import (
+    TrackCache,
+)
 
 # from phopyqttimelineplotter.GUI.Model.ReferenceLines.ReferenceMarker import RepresentedTimeRange
 """
 RepresentedMarkerTime: a simple model object that wraps a datetime. To be used by ReferenceMarkerManager
 """
+
+
 class RepresentedMarkerTime(QObject):
     def __init__(self, markerDatetime, parent=None):
         super(RepresentedMarkerTime, self).__init__(parent=parent)
@@ -39,11 +69,10 @@ class RepresentedMarkerTime(QObject):
             pass
 
 
-
 class RepresentedMarkerRecord(RepresentedMarkerTime):
     def __init__(self, markerDatetime, parent=None):
         super(RepresentedMarkerRecord, self).__init__(markerDatetime, parent=parent)
-        
+
 
 # ReferenceMarkerManagerConfiguration: a class that holds the settings for a timeline track
 class ReferenceMarkerManagerConfiguration(QObject):
@@ -60,12 +89,18 @@ class ReferenceMarkerManagerConfiguration(QObject):
     # reload(...): called when the filter is changed to update the cache (reloading the records from the database) as needed
     def reload(self, session, owning_parent_track):
         found_records = self.filter_records(session)
-        print("track[{0}]: {1} records found".format(self.get_track_id(), len(found_records)))
+        print(
+            "track[{0}]: {1} records found".format(
+                self.get_track_id(), len(found_records)
+            )
+        )
 
         # Build the corresponding GUI objects
         built_model_view_container_array = []
         for (index, aRecord) in enumerate(found_records):
-            aGuiView = self.get_filter().trackRecordClass.get_gui_view(aRecord, parent=owning_parent_track)
+            aGuiView = self.get_filter().trackRecordClass.get_gui_view(
+                aRecord, parent=owning_parent_track
+            )
             aModelViewContainer = ModelViewContainer(aRecord, aGuiView)
             built_model_view_container_array.append(aModelViewContainer)
 
@@ -83,15 +118,19 @@ class ReferenceMarkerManagerConfiguration(QObject):
 """
 RepresentedTimeRange: on object that holds a reference to the current global start and end times
 """
+
+
 class RepresentedTimeRange(QObject):
 
-    timesChanged = pyqtSignal(datetime, datetime, timedelta) # Called when the timeline's global displayed start/end times are updated
-    
+    timesChanged = pyqtSignal(
+        datetime, datetime, timedelta
+    )  # Called when the timeline's global displayed start/end times are updated
+
     def __init__(self, totalStartTime, totalEndTime, parent=None):
         super(RepresentedTimeRange, self).__init__(parent=parent)
         self._totalStartTime = totalStartTime
         self._totalEndTime = totalEndTime
-        self._totalDuration = (totalEndTime - totalStartTime)
+        self._totalDuration = totalEndTime - totalStartTime
 
     # Getters:
     @property
@@ -104,14 +143,16 @@ class RepresentedTimeRange(QObject):
 
     @property
     def totalDuration(self):
-        return (self.totalEndTime - self.totalStartTime)
+        return self.totalEndTime - self.totalStartTime
 
     # Setters:
     @totalStartTime.setter
     def totalStartTime(self, new_value):
         if self._totalStartTime != new_value:
             self._totalStartTime = new_value
-            self.timesChanged.emit(self.totalStartTime, self.totalEndTime, self.totalDuration)
+            self.timesChanged.emit(
+                self.totalStartTime, self.totalEndTime, self.totalDuration
+            )
         else:
             # Otherwise nothing has changed
             pass
@@ -120,9 +161,9 @@ class RepresentedTimeRange(QObject):
     def totalEndTime(self, new_value):
         if self._totalEndTime != new_value:
             self._totalEndTime = new_value
-            self.timesChanged.emit(self.totalStartTime, self.totalEndTime, self.totalDuration)
+            self.timesChanged.emit(
+                self.totalStartTime, self.totalEndTime, self.totalDuration
+            )
         else:
             # Otherwise nothing has changed
             pass
-
-

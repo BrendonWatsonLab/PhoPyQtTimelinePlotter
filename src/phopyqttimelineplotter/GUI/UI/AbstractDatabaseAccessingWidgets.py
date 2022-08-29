@@ -1,23 +1,34 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+
+from app.database.DatabaseConnectionRef import (
+    DatabaseConnectionRef,
+    DatabasePendingItemsState,
+)
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
+from PyQt5.QtCore import QObject
+from PyQt5.QtWidgets import (
+    QApplication,
+    QDialog,
+    QMessageBox,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
+
 # import numpy as np
 
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QDialog, QMessageBox
-from PyQt5.QtCore import QObject
 
-from app.database.DatabaseConnectionRef import DatabasePendingItemsState, DatabaseConnectionRef
-
-#from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWidget
+# from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingWidget
 # from phopyqttimelineplotter.GUI.UI.AbstractDatabaseAccessingWidgets import AbstractDatabaseAccessingQObject
 
 ShouldCloseConnectionOnlyOnQuit = True
 
 # Displays an interactive message box to prompt the user interactively when there is unsaved database changes
 class InteractiveDatabaseCloseMixin(object):
-    
+
     # Called when something requested that the database close.
     # Shows an interactive message box if unsaved changes exist, and lets the user decide whether to save them or just close.
     # returns shouldClose, a Bool indicating whether the user canceled the close event.
@@ -27,10 +38,12 @@ class InteractiveDatabaseCloseMixin(object):
         shouldClose = True
         if user_edited_pending_counts.has_pending():
             reply = QMessageBox.question(
-                self, "Message",
+                self,
+                "Message",
                 "Are you sure you want to quit? Any unsaved work will be lost.",
                 QMessageBox.Save | QMessageBox.Close | QMessageBox.Cancel,
-                QMessageBox.Save)
+                QMessageBox.Save,
+            )
 
             if reply == QMessageBox.Close:
                 print("User is closing, discarding changes")
@@ -53,10 +66,10 @@ class InteractiveDatabaseCloseMixin(object):
 
         if shouldClose:
             print("Closing...")
-            if (not ShouldCloseConnectionOnlyOnQuit):
+            if not ShouldCloseConnectionOnlyOnQuit:
                 self.database_close()
             else:
-                pass # skip closing the database on a window close
+                pass  # skip closing the database on a window close
         else:
             print("Close has been canceled!")
 
@@ -64,9 +77,13 @@ class InteractiveDatabaseCloseMixin(object):
 
 
 # An Abstract QMainWindow superclass that holds a reference to an open database
-class AbstractDatabaseAccessingWindow(InteractiveDatabaseCloseMixin, QtWidgets.QMainWindow):
+class AbstractDatabaseAccessingWindow(
+    InteractiveDatabaseCloseMixin, QtWidgets.QMainWindow
+):
     def __init__(self, database_connection, parent=None):
-        super(AbstractDatabaseAccessingWindow, self).__init__(parent) # Call the inherited classes __init__ method
+        super(AbstractDatabaseAccessingWindow, self).__init__(
+            parent
+        )  # Call the inherited classes __init__ method
         self.database_connection = database_connection
 
     def get_database_connection(self):
@@ -100,12 +117,12 @@ class AbstractDatabaseAccessingWindow(InteractiveDatabaseCloseMixin, QtWidgets.Q
     def reloadModelFromDatabase(self):
         pass
 
-    
     # Returns true if any models have pending (uncommited) changes
     def get_has_pending_changes(self):
         return self.database_connection.get_pending_counts().has_pending()
-        
-         # Called on close
+
+        # Called on close
+
     def closeEvent(self, event):
         # Assess whether this is appropriate for a specific widget to have
         shouldClose = self.perform_interactive_database_close()
@@ -115,15 +132,14 @@ class AbstractDatabaseAccessingWindow(InteractiveDatabaseCloseMixin, QtWidgets.Q
         else:
             print("Close has been canceled!")
             event.ignore()
-
-            
-        
 
 
 # An Abstract QtWidgets.QDialog superclass that holds a reference to an open database
 class AbstractDatabaseAccessingDialog(InteractiveDatabaseCloseMixin, QtWidgets.QDialog):
     def __init__(self, database_connection, parent=None):
-        super(AbstractDatabaseAccessingDialog, self).__init__(parent) # Call the inherited classes __init__ method
+        super(AbstractDatabaseAccessingDialog, self).__init__(
+            parent
+        )  # Call the inherited classes __init__ method
         self.database_connection = database_connection
 
     def get_database_connection(self):
@@ -157,12 +173,12 @@ class AbstractDatabaseAccessingDialog(InteractiveDatabaseCloseMixin, QtWidgets.Q
     def reloadModelFromDatabase(self):
         pass
 
-    
     # Returns true if any models have pending (uncommited) changes
     def get_has_pending_changes(self):
         return self.database_connection.get_pending_counts().has_pending()
-        
-         # Called on close
+
+        # Called on close
+
     def closeEvent(self, event):
         # Assess whether this is appropriate for a specific widget to have
         shouldClose = self.perform_interactive_database_close()
@@ -172,15 +188,14 @@ class AbstractDatabaseAccessingDialog(InteractiveDatabaseCloseMixin, QtWidgets.Q
         else:
             print("Close has been canceled!")
             event.ignore()
-
-            
-        
 
 
 # An Abstract QtWidgets.QWidget superclass that holds a reference to an open database
 class AbstractDatabaseAccessingWidget(InteractiveDatabaseCloseMixin, QtWidgets.QWidget):
     def __init__(self, database_connection, parent=None):
-        super(AbstractDatabaseAccessingWidget, self).__init__(parent) # Call the inherited classes __init__ method
+        super(AbstractDatabaseAccessingWidget, self).__init__(
+            parent
+        )  # Call the inherited classes __init__ method
         self.database_connection = database_connection
 
     def get_database_connection(self):
@@ -214,12 +229,11 @@ class AbstractDatabaseAccessingWidget(InteractiveDatabaseCloseMixin, QtWidgets.Q
     def reloadModelFromDatabase(self):
         pass
 
-    
     # Returns true if any models have pending (uncommited) changes
     def get_has_pending_changes(self):
         return self.database_connection.get_pending_counts().has_pending()
-        
-     # Called on close
+
+    # Called on close
     def closeEvent(self, event):
         # Assess whether this is appropriate for a specific widget to have
         shouldClose = self.perform_interactive_database_close()
@@ -231,12 +245,12 @@ class AbstractDatabaseAccessingWidget(InteractiveDatabaseCloseMixin, QtWidgets.Q
             event.ignore()
 
 
-      
-
 # An Abstract QtWidgets.QWidget superclass that holds a reference to an open database
 class AbstractDatabaseAccessingQObject(QObject):
     def __init__(self, database_connection, parent=None):
-        super(AbstractDatabaseAccessingQObject, self).__init__(parent) # Call the inherited classes __init__ method
+        super(AbstractDatabaseAccessingQObject, self).__init__(
+            parent
+        )  # Call the inherited classes __init__ method
         self.database_connection = database_connection
 
     def get_database_connection(self):
@@ -271,7 +285,6 @@ class AbstractDatabaseAccessingQObject(QObject):
     def reloadModelFromDatabase(self):
         pass
 
-    
     # Returns true if any models have pending (uncommited) changes
     def get_has_pending_changes(self):
         return self.database_connection.get_pending_counts().has_pending()

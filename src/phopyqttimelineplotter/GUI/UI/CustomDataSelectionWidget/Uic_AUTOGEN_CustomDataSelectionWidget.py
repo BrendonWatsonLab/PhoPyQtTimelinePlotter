@@ -9,6 +9,7 @@
 # from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class Ui_CustomDataSelectionWidget(object):
     def setupUi(self, customDataSelectionWidget):
         customDataSelectionWidget.setObjectName("CustomDataSelectionWidget")

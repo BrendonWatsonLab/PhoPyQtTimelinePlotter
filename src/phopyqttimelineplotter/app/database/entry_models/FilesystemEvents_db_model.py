@@ -1,30 +1,53 @@
 # coding: utf-8
 import sys
+from datetime import datetime
 from enum import Enum
-
-from sqlalchemy import Column, ForeignKey, Integer, Table, Text, text, DateTime, UniqueConstraint
-from sqlalchemy.sql.sqltypes import NullType
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from pathlib import Path
 
 from app.database.entry_models.DatabaseBase import Base, metadata
-from pathlib import Path
-from datetime import datetime
-
-from phopyqttimelineplotter.GUI.Model.Videos import VideoInfo, ExperimentContextInfo
-
-from app.filesystem.VideoUtils import VideoParsedResults, FoundVideoFileResult
-
+from app.database.entry_models.db_model import (
+    ReferenceBoxExperCohortAnimalMixin,
+    StartEndDatetimeMixin,
+)
+from app.filesystem.VideoUtils import FoundVideoFileResult, VideoParsedResults
 from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtWidgets import QWidget, QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
+from PyQt5.QtGui import QBrush, QColor, QFont, QPainter, QPen
+from PyQt5.QtWidgets import (
+    QFormLayout,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QSplitter,
+    QStackedWidget,
+    QTableWidget,
+    QTableWidgetItem,
+    QToolTip,
+    QVBoxLayout,
+    QWidget,
+)
+from sqlalchemy import (
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Table,
+    Text,
+    UniqueConstraint,
+    text,
+)
+from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql.sqltypes import NullType
 
-from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent import PhoDurationEvent, PhoEvent
-
-from phopyqttimelineplotter.GUI.Model.TrackType import TrackType
 from phopyqttimelineplotter.GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
-
-from app.database.entry_models.db_model import ReferenceBoxExperCohortAnimalMixin, StartEndDatetimeMixin
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent import (
+    PhoDurationEvent,
+    PhoEvent,
+)
+from phopyqttimelineplotter.GUI.Model.TrackType import TrackType
+from phopyqttimelineplotter.GUI.Model.Videos import ExperimentContextInfo, VideoInfo
 
 # FilesystemEvents_db_model.py
 
@@ -39,33 +62,34 @@ class LabjackVariable_EventTypes(Enum):
 
     def get_short_str(self):
         if self == LabjackVariable_EventTypes.Unknown:
-            return '?'
+            return "?"
         elif self == LabjackVariable_EventTypes.BeamBreak:
-            return 'B'
+            return "B"
         elif self == LabjackVariable_EventTypes.Dispense:
-            return 'D'
+            return "D"
         else:
-            return '!'
+            return "!"
 
     def get_medium_str(self):
         if self == LabjackVariable_EventTypes.Unknown:
-            return '???'
+            return "???"
         elif self == LabjackVariable_EventTypes.BeamBreak:
-            return 'BBr'
+            return "BBr"
         elif self == LabjackVariable_EventTypes.Dispense:
-            return 'Disp'
+            return "Disp"
         else:
-            return 'ERR'
+            return "ERR"
 
     def get_long_str(self):
         if self == LabjackVariable_EventTypes.Unknown:
-            return 'Unknown'
+            return "Unknown"
         elif self == LabjackVariable_EventTypes.BeamBreak:
-            return 'BeamBreak'
+            return "BeamBreak"
         elif self == LabjackVariable_EventTypes.Dispense:
-            return 'Dispense'
+            return "Dispense"
         else:
-            return 'ERROR'
+            return "ERROR"
+
 
 class LabjackVariable_DispenseTypes(Enum):
     Unknown = 1
@@ -74,44 +98,44 @@ class LabjackVariable_DispenseTypes(Enum):
 
     def get_short_str(self):
         if self == LabjackVariable_DispenseTypes.Unknown:
-            return '?'
+            return "?"
         elif self == LabjackVariable_DispenseTypes.Water:
-            return 'W'
+            return "W"
         elif self == LabjackVariable_DispenseTypes.Food:
-            return 'F'
+            return "F"
         else:
-            return '!'
+            return "!"
 
     def get_medium_str(self):
         if self == LabjackVariable_DispenseTypes.Unknown:
-            return '???'
+            return "???"
         elif self == LabjackVariable_DispenseTypes.Water:
-            return 'Wat'
+            return "Wat"
         elif self == LabjackVariable_DispenseTypes.Food:
-            return 'Food'
+            return "Food"
         else:
-            return 'ERR'
+            return "ERR"
 
     def get_long_str(self):
         if self == LabjackVariable_DispenseTypes.Unknown:
-            return 'Unknown'
+            return "Unknown"
         elif self == LabjackVariable_DispenseTypes.Water:
-            return 'Water'
+            return "Water"
         elif self == LabjackVariable_DispenseTypes.Food:
-            return 'Food'
+            return "Food"
         else:
-            return 'ERROR'
+            return "ERROR"
 
 
 class StaticEventType(Base):
-    __tablename__ = 'staticFileExtensions'
+    __tablename__ = "staticFileExtensions"
 
     extension = Column(Text, primary_key=True, server_default=text("'mp4'"))
     description = Column(Text)
     notes = Column(Text)
     version = Column(Integer, server_default=text("0"))
 
-    def __init__(self,extension,description=None,notes=None,version='0'):
+    def __init__(self, extension, description=None, notes=None, version="0"):
         self.extension = extension
         self.description = description
         self.notes = notes
@@ -125,36 +149,45 @@ class StaticEventType(Base):
     @classmethod
     def getTableMapping(cls):
         return [
-            ('Extension', cls.extension, 'extension', {'editable': True}),
-            ('Description', cls.description, 'description', {'editable': True}),
-            ('Notes', cls.notes, 'notes', {'editable': True}),
-            ('Version', cls.version, 'version', {'editable': True}),
+            ("Extension", cls.extension, "extension", {"editable": True}),
+            ("Description", cls.description, "description", {"editable": True}),
+            ("Notes", cls.notes, "notes", {"editable": True}),
+            ("Version", cls.version, "version", {"editable": True}),
         ]
-
-
 
 
 # Parent of Behavior
 class BehaviorGroup(Base):
-    __tablename__ = 'behavior_groups'
+    __tablename__ = "behavior_groups"
 
     id = Column(Integer, primary_key=True)
     name = Column(Text, nullable=False, unique=True)
     description = Column(Text)
-    primary_color = Column(Integer, ForeignKey('category_colors.id'), nullable=False, server_default=text("1"))
-    secondary_color = Column(Integer, ForeignKey('category_colors.id'), nullable=False, server_default=text("2"))
+    primary_color = Column(
+        Integer,
+        ForeignKey("category_colors.id"),
+        nullable=False,
+        server_default=text("1"),
+    )
+    secondary_color = Column(
+        Integer,
+        ForeignKey("category_colors.id"),
+        nullable=False,
+        server_default=text("2"),
+    )
     note = Column(Text)
 
-    primaryColor = relationship('CategoryColors', foreign_keys=[primary_color])
-    secondaryColor = relationship('CategoryColors', foreign_keys=[secondary_color])
+    primaryColor = relationship("CategoryColors", foreign_keys=[primary_color])
+    secondaryColor = relationship("CategoryColors", foreign_keys=[secondary_color])
 
-    behaviors = relationship("Behavior", order_by=Behavior.id, back_populates="parentGroup")
+    behaviors = relationship(
+        "Behavior", order_by=Behavior.id, back_populates="parentGroup"
+    )
 
-    def __init__(self,id,name,description,primary_color,secondary_color,note):
+    def __init__(self, id, name, description, primary_color, secondary_color, note):
         self.id = id
         self.name = name
         self.description = description
         self.primary_color = primary_color
         self.secondary_color = secondary_color
         self.note = note
-

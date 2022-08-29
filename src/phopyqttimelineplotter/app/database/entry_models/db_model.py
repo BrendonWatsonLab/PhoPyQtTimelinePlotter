@@ -1,28 +1,52 @@
 # coding: utf-8
-from sqlalchemy import Column, ForeignKey, Integer, Table, Text, text, DateTime, UniqueConstraint
-from sqlalchemy.sql.sqltypes import NullType
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from datetime import datetime
+from pathlib import Path
 
 from app.database.entry_models.DatabaseBase import Base, metadata
-from pathlib import Path
-from datetime import datetime
-
-from phopyqttimelineplotter.GUI.Model.Videos import VideoInfo, ExperimentContextInfo
-
-from app.filesystem.VideoUtils import VideoParsedResults, FoundVideoFileResult
-
+from app.filesystem.VideoUtils import FoundVideoFileResult, VideoParsedResults
 from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtWidgets import QWidget, QMessageBox, QToolTip, QStackedWidget, QHBoxLayout, QVBoxLayout, QSplitter, QFormLayout, QLabel, QFrame, QPushButton, QTableWidget, QTableWidgetItem
-from PyQt5.QtGui import QPainter, QBrush, QPen, QColor, QFont
+from PyQt5.QtGui import QBrush, QColor, QFont, QPainter, QPen
+from PyQt5.QtWidgets import (
+    QFormLayout,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QSplitter,
+    QStackedWidget,
+    QTableWidget,
+    QTableWidgetItem,
+    QToolTip,
+    QVBoxLayout,
+    QWidget,
+)
+from sqlalchemy import (
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Table,
+    Text,
+    UniqueConstraint,
+    text,
+)
+from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql.sqltypes import NullType
 
-from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent_Video import PhoDurationEvent_Video
-from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent_AnnotationComment import PhoDurationEvent_AnnotationComment
-from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent_Partition import PhoDurationEvent_Partition
-
-from phopyqttimelineplotter.GUI.Model.TrackType import TrackType
 from phopyqttimelineplotter.GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
-
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent_AnnotationComment import (
+    PhoDurationEvent_AnnotationComment,
+)
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent_Partition import (
+    PhoDurationEvent_Partition,
+)
+from phopyqttimelineplotter.GUI.Model.Events.PhoDurationEvent_Video import (
+    PhoDurationEvent_Video,
+)
+from phopyqttimelineplotter.GUI.Model.TrackType import TrackType
+from phopyqttimelineplotter.GUI.Model.Videos import ExperimentContextInfo, VideoInfo
 
 ## INCLUDES:
 # from app.database.entry_models.db_model import Animal, BehavioralBox, Context, Experiment, Labjack, Cohort, Subcontext, TimestampedAnnotation, ExperimentalConfigurationEvent, CategoricalDurationLabel, VideoFile
@@ -55,19 +79,19 @@ class ReferenceBoxExperCohortAnimalMixin(object):
 
     @declared_attr
     def behavioral_box_id(cls):
-        return Column(Integer, ForeignKey('BehavioralBoxes.id'), nullable=True)
+        return Column(Integer, ForeignKey("BehavioralBoxes.id"), nullable=True)
 
     @declared_attr
     def experiment_id(cls):
-        return Column(Integer, ForeignKey('Experiments.id'), nullable=True)
+        return Column(Integer, ForeignKey("Experiments.id"), nullable=True)
 
     @declared_attr
     def cohort_id(cls):
-        return Column(Integer, ForeignKey('Cohorts.id'), nullable=True)
+        return Column(Integer, ForeignKey("Cohorts.id"), nullable=True)
 
     @declared_attr
     def animal_id(cls):
-        return Column(Integer, ForeignKey('Animals.id'), nullable=True)
+        return Column(Integer, ForeignKey("Animals.id"), nullable=True)
 
     ## Relationships:
     @declared_attr
@@ -87,7 +111,12 @@ class ReferenceBoxExperCohortAnimalMixin(object):
         return relationship("Experiment")
 
     def get_id_values(self):
-        return (self.behavioral_box_id, self.experiment_id, self.cohort_id, self.animal_id)
+        return (
+            self.behavioral_box_id,
+            self.experiment_id,
+            self.cohort_id,
+            self.animal_id,
+        )
 
     def set_id_values(self, behavioral_box_id, experiment_id, cohort_id, animal_id):
         self.behavioral_box_id = behavioral_box_id
@@ -111,7 +140,6 @@ class ReferenceBoxExperCohortAnimalMixin(object):
 
         return outDict
 
-
     # @classmethod
     # def getTableMapping(cls):
     #     return [
@@ -120,10 +148,9 @@ class ReferenceBoxExperCohortAnimalMixin(object):
     #         ('CohortID', cls.cohort_id, 'cohort_id', {'editable': True}),
     #         ('AnimalID', cls.animal_id, 'animal_id', {'editable': True}),
     #     ]
-    
+
 
 class StartEndDatetimeMixin(DateTimeRenderMixin, object):
-
     def get_start_date(self):
         return datetime.fromtimestamp(float(self.start_date) / 1000.0)
 
@@ -134,12 +161,14 @@ class StartEndDatetimeMixin(DateTimeRenderMixin, object):
             return datetime.fromtimestamp(float(self.end_date) / 1000.0)
 
     def StartEndDatetimeMixin_get_JSON(self):
-        return {"start_date":self.get_full_long_date_time_string(self.get_start_date()), "end_date":self.get_full_long_date_time_string(self.get_end_date())}
-
+        return {
+            "start_date": self.get_full_long_date_time_string(self.get_start_date()),
+            "end_date": self.get_full_long_date_time_string(self.get_end_date()),
+        }
 
 
 class Animal(Base):
-    __tablename__ = 'Animals'
+    __tablename__ = "Animals"
 
     id = Column(Integer, primary_key=True)
     name = Column(Text, nullable=False, unique=True, server_default=text("'animal_0'"))
@@ -151,18 +180,17 @@ class Animal(Base):
     @classmethod
     def getTableMapping(cls):
         return [
-            ('ID', cls.id, 'id', {'editable': False}),
-            ('Name', cls.name, 'name', {'editable': True}),
-            ('Birth Date', cls.birth_date, 'birth_date', {'editable': True}),
-            ('Receive Date', cls.receive_date, 'receive_date', {'editable': True}),
-            ('Death Date', cls.death_date, 'death_date', {'editable': True}),
-            ('Notes', cls.notes, 'notes', {'editable': True}),
+            ("ID", cls.id, "id", {"editable": False}),
+            ("Name", cls.name, "name", {"editable": True}),
+            ("Birth Date", cls.birth_date, "birth_date", {"editable": True}),
+            ("Receive Date", cls.receive_date, "receive_date", {"editable": True}),
+            ("Death Date", cls.death_date, "death_date", {"editable": True}),
+            ("Notes", cls.notes, "notes", {"editable": True}),
         ]
-    
 
 
 class BehavioralBox(Base):
-    __tablename__ = 'BehavioralBoxes'
+    __tablename__ = "BehavioralBoxes"
 
     id = Column(Integer, primary_key=True)
     # numerical_id = Column(Integer, nullable=False)
@@ -171,24 +199,25 @@ class BehavioralBox(Base):
     @classmethod
     def getTableMapping(cls):
         return [
-            ('ID', cls.id, 'id', {'editable': False}),
+            ("ID", cls.id, "id", {"editable": False}),
             # ('NumericalID', cls.numerical_id, 'numerical_id', {'editable': True}),
-            ('Name', cls.name, 'name', {'editable': True}),
+            ("Name", cls.name, "name", {"editable": True}),
         ]
 
 
-
 class Subcontext(Base):
-    __tablename__ = 'Subcontext'
+    __tablename__ = "Subcontext"
 
     id = Column(Integer, primary_key=True)
     name = Column(Text, nullable=False)
-    parent_context = Column(Integer, ForeignKey('Contexts.id'), nullable=False, server_default=text("1"))
+    parent_context = Column(
+        Integer, ForeignKey("Contexts.id"), nullable=False, server_default=text("1")
+    )
     notes = Column(Text)
 
-    parentContext = relationship('Context', back_populates="subcontexts")
+    parentContext = relationship("Context", back_populates="subcontexts")
 
-    def __init__(self,id,name,parent_context,notes=None):
+    def __init__(self, id, name, parent_context, notes=None):
         self.id = id
         self.name = name
         self.parent_context = parent_context
@@ -197,32 +226,36 @@ class Subcontext(Base):
     @classmethod
     def getTableMapping(cls):
         return [
-            ('ID', cls.id, 'id', {'editable': False}),
-            ('Name', cls.name, 'name', {'editable': True}),
-            ('Parent ID', cls.parent_context, 'parent_context', {'editable': True}),
-            ('Notes', cls.notes, 'notes', {'editable': True}),
+            ("ID", cls.id, "id", {"editable": False}),
+            ("Name", cls.name, "name", {"editable": True}),
+            ("Parent ID", cls.parent_context, "parent_context", {"editable": True}),
+            ("Notes", cls.notes, "notes", {"editable": True}),
         ]
 
-    __table_args__ = (UniqueConstraint('name', 'parent_context', name='_name_parent_uc'),
-                     )
+    __table_args__ = (
+        UniqueConstraint("name", "parent_context", name="_name_parent_uc"),
+    )
 
     def Subcontext_get_JSON(self):
         outDict = dict()
         outDict["name"] = self.name
         outDict["parentContext"] = self.parentContext.name
-        outDict["notes"] = (self.notes or "")
+        outDict["notes"] = self.notes or ""
         return outDict
 
+
 class Context(Base):
-    __tablename__ = 'Contexts'
+    __tablename__ = "Contexts"
 
     id = Column(Integer, primary_key=True)
     name = Column(Text, nullable=False, unique=True)
     note = Column(Text)
 
-    subcontexts = relationship('Subcontext', order_by=Subcontext.id, back_populates="parentContext")
+    subcontexts = relationship(
+        "Subcontext", order_by=Subcontext.id, back_populates="parentContext"
+    )
 
-    def __init__(self,id,name,notes=None):
+    def __init__(self, id, name, notes=None):
         self.id = id
         self.name = name
         self.note = notes
@@ -230,20 +263,20 @@ class Context(Base):
     @classmethod
     def getTableMapping(cls):
         return [
-            ('ID', cls.id, 'id', {'editable': False}),
-            ('Name', cls.name, 'name', {'editable': True}),
-            ('Notes', cls.note, 'note', {'editable': True}),
+            ("ID", cls.id, "id", {"editable": False}),
+            ("Name", cls.name, "name", {"editable": True}),
+            ("Notes", cls.note, "note", {"editable": True}),
         ]
 
     def Context_get_JSON(self):
         outDict = dict()
         outDict["name"] = self.name
-        outDict["note"] = (self.note or "")
+        outDict["note"] = self.note or ""
         return outDict
 
 
 class Experiment(Base):
-    __tablename__ = 'Experiments'
+    __tablename__ = "Experiments"
 
     id = Column(Integer, primary_key=True)
     name = Column(Text, server_default=text("'experiment_'"))
@@ -254,16 +287,16 @@ class Experiment(Base):
     @classmethod
     def getTableMapping(cls):
         return [
-            ('ID', cls.id, 'id', {'editable': False}),
-            ('Name', cls.name, 'name', {'editable': True}),
-            ('StartDate', cls.start_date, 'start_date', {'editable': True}),
-            ('EndDate', cls.end_date, 'end_date', {'editable': True}),
-            ('Notes', cls.notes, 'notes', {'editable': True}),
+            ("ID", cls.id, "id", {"editable": False}),
+            ("Name", cls.name, "name", {"editable": True}),
+            ("StartDate", cls.start_date, "start_date", {"editable": True}),
+            ("EndDate", cls.end_date, "end_date", {"editable": True}),
+            ("Notes", cls.notes, "notes", {"editable": True}),
         ]
 
 
 class Labjack(Base):
-    __tablename__ = 'Labjacks'
+    __tablename__ = "Labjacks"
 
     serial_number = Column(Integer, primary_key=True)
     name = Column(Text, unique=True, server_default=text("'LJ-'"))
@@ -272,9 +305,9 @@ class Labjack(Base):
     @classmethod
     def getTableMapping(cls):
         return [
-            ('SerialNumber', cls.serial_number, 'serial_number', {'editable': True}),
-            ('Name', cls.name, 'name', {'editable': True}),
-            ('Model', cls.model, 'model', {'editable': True}),
+            ("SerialNumber", cls.serial_number, "serial_number", {"editable": True}),
+            ("Name", cls.name, "name", {"editable": True}),
+            ("Model", cls.model, "model", {"editable": True}),
         ]
 
 
@@ -286,14 +319,14 @@ class Labjack(Base):
 
 
 class StaticFileExtension(Base):
-    __tablename__ = 'staticFileExtensions'
+    __tablename__ = "staticFileExtensions"
 
     extension = Column(Text, primary_key=True, server_default=text("'mp4'"))
     description = Column(Text)
     notes = Column(Text)
     version = Column(Integer, server_default=text("0"))
 
-    def __init__(self,extension,description=None,notes=None,version='0'):
+    def __init__(self, extension, description=None, notes=None, version="0"):
         self.extension = extension
         self.description = description
         self.notes = notes
@@ -307,35 +340,38 @@ class StaticFileExtension(Base):
     @classmethod
     def getTableMapping(cls):
         return [
-            ('Extension', cls.extension, 'extension', {'editable': True}),
-            ('Description', cls.description, 'description', {'editable': True}),
-            ('Notes', cls.notes, 'notes', {'editable': True}),
-            ('Version', cls.version, 'version', {'editable': True}),
+            ("Extension", cls.extension, "extension", {"editable": True}),
+            ("Description", cls.description, "description", {"editable": True}),
+            ("Notes", cls.notes, "notes", {"editable": True}),
+            ("Version", cls.version, "version", {"editable": True}),
         ]
 
 
 class Cohort(StartEndDatetimeMixin, Base):
-    __tablename__ = 'Cohorts'
+    __tablename__ = "Cohorts"
 
     id = Column(Integer, primary_key=True)
     name = Column(Text, nullable=False, unique=True, server_default=text("'cohort_'"))
     start_date = Column(Integer, nullable=False)
     end_date = Column(Integer)
-    experiment = Column(Integer, ForeignKey('Experiments.id', ondelete='SET NULL'))
+    experiment = Column(Integer, ForeignKey("Experiments.id", ondelete="SET NULL"))
 
-    Experiment = relationship('Experiment')
+    Experiment = relationship("Experiment")
 
     @classmethod
     def getTableMapping(cls):
         return [
-            ('ID', cls.id, 'id', {'editable': False}),
-            ('Name', cls.name, 'name', {'editable': True}),
-            ('StartDate', cls.start_date, 'start_date', {'editable': True}),
-            ('EndDate', cls.end_date, 'end_date', {'editable': True}),
-            ('ExperimentID', cls.experiment, 'experiment', {'editable': True}), # TODO: should we disable this column?
+            ("ID", cls.id, "id", {"editable": False}),
+            ("Name", cls.name, "name", {"editable": True}),
+            ("StartDate", cls.start_date, "start_date", {"editable": True}),
+            ("EndDate", cls.end_date, "end_date", {"editable": True}),
+            (
+                "ExperimentID",
+                cls.experiment,
+                "experiment",
+                {"editable": True},
+            ),  # TODO: should we disable this column?
         ]
-
-
 
 
 """
@@ -344,8 +380,12 @@ Datatypes:
 Interval: datetime.timedelta()
 Numeric
 """
-class CategoricalDurationLabel(StartEndDatetimeMixin, ReferenceBoxExperCohortAnimalMixin, Base):
-    __tablename__ = 'CategoricalDurationLabels'
+
+
+class CategoricalDurationLabel(
+    StartEndDatetimeMixin, ReferenceBoxExperCohortAnimalMixin, Base
+):
+    __tablename__ = "CategoricalDurationLabels"
 
     id = Column(Integer, primary_key=True)
     start_date = Column(DateTime, nullable=False)
@@ -356,8 +396,8 @@ class CategoricalDurationLabel(StartEndDatetimeMixin, ReferenceBoxExperCohortAni
     last_updated_date = Column(DateTime, nullable=False)
     last_updated_user = Column(Text, nullable=False, server_default=text("Anonymous"))
 
-    context_id = Column(Integer, ForeignKey('Contexts.id'))
-    subcontext_id = Column(Integer, ForeignKey('Subcontext.id'))
+    context_id = Column(Integer, ForeignKey("Contexts.id"))
+    subcontext_id = Column(Integer, ForeignKey("Subcontext.id"))
 
     # type, subtype are the main properties. Either property can be Null/None when the user hasn't yet labeled the partition
     type_id = Column(Integer)
@@ -370,8 +410,8 @@ class CategoricalDurationLabel(StartEndDatetimeMixin, ReferenceBoxExperCohortAni
 
     notes = Column(Text)
 
-    Context = relationship('Context', foreign_keys=[context_id])
-    Subcontext = relationship('Subcontext', foreign_keys=[subcontext_id])
+    Context = relationship("Context", foreign_keys=[context_id])
+    Subcontext = relationship("Subcontext", foreign_keys=[subcontext_id])
 
     # def __init__(self,id,start_date,end_date,label_created_date,label_created_user,last_updated_date,last_updated_user,context_id,subcontext_id,\
     #      type_id, subtype_id, tertiarytype_id, primary_text, secondary_text, tertiary_text, notes):
@@ -402,7 +442,6 @@ class CategoricalDurationLabel(StartEndDatetimeMixin, ReferenceBoxExperCohortAni
     # def get_export_output(self):
     #     return {}
 
-
     def CategoricalDurationLabel_get_JSON(self):
         outDict = dict()
         outDict["type_id"] = self.type_id
@@ -421,63 +460,108 @@ class CategoricalDurationLabel(StartEndDatetimeMixin, ReferenceBoxExperCohortAni
     @classmethod
     def getTableMapping(cls):
         return [
-            ('ID', cls.id, 'id', {'editable': False}),
-            ('StartDate', cls.start_date, 'start_date', {'editable': False}),
-            ('EndDate', cls.end_date, 'end_date', {'editable': False}),
-            ('CreatedDate', cls.label_created_date, 'label_created_date', {'editable': False}),
-            ('CreatedUser', cls.label_created_user, 'label_created_user', {'editable': False}),
-            ('LastUpdatedDate', cls.last_updated_date, 'last_updated_date', {'editable': False}),
-            ('LastUpdatingUser', cls.last_updated_user, 'last_updated_user', {'editable': False}),
-            ('Context ID', cls.context, 'context', {'editable': True}),
-            ('Subcontext ID', cls.subcontext, 'subcontext', {'editable': True}),
-            ('Type ID', cls.type, 'type', {'editable': True}),
-            ('Subtype ID', cls.subtype, 'subtype', {'editable': True}),
-            ('TertiaryType ID', cls.tertiarytype_id, 'tertiarytype_id', {'editable': True}),
-            ('PrimaryTxt', cls.primary_text, 'primary_text', {'editable': True}),
-            ('SecondaryTxt', cls.secondary_text, 'secondary_text', {'editable': True}),
-            ('TertiaryTxt', cls.tertiary_text, 'tertiary_text', {'editable': True}),
-            ('Notes', cls.notes, 'notes', {'editable': True}),
-            ('BB ID', cls.behavioral_box_id, 'behavioral_box_id', {'editable': True}),
-            ('ExperimentID', cls.experiment_id, 'experiment_id', {'editable': True}),
-            ('CohortID', cls.cohort_id, 'cohort_id', {'editable': True}),
-            ('AnimalID', cls.animal_id, 'animal_id', {'editable': True}),
+            ("ID", cls.id, "id", {"editable": False}),
+            ("StartDate", cls.start_date, "start_date", {"editable": False}),
+            ("EndDate", cls.end_date, "end_date", {"editable": False}),
+            (
+                "CreatedDate",
+                cls.label_created_date,
+                "label_created_date",
+                {"editable": False},
+            ),
+            (
+                "CreatedUser",
+                cls.label_created_user,
+                "label_created_user",
+                {"editable": False},
+            ),
+            (
+                "LastUpdatedDate",
+                cls.last_updated_date,
+                "last_updated_date",
+                {"editable": False},
+            ),
+            (
+                "LastUpdatingUser",
+                cls.last_updated_user,
+                "last_updated_user",
+                {"editable": False},
+            ),
+            ("Context ID", cls.context, "context", {"editable": True}),
+            ("Subcontext ID", cls.subcontext, "subcontext", {"editable": True}),
+            ("Type ID", cls.type, "type", {"editable": True}),
+            ("Subtype ID", cls.subtype, "subtype", {"editable": True}),
+            (
+                "TertiaryType ID",
+                cls.tertiarytype_id,
+                "tertiarytype_id",
+                {"editable": True},
+            ),
+            ("PrimaryTxt", cls.primary_text, "primary_text", {"editable": True}),
+            ("SecondaryTxt", cls.secondary_text, "secondary_text", {"editable": True}),
+            ("TertiaryTxt", cls.tertiary_text, "tertiary_text", {"editable": True}),
+            ("Notes", cls.notes, "notes", {"editable": True}),
+            ("BB ID", cls.behavioral_box_id, "behavioral_box_id", {"editable": True}),
+            ("ExperimentID", cls.experiment_id, "experiment_id", {"editable": True}),
+            ("CohortID", cls.cohort_id, "cohort_id", {"editable": True}),
+            ("AnimalID", cls.animal_id, "animal_id", {"editable": True}),
         ]
 
-    # __table_args__ = (UniqueConstraint('context_id', 'subcontext_id', name='_name_parent_uc'),
-    #                  )
-        __table_args__ = (UniqueConstraint('context_id','subcontext_id','behavioral_box_id','experiment_id','cohort_id','animal_id', name="uix_context_filters_uc"))
+        # __table_args__ = (UniqueConstraint('context_id', 'subcontext_id', name='_name_parent_uc'),
+        #                  )
+        __table_args__ = UniqueConstraint(
+            "context_id",
+            "subcontext_id",
+            "behavioral_box_id",
+            "experiment_id",
+            "cohort_id",
+            "animal_id",
+            name="uix_context_filters_uc",
+        )
 
     @staticmethod
     def get_gui_view(aRecord, parent=None):
-        #TODO: implement!
+        # TODO: implement!
         end_date = None
         theColor = None
-        if (aRecord.end_date is None):
-            print("ERROR: partition record doesn't have an endDate! Can't create GUI Object")
+        if aRecord.end_date is None:
+            print(
+                "ERROR: partition record doesn't have an endDate! Can't create GUI Object"
+            )
             return None
         else:
             end_date = aRecord.end_date
 
-
-        if (parent is not None):
-            if ((aRecord.type_id is None) or (aRecord.subtype_id is None)):
+        if parent is not None:
+            if (aRecord.type_id is None) or (aRecord.subtype_id is None):
                 theColor = PhoDurationEvent_Partition.ColorBase
             else:
-                theColor = parent.behaviors[aRecord.subtype_id-1].primaryColor.get_QColor()
+                theColor = parent.behaviors[
+                    aRecord.subtype_id - 1
+                ].primaryColor.get_QColor()
 
         else:
             print("WARNING: Partition Record's parent is None!")
             theColor = PhoDurationEvent_Partition.ColorBase
             pass
 
-        outPartitionGuiObj = PhoDurationEvent_Partition(aRecord.start_date, end_date, \
-            aRecord.primary_text, aRecord.secondary_text, aRecord.tertiary_text, \
-                theColor, aRecord.type_id, aRecord.subtype_id, {'notes':aRecord.notes}, parent=parent)
-        
+        outPartitionGuiObj = PhoDurationEvent_Partition(
+            aRecord.start_date,
+            end_date,
+            aRecord.primary_text,
+            aRecord.secondary_text,
+            aRecord.tertiary_text,
+            theColor,
+            aRecord.type_id,
+            aRecord.subtype_id,
+            {"notes": aRecord.notes},
+            parent=parent,
+        )
+
         # Connect signals
-        if (parent is not None):
+        if parent is not None:
             outPartitionGuiObj.on_edit.connect(parent.on_partition_modify_event)
-        
+
         return outPartitionGuiObj
 
     # Overriden from StartEndDatetimeMixin because this record type uniquely used actual datetime values instead of floats.
@@ -488,16 +572,17 @@ class CategoricalDurationLabel(StartEndDatetimeMixin, ReferenceBoxExperCohortAni
         return self.end_date
 
 
-class TimestampedAnnotation(StartEndDatetimeMixin, ReferenceBoxExperCohortAnimalMixin, Base):
-    __tablename__ = 'TimestampedAnnotations'
+class TimestampedAnnotation(
+    StartEndDatetimeMixin, ReferenceBoxExperCohortAnimalMixin, Base
+):
+    __tablename__ = "TimestampedAnnotations"
 
     id = Column(Integer, primary_key=True)
     start_date = Column(Integer)
     end_date = Column(Integer)
 
-
-    context = Column(Integer, ForeignKey('Contexts.id'), server_default=text("1"))
-    subcontext = Column(Integer, ForeignKey('Subcontext.id'))
+    context = Column(Integer, ForeignKey("Contexts.id"), server_default=text("1"))
+    subcontext = Column(Integer, ForeignKey("Subcontext.id"))
 
     type = Column(Integer, nullable=False, server_default=text("1"))
     subtype = Column(Integer, nullable=False, server_default=text("1"))
@@ -506,9 +591,8 @@ class TimestampedAnnotation(StartEndDatetimeMixin, ReferenceBoxExperCohortAnimal
     tertiary_text = Column(Text)
     overflow_text = Column(Text)
 
-
-    Context = relationship('Context', foreign_keys=[context])
-    Subcontext = relationship('Subcontext', foreign_keys=[subcontext])
+    Context = relationship("Context", foreign_keys=[context])
+    Subcontext = relationship("Subcontext", foreign_keys=[subcontext])
 
     """
     TimestampedAnnotation:
@@ -532,21 +616,21 @@ class TimestampedAnnotation(StartEndDatetimeMixin, ReferenceBoxExperCohortAnimal
     @classmethod
     def getTableMapping(cls):
         return [
-            ('ID', cls.id, 'id', {'editable': False}),
-            ('StartDate', cls.start_date, 'start_date', {'editable': False}),
-            ('EndDate', cls.end_date, 'end_date', {'editable': False}),
-            ('Context ID', cls.context, 'context', {'editable': True}),
-            ('Subcontext ID', cls.subcontext, 'subcontext', {'editable': True}),
-            ('Type ID', cls.type, 'type', {'editable': True}),
-            ('Subtype ID', cls.subtype, 'subtype', {'editable': True}),
-            ('PrimaryTxt', cls.primary_text, 'primary_text', {'editable': True}),
-            ('SecondaryTxt', cls.secondary_text, 'secondary_text', {'editable': True}),
-            ('TertiaryTxt', cls.tertiary_text, 'tertiary_text', {'editable': True}),
-            ('OverflowTxt', cls.overflow_text, 'overflow_text', {'editable': True}),
-            ('BB ID', cls.behavioral_box_id, 'behavioral_box_id', {'editable': True}),
-            ('ExperimentID', cls.experiment_id, 'experiment_id', {'editable': True}),
-            ('CohortID', cls.cohort_id, 'cohort_id', {'editable': True}),
-            ('AnimalID', cls.animal_id, 'animal_id', {'editable': True}),
+            ("ID", cls.id, "id", {"editable": False}),
+            ("StartDate", cls.start_date, "start_date", {"editable": False}),
+            ("EndDate", cls.end_date, "end_date", {"editable": False}),
+            ("Context ID", cls.context, "context", {"editable": True}),
+            ("Subcontext ID", cls.subcontext, "subcontext", {"editable": True}),
+            ("Type ID", cls.type, "type", {"editable": True}),
+            ("Subtype ID", cls.subtype, "subtype", {"editable": True}),
+            ("PrimaryTxt", cls.primary_text, "primary_text", {"editable": True}),
+            ("SecondaryTxt", cls.secondary_text, "secondary_text", {"editable": True}),
+            ("TertiaryTxt", cls.tertiary_text, "tertiary_text", {"editable": True}),
+            ("OverflowTxt", cls.overflow_text, "overflow_text", {"editable": True}),
+            ("BB ID", cls.behavioral_box_id, "behavioral_box_id", {"editable": True}),
+            ("ExperimentID", cls.experiment_id, "experiment_id", {"editable": True}),
+            ("CohortID", cls.cohort_id, "cohort_id", {"editable": True}),
+            ("AnimalID", cls.animal_id, "animal_id", {"editable": True}),
         ]
 
     @staticmethod
@@ -555,56 +639,68 @@ class TimestampedAnnotation(StartEndDatetimeMixin, ReferenceBoxExperCohortAnimal
         if aRecord.end_date:
             end_date = aRecord.get_end_date()
 
-        outGuiObj = PhoDurationEvent_AnnotationComment(aRecord.get_start_date(), end_date,
-            aRecord.tertiary_text, aRecord.primary_text, aRecord.secondary_text, parent=parent)
+        outGuiObj = PhoDurationEvent_AnnotationComment(
+            aRecord.get_start_date(),
+            end_date,
+            aRecord.tertiary_text,
+            aRecord.primary_text,
+            aRecord.secondary_text,
+            parent=parent,
+        )
 
         if parent is not None:
             outGuiObj.on_edit.connect(parent.on_annotation_modify_event)
             outGuiObj.on_delete.connect(parent.on_annotation_delete_event)
-            outGuiObj.on_edit_by_dragging_handle_start.connect(parent.handleStartSliderValueChange)
-            outGuiObj.on_edit_by_dragging_handle_end.connect(parent.handleEndSliderValueChange)
+            outGuiObj.on_edit_by_dragging_handle_start.connect(
+                parent.handleStartSliderValueChange
+            )
+            outGuiObj.on_edit_by_dragging_handle_end.connect(
+                parent.handleEndSliderValueChange
+            )
 
         return outGuiObj
 
 
 class ExperimentalConfigurationEvent(StartEndDatetimeMixin, Base):
-    __tablename__ = 'ExperimentalConfigurationEvents'
+    __tablename__ = "ExperimentalConfigurationEvents"
 
     id = Column(Integer, primary_key=True)
     start_date = Column(Integer, nullable=False)
     end_date = Column(Integer)
-    experiment_id = Column(Integer, ForeignKey('Experiments.id'))
-    cohort_id = Column(Integer, ForeignKey('Cohorts.id'))
-    animal_id = Column(Integer, ForeignKey('Animals.id'))
-    labjack_id = Column(Integer, ForeignKey('Labjacks.serial_number'))
-    behavioralbox_id = Column(Integer, ForeignKey('BehavioralBoxes.id'))
+    experiment_id = Column(Integer, ForeignKey("Experiments.id"))
+    cohort_id = Column(Integer, ForeignKey("Cohorts.id"))
+    animal_id = Column(Integer, ForeignKey("Animals.id"))
+    labjack_id = Column(Integer, ForeignKey("Labjacks.serial_number"))
+    behavioralbox_id = Column(Integer, ForeignKey("BehavioralBoxes.id"))
     notes = Column(Text)
     event_type = Column(Text)
     event_subtype = Column(Text)
 
-    animal = relationship('Animal')
-    behavioralbox = relationship('BehavioralBox')
-    cohort = relationship('Cohort')
-    experiment = relationship('Experiment')
-    labjack = relationship('Labjack')
+    animal = relationship("Animal")
+    behavioralbox = relationship("BehavioralBox")
+    cohort = relationship("Cohort")
+    experiment = relationship("Experiment")
+    labjack = relationship("Labjack")
 
 
 class VideoFile(StartEndDatetimeMixin, ReferenceBoxExperCohortAnimalMixin, Base):
-    __tablename__ = 'VideoFile'
+    __tablename__ = "VideoFile"
 
     id = Column(Integer, primary_key=True)
     file_fullname = Column(Text, nullable=False)
     file_basename = Column(Text, nullable=False)
-    file_extension = Column(Text, ForeignKey('staticFileExtensions.extension'), nullable=False)
-    file_video_folder = Column(Integer, ForeignKey('fileParentFolders.id'))
+    file_extension = Column(
+        Text, ForeignKey("staticFileExtensions.extension"), nullable=False
+    )
+    file_video_folder = Column(Integer, ForeignKey("fileParentFolders.id"))
     start_date = Column(Integer, nullable=False)
     end_date = Column(Integer)
     duration = Column(Integer)
     is_original_video = Column(Integer)
     notes = Column(Text)
 
-    staticFileExtension = relationship('StaticFileExtension')
-    fileParentFolder = relationship('FileParentFolder', back_populates="videoFiles")
+    staticFileExtension = relationship("StaticFileExtension")
+    fileParentFolder = relationship("FileParentFolder", back_populates="videoFiles")
 
     @staticmethod
     def get_track_type():
@@ -613,24 +709,49 @@ class VideoFile(StartEndDatetimeMixin, ReferenceBoxExperCohortAnimalMixin, Base)
     @classmethod
     def getTableMapping(cls):
         return [
-            ('ID', cls.id, 'id', {'editable': False}),
-            ('FullName', cls.file_fullname, 'file_fullname', {'editable': True}),
+            ("ID", cls.id, "id", {"editable": False}),
+            ("FullName", cls.file_fullname, "file_fullname", {"editable": True}),
             # ('BaseName', cls.file_basename, 'file_basename', {'editable': True}),
             # ('FileExtension ID', cls.file_extension, 'file_extension', {'editable': True}),
-            ('Parent Folder ID', cls.file_video_folder, 'file_video_folder', {'editable': True}),
-            ('StartDate', cls.start_date, 'start_date', {'editable': False}),
-            ('EndDate', cls.end_date, 'end_date', {'editable': False}),
-            ('Duration', cls.duration, 'duration', {'editable': False}),
-            ('BB ID', cls.behavioral_box_id, 'behavioral_box_id', {'editable': True}),
-            ('ExperimentID', cls.experiment_id, 'experiment_id', {'editable': True}),
-            ('CohortID', cls.cohort_id, 'cohort_id', {'editable': True}),
-            ('AnimalID', cls.animal_id, 'animal_id', {'editable': True}),
-            ('Is Original?', cls.is_original_video, 'is_original_video', {'editable': False}),
-            ('Notes', cls.notes, 'notes', {'editable': True}),
+            (
+                "Parent Folder ID",
+                cls.file_video_folder,
+                "file_video_folder",
+                {"editable": True},
+            ),
+            ("StartDate", cls.start_date, "start_date", {"editable": False}),
+            ("EndDate", cls.end_date, "end_date", {"editable": False}),
+            ("Duration", cls.duration, "duration", {"editable": False}),
+            ("BB ID", cls.behavioral_box_id, "behavioral_box_id", {"editable": True}),
+            ("ExperimentID", cls.experiment_id, "experiment_id", {"editable": True}),
+            ("CohortID", cls.cohort_id, "cohort_id", {"editable": True}),
+            ("AnimalID", cls.animal_id, "animal_id", {"editable": True}),
+            (
+                "Is Original?",
+                cls.is_original_video,
+                "is_original_video",
+                {"editable": False},
+            ),
+            ("Notes", cls.notes, "notes", {"editable": True}),
         ]
 
-
-    def __init__(self,id,file_fullname,file_basename,file_extension,file_video_folder,start_date,end_date,duration,behavioral_box_id,experiment_id,cohort_id,animal_id,is_original_video,notes=None):
+    def __init__(
+        self,
+        id,
+        file_fullname,
+        file_basename,
+        file_extension,
+        file_video_folder,
+        start_date,
+        end_date,
+        duration,
+        behavioral_box_id,
+        experiment_id,
+        cohort_id,
+        animal_id,
+        is_original_video,
+        notes=None,
+    ):
         self.id = id
         self.file_fullname = file_fullname
         self.file_basename = file_basename
@@ -656,7 +777,7 @@ class VideoFile(StartEndDatetimeMixin, ReferenceBoxExperCohortAnimalMixin, Base)
         return float(self.duration) / 1000.0
 
     def get_extension(self):
-        return ('.' + self.file_extension)  # Add the period back on
+        return "." + self.file_extension  # Add the period back on
 
     def get_full_path(self):
         entries = Path(self.get_parent_path())
@@ -669,95 +790,177 @@ class VideoFile(StartEndDatetimeMixin, ReferenceBoxExperCohortAnimalMixin, Base)
 
     def get_is_original_video(self):
         # Allow being undecided as to whether a video is an original or not
-        if (self.is_original_video is None):
+        if self.is_original_video is None:
             return None
         else:
             return self.is_original_video
 
     def get_is_deeplabcut_labeled_video(self):
         # Allow being undecided as to whether a video is an original or not
-        if (self.is_original_video is None):
+        if self.is_original_video is None:
             return None
         else:
-            return (not self.is_original_video)
+            return not self.is_original_video
 
     def get_behavioral_box_id(self):
-        if (self.behavioral_box_id is None):
+        if self.behavioral_box_id is None:
             return None
         else:
-            return (self.behavioral_box_id - 1)
+            return self.behavioral_box_id - 1
 
     def get_currProperties(self):
-        return {'duration': self.get_duration()}
+        return {"duration": self.get_duration()}
 
     def get_extendedProperties(self):
-        return {'behavioral_box_id': self.behavioral_box_id}
+        return {"behavioral_box_id": self.behavioral_box_id}
 
     def get_output_dict(self):
-        return {'base_name': self.file_basename, 'file_fullname': self.file_fullname, 'file_extension': self.get_extension(), 'parent_path': self.file_video_folder, 'path': self.get_full_path(), 'parsed_date': self.get_start_date(), 'computed_end_date': self.get_end_date(), 'is_deeplabcut_labeled_video': self.get_is_deeplabcut_labeled_video(), 'properties': self.get_currProperties(), 'extended_properties': self.get_extendedProperties()}
+        return {
+            "base_name": self.file_basename,
+            "file_fullname": self.file_fullname,
+            "file_extension": self.get_extension(),
+            "parent_path": self.file_video_folder,
+            "path": self.get_full_path(),
+            "parsed_date": self.get_start_date(),
+            "computed_end_date": self.get_end_date(),
+            "is_deeplabcut_labeled_video": self.get_is_deeplabcut_labeled_video(),
+            "properties": self.get_currProperties(),
+            "extended_properties": self.get_extendedProperties(),
+        }
 
     # returns a "VideoInfo" object
     def get_video_info_obj(self):
         parentFolder = self.fileParentFolder
         aFullParentPath = parentFolder.fullpath
-        newExperimentContextInfoObj = ExperimentContextInfo(self.id, self.get_behavioral_box_id(), self.experiment_id, self.cohort_id, self.animal_id, self.notes)
-        newVideoInfoObj = VideoInfo(self.file_fullname, self.file_basename, self.get_extension(), aFullParentPath, \
-             self.get_start_date().replace(tzinfo=None), self.get_end_date().replace(tzinfo=None), self.get_duration(), self.get_is_original_video(), newExperimentContextInfoObj)
+        newExperimentContextInfoObj = ExperimentContextInfo(
+            self.id,
+            self.get_behavioral_box_id(),
+            self.experiment_id,
+            self.cohort_id,
+            self.animal_id,
+            self.notes,
+        )
+        newVideoInfoObj = VideoInfo(
+            self.file_fullname,
+            self.file_basename,
+            self.get_extension(),
+            aFullParentPath,
+            self.get_start_date().replace(tzinfo=None),
+            self.get_end_date().replace(tzinfo=None),
+            self.get_duration(),
+            self.get_is_original_video(),
+            newExperimentContextInfoObj,
+        )
         return newVideoInfoObj
 
     # returns a "VideoParsedResults" object
     def get_parsed_video_result_obj(self):
         parsedResults = VideoParsedResults(self.get_duration())
-        newResultsObj = FoundVideoFileResult(str(self.get_full_path()), self.get_parent_path(), self.file_basename, self.file_fullname, self.get_extension(), \
-            self.get_start_date().replace(tzinfo=None), self.get_behavioral_box_id(), self.get_is_deeplabcut_labeled_video())
+        newResultsObj = FoundVideoFileResult(
+            str(self.get_full_path()),
+            self.get_parent_path(),
+            self.file_basename,
+            self.file_fullname,
+            self.get_extension(),
+            self.get_start_date().replace(tzinfo=None),
+            self.get_behavioral_box_id(),
+            self.get_is_deeplabcut_labeled_video(),
+        )
         newResultsObj.video_parsed_results = parsedResults
         return newResultsObj
 
-
     @staticmethod
-    def from_parsed_video_result_obj(aParsedVideoResultObj, anExperimentID = 1, aCohortID = 1, anAnimalID = 3, notes= ''):
+    def from_parsed_video_result_obj(
+        aParsedVideoResultObj, anExperimentID=1, aCohortID=1, anAnimalID=3, notes=""
+    ):
         aFullPath = str(aParsedVideoResultObj.path)
         aFullParentPath = str(aParsedVideoResultObj.parent_path)  # The parent path
         aFullName = aParsedVideoResultObj.full_name  # The full name including extension
-        aBaseName = aParsedVideoResultObj.base_name  # Excluding the period and extension
-        anExtension = aParsedVideoResultObj.file_extension[1:]  # the file extension excluding the period
-        if (not aParsedVideoResultObj.behavioral_box_id is None):
-            aBBID = aParsedVideoResultObj.behavioral_box_id + 1  # Add one to get a valid index
+        aBaseName = (
+            aParsedVideoResultObj.base_name
+        )  # Excluding the period and extension
+        anExtension = aParsedVideoResultObj.file_extension[
+            1:
+        ]  # the file extension excluding the period
+        if not aParsedVideoResultObj.behavioral_box_id is None:
+            aBBID = (
+                aParsedVideoResultObj.behavioral_box_id + 1
+            )  # Add one to get a valid index
         else:
             aBBID = 1
 
-        if (not aParsedVideoResultObj.is_deeplabcut_labeled_video is None):
-            is_deeplabcut_labeled_video = aParsedVideoResultObj.is_deeplabcut_labeled_video
-            is_original_video = (not is_deeplabcut_labeled_video)
+        if not aParsedVideoResultObj.is_deeplabcut_labeled_video is None:
+            is_deeplabcut_labeled_video = (
+                aParsedVideoResultObj.is_deeplabcut_labeled_video
+            )
+            is_original_video = not is_deeplabcut_labeled_video
         else:
             is_deeplabcut_labeled_video = None
-            is_original_video = None  # We know nothing about whether it is an original video
+            is_original_video = (
+                None  # We know nothing about whether it is an original video
+            )
 
         startTime = int(aParsedVideoResultObj.parsed_date.timestamp() * 1000.0)
-        endTime = int(aParsedVideoResultObj.get_computed_end_date().timestamp() * 1000.0)
+        endTime = int(
+            aParsedVideoResultObj.get_computed_end_date().timestamp() * 1000.0
+        )
         duration = int(aParsedVideoResultObj.get_duration().total_seconds() * 1000.0)
 
-        return VideoFile(None, aFullName, aBaseName, anExtension, aFullParentPath, startTime, endTime, duration, aBBID, anExperimentID, aCohortID, anAnimalID, is_original_video, notes)
+        return VideoFile(
+            None,
+            aFullName,
+            aBaseName,
+            anExtension,
+            aFullParentPath,
+            startTime,
+            endTime,
+            duration,
+            aBBID,
+            anExperimentID,
+            aCohortID,
+            anAnimalID,
+            is_original_video,
+            notes,
+        )
 
     @staticmethod
     def get_gui_view(aVideoRecord, parent=None):
         currExtraInfoDict = aVideoRecord.get_output_dict()
-        outGuiObj = PhoDurationEvent_Video(aVideoRecord.get_start_date(), aVideoRecord.get_end_date(), aVideoRecord.file_fullname, QColor(51,204,255), currExtraInfoDict, parent=parent)
+        outGuiObj = PhoDurationEvent_Video(
+            aVideoRecord.get_start_date(),
+            aVideoRecord.get_end_date(),
+            aVideoRecord.file_fullname,
+            QColor(51, 204, 255),
+            currExtraInfoDict,
+            parent=parent,
+        )
         return outGuiObj
 
 
 class FileParentFolder(Base):
-    __tablename__ = 'fileParentFolders'
+    __tablename__ = "fileParentFolders"
 
     id = Column(Integer, primary_key=True)
-    fullpath = Column(Text, nullable=False, server_default=text("'\\WATSON-BB-OVERS\ServerInternal-01\Transcoded Videos\BB00\'"))
-    root = Column(Text, nullable=False, server_default=text("'\\WATSON-BB-OVERS\'"))
-    path = Column(Text, nullable=False, server_default=text("'ServerInternal-01\Transcoded Videos\BB00\'"))
+    fullpath = Column(
+        Text,
+        nullable=False,
+        server_default=text(
+            "'\\WATSON-BB-OVERS\ServerInternal-01\Transcoded Videos\BB00'"
+        ),
+    )
+    root = Column(Text, nullable=False, server_default=text("'\\WATSON-BB-OVERS'"))
+    path = Column(
+        Text,
+        nullable=False,
+        server_default=text("'ServerInternal-01\Transcoded Videos\BB00'"),
+    )
     notes = Column(Text)
 
-    videoFiles = relationship("VideoFile", order_by=VideoFile.start_date, back_populates="fileParentFolder")
+    videoFiles = relationship(
+        "VideoFile", order_by=VideoFile.start_date, back_populates="fileParentFolder"
+    )
 
-    def __init__(self,id,fullpath,root,path,notes=None):
+    def __init__(self, id, fullpath, root, path, notes=None):
         self.id = id
         self.fullpath = str(fullpath)
         self.root = str(root)
@@ -772,9 +975,9 @@ class FileParentFolder(Base):
     @classmethod
     def getTableMapping(cls):
         return [
-            ('ID', cls.id, 'id', {'editable': False}),
-            ('Full Path', cls.fullpath, 'fullpath', {'editable': True}),
-            ('Root', cls.root, 'root', {'editable': True}),
-            ('Leaf Path', cls.path, 'path', {'editable': True}),
-            ('Notes', cls.notes, 'notes', {'editable': True}),
+            ("ID", cls.id, "id", {"editable": False}),
+            ("Full Path", cls.fullpath, "fullpath", {"editable": True}),
+            ("Root", cls.root, "root", {"editable": True}),
+            ("Leaf Path", cls.path, "path", {"editable": True}),
+            ("Notes", cls.notes, "notes", {"editable": True}),
         ]
