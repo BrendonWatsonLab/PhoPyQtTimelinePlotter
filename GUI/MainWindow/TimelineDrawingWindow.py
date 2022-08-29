@@ -70,7 +70,7 @@ from app.filesystem.FileExporting import FileExportingMixin, FileExportFormat, F
 from GUI.Model.TrackGroups import VideoTrackGroupSettings, VideoTrackGroup, TrackReference, TrackChildReference, VideoTrackGroupOwningMixin
 from GUI.Helpers.DateTimeRenders import DateTimeRenderMixin
 
-from app.filesystem.LabjackFilesystemLoadingMixin import LabjackEventFile, LabjackFilesystemLoader
+from app.filesystem.LabjackData.LabjackFilesystemLoadingMixin import LabjackEventFile, LabjackFilesystemLoader
 
 class GlobalTimeAdjustmentOptions(Enum):
         ConstrainGlobalToVideoTimeRange = 1 # adjusts the global start and end times for the timeline to the range of the loaded videos.

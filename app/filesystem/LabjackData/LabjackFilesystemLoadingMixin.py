@@ -27,12 +27,12 @@ from pathlib import Path
 
 from GUI.Model.ModelViewContainer import ModelViewContainer
 from app.filesystem.FilesystemOperations import OperationTypes, PendingFilesystemOperation
-from app.filesystem.LabjackEventsLoader import LabjackEventsLoader, PhoServerFormatArgs
+from app.filesystem.LabjackData.LabjackEventsLoader import LabjackEventsLoader, PhoServerFormatArgs
 
 from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemLabjackEvent_Record
 from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
 
-# from app.filesystem.LabjackFilesystemLoadingMixin import LabjackEventFile, LabjackFilesystemLoader
+# from app.filesystem.LabjackData.LabjackFilesystemLoadingMixin import LabjackEventFile, LabjackFilesystemLoader
 
 
 # from pyqtgraph import ProgressDialog
@@ -227,11 +227,11 @@ class LabjackFilesystemLoader(QObject):
 
 
 
-    """
-    The main execution function
-    """
-    def on_load_labjack_data_files_execute_thread(self, active_labjack_data_file_paths, progress_callback):
 
+    def on_load_labjack_data_files_execute_thread(self, active_labjack_data_file_paths, progress_callback):
+        """
+            The main execution function
+        """
         should_filter_for_invalid_events = True
         # should_filter_for_invalid_events = False
         
@@ -323,10 +323,11 @@ class LabjackFilesystemLoader(QObject):
     """
     @staticmethod
     def loadLabjackEventsFile(labjackFilePath, videoDates, videoEndDates, shouldLimitEventsToVideoDates=True, limitedVariablesToCreateEventsFor=None, usePhoServerFormat=False, phoServerFormatIsStdOut=True, should_filter_for_invalid_events=True):
-        ## Load the Labjack events data from an exported MATLAB file
+        """ Load the Labjack events data from an exported MATLAB file
         # If shouldLimitEventsToVideoDates is True then only events that fall between the earliest video start date and the latest video finish date are included
         # If shouldLimitEventsToVariables is not None, then only events that are of type of the variable with the name in the array are included
         ## TODO: shouldLimitEventsToVideoDates should also affect the returned dateTimes, dataArray, etc.
+        """
         (dateTimes, onesEventFormatDataArray, phoServerFormatArgs) = LabjackEventsLoader.loadLabjackEventsFile_loadFromFile(labjackFilePath, usePhoServerFormat, phoServerFormatIsStdOut)
 
         ## Pre-process the data

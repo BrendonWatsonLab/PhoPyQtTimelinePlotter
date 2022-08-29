@@ -27,7 +27,7 @@ from pathlib import Path
 
 from GUI.Model.ModelViewContainer import ModelViewContainer
 from app.filesystem.FilesystemOperations import OperationTypes, PendingFilesystemOperation
-from app.filesystem.LabjackEventsLoader import LabjackEventsLoader, PhoServerFormatArgs
+from app.filesystem.LabjackData.LabjackEventsLoader import LabjackEventsLoader, PhoServerFormatArgs
 
 from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, FilesystemLabjackEvent_Record
 from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent

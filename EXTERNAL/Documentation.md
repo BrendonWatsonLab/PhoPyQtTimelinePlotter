@@ -3,6 +3,29 @@
 - Requires ffprobe binary installed in ./EXTERNAL/Dependencies/ffmpeg/bin/ffprobe. Obtainable from https://ffmpeg.zeranoe.com/builds/. Tested with 4.2.1
 
 
+# Generating Documentation
+`mamba install pdoc -c conda-forge`
+
+pdoc . --output-directory EXTERNAL/DOCS/GENERATED
+
+
+# 2022-08-29 General Data Import Test (.h5 and .npz):
+r'C:\Users\pho\repos\PhoPy3DPositionAnalysis2021\data\pipeline_cache_store.h5'
+r'C:/Users/pho/repos/PhoPy3DPositionAnalysis2021/data/completed_pipeline.npz'
+
+TimelineDrawingWindow.on_user_general_h5_data_load()
+User canceled the import!
+TimelineDrawingWindow.on_user_general_npz_data_load()
+Importing data file at path C:/Users/pho/repos/PhoPy3DPositionAnalysis2021/data/completed_pipeline.npz...
+Traceback (most recent call last):
+  File "c:\Users\pho\repos\PhoPyQtTimelinePlotter\GUI\MainWindow\TimelineDrawingWindow.py", line 2787, in on_user_general_npz_data_load
+    self.get_general_npz_data_files_loader().add_actigraphy_file_path(importFilePath)
+  File "c:\Users\pho\repos\PhoPyQtTimelinePlotter\GUI\MainWindow\TimelineDrawingWindow.py", line 2792, in get_general_npz_data_files_loader
+    return self.actigraphyDataFilesystemLoader
+AttributeError: 'TimelineDrawingWindow' object has no attribute 'actigraphyDataFilesystemLoader'
+
+
+# Track Widget Setup
 
 In general each track widget has the following setup:
 

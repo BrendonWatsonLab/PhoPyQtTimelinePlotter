@@ -17,8 +17,8 @@ from app.filesystem.FilesystemRecordBase import FilesystemRecordBase, Filesystem
 
 # Copied from "phoPythonVideoFileParser" project
 
-# from app.filesystem.LabjackEventsLoader import loadLabjackDataFromPhoServerFormat, loadLabjackDataFromMatlabFormat, labjack_variable_names, labjack_variable_colors_dict, labjack_variable_indicies_dict, labjack_variable_event_type, labjack_variable_port_location, writeLinesToCsvFile
-# from app.filesystem.LabjackEventsLoader import LabjackEventsLoader, PhoServerFormatArgs
+# from app.filesystem.LabjackData.LabjackEventsLoader import loadLabjackDataFromPhoServerFormat, loadLabjackDataFromMatlabFormat, labjack_variable_names, labjack_variable_colors_dict, labjack_variable_indicies_dict, labjack_variable_event_type, labjack_variable_port_location, writeLinesToCsvFile
+# from app.filesystem.LabjackData.LabjackEventsLoader import LabjackEventsLoader, PhoServerFormatArgs
 
 class PhoServerFormatArgs(QObject):
     """ class PhoServerFormatArgs: A simple wrapper class that holds the arguments to filter_invalid_events for phoServerFormat 

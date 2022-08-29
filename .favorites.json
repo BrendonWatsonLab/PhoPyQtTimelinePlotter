@@ -163,7 +163,8 @@
         "parent_id": "HdDeGNEwjvCfspgU",
         "workspaceRoot": null,
         "workspacePath": null,
-        "id": "RD93tH6nWPrhgmVk"
+        "id": "RD93tH6nWPrhgmVk",
+        "iconColor": "rgb(0, 0, 139)"
     },
     {
         "type": "Directory",

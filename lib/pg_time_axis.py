@@ -28,10 +28,6 @@
 #
 #############################################################################
 
-"""
-This module provides date-time aware axis
-"""
-
 __all__ = ["DateAxisItem"]
 
 import numpy
@@ -41,16 +37,14 @@ from time import mktime
 
 
 class DateAxisItem(AxisItem):
-    """
-    A tool that provides a date-time aware axis. It is implemented as an
-    AxisItem that interpretes positions as unix timestamps (i.e. seconds
-    since 1970).
-    The labels and the tick positions are dynamically adjusted depending
-    on the range.
-    It provides a  :meth:`attachToPlotItem` method to add it to a given
-    PlotItem
-    """
+    """ This module provides date-time aware axis
+    A tool that provides a date-time aware axis. It is implemented as an AxisItem that interpretes positions as unix timestamps (i.e. seconds since 1970). The labels and the tick positions are dynamically adjusted depending
+    on the range. It provides a  :meth:`attachToPlotItem` method to add it to a given PlotItem
     
+    Usages:
+        Used in `TimelineTrackDrawingWidget_DataFile`
+
+    """  
     # Max width in pixels reserved for each label in axis
     _pxLabelWidth = 80
 
