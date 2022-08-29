@@ -54,10 +54,9 @@ from GUI.Model.Events.PhoDurationEvent import PhoDurationEvent
 # GeneralDataFilesystemLoadingMixin
 
 
-""" LabjackEventFile: a single imported data file containing one or more labjack events.
 
-"""
 class LabjackEventFile(QObject):
+    """ LabjackEventFile: a single imported data file containing one or more labjack events. """
     def __init__(self, filePath, parent=None):
         super().__init__(parent=parent)
         self.filePath = filePath
@@ -103,12 +102,11 @@ class LabjackEventFile(QObject):
 
 # QThreadPool
 
-## GeneralDataFilesystemLoader: this object tries to find Labjack-exported data files in the filesystem and make them accessible in memory
-"""
-Loads the Labjack event files
-"""
-class GeneralDataFilesystemLoader(QObject):
 
+class GeneralDataFilesystemLoader(QObject):
+    """ GeneralDataFilesystemLoader: this object tries to find Labjack-exported data files in the filesystem and make them accessible in memory
+    Loads the Labjack event files
+    """
     # foundFilesUpdated = pyqtSignal()
     targetGeneralDataFilePathsUpdated = pyqtSignal()
 

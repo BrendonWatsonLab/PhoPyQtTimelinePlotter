@@ -29,10 +29,9 @@ from app.filesystem.FilesystemOperations import OperationTypes, PendingFilesyste
 # from app.filesystem.VideoPreviewThumbnailGeneratingMixin import VideoThumbnail, VideoPreviewThumbnailGenerator
 
 
-""" VideoThumbnail: A cache of all the different thumbnail sizes for a specific frame in a specific video
-
-"""
 class VideoThumbnail(QObject):
+    """ VideoThumbnail: A cache of all the different thumbnail sizes for a specific frame in a specific video
+    """
     def __init__(self, frameIndex, thumbsDict, parent=None):
         super().__init__(parent=parent)
         self.frameIndex = frameIndex
@@ -45,10 +44,9 @@ class VideoThumbnail(QObject):
         return self.thumbsDict
 
 
-""" VideoSpecificThumbnailCache: A cache of all the resultant thumbnails for each frame for a given video file
-
-"""
 class VideoSpecificThumbnailCache(QObject):
+    """ VideoSpecificThumbnailCache: A cache of all the resultant thumbnails for each frame for a given video file
+    """
 
     frame_thumbnails_updated = pyqtSignal(str, VideoThumbnail) # (cache_video_file_name: str, frameThumbnailResult: VideoThumbnail)
 
@@ -96,11 +94,9 @@ class VideoSpecificThumbnailCache(QObject):
             self.frame_thumbnails_updated.emit(self.get_video_file_name(), aThumbnailResult)
 
         
-## VideoPreviewThumbnailGenerator: this object generates an array of "VideoThumbnail" type objects from a videoURL
-"""
-
-"""
 class VideoPreviewThumbnailGenerator(QObject):
+    """ VideoPreviewThumbnailGenerator: this object generates an array of "VideoThumbnail" type objects from a videoURL
+    """
 
     targetVideoFilePathsUpdated = pyqtSignal()
 
